@@ -1,10 +1,15 @@
 import { Dice } from "./dice";
+import { Board } from "./board";
 
 declare function require(name:string):any;
 var http = require("http");
 
 class Main {
+  private board:Board;
+
   constructor() {
+    this.board = new Board();
+
     let server = http.createServer();
     server.on('request', (request, response) => this.requestHandler(request, response));
     server.listen("3156");
@@ -15,6 +20,10 @@ class Main {
     console.log(request.method);
     if (request.url == "/dice") {
       let output:string = Dice.roll(2, 7).debugString();
+      console.log(output);
+      response.end(output);
+    } else if (request.url == "/board") {
+      let output:string = this.board.debugString();
       console.log(output);
       response.end(output);
     }
