@@ -39,7 +39,6 @@ export class Board {
         this.fields[x][y] = new Field(x, y);
       }
     }
-    this.setFacility(3, 2, new Facility("[Bee]"));
   }
 
   setFacility(x:number, y:number, facility:Facility):void {

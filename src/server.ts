@@ -1,5 +1,5 @@
 import { Dice } from "./dice";
-import { Board } from "./board";
+import { Board,Facility } from "./board";
 
 declare function require(name:string):any;
 var http = require("http");
@@ -23,6 +23,15 @@ class Main {
       console.log(output);
       response.end(output);
     } else if (request.url == "/board") {
+      let output:string = this.board.debugString();
+      console.log(output);
+      response.end(output);
+    } else if (request.url == "/build") {
+      let x:number = 3;
+      let y:number = 2;
+      let facility:Facility = new Facility("[Bee]");
+      this.board.setFacility(x, y, facility);
+
       let output:string = this.board.debugString();
       console.log(output);
       response.end(output);
