@@ -1,3 +1,3 @@
 import { Dice } from "./dice";
 
-document.body.innerHTML = Dice.roll(2, 7).debugString();
+document.body.innerHTML = "<pre>" + Dice.roll(2, 7).debugString() + "</pre>";

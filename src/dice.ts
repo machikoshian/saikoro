@@ -6,10 +6,12 @@ export class DiceResult {
               public miracle_dice2:number = 0) {}
 
   debugString():string {
-    let output:string = "<p>" + this.dice1 + ", " + this.dice2 + "</p>";
+    let output:string = "Dice1: " + this.dice1 + "\n";
+    output += "Dice2: " + this.dice2 + "\n";
     if (this.is_miracle) {
-      output += "<p>MIRACLE!</p>";
-      output += "<p>" + this.miracle_dice1 + ", " + this.miracle_dice2 + "</p>";
+      output += "MIRACLE!\n";
+      output += "MDice1: " + this.miracle_dice1 + "\n";
+      output += "MDice2: " + this.miracle_dice2 + "\n";
     }
     return output;
   }

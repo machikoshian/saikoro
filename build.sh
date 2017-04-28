@@ -1,6 +1,11 @@
 #!/bin/sh
 
 cd src
-tsc --outDir ../out --sourceMap --module amd saikoro.ts
-cp -r third_party ../out
-cp saikoro.html ../out
+
+# Client side (web browser)
+tsc --outDir ../out/client --sourceMap --module amd saikoro.ts
+cp -r third_party ../out/client
+cp saikoro.html ../out/client
+
+# Server side (Node.js)
+tsc --outDir ../out/server --sourceMap --module commonjs server.ts
