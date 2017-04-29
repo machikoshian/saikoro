@@ -5,15 +5,27 @@ export class DiceResult {
               public miracle_dice1:number = 0,
               public miracle_dice2:number = 0) {}
 
-  debugString():string {
-    let output:string = "Dice1: " + this.dice1 + "\n";
-    output += "Dice2: " + this.dice2 + "\n";
-    if (this.is_miracle) {
-      output += "MIRACLE!\n";
-      output += "MDice1: " + this.miracle_dice1 + "\n";
-      output += "MDice2: " + this.miracle_dice2 + "\n";
+  toObject() {
+    return {
+      dice1: this.dice1,
+      dice2: this.dice2,
+      is_miracle: this.is_miracle,
+      miracle_dice1: this.miracle_dice1,
+      miracle_dice2: this.miracle_dice2,
     }
-    return output;
+  }
+
+  static fromObject(object):DiceResult {
+    return new DiceResult(
+      object.dice1,
+      object.dice2,
+      object.is_miracle,
+      object.miracle_dice1,
+      object.miracle_dice2);
+  }
+
+  debugString():string {
+    return JSON.stringify(this.toObject());
   }
 }
 

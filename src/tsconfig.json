@@ -2,10 +2,8 @@
   "compilerOptions": {
     "sourceMap": true
   },
-  "filesGlob": [
-    "./src/**/*.ts"
-  ],
   "files": [
+    "server.ts",
     "../typings/index.d.ts"
   ]
 }
