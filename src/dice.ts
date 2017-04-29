@@ -5,8 +5,9 @@ export class DiceResult {
               public miracle_dice1:number = 0,
               public miracle_dice2:number = 0) {}
 
-  toObject() {
+  public toJSON():Object {
     return {
+      class_name: "DiceResult",
       dice1: this.dice1,
       dice2: this.dice2,
       is_miracle: this.is_miracle,
@@ -15,17 +16,17 @@ export class DiceResult {
     }
   }
 
-  static fromObject(object):DiceResult {
+  static fromJSON(json):DiceResult {
     return new DiceResult(
-      object.dice1,
-      object.dice2,
-      object.is_miracle,
-      object.miracle_dice1,
-      object.miracle_dice2);
+      json.dice1,
+      json.dice2,
+      json.is_miracle,
+      json.miracle_dice1,
+      json.miracle_dice2);
   }
 
   debugString():string {
-    return JSON.stringify(this.toObject());
+    return JSON.stringify(this);
   }
 }
 

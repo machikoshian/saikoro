@@ -27,7 +27,7 @@ class HttpRequest {
 }
 
 function callbackDice(response:string):void {
-  let dice:DiceResult = DiceResult.fromObject(JSON.parse(response));
+  let dice:DiceResult = DiceResult.fromJSON(JSON.parse(response));
   document.body.innerHTML = "<pre>" + dice.dice1 + "</pre>";
 }
 
