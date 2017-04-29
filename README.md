@@ -17,4 +17,5 @@
 
 # Third party libraries
 
-* http://requirejs.org/
+* Require.js: http://requirejs.org/
+* Typings: https://github.com/typings/typings

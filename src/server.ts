@@ -2,8 +2,8 @@ import { Dice } from "./dice";
 import { Board,Facility } from "./board";
 
 declare function require(name:string):any;
-var http = require("http");
-var url = require("url");
+let http = require("http");
+let url = require("url");
 
 class Main {
   private board:Board;
