@@ -1,9 +1,9 @@
 import { Dice } from "./dice";
 import { Board,Facility } from "./board";
 
-declare function require(name:string):any;
-let http = require("http");
-let url = require("url");
+// Moduiles from Node.js
+import * as http from "http";
+import * as url from "url";
 
 class Main {
   private board:Board;

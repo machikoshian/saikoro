@@ -3,6 +3,13 @@
 * Typescript
 * Node.js
 
+# How to init the project
+
+* npm install typescript --global
+* npm install typings --global
+* cd <Dir_of_this_README.md>
+* typings install
+
 # How to build
 
 * ./build.sh
