@@ -3,6 +3,7 @@
     "sourceMap": true
   },
   "files": [
+    "saikoro.ts",
     "server.ts",
     "../typings/index.d.ts"
   ]

@@ -4,6 +4,7 @@ import { Board,Facility } from "./board";
 // Moduiles from Node.js
 import * as http from "http";
 import * as url from "url";
+import * as fs from "fs";
 
 class Main {
   private board:Board;
@@ -26,13 +27,17 @@ class Main {
     console.log(url_parts.query);
 
     if (pathname == "/dice") {
-      let output:string = Dice.roll(2, 7).debugString();
+      let dice_num = query.dice_num;
+      let aim = query.aim;
+      let output:string = Dice.roll(dice_num, aim).debugString();
       console.log(output);
       response.end(output);
+      return;
     } else if (pathname == "/board") {
       let output:string = this.board.debugString();
       console.log(output);
       response.end(output);
+      return;
     } else if (pathname == "/build") {
       let x:number = query.x;
       let y:number = query.y;
@@ -44,7 +49,20 @@ class Main {
       let output:string = this.board.debugString();
       console.log(output);
       response.end(output);
+      return;
     }
+
+    let filepath:string = "./out/client" + pathname;
+    fs.stat(filepath, function(error, stat) {
+      if (error == null) {
+        console.log("File exists: " + pathname);
+        fs.readFile(filepath, "utf8", function(error, output) {
+          response.end(output);
+        });
+      } else {
+        console.log("Error: " + filepath);
+      }
+    });
   }
 }
 let main:Main = new Main();
