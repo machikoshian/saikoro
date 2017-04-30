@@ -1,4 +1,4 @@
-import { Board, Field } from "./board";
+import { Session, Board, Field } from "./board";
 import { Dice, DiceResult } from "./dice";
 
 class HttpRequest {
@@ -43,9 +43,21 @@ function callbackBoard(response: string):void {
   }
 }
 
+function callbackSession(response: string):void {
+  let session: Session = Session.fromJSON(JSON.parse(response));
+  let board: Board = session.getBoard();
+  for (let y: number = 0; y < board.row; ++y) {
+    for (let x: number = 0; x < board.column; ++x) {
+      let field: Field = board.fields[x][y];
+      let name: string = field.getFacility() ? field.getFacility().name : "";
+      document.getElementById(`field_${x}_${y}`).innerHTML = name;
+    }
+  }
+}
+
 function onClickField(x, y): void {
   console.log(`clicked: field_${x}_${y}`);
-  HttpRequest.Send(`/build?x=${x}&y=${y}`, callbackBoard);
+  HttpRequest.Send(`/build?x=${x}&y=${y}`, callbackSession);
 }
 
 function drawBoard(column: number=12, row: number=5): void {
@@ -81,4 +93,4 @@ function drawBoard(column: number=12, row: number=5): void {
 
 // HttpRequest.Send("/dice?dice_num=2&aim=7", callbackDice);
 drawBoard();
-HttpRequest.Send("/board", callbackBoard);
+HttpRequest.Send("/board", callbackSession);

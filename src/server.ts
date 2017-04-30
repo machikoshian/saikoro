@@ -1,5 +1,5 @@
 import { Dice } from "./dice";
-import { Board,Facility } from "./board";
+import { Session,Board,Facility } from "./board";
 
 // Moduiles from Node.js
 import * as http from "http";
@@ -7,10 +7,10 @@ import * as url from "url";
 import * as fs from "fs";
 
 class Main {
-  private board: Board;
+  private session: Session;
 
   constructor() {
-    this.board = new Board();
+    this.session = new Session();
 
     let server = http.createServer();
     server.on("request",
@@ -36,7 +36,7 @@ class Main {
       return;
     }
     else if (pathname == "/board") {
-      let output: string = JSON.stringify(this.board.toJSON());
+      let output: string = JSON.stringify(this.session.toJSON());
       console.log(output);
       response.end(output);
       return;
@@ -46,10 +46,10 @@ class Main {
       let y: number = query.y;
       if (x && y) {
         let facility: Facility = new Facility("🐝");
-        this.board.setFacility(x, y, facility);
+        this.session.getBoard().setFacility(x, y, facility);
       }
 
-      let output: string = JSON.stringify(this.board.toJSON());
+      let output: string = JSON.stringify(this.session.toJSON());
       console.log(output);
       response.end(output);
       return;
