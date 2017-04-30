@@ -48,20 +48,107 @@ export class Player {
   }
 }
 
+enum Steps {
+  // CardDraw,
+  Start,
+  CharacterCard,
+  DiceRoll,
+  // DiceRollAgain,
+  FacilityAction,
+  // FacilityAction2,
+  // FacilityAction3,
+  // FacilityAction4,
+  // FacilityAction5,
+  BuildFacility,
+  CardRemoval,
+  End,
+}
+
+export class State {
+  private round: number;
+  private turn: number;
+  private current_player_id: number;
+  private step: Steps;
+
+  constructor() {
+    this.round = 0;
+    this.turn = 0;
+    this.current_player_id = 0;
+    this.step = Steps.BuildFacility;
+  }
+
+  public toJSON(): Object {
+    return {
+      class_name: "State",
+      round: this.round,
+      turn: this.turn,
+      current_player_id: this.current_player_id,
+      step: this.step,
+    }
+  }
+
+  static fromJSON(json): State {
+    let state: State = new State();
+    state.round = json.round;
+    state.turn = json.turn;
+    state.current_player_id = json.current_player_id;
+    state.step = json.step;
+    return state;
+  }
+
+  public done(step: Steps): void {
+    // TODO: Need to know all player info.
+    if (this.current_player_id == 1) {
+      this.current_player_id = 0;
+    }
+    else {
+      this.current_player_id = 1;
+    }
+  }
+
+  public getCurrentPlayerId(): number {
+    return this.current_player_id;
+  }
+
+/*
+  public getAvailableActions(): Steps[] {
+    if (this.step == Steps.Start) {
+      return [Steps.DiceRoll];
+    }
+    else if (this.step == Steps.DiceRoll) {
+      return [Steps.FacilityAction];
+    }
+    else if (this.step == Steps.FacilityAction) {
+      return [Steps.BuildFacility];
+    }
+    else if (this.step == Steps.BuildFacility) {
+      return [Steps.CardRemoval];
+    }
+    else if (this.step == Steps.CardRemoval) {
+      return [Steps.End];
+    }
+    // return a set of steps.
+  }
+*/
+}
+
 export class Session {
   private board: Board;
   private players: Player[];
+  private state: State;
 
   constructor() {
     this.board = new Board();
     this.players = [];
+    this.state = new State();
   }
 
-  public toJSON():Object {
+  public toJSON(): Object {
     return {
       class_name: "Session",
       board: this.board.toJSON(),
       players: this.players.map(player => { return player.toJSON(); }),
+      state: this.state.toJSON(),
     }
   }
 
@@ -69,9 +156,11 @@ export class Session {
     let board: Board = Board.fromJSON(json.board);
     let players: Player[] =
         json.players.map(player => { return Player.fromJSON(player); });
-    let session:Session = new Session();
+    let state: State = State.fromJSON(json.state);
+    let session: Session = new Session();
     session.board = board;
     session.players = players;
+    session.state = state;
     return session;
   }
 
@@ -92,6 +181,9 @@ export class Session {
     }
     let player: Player = this.players[player_id];
     this.board.buildFacility(x, y, facility, player);
+
+    this.state.done(Steps.BuildFacility);
+
     return true;
   }
 
@@ -100,6 +192,9 @@ export class Session {
   }
   public getPlayers(): Player[] {
     return this.players;
+  }
+  public getState(): State {
+    return this.state;
   }
   public getPlayer(player_id: number): Player {
     if (player_id == null) {

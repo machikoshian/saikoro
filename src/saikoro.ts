@@ -52,8 +52,11 @@ function getPlayerColor(player: Player): string {
   return colors[player.id];
 }
 
+let _hack_player_id: number = 0;
+
 function callbackSession(response: string): void {
   let session: Session = Session.fromJSON(JSON.parse(response));
+  _hack_player_id = session.getState().getCurrentPlayerId();
 
   // Update board.
   let board: Board = session.getBoard();
@@ -82,10 +85,11 @@ function callbackSession(response: string): void {
 
 function onClickField(x, y): void {
   console.log(`clicked: field_${x}_${y}`);
-  HttpRequest.Send(`/build?x=${x}&y=${y}&player_id=0`, callbackSession);
+  HttpRequest.Send(`/build?x=${x}&y=${y}&player_id=${_hack_player_id}`,
+                   callbackSession);
 }
 
-function drawBoard(column: number=12, row: number=5): void {
+function initBoard(column: number=12, row: number=5): void {
   // Add click listeners.
   for (let y: number = 0; y < row; ++y) {
     for (let x: number = 0; x < column; ++x) {
@@ -96,5 +100,5 @@ function drawBoard(column: number=12, row: number=5): void {
 }
 
 // HttpRequest.Send("/dice?dice_num=2&aim=7", callbackDice);
-drawBoard();
+initBoard();
 HttpRequest.Send("/board", callbackSession);
