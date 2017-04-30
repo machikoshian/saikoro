@@ -28,8 +28,14 @@ class HttpRequest {
 }
 
 function callbackDice(response: string): void {
+  let faces: string[] = ["", "⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
+
   let dice: DiceResult = DiceResult.fromJSON(JSON.parse(response));
-  document.body.innerHTML = "<pre>" + dice.dice1 + "</pre>";
+  let d1: number = dice.dice1;
+  let d2: number = dice.dice2;
+  let message: string = `${faces[d1]} ${faces[d2]} : ${d1 + d2} です。`;
+
+  document.getElementById("message").innerHTML = message;
 }
 
 function callbackBoard(response: string): void {
@@ -94,6 +100,11 @@ function onClickField(x, y): void {
                    callbackSession);
 }
 
+function onClickDice(dice_num: number, aim: number): void {
+  console.log(`clicked: dice_num:${dice_num}, aim:${aim}`);
+  HttpRequest.Send(`/dice?dice_num=${dice_num}&aim=${aim}`, callbackDice);
+}
+
 function initBoard(column: number=12, row: number=5): void {
   // Add click listeners.
   for (let y: number = 0; y < row; ++y) {
@@ -102,6 +113,10 @@ function initBoard(column: number=12, row: number=5): void {
           "click", ()=>{onClickField(x, y);});
     }
   }
+  document.getElementById("dice_1").addEventListener(
+      "click", ()=>{onClickDice(1, 0);});
+  document.getElementById("dice_2").addEventListener(
+      "click", ()=>{onClickDice(2, 0);});
 }
 
 // HttpRequest.Send("/dice?dice_num=2&aim=7", callbackDice);

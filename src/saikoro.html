@@ -8,7 +8,7 @@
     #board table { border-style: solid; border-width: 1px; }
     #board td { width: 50px; height: 50px; background-color: #EFF0D1; text-align: center;}
     #message {
-      width: 640px; margin: 10px 0px; padding: 5px;
+      width: 640px; height: 30px; margin: 10px 0px; padding: 5px;
       background-color: #EEEEEE; text-align: center;
       border-style: none; border-radius: 5px; border-width: 1px;
     }
@@ -17,6 +17,18 @@
     #player_1 { background-color: #D9BDC5; border-radius: 5px; }
     #player_2 { background-color: #90C290; border-radius: 5px; }
     #player_3 { background-color: #9D8189; border-radius: 5px; }
+
+    #dice { width: 640px; margin-left: 225px; }
+    td.dice_button {
+      width: 80px; height: 60px; padding: 10px;
+      font-size: 40px; text-align: center;
+      border-radius: 10px; background-color: #EEEEEE;
+    }
+    td.dice_button {
+      width: 80px; height: 60px; padding: 10px;
+      font-size: 40px; text-align: center;
+      border-radius: 10px; background-color: #EEEEEE;
+    }
     -->
     </style>
     <script type="text/javascript" data-main="saikoro.js"
@@ -59,6 +71,12 @@
         <tr><td id="field_0_4"></td><td id="field_1_4"></td><td id="field_2_4"></td><td id="field_3_4"></td><td id="field_4_4"></td><td id="field_5_4"></td><td id="field_6_4"></td><td id="field_7_4"></td><td id="field_8_4"></td><td id="field_9_4"></td><td id="field_10_4"></td><td id="field_11_4"></td></tr>
         <tr><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th></tr>
       </tbody></table>
+    </div>
+    <div id="dice">
+    <table><tr>
+      <td id="dice_1" class="dice_button">🎲</td>
+      <td id="dice_2" class="dice_button">🎲🎲</td>
+    </tr></table>
     </div>
   </body>
 </html>
