@@ -1,4 +1,4 @@
-import { Session, Board, Field } from "./board";
+import { Session, Player, Board, Field } from "./board";
 import { Dice, DiceResult } from "./dice";
 
 class HttpRequest {
@@ -45,6 +45,7 @@ function callbackBoard(response: string):void {
 
 function callbackSession(response: string):void {
   let session: Session = Session.fromJSON(JSON.parse(response));
+
   let board: Board = session.getBoard();
   for (let y: number = 0; y < board.row; ++y) {
     for (let x: number = 0; x < board.column; ++x) {
@@ -52,6 +53,17 @@ function callbackSession(response: string):void {
       let name: string = field.getFacility() ? field.getFacility().name : "";
       document.getElementById(`field_${x}_${y}`).innerHTML = name;
     }
+  }
+
+  let players: Player[] = session.getPlayers();
+  for (let i: number = 0; i < players.length; ++i) {
+    document.getElementById(`player_${i}`).style.visibility = "visible";
+    document.getElementById(`player_${i}_name`).innerHTML = players[i].name;
+    document.getElementById(`player_${i}_money`).innerHTML = `${players[i].money}`;
+    document.getElementById(`player_${i}_salary`).innerHTML = `${players[i].salary}`;
+  }
+  for (let i: number = players.length; i < 4; ++i) {
+    document.getElementById(`player_${i}`).style.visibility = "hidden";
   }
 }
 
@@ -61,27 +73,6 @@ function onClickField(x, y): void {
 }
 
 function drawBoard(column: number=12, row: number=5): void {
-  let output: string = "<table>";
-
-  // Draw fields.
-  for (let y: number = 0; y < row; ++y) {
-    output += "<tr>";
-    for (let x: number = 0; x < column; ++x) {
-      output += `<td id="field_${x}_${y}"></td>`;
-    }
-    output += "</tr>";
-  }
-
-  // Draw dice numbers.
-  output += "<tr>";
-  for (let x: number = 1; x <= column; ++x) {
-    output += `<th>${x}</th>`;
-  }
-  output += "</tr>";
-
-  output += "</table>";
-  document.getElementById("board").innerHTML = output;
-
   // Add click listeners.
   for (let y: number = 0; y < row; ++y) {
     for (let x: number = 0; x < column; ++x) {
@@ -90,6 +81,10 @@ function drawBoard(column: number=12, row: number=5): void {
     }
   }
 }
+
+//function drawPlayers(): void {
+//  document.getElementById("players").innerHTML = output;
+//}
 
 // HttpRequest.Send("/dice?dice_num=2&aim=7", callbackDice);
 drawBoard();

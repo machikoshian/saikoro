@@ -20,12 +20,15 @@ export class Player {
   readonly id: number;  // TODO: How to assign an id number?
   readonly name: string;
   readonly money: number;
+  readonly salary: number;
   readonly color: string;
 
-  constructor(id: number, name: string, money: number, color: string) {
+  constructor(id: number, name: string, money: number, salary: number,
+              color: string) {
     this.id = id;
     this.name = name;
     this.money = money;
+    this.salary = salary;
     this.color = color;
   }
 
@@ -35,12 +38,13 @@ export class Player {
       id: this.id,
       name: this.name,
       money: this.money,
+      salary: this.salary,
       color: this.color,
     }
   }
 
   static fromJSON(json): Player {
-    return new Player(json.id, json.name, json.money, json.color);
+    return new Player(json.id, json.name, json.money, json.salary, json.color);
   }
 }
 
@@ -48,28 +52,29 @@ export class Session {
   private board: Board;
   private players: Player[];
 
-  constructor(board?: Board, players?: Player[]) {
-    this.board = board ? board : new Board();
-    this.players = players ? players : [];
+  constructor() {
+    this.board = new Board();
+    this.players = [];
+    this.players.push(new Player(0, "こしあん", 1000, 220, "#2D79B1"));
+    this.players.push(new Player(1, "コロすけ", 1200, 200, "#E6632A"));
   }
 
   public toJSON():Object {
     return {
       class_name: "Session",
       board: this.board.toJSON(),
-      players: this.players.map(player => { player.toJSON(); }),
+      players: this.players.map(player => { return player.toJSON(); }),
     }
   }
 
   static fromJSON(json): Session {
     let board: Board = Board.fromJSON(json.board);
     let players: Player[] =
-        json.players.map(player => { Player.fromJSON(player); });
+        json.players.map(player => { return Player.fromJSON(player); });
     let session:Session = new Session();
     session.board = board;
     session.players = players;
     return session;
-    // return new Session(board, players);
   }
 
   public getBoard(): Board {
