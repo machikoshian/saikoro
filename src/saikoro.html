@@ -7,7 +7,12 @@
     <!--
     #board table { border-style: solid; border-width: 1px; }
     #board td { width: 50px; height: 50px; background-color: #EFF0D1; text-align: center;}
-    table.player { width: 150px; }
+    #message {
+      width: 640px; margin: 10px 0px; padding: 5px;
+      background-color: #EEEEEE; text-align: center;
+      border-style: none; border-radius: 8px; border-width: 1px;
+    }
+    table.player { width: 160px; }
     #player_0 { background-color: #909CC2; }
     #player_1 { background-color: #D9BDC5; }
     #player_2 { background-color: #90C290; }
@@ -29,7 +34,9 @@
         <tr><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th></tr>
       </tbody></table>
     </div>
-    <p></p>
+    <div id="message">
+      🎲 こしあんのターンです 🎲
+    </div>
     <table id="players">
       <tr>
         <td><table id="player_0" class="player">

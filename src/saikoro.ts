@@ -81,6 +81,11 @@ function callbackSession(response: string): void {
   for (let i: number = players.length; i < 4; ++i) {
     document.getElementById(`player_${i}`).style.visibility = "hidden";
   }
+
+  // Update message.
+  let name: string = players[_hack_player_id].name;
+  let message: string = `🎲 ${name} のターンです 🎲`;
+  document.getElementById("message").innerHTML = message;
 }
 
 function onClickField(x, y): void {
