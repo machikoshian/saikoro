@@ -34,12 +34,14 @@ class Main {
       let aim = query.aim;
       let output: string = JSON.stringify(Dice.roll(dice_num, aim).toJSON());
       console.log(output);
+      response.setHeader("Content-Type", "application/json; charset=utf-8");
       response.end(output);
       return;
     }
     else if (pathname == "/board") {
       let output: string = JSON.stringify(this.session.toJSON());
       console.log(output);
+      response.setHeader("Content-Type", "application/json; charset=utf-8");
       response.end(output);
       return;
     }
@@ -54,6 +56,7 @@ class Main {
 
       let output: string = JSON.stringify(this.session.toJSON());
       console.log(output);
+      response.setHeader("Content-Type", "application/json; charset=utf-8");
       response.end(output);
       return;
     }

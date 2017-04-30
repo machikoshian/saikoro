@@ -63,7 +63,7 @@ function callbackSession(response: string): void {
       let name: string = field.getFacility() ? field.getFacility().name : "";
       document.getElementById(`field_${x}_${y}`).innerHTML = name;
       document.getElementById(`field_${x}_${y}`).style.backgroundColor =
-          getPlayerColor(field.getOwner());
+          getPlayerColor(session.getPlayer(field.getOwner()));
     }
   }
 

@@ -101,17 +101,24 @@ export class Session {
   public getPlayers(): Player[] {
     return this.players;
   }
+  public getPlayer(player_id: number): Player {
+    if (player_id == null) {
+      return null;
+    }
+    return this.players[player_id];
+  }
 }
 
 export class Field {
   private facility: Facility;
   readonly x: number;  // dice pips - 1
   readonly y: number;
-  private owner: Player;
+  private owner_id: number;
 
   constructor(x: number, y: number) {
     this.x = x;
     this.y = y;
+    this.owner_id = -1;
   }
 
   public toJSON(): Object {
@@ -120,7 +127,7 @@ export class Field {
       facility: this.facility ? this.facility.toJSON() : null,
       x: this.x,
       y: this.y,
-      owner: this.owner ? this.owner.toJSON() : null,
+      owner_id: this.owner_id,
     }
   }
 
@@ -129,27 +136,20 @@ export class Field {
     if (json.facility) {
       field.facility = Facility.fromJSON(json.facility);
     }
-    if (json.owner) {
-      field.owner = Player.fromJSON(json.owner);
-    }
+    field.owner_id = json.owner_id;
     return field;
   }
 
   public getFacility(): Facility {
     return this.facility;
   }
+  public getOwner(): number {
+    return this.owner_id;
+  }
 
   public buildFacility(facility: Facility, owner: Player):void {
     this.facility = facility;
-    this.owner = owner;
-  }
-
-  public getOwner(): Player {
-    return this.owner;
-  }
-
-  public setOwner(owner: Player): void {
-    this.owner = owner;
+    this.owner_id = owner.id;
   }
 
   debugString(): string {
