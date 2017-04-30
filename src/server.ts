@@ -11,6 +11,8 @@ class Main {
 
   constructor() {
     this.session = new Session();
+    this.session.addPlayer("こしあん", 1200, 200);
+    this.session.addPlayer("つぶあん", 1000, 220);
 
     let server = http.createServer();
     server.on("request",
@@ -46,7 +48,8 @@ class Main {
       let y: number = query.y;
       if (x && y) {
         let facility: Facility = new Facility("🐝");
-        this.session.getBoard().setFacility(x, y, facility);
+        let player_id: number = 0;
+        this.session.buildFacility(x, y, facility, player_id);
       }
 
       let output: string = JSON.stringify(this.session.toJSON());

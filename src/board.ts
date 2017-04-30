@@ -17,19 +17,19 @@ export class Facility {
 }
 
 export class Player {
-  readonly id: number;  // TODO: How to assign an id number?
+  readonly id: number;
   readonly name: string;
   readonly money: number;
   readonly salary: number;
-  readonly color: string;
+  readonly team: number;
 
   constructor(id: number, name: string, money: number, salary: number,
-              color: string) {
+              team: number) {
     this.id = id;
     this.name = name;
     this.money = money;
     this.salary = salary;
-    this.color = color;
+    this.team = team;
   }
 
   public toJSON(): Object {
@@ -39,7 +39,7 @@ export class Player {
       name: this.name,
       money: this.money,
       salary: this.salary,
-      color: this.color,
+      team: this.team,
     }
   }
 
@@ -55,8 +55,6 @@ export class Session {
   constructor() {
     this.board = new Board();
     this.players = [];
-    this.players.push(new Player(0, "こしあん", 1000, 220, "#2D79B1"));
-    this.players.push(new Player(1, "コロすけ", 1200, 200, "#E6632A"));
   }
 
   public toJSON():Object {
@@ -75,6 +73,26 @@ export class Session {
     session.board = board;
     session.players = players;
     return session;
+  }
+
+  public addPlayer(name: string, money: number, salary: number): boolean {
+    let player_id: number = this.players.length;
+    if (player_id > 4) {
+      return false;
+    }
+    // team == player_id (no 2vs2 so far).
+    this.players.push(new Player(player_id, name, money, salary, player_id));
+    return true;
+  }
+
+  public buildFacility(x: number, y: number,
+                       facility: Facility, player_id: number): boolean {
+    if (player_id >= this.players.length) {
+      return false;
+    }
+    let player: Player = this.players[player_id];
+    this.board.buildFacility(x, y, facility, player);
+    return true;
   }
 
   public getBoard(): Board {
@@ -109,10 +127,10 @@ export class Field {
   static fromJSON(json): Field {
     let field: Field = new Field(json.x, json.y);
     if (json.facility) {
-      field.setFacility(Facility.fromJSON(json.facility));
+      field.facility = Facility.fromJSON(json.facility);
     }
     if (json.owner) {
-      field.setOwner(Player.fromJSON(json.owner));
+      field.owner = Player.fromJSON(json.owner);
     }
     return field;
   }
@@ -121,8 +139,9 @@ export class Field {
     return this.facility;
   }
 
-  public setFacility(facility: Facility):void {
+  public buildFacility(facility: Facility, owner: Player):void {
     this.facility = facility;
+    this.owner = owner;
   }
 
   public getOwner(): Player {
@@ -191,8 +210,8 @@ export class Board {
     return new Board(fields);
   }
 
-  setFacility(x: number, y: number, facility: Facility):void {
-    this.fields[x][y].setFacility(facility);
+  buildFacility(x: number, y: number, facility: Facility, owner: Player):void {
+    this.fields[x][y].buildFacility(facility, owner);
   }
 
   debugString(): string {
