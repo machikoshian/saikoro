@@ -10,33 +10,19 @@
     #message {
       width: 640px; margin: 10px 0px; padding: 5px;
       background-color: #EEEEEE; text-align: center;
-      border-style: none; border-radius: 8px; border-width: 1px;
+      border-style: none; border-radius: 5px; border-width: 1px;
     }
     table.player { width: 160px; }
-    #player_0 { background-color: #909CC2; }
-    #player_1 { background-color: #D9BDC5; }
-    #player_2 { background-color: #90C290; }
-    #player_3 { background-color: #9D8189; }
+    #player_0 { background-color: #909CC2; border-radius: 5px; }
+    #player_1 { background-color: #D9BDC5; border-radius: 5px; }
+    #player_2 { background-color: #90C290; border-radius: 5px; }
+    #player_3 { background-color: #9D8189; border-radius: 5px; }
     -->
     </style>
     <script type="text/javascript" data-main="saikoro.js"
             src="third_party/require.js"></script>
   </head>
   <body>
-    <p>🎲 サイコロころころ 🎲</p>
-    <div id="board">
-      <table><tbody>
-        <tr><td id="field_0_0"></td><td id="field_1_0"></td><td id="field_2_0"></td><td id="field_3_0"></td><td id="field_4_0"></td><td id="field_5_0"></td><td id="field_6_0"></td><td id="field_7_0"></td><td id="field_8_0"></td><td id="field_9_0"></td><td id="field_10_0"></td><td id="field_11_0"></td></tr>
-        <tr><td id="field_0_1"></td><td id="field_1_1"></td><td id="field_2_1"></td><td id="field_3_1"></td><td id="field_4_1"></td><td id="field_5_1"></td><td id="field_6_1"></td><td id="field_7_1"></td><td id="field_8_1"></td><td id="field_9_1"></td><td id="field_10_1"></td><td id="field_11_1"></td></tr>
-        <tr><td id="field_0_2"></td><td id="field_1_2"></td><td id="field_2_2"></td><td id="field_3_2"></td><td id="field_4_2"></td><td id="field_5_2"></td><td id="field_6_2"></td><td id="field_7_2"></td><td id="field_8_2"></td><td id="field_9_2"></td><td id="field_10_2"></td><td id="field_11_2"></td></tr>
-        <tr><td id="field_0_3"></td><td id="field_1_3"></td><td id="field_2_3"></td><td id="field_3_3"></td><td id="field_4_3"></td><td id="field_5_3"></td><td id="field_6_3"></td><td id="field_7_3"></td><td id="field_8_3"></td><td id="field_9_3"></td><td id="field_10_3"></td><td id="field_11_3"></td></tr>
-        <tr><td id="field_0_4"></td><td id="field_1_4"></td><td id="field_2_4"></td><td id="field_3_4"></td><td id="field_4_4"></td><td id="field_5_4"></td><td id="field_6_4"></td><td id="field_7_4"></td><td id="field_8_4"></td><td id="field_9_4"></td><td id="field_10_4"></td><td id="field_11_4"></td></tr>
-        <tr><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th></tr>
-      </tbody></table>
-    </div>
-    <div id="message">
-      🎲 こしあんのターンです 🎲
-    </div>
     <table id="players">
       <tr>
         <td><table id="player_0" class="player">
@@ -61,5 +47,18 @@
         </table></td>
       </tr>
     </table>
+    <div id="message">
+      🎲 こしあんのターンです 🎲
+    </div>
+    <div id="board">
+      <table><tbody>
+        <tr><td id="field_0_0"></td><td id="field_1_0"></td><td id="field_2_0"></td><td id="field_3_0"></td><td id="field_4_0"></td><td id="field_5_0"></td><td id="field_6_0"></td><td id="field_7_0"></td><td id="field_8_0"></td><td id="field_9_0"></td><td id="field_10_0"></td><td id="field_11_0"></td></tr>
+        <tr><td id="field_0_1"></td><td id="field_1_1"></td><td id="field_2_1"></td><td id="field_3_1"></td><td id="field_4_1"></td><td id="field_5_1"></td><td id="field_6_1"></td><td id="field_7_1"></td><td id="field_8_1"></td><td id="field_9_1"></td><td id="field_10_1"></td><td id="field_11_1"></td></tr>
+        <tr><td id="field_0_2"></td><td id="field_1_2"></td><td id="field_2_2"></td><td id="field_3_2"></td><td id="field_4_2"></td><td id="field_5_2"></td><td id="field_6_2"></td><td id="field_7_2"></td><td id="field_8_2"></td><td id="field_9_2"></td><td id="field_10_2"></td><td id="field_11_2"></td></tr>
+        <tr><td id="field_0_3"></td><td id="field_1_3"></td><td id="field_2_3"></td><td id="field_3_3"></td><td id="field_4_3"></td><td id="field_5_3"></td><td id="field_6_3"></td><td id="field_7_3"></td><td id="field_8_3"></td><td id="field_9_3"></td><td id="field_10_3"></td><td id="field_11_3"></td></tr>
+        <tr><td id="field_0_4"></td><td id="field_1_4"></td><td id="field_2_4"></td><td id="field_3_4"></td><td id="field_4_4"></td><td id="field_5_4"></td><td id="field_6_4"></td><td id="field_7_4"></td><td id="field_8_4"></td><td id="field_9_4"></td><td id="field_10_4"></td><td id="field_11_4"></td></tr>
+        <tr><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>11</th><th>12</th></tr>
+      </tbody></table>
+    </div>
   </body>
 </html>
