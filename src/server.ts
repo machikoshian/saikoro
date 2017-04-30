@@ -46,9 +46,9 @@ class Main {
     else if (pathname == "/build") {
       let x: number = query.x;
       let y: number = query.y;
-      if (x && y) {
+      let player_id: number = query.player_id;
+      if (x && y && player_id) {
         let facility: Facility = new Facility("🐝");
-        let player_id: number = 0;
         this.session.buildFacility(x, y, facility, player_id);
       }
 

@@ -82,7 +82,7 @@ function callbackSession(response: string): void {
 
 function onClickField(x, y): void {
   console.log(`clicked: field_${x}_${y}`);
-  HttpRequest.Send(`/build?x=${x}&y=${y}`, callbackSession);
+  HttpRequest.Send(`/build?x=${x}&y=${y}&player_id=0`, callbackSession);
 }
 
 function drawBoard(column: number=12, row: number=5): void {
