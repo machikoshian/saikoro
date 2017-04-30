@@ -57,9 +57,9 @@ export class Field {
 }
 
 export class Board {
-  private fields:Field[][];
-  private row:number = 5;
-  private column:number = 12;
+  readonly fields:Field[][];
+  readonly row:number = 5;
+  readonly column:number = 12;
 
   constructor(fields = null) {
     if (fields) {

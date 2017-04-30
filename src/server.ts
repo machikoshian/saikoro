@@ -29,12 +29,12 @@ class Main {
     if (pathname == "/dice") {
       let dice_num = query.dice_num;
       let aim = query.aim;
-      let output:string = Dice.roll(dice_num, aim).debugString();
+      let output:string = JSON.stringify(Dice.roll(dice_num, aim).toJSON());
       console.log(output);
       response.end(output);
       return;
     } else if (pathname == "/board") {
-      let output:string = this.board.debugString();
+      let output:string = JSON.stringify(this.board.toJSON());
       console.log(output);
       response.end(output);
       return;
@@ -46,10 +46,14 @@ class Main {
         this.board.setFacility(x, y, facility);
       }
 
-      let output:string = this.board.debugString();
+      let output:string = JSON.stringify(this.board.toJSON());
       console.log(output);
       response.end(output);
       return;
+    }
+
+    if (pathname == "/") {
+      pathname = "/saikoro.html";
     }
 
     let filepath:string = "./out/client" + pathname;

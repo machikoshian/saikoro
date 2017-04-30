@@ -1,3 +1,4 @@
+import { Board, Field } from "./board";
 import { Dice, DiceResult } from "./dice";
 
 class HttpRequest {
@@ -31,4 +32,28 @@ function callbackDice(response:string):void {
   document.body.innerHTML = "<pre>" + dice.dice1 + "</pre>";
 }
 
-HttpRequest.Send("/dice?dice_num=2&aim=7", callbackDice);
+function callbackBoard(response:string):void {
+  let board:Board = Board.fromJSON(JSON.parse(response));
+  let output:string = "<table>";
+  for (let y:number = 0; y < board.row; ++y) {
+    output += "<tr>";
+    for (let x:number = 0; x < board.column; ++x) {
+      let field:Field = board.fields[x][y];
+      let name:string = field.facility ? field.facility.name : "";
+      output += "<td>" + name + "</td>";
+    }
+    output += "</tr>";
+  }
+
+  output += "<tr>";
+  for (let x:number = 1; x <= board.column; ++x) {
+    output += "<th>" + x + "</th>";
+  }
+  output += "</tr>";
+
+  output += "</table>";
+  document.getElementById("board").innerHTML = output;
+}
+
+// HttpRequest.Send("/dice?dice_num=2&aim=7", callbackDice);
+HttpRequest.Send("/board", callbackBoard);
