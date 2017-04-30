@@ -2,15 +2,15 @@ import { Board, Field } from "./board";
 import { Dice, DiceResult } from "./dice";
 
 class HttpRequest {
-  static Send(url:string, callback:(response:string) => void) {
-    let xhr:XMLHttpRequest = new XMLHttpRequest();
+  static Send(url: string, callback: (response:string) => void) {
+    let xhr: XMLHttpRequest = new XMLHttpRequest();
     xhr.onreadystatechange = () => HttpRequest.OnReadyStateChange(xhr,
                                                                   callback);
     xhr.open("GET", url, true);
   }
 
-  static OnReadyStateChange(xhr:XMLHttpRequest,
-                            callback:(response:string) => void):void {
+  static OnReadyStateChange(xhr: XMLHttpRequest,
+                            callback: (response:string) => void): void {
     switch (xhr.readyState) {
       case XMLHttpRequest.OPENED:
         xhr.send();
@@ -27,34 +27,34 @@ class HttpRequest {
   }
 }
 
-function callbackDice(response:string):void {
-  let dice:DiceResult = DiceResult.fromJSON(JSON.parse(response));
+function callbackDice(response: string): void {
+  let dice: DiceResult = DiceResult.fromJSON(JSON.parse(response));
   document.body.innerHTML = "<pre>" + dice.dice1 + "</pre>";
 }
 
-function callbackBoard(response:string):void {
-  let board:Board = Board.fromJSON(JSON.parse(response));
-  for (let y:number = 0; y < board.row; ++y) {
-    for (let x:number = 0; x < board.column; ++x) {
-      let field:Field = board.fields[x][y];
-      let name:string = field.getFacility() ? field.getFacility().name : "";
+function callbackBoard(response: string):void {
+  let board: Board = Board.fromJSON(JSON.parse(response));
+  for (let y: number = 0; y < board.row; ++y) {
+    for (let x: number = 0; x < board.column; ++x) {
+      let field: Field = board.fields[x][y];
+      let name: string = field.getFacility() ? field.getFacility().name : "";
       document.getElementById(`field_${x}_${y}`).innerHTML = name;
     }
   }
 }
 
-function onClickField(x, y):void {
+function onClickField(x, y): void {
   console.log(`clicked: field_${x}_${y}`);
   HttpRequest.Send(`/build?x=${x}&y=${y}`, callbackBoard);
 }
 
-function drawBoard(column:number=12, row:number=5):void {
-  let output:string = "<table>";
+function drawBoard(column: number=12, row: number=5): void {
+  let output: string = "<table>";
 
   // Draw fields.
-  for (let y:number = 0; y < row; ++y) {
+  for (let y: number = 0; y < row; ++y) {
     output += "<tr>";
-    for (let x:number = 0; x < column; ++x) {
+    for (let x: number = 0; x < column; ++x) {
       output += `<td id="field_${x}_${y}"></td>`;
     }
     output += "</tr>";
@@ -62,7 +62,7 @@ function drawBoard(column:number=12, row:number=5):void {
 
   // Draw dice numbers.
   output += "<tr>";
-  for (let x:number = 1; x <= column; ++x) {
+  for (let x: number = 1; x <= column; ++x) {
     output += `<th>${x}</th>`;
   }
   output += "</tr>";
@@ -71,8 +71,8 @@ function drawBoard(column:number=12, row:number=5):void {
   document.getElementById("board").innerHTML = output;
 
   // Add click listeners.
-  for (let y:number = 0; y < row; ++y) {
-    for (let x:number = 0; x < column; ++x) {
+  for (let y: number = 0; y < row; ++y) {
+    for (let x: number = 0; x < column; ++x) {
       document.getElementById(`field_${x}_${y}`).addEventListener(
           "click", ()=>{onClickField(x, y);});
     }
