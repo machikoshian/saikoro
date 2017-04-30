@@ -37,7 +37,7 @@ function callbackBoard(response:string):void {
   for (let y:number = 0; y < board.row; ++y) {
     for (let x:number = 0; x < board.column; ++x) {
       let field:Field = board.fields[x][y];
-      let name:string = field.facility ? field.facility.name : "";
+      let name:string = field.getFacility() ? field.getFacility().name : "";
       document.getElementById(`field_${x}_${y}`).innerHTML = name;
     }
   }

@@ -16,40 +16,120 @@ export class Facility {
   }
 }
 
+export class Player {
+  readonly id:number;  // TODO: How to assign an id number?
+  readonly name:string;
+  readonly money:number;
+  readonly color:string;
+
+  constructor(id:number, name:string, money:number, color:string) {
+    this.id = id;
+    this.name = name;
+    this.money = money;
+    this.color = color;
+  }
+
+  public toJSON():Object {
+    return {
+      class_name: "Player",
+      id: this.id,
+      name: this.name,
+      money: this.money,
+      color: this.color,
+    }
+  }
+
+  static fromJSON(json):Player {
+    return new Player(json.id, json.name, json.money, json.color);
+  }
+}
+
+export class Session {
+  private board:Board;
+  private players:Player[];
+
+  constructor(board?:Board, players?:Player[]) {
+    this.board = board ? board : new Board();
+    this.players = players ? players : [];
+  }
+
+  public toJSON():Object {
+    return {
+      class_name: "Session",
+      board: this.board.toJSON(),
+      players: this.players.map((player)=>{player.toJSON();}),
+    }
+  }
+
+  static fromJSON(json):Session {
+    let board:Board = Board.fromJSON(json.board);
+    let players:Player[] = json.players.map((player)=>{Player.fromJSON(player);});
+    let session:Session = new Session();
+    session.board = board;
+    session.players = players;
+    return session;
+    // return new Session(board, players);
+  }
+
+  public getBoard():Board {
+    return this.board;
+  }
+  public getPlayers():Player[] {
+    return this.players;
+  }
+}
+
 export class Field {
-  public name:string;
-  public facility:Facility;
-  private x:number;  // dice pips - 1
-  private y:number;
+  private facility:Facility;
+  readonly x:number;  // dice pips - 1
+  readonly y:number;
+  private owner:Player;
 
   constructor(x:number, y:number) {
     this.x = x;
     this.y = y;
-    this.name = "(" + x + "," + y + ")";
   }
 
   public toJSON():Object {
     return {
       class_name: "Field",
-      name: this.name,
       facility: this.facility ? this.facility.toJSON() : null,
       x: this.x,
       y: this.y,
+      owner: this.owner ? this.owner.toJSON() : null,
     }
   }
 
   static fromJSON(json):Field {
     let field:Field = new Field(json.x, json.y);
-    field.name = json.name;
     if (json.facility) {
-      field.facility = Facility.fromJSON(json.facility);
+      field.setFacility(Facility.fromJSON(json.facility));
+    }
+    if (json.owner) {
+      field.setOwner(Player.fromJSON(json.owner));
     }
     return field;
   }
 
+  public getFacility():Facility {
+    return this.facility;
+  }
+
+  public setFacility(facility:Facility):void {
+    this.facility = facility;
+  }
+
+  public getOwner():Player {
+    return this.owner;
+  }
+
+  public setOwner(owner:Player):void {
+    this.owner = owner;
+  }
+
   debugString():string {
     if (this.facility == undefined) {
-      return this.name;
+      return `(${this.x},${this.y})`;
     } else {
       return this.facility.name;
     }
@@ -104,7 +184,7 @@ export class Board {
   }
 
   setFacility(x:number, y:number, facility:Facility):void {
-    this.fields[x][y].facility = facility;
+    this.fields[x][y].setFacility(facility);
   }
 
   debugString():string {
