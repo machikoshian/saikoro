@@ -42,7 +42,7 @@ class Main {
       let x:number = query.x;
       let y:number = query.y;
       if (x && y) {
-        let facility:Facility = new Facility("[Bee]");
+        let facility:Facility = new Facility("🐝");
         this.board.setFacility(x, y, facility);
       }
 

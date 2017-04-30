@@ -43,8 +43,15 @@ function callbackBoard(response:string):void {
   }
 }
 
+function onClickField(x, y):void {
+  console.log(`clicked: field_${x}_${y}`);
+  HttpRequest.Send(`/build?x=${x}&y=${y}`, callbackBoard);
+}
+
 function drawBoard(column:number=12, row:number=5):void {
   let output:string = "<table>";
+
+  // Draw fields.
   for (let y:number = 0; y < row; ++y) {
     output += "<tr>";
     for (let x:number = 0; x < column; ++x) {
@@ -53,6 +60,7 @@ function drawBoard(column:number=12, row:number=5):void {
     output += "</tr>";
   }
 
+  // Draw dice numbers.
   output += "<tr>";
   for (let x:number = 1; x <= column; ++x) {
     output += `<th>${x}</th>`;
@@ -65,7 +73,8 @@ function drawBoard(column:number=12, row:number=5):void {
   // Add click listeners.
   for (let y:number = 0; y < row; ++y) {
     for (let x:number = 0; x < column; ++x) {
-      document.getElementById(`field_${x}_${y}`).addEventListener("click", ()=>{alert("yay");});
+      document.getElementById(`field_${x}_${y}`).addEventListener(
+          "click", ()=>{onClickField(x, y);});
     }
   }
 }
