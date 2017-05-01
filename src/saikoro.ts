@@ -41,18 +41,7 @@ function callbackDice(response: string): void {
 
   document.getElementById("message").innerHTML = message;
 }
-/*
-function callbackBoard(response: string): void {
-  let board: Board = Board.fromJSON(JSON.parse(response));
-  for (let y: number = 0; y < board.row; ++y) {
-    for (let x: number = 0; x < board.column; ++x) {
-      let facility: Facility = board.getFacility(x, y);
-      let name: string = facility ? facility.getName() : "";
-      document.getElementById(`field_${x}_${y}`).innerHTML = name;
-    }
-  }
-}
-*/
+
 function getPlayerColor(player: Player): string {
   let colors = [ "#909CC2", "#D9BDC5", "#90C290", "#9D8189" ];
 
@@ -136,6 +125,5 @@ function initBoard(column: number=12, row: number=5): void {
       "click", ()=>{onClickDice(2, 0);});
 }
 
-// HttpRequest.Send("/dice?dice_num=2&aim=7", callbackDice);
 initBoard();
 HttpRequest.Send("/board", callbackSession);
