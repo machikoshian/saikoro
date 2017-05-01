@@ -30,9 +30,11 @@ class Main {
     console.log(url_parts.query);
 
     if (pathname == "/dice") {
+      let player_id: number = query.player_id;
       let dice_num = query.dice_num;
       let aim = query.aim;
-      let output: string = JSON.stringify(Dice.roll(dice_num, aim).toJSON());
+      this.session.diceRoll(player_id, dice_num, aim);
+      let output: string = JSON.stringify(this.session.toJSON());
       console.log(output);
       response.setHeader("Content-Type", "application/json; charset=utf-8");
       response.end(output);
@@ -46,12 +48,12 @@ class Main {
       return;
     }
     else if (pathname == "/build") {
+      let player_id: number = query.player_id;
       let x: number = query.x;
       let y: number = query.y;
-      let player_id: number = query.player_id;
       if (x && y && player_id) {
         let facility: Facility = new Facility("🐝");
-        this.session.buildFacility(x, y, facility, player_id);
+        this.session.buildFacility(player_id, x, y, facility);
       }
 
       let output: string = JSON.stringify(this.session.toJSON());

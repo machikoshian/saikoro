@@ -1,4 +1,4 @@
-import { Session, Player, Board, Field } from "./board";
+import { Steps, Session, Player, Board, Field } from "./board";
 import { Dice, DiceResult } from "./dice";
 
 class HttpRequest {
@@ -27,13 +27,17 @@ class HttpRequest {
   }
 }
 
-function callbackDice(response: string): void {
+function diceResultMessage(dice: DiceResult): string {
   let faces: string[] = ["", "⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
 
-  let dice: DiceResult = DiceResult.fromJSON(JSON.parse(response));
   let d1: number = dice.dice1;
   let d2: number = dice.dice2;
-  let message: string = `${faces[d1]} ${faces[d2]} : ${d1 + d2} です。`;
+  return `${faces[d1]} ${faces[d2]} : ${d1 + d2} です。`;
+}
+
+function callbackDice(response: string): void {
+  let dice: DiceResult = DiceResult.fromJSON(JSON.parse(response));
+  let message: string = diceResultMessage(dice);
 
   document.getElementById("message").innerHTML = message;
 }
@@ -62,7 +66,8 @@ let _hack_player_id: number = 0;
 
 function callbackSession(response: string): void {
   let session: Session = Session.fromJSON(JSON.parse(response));
-  _hack_player_id = session.getState().getCurrentPlayerId();
+  let player_id: number = session.getState().getCurrentPlayerId();
+  _hack_player_id = player_id;
 
   // Update board.
   let board: Board = session.getBoard();
@@ -89,20 +94,30 @@ function callbackSession(response: string): void {
   }
 
   // Update message.
-  let name: string = players[_hack_player_id].name;
-  let message: string = `🎲 ${name} のターンです 🎲`;
+  let player: Player = players[player_id];
+  let name: string = player.name;
+  let message: string = "";
+  if (session.getState().getStep() == Steps.DiceRoll) {
+    message = `🎲 ${name} のサイコロです 🎲`;
+  }
+  else if (session.getState().getStep() == Steps.BuildFacility) {
+    message = diceResultMessage(session.getDiceResult());
+    message += `  🎲 ${name} の建設です 🎲`;
+  }
   document.getElementById("message").innerHTML = message;
+  document.getElementById("message").style.backgroundColor = getPlayerColor(player);
 }
 
 function onClickField(x, y): void {
   console.log(`clicked: field_${x}_${y}`);
-  HttpRequest.Send(`/build?x=${x}&y=${y}&player_id=${_hack_player_id}`,
+  HttpRequest.Send(`/build?player_id=${_hack_player_id}&x=${x}&y=${y}`,
                    callbackSession);
 }
 
 function onClickDice(dice_num: number, aim: number): void {
   console.log(`clicked: dice_num:${dice_num}, aim:${aim}`);
-  HttpRequest.Send(`/dice?dice_num=${dice_num}&aim=${aim}`, callbackDice);
+  HttpRequest.Send(`/dice?player_id=${_hack_player_id}&dice_num=${dice_num}&aim=${aim}`,
+                   callbackSession);
 }
 
 function initBoard(column: number=12, row: number=5): void {

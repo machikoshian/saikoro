@@ -1,3 +1,5 @@
+import { Dice, DiceResult } from "./dice";
+
 export class Facility {
   public name: string;
   constructor(name: string) {
@@ -48,7 +50,7 @@ export class Player {
   }
 }
 
-enum Steps {
+export enum Steps {
   // CardDraw,
   Start,
   CharacterCard,
@@ -74,7 +76,7 @@ export class State {
     this.round = 0;
     this.turn = 0;
     this.current_player_id = 0;
-    this.step = Steps.BuildFacility;
+    this.step = Steps.DiceRoll;
   }
 
   public toJSON(): Object {
@@ -96,18 +98,38 @@ export class State {
     return state;
   }
 
+  public isValid(player_id: number, step: Steps): boolean {
+    return (this.current_player_id == player_id && this.step == step);
+  }
+
   public done(step: Steps): void {
-    // TODO: Need to know all player info.
-    if (this.current_player_id == 1) {
-      this.current_player_id = 0;
+    if (this.step == Steps.DiceRoll && step == Steps.DiceRoll) {
+      this.step = Steps.BuildFacility;
+      return;
     }
-    else {
-      this.current_player_id = 1;
+
+    if (this.step == Steps.BuildFacility && step == Steps.BuildFacility) {
+      this.step = Steps.DiceRoll;
+      // TODO: Need to know all player info.
+      if (this.current_player_id == 1) {
+        this.current_player_id = 0;
+        this.round += 1;
+        this.turn = 0;
+      }
+      else {
+        this.current_player_id = 1;
+        this.turn += 1;
+      }
+      return;
     }
   }
 
   public getCurrentPlayerId(): number {
     return this.current_player_id;
+  }
+
+  public getStep(): Steps {
+    return this.step;
   }
 
 /*
@@ -136,11 +158,13 @@ export class Session {
   private board: Board;
   private players: Player[];
   private state: State;
+  private dice_result: DiceResult;  // TODO: change it to Events.
 
   constructor() {
     this.board = new Board();
     this.players = [];
     this.state = new State();
+    this.dice_result = null;
   }
 
   public toJSON(): Object {
@@ -149,6 +173,7 @@ export class Session {
       board: this.board.toJSON(),
       players: this.players.map(player => { return player.toJSON(); }),
       state: this.state.toJSON(),
+      dice_result: this.dice_result ? this.dice_result.toJSON() : null,
     }
   }
 
@@ -161,6 +186,7 @@ export class Session {
     session.board = board;
     session.players = players;
     session.state = state;
+    session.dice_result = json.dice_result ? DiceResult.fromJSON(json.dice_result) : null;
     return session;
   }
 
@@ -174,8 +200,21 @@ export class Session {
     return true;
   }
 
-  public buildFacility(x: number, y: number,
-                       facility: Facility, player_id: number): boolean {
+  public diceRoll(player_id: number, dice_num: number, aim: number): boolean {
+    if (!this.state.isValid(player_id, Steps.DiceRoll)) {
+      return false;
+    }
+    this.dice_result = Dice.roll(dice_num, aim);
+    this.state.done(Steps.DiceRoll);
+    return true;
+  }
+
+  public buildFacility(player_id: number, x: number, y: number,
+                       facility: Facility): boolean {
+    if (!this.state.isValid(player_id, Steps.BuildFacility)) {
+      return false;
+    }
+
     if (player_id >= this.players.length) {
       return false;
     }
@@ -201,6 +240,9 @@ export class Session {
       return null;
     }
     return this.players[player_id];
+  }
+  public getDiceResult(): DiceResult {
+    return this.dice_result;
   }
 }
 
