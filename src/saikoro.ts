@@ -51,11 +51,11 @@ function getPlayerColor(player: Player): string {
   return colors[player.id];
 }
 
-let _hack_player_id: number = 0;
+let _hack_player_id: PlayerId = 0;
 
 function callbackSession(response: string): void {
   let session: Session = Session.fromJSON(JSON.parse(response));
-  let player_id: number = session.getState().getCurrentPlayerId();
+  let player_id: PlayerId = session.getState().getCurrentPlayerId();
   _hack_player_id = player_id;
 
   // Update board.

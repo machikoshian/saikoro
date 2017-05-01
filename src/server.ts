@@ -1,5 +1,5 @@
 import { Dice } from "./dice";
-import { Session,Board,Facility } from "./board";
+import { Session,Board,Facility,PlayerId } from "./board";
 
 // Moduiles from Node.js
 import * as http from "http";
@@ -30,7 +30,7 @@ class Main {
     console.log(url_parts.query);
 
     if (pathname == "/dice") {
-      let player_id: number = query.player_id;
+      let player_id: PlayerId = query.player_id;
       let dice_num = query.dice_num;
       let aim = query.aim;
       this.session.diceRoll(player_id, dice_num, aim);
@@ -48,7 +48,7 @@ class Main {
       return;
     }
     else if (pathname == "/build") {
-      let player_id: number = query.player_id;
+      let player_id: PlayerId = query.player_id;
       let x: number = query.x;
       let y: number = query.y;
       if (x && y && player_id) {

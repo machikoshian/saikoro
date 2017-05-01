@@ -101,7 +101,7 @@ export enum Steps {
 export class State {
   private round: number;
   private turn: number;
-  private current_player_id: number;
+  private current_player_id: PlayerId;
   private step: Steps;
 
   constructor() {
@@ -130,7 +130,7 @@ export class State {
     return state;
   }
 
-  public isValid(player_id: number, step: Steps): boolean {
+  public isValid(player_id: PlayerId, step: Steps): boolean {
     return (this.current_player_id == player_id && this.step == step);
   }
 
@@ -223,7 +223,7 @@ export class Session {
   }
 
   public addPlayer(name: string, money: number, salary: number): boolean {
-    let player_id: number = this.players.length;
+    let player_id: PlayerId = this.players.length;
     if (player_id > 4) {
       return false;
     }
@@ -252,7 +252,7 @@ export class Session {
     return facility_on_board.getCost() * 2;
   }
 
-  public buildFacility(player_id: number, x: number, y: number,
+  public buildFacility(player_id: PlayerId, x: number, y: number,
                        facility: Facility): boolean {
     // State is valid?
     if (!this.state.isValid(player_id, Steps.BuildFacility)) {
@@ -301,7 +301,7 @@ export class Session {
   public getState(): State {
     return this.state;
   }
-  public getPlayer(player_id: number): Player {
+  public getPlayer(player_id: PlayerId): Player {
     if (player_id == null) {
       return null;
     }
