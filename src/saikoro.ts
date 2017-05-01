@@ -1,4 +1,4 @@
-import { Steps, Session, Player, Board, Field } from "./board";
+import { Steps, Session, Player, Board, Field, Facility, PlayerId } from "./board";
 import { Dice, DiceResult } from "./dice";
 
 class HttpRequest {
@@ -41,18 +41,18 @@ function callbackDice(response: string): void {
 
   document.getElementById("message").innerHTML = message;
 }
-
+/*
 function callbackBoard(response: string): void {
   let board: Board = Board.fromJSON(JSON.parse(response));
   for (let y: number = 0; y < board.row; ++y) {
     for (let x: number = 0; x < board.column; ++x) {
-      let field: Field = board.fields[x][y];
-      let name: string = field.getFacility() ? field.getFacility().name : "";
+      let facility: Facility = board.getFacility(x, y);
+      let name: string = facility ? facility.getName() : "";
       document.getElementById(`field_${x}_${y}`).innerHTML = name;
     }
   }
 }
-
+*/
 function getPlayerColor(player: Player): string {
   let colors = [ "#909CC2", "#D9BDC5", "#90C290", "#9D8189" ];
 
@@ -73,11 +73,13 @@ function callbackSession(response: string): void {
   let board: Board = session.getBoard();
   for (let y: number = 0; y < board.row; ++y) {
     for (let x: number = 0; x < board.column; ++x) {
-      let field: Field = board.fields[x][y];
-      let name: string = field.getFacility() ? field.getFacility().name : "";
+      let facility: Facility = board.getFacility(x, y);
+      let name: string = facility ? facility.getName() : "";
+      let owner_id: PlayerId = facility ? facility.getPlayerId() : null;
+
       document.getElementById(`field_${x}_${y}`).innerHTML = name;
       document.getElementById(`field_${x}_${y}`).style.backgroundColor =
-          getPlayerColor(session.getPlayer(field.getOwner()));
+          getPlayerColor(session.getPlayer(owner_id));
     }
   }
 
@@ -86,7 +88,7 @@ function callbackSession(response: string): void {
   for (let i: number = 0; i < players.length; ++i) {
     document.getElementById(`player_${i}`).style.visibility = "visible";
     document.getElementById(`player_${i}_name`).innerHTML = players[i].name;
-    document.getElementById(`player_${i}_money`).innerHTML = `${players[i].money}`;
+    document.getElementById(`player_${i}_money`).innerHTML = `${players[i].getMoney()}`;
     document.getElementById(`player_${i}_salary`).innerHTML = `${players[i].salary}`;
   }
   for (let i: number = players.length; i < 4; ++i) {

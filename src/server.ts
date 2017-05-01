@@ -11,7 +11,7 @@ class Main {
 
   constructor() {
     this.session = new Session();
-    this.session.addPlayer("こしあん", 1200, 200);
+    this.session.addPlayer("こしあん", 1200, 250);
     this.session.addPlayer("つぶあん", 1000, 220);
 
     let server = http.createServer();
@@ -52,7 +52,7 @@ class Main {
       let x: number = query.x;
       let y: number = query.y;
       if (x && y && player_id) {
-        let facility: Facility = new Facility("🐝");
+        let facility: Facility = new Facility("🐝", 200, player_id);
         this.session.buildFacility(player_id, x, y, facility);
       }
 

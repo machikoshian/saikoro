@@ -1,31 +1,49 @@
 import { Dice, DiceResult } from "./dice";
 
+export type PlayerId = number;
+
 export class Facility {
-  public name: string;
-  constructor(name: string) {
+  private name: string;
+  private cost: number;
+  private player_id: PlayerId;
+  constructor(name: string, cost: number, player_id: PlayerId) {
     this.name = name;
+    this.cost = cost;
+    this.player_id = player_id;
   }
 
   public toJSON(): Object {
     return {
       class_name: "Facility",
       name: this.name,
+      cost: this.cost,
+      player_id: this.player_id,
     }
   }
 
   static fromJSON(json) {
-    return new Facility(json.name);
+    return new Facility(json.name, json.cost, json.player_id);
+  }
+
+  public getName(): string {
+    return this.name;
+  }
+  public getCost(): number {
+    return this.cost;
+  }
+  public getPlayerId(): PlayerId {
+    return this.player_id;
   }
 }
 
 export class Player {
-  readonly id: number;
+  readonly id: PlayerId;
   readonly name: string;
-  readonly money: number;
+  private money: number;
   readonly salary: number;
   readonly team: number;
 
-  constructor(id: number, name: string, money: number, salary: number,
+  constructor(id: PlayerId, name: string, money: number, salary: number,
               team: number) {
     this.id = id;
     this.name = name;
@@ -47,6 +65,20 @@ export class Player {
 
   static fromJSON(json): Player {
     return new Player(json.id, json.name, json.money, json.salary, json.color);
+  }
+
+  public getMoney(): number {
+    return this.money;
+  }
+
+  public setMoney(money: number): void {
+    this.money = money;
+  }
+
+  public addMoney(money: number): number {
+    let return_value = this.money + money;
+    this.money = Math.max(return_value, 0);
+    return return_value;
   }
 }
 
@@ -209,17 +241,51 @@ export class Session {
     return true;
   }
 
+  private getOverwriteCost(facility_on_board: Facility,
+                           player_id: PlayerId): number {
+    if (!facility_on_board) {
+      return 0;
+    }
+    if (facility_on_board.getPlayerId() == player_id) {
+      return 0;
+    }
+    return facility_on_board.getCost() * 2;
+  }
+
   public buildFacility(player_id: number, x: number, y: number,
                        facility: Facility): boolean {
+    // State is valid?
     if (!this.state.isValid(player_id, Steps.BuildFacility)) {
       return false;
     }
 
+    // Player ID is valid?
     if (player_id >= this.players.length) {
       return false;
     }
+
+    // Facility's owner is valid?
+    if (facility.getPlayerId() != player_id) {
+      return false;
+    }
+
+    // Money is valid?
     let player: Player = this.players[player_id];
-    this.board.buildFacility(x, y, facility, player);
+    let facility_on_board: Facility = this.board.getFacility(x, y);
+    let overwrite_cost: number = this.getOverwriteCost(facility_on_board, player_id);
+    let total_cost: number = facility.getCost() + overwrite_cost;
+    let money: number = player.getMoney();
+    if (total_cost > money) {
+      return false;
+    }
+
+    // Update the data.
+    this.board.buildFacility(x, y, facility);
+    player.setMoney(money - total_cost);
+    if (overwrite_cost > 0) {
+      this.players[facility_on_board.getPlayerId()].addMoney(overwrite_cost);
+    }
+    // TODO: move facility_on_board to recycle box.
 
     this.state.done(Steps.BuildFacility);
 
@@ -250,12 +316,12 @@ export class Field {
   private facility: Facility;
   readonly x: number;  // dice pips - 1
   readonly y: number;
-  private owner_id: number;
+  // private owner_id: number;
 
   constructor(x: number, y: number) {
     this.x = x;
     this.y = y;
-    this.owner_id = -1;
+    // this.owner_id = -1;
   }
 
   public toJSON(): Object {
@@ -264,7 +330,7 @@ export class Field {
       facility: this.facility ? this.facility.toJSON() : null,
       x: this.x,
       y: this.y,
-      owner_id: this.owner_id,
+      // owner_id: this.owner_id,
     }
   }
 
@@ -273,20 +339,20 @@ export class Field {
     if (json.facility) {
       field.facility = Facility.fromJSON(json.facility);
     }
-    field.owner_id = json.owner_id;
+    // field.owner_id = json.owner_id;
     return field;
   }
 
   public getFacility(): Facility {
     return this.facility;
   }
-  public getOwner(): number {
-    return this.owner_id;
-  }
+  //public getOwner(): number {
+  //  return this.owner_id;
+  //}
 
-  public buildFacility(facility: Facility, owner: Player):void {
+  public buildFacility(facility: Facility): void {
     this.facility = facility;
-    this.owner_id = owner.id;
+    // this.owner_id = owner.id;
   }
 
   debugString(): string {
@@ -294,7 +360,7 @@ export class Field {
       return `(${this.x},${this.y})`;
     }
     else {
-      return this.facility.name;
+      return this.facility.getName();
     }
   }
 }
@@ -347,8 +413,12 @@ export class Board {
     return new Board(fields);
   }
 
-  buildFacility(x: number, y: number, facility: Facility, owner: Player):void {
-    this.fields[x][y].buildFacility(facility, owner);
+  buildFacility(x: number, y: number, facility: Facility): void {
+    this.fields[x][y].buildFacility(facility);
+  }
+
+  getFacility(x: number, y: number): Facility {
+    return this.fields[x][y].getFacility();
   }
 
   debugString(): string {
