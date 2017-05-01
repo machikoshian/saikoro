@@ -80,11 +80,15 @@ export class Player {
     this.money = Math.max(return_value, 0);
     return return_value;
   }
+
+  public paySalary(): void {
+    this.money += this.salary;
+  }
 }
 
 export enum Steps {
   // CardDraw,
-  Start,
+  StartTurn,
   CharacterCard,
   DiceRoll,
   // DiceRollAgain,
@@ -93,9 +97,10 @@ export enum Steps {
   // FacilityAction3,
   // FacilityAction4,
   // FacilityAction5,
+  PaySalary,
   BuildFacility,
   CardRemoval,
-  End,
+  EndTurn,
 }
 
 export class State {
@@ -135,13 +140,22 @@ export class State {
   }
 
   public done(step: Steps): void {
-    if (this.step == Steps.DiceRoll && step == Steps.DiceRoll) {
+    if (this.step == step && step == Steps.DiceRoll) {
+      this.step = Steps.PaySalary;
+      return;
+    }
+
+    if (this.step == step && step == Steps.PaySalary) {
       this.step = Steps.BuildFacility;
       return;
     }
 
-    if (this.step == Steps.BuildFacility && step == Steps.BuildFacility) {
-      this.step = Steps.DiceRoll;
+    if (this.step == step && step == Steps.BuildFacility) {
+      this.step = Steps.EndTurn;
+      return;
+    }
+
+    if (this.step == step && step == Steps.EndTurn) {
       // TODO: Need to know all player info.
       if (this.current_player_id == 1) {
         this.current_player_id = 0;
@@ -152,6 +166,7 @@ export class State {
         this.current_player_id = 1;
         this.turn += 1;
       }
+      this.step = Steps.DiceRoll;
       return;
     }
   }
@@ -222,6 +237,19 @@ export class Session {
     return session;
   }
 
+  public doNext(): boolean {
+    if (this.state.getStep() == Steps.PaySalary) {
+      return this.paySalary();
+    }
+    if (this.state.getStep() == Steps.EndTurn) {
+      return this.endTurn();
+    }
+    return false;
+  }
+
+  //public addHandler(step: Steps, handler: () => void): void {
+  //}
+
   public addPlayer(name: string, money: number, salary: number): boolean {
     let player_id: PlayerId = this.players.length;
     if (player_id > 4) {
@@ -288,7 +316,17 @@ export class Session {
     // TODO: move facility_on_board to recycle box.
 
     this.state.done(Steps.BuildFacility);
+    return true;
+  }
 
+  public paySalary(): boolean {
+    this.getCurrentPlayer().paySalary();
+    this.state.done(Steps.PaySalary);
+    return true;
+  }
+
+  public endTurn(): boolean {
+    this.state.done(Steps.EndTurn);
     return true;
   }
 
@@ -300,6 +338,9 @@ export class Session {
   }
   public getState(): State {
     return this.state;
+  }
+  public getCurrentPlayer(): Player {
+    return this.getPlayer(this.state.getCurrentPlayerId());
   }
   public getPlayer(player_id: PlayerId): Player {
     if (player_id == null) {

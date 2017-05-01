@@ -33,7 +33,10 @@ class Main {
       let player_id: PlayerId = query.player_id;
       let dice_num = query.dice_num;
       let aim = query.aim;
-      this.session.diceRoll(player_id, dice_num, aim);
+      if (this.session.diceRoll(player_id, dice_num, aim)) {
+        // TODO: integrate diceRoll and doNext.
+        while (this.session.doNext()) {}
+      }
       let output: string = JSON.stringify(this.session.toJSON());
       console.log(output);
       response.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -53,7 +56,10 @@ class Main {
       let y: number = query.y;
       if (x && y && player_id) {
         let facility: Facility = new Facility("🐝", 200, player_id);
-        this.session.buildFacility(player_id, x, y, facility);
+        if (this.session.buildFacility(player_id, x, y, facility)) {
+          // TODO: integrate buildFacility and doNext.
+          while (this.session.doNext()) {}
+        }
       }
 
       let output: string = JSON.stringify(this.session.toJSON());
