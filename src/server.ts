@@ -52,11 +52,13 @@ class Main {
             return;
         }
         else if (pathname == "/build") {
+            const names: string[] =
+                ["🌾", "🐮", "🎳", "🐝", "🍴", "💆", "👕", "🐔", "🌻", "🍣", "🗻", "🍍"];
             let player_id: PlayerId = query.player_id;
             let x: number = query.x;
             let y: number = query.y;
             if (x && y && player_id) {
-                let facility: Facility = new Facility("🐝", 200, player_id);
+                let facility: Facility = new Facility(names[x], 200, player_id);
                 /*
                         this.session.addProcessor(
                             Steps.BuildFacility,

@@ -1,6 +1,7 @@
 import { Dice, DiceResult } from "./dice";
 
 export type PlayerId = number;
+export type FacilityId = number;
 
 export class Facility {
     private name: string;
@@ -87,47 +88,39 @@ export class Player {
 }
 
 export class Field {
-    private facility: Facility;
+    private facility_id: FacilityId;
     readonly x: number;  // dice pips - 1
     readonly y: number;
 
-    constructor(x: number, y: number) {
+    constructor(x: number, y: number, facility_id: FacilityId = -1) {
         this.x = x;
         this.y = y;
+        this.facility_id = facility_id;
     }
 
     public toJSON(): Object {
         return {
             class_name: "Field",
-            facility: this.facility ? this.facility.toJSON() : null,
+            facility_id: this.facility_id,
             x: this.x,
             y: this.y,
         }
     }
 
     static fromJSON(json): Field {
-        let field: Field = new Field(json.x, json.y);
-        if (json.facility) {
-            field.facility = Facility.fromJSON(json.facility);
-        }
-        return field;
+        return new Field(json.x, json.y, json.facility_id);
     }
 
-    public getFacility(): Facility {
-        return this.facility;
+    public getFacilityId(): FacilityId {
+        return this.facility_id;
     }
 
-    public buildFacility(facility: Facility): void {
-        this.facility = facility;
+    public setFacilityId(facility_id: FacilityId): void {
+        this.facility_id = facility_id;
     }
 
     debugString(): string {
-        if (this.facility == undefined) {
-            return `(${this.x},${this.y})`;
-        }
-        else {
-            return this.facility.getName();
-        }
+        return `(${this.x},${this.y},${this.facility_id})`;
     }
 }
 
@@ -179,12 +172,12 @@ export class Board {
         return new Board(fields);
     }
 
-    buildFacility(x: number, y: number, facility: Facility): void {
-        this.fields[x][y].buildFacility(facility);
+    setFacilityId(x: number, y: number, facility_id: FacilityId): void {
+        this.fields[x][y].setFacilityId(facility_id);
     }
 
-    getFacility(x: number, y: number): Facility {
-        return this.fields[x][y].getFacility();
+    getFacilityId(x: number, y: number): FacilityId {
+        return this.fields[x][y].getFacilityId();
     }
 
     debugString(): string {

@@ -63,7 +63,7 @@ function callbackSession(response: string): void {
     let board: Board = session.getBoard();
     for (let y: number = 0; y < board.row; ++y) {
         for (let x: number = 0; x < board.column; ++x) {
-            let facility: Facility = board.getFacility(x, y);
+            let facility: Facility = session.getFacility(x, y);
             let name: string = facility ? facility.getName() : "";
             let owner_id: PlayerId = facility ? facility.getPlayerId() : null;
 
