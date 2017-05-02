@@ -55,7 +55,7 @@ let _hack_player_id: PlayerId = 0;
 
 function callbackSession(response: string): void {
   let session: Session = Session.fromJSON(JSON.parse(response));
-  let player_id: PlayerId = session.getState().getCurrentPlayerId();
+  let player_id: PlayerId = session.getCurrentPlayerId();
   _hack_player_id = player_id;
 
   // Update board.
@@ -77,7 +77,23 @@ function callbackSession(response: string): void {
   for (let i: number = 0; i < players.length; ++i) {
     document.getElementById(`player_${i}`).style.visibility = "visible";
     document.getElementById(`player_${i}_name`).innerHTML = players[i].name;
-    document.getElementById(`player_${i}_money`).innerHTML = `${players[i].getMoney()}`;
+
+    let money_element = document.getElementById(`player_${i}_money`);
+    let money: number = players[i].getMoney();
+    let timer = setInterval( () => {
+        let current_money = Number(money_element.innerText);
+        if (current_money == money) {
+          clearInterval(timer);
+          return;
+        }
+        else if (current_money > money) {
+          current_money -= Math.min(10, current_money - money);
+        }
+        else if (current_money < money) {
+          current_money += Math.min(10, money - current_money);
+        }
+        money_element.innerHTML = String(current_money);
+      }, 5);
     document.getElementById(`player_${i}_salary`).innerHTML = `${players[i].salary}`;
   }
   for (let i: number = players.length; i < 4; ++i) {

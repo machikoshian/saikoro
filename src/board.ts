@@ -104,39 +104,23 @@ export enum Steps {
 }
 
 export class State {
-  private round: number;
-  private turn: number;
-  private current_player_id: PlayerId;
   private step: Steps;
 
   constructor() {
-    this.round = 0;
-    this.turn = 0;
-    this.current_player_id = 0;
     this.step = Steps.DiceRoll;
   }
 
   public toJSON(): Object {
     return {
       class_name: "State",
-      round: this.round,
-      turn: this.turn,
-      current_player_id: this.current_player_id,
       step: this.step,
     }
   }
 
   static fromJSON(json): State {
     let state: State = new State();
-    state.round = json.round;
-    state.turn = json.turn;
-    state.current_player_id = json.current_player_id;
     state.step = json.step;
     return state;
-  }
-
-  public isValid(player_id: PlayerId, step: Steps): boolean {
-    return (this.current_player_id == player_id && this.step == step);
   }
 
   public done(step: Steps): void {
@@ -156,61 +140,32 @@ export class State {
     }
 
     if (this.step == step && step == Steps.EndTurn) {
-      // TODO: Need to know all player info.
-      if (this.current_player_id == 1) {
-        this.current_player_id = 0;
-        this.round += 1;
-        this.turn = 0;
-      }
-      else {
-        this.current_player_id = 1;
-        this.turn += 1;
-      }
       this.step = Steps.DiceRoll;
       return;
     }
   }
 
-  public getCurrentPlayerId(): number {
-    return this.current_player_id;
-  }
-
   public getStep(): Steps {
     return this.step;
   }
-
-/*
-  public getAvailableActions(): Steps[] {
-    if (this.step == Steps.Start) {
-      return [Steps.DiceRoll];
-    }
-    else if (this.step == Steps.DiceRoll) {
-      return [Steps.FacilityAction];
-    }
-    else if (this.step == Steps.FacilityAction) {
-      return [Steps.BuildFacility];
-    }
-    else if (this.step == Steps.BuildFacility) {
-      return [Steps.CardRemoval];
-    }
-    else if (this.step == Steps.CardRemoval) {
-      return [Steps.End];
-    }
-    // return a set of steps.
-  }
-*/
 }
 
 export class Session {
   private board: Board;
   private players: Player[];
   private state: State;
+  private round: number;
+  private turn: number;
+  private current_player_id: PlayerId;
   private dice_result: DiceResult;  // TODO: change it to Events.
 
   constructor() {
     this.board = new Board();
     this.players = [];
     this.state = new State();
+    this.round = 0;
+    this.turn = 0;
+    this.current_player_id = 0;
     this.dice_result = null;
   }
 
@@ -220,6 +175,9 @@ export class Session {
       board: this.board.toJSON(),
       players: this.players.map(player => { return player.toJSON(); }),
       state: this.state.toJSON(),
+      round: this.round,
+      turn: this.turn,
+      current_player_id: this.current_player_id,
       dice_result: this.dice_result ? this.dice_result.toJSON() : null,
     }
   }
@@ -233,6 +191,9 @@ export class Session {
     session.board = board;
     session.players = players;
     session.state = state;
+    session.round = json.round;
+    session.turn = json.turn;
+    session.current_player_id = json.current_player_id;
     session.dice_result = json.dice_result ? DiceResult.fromJSON(json.dice_result) : null;
     return session;
   }
@@ -260,8 +221,12 @@ export class Session {
     return true;
   }
 
+  public isValid(player_id: PlayerId, step: Steps): boolean {
+    return (this.current_player_id == player_id && this.state.getStep() == step);
+  }
+
   public diceRoll(player_id: number, dice_num: number, aim: number): boolean {
-    if (!this.state.isValid(player_id, Steps.DiceRoll)) {
+    if (!this.isValid(player_id, Steps.DiceRoll)) {
       return false;
     }
     this.dice_result = Dice.roll(dice_num, aim);
@@ -283,7 +248,7 @@ export class Session {
   public buildFacility(player_id: PlayerId, x: number, y: number,
                        facility: Facility): boolean {
     // State is valid?
-    if (!this.state.isValid(player_id, Steps.BuildFacility)) {
+    if (!this.isValid(player_id, Steps.BuildFacility)) {
       return false;
     }
 
@@ -326,6 +291,16 @@ export class Session {
   }
 
   public endTurn(): boolean {
+    if (this.current_player_id == this.players.length - 1) {
+      this.current_player_id = 0;
+      this.round += 1;
+      this.turn = 0;
+    }
+    else {
+      this.current_player_id += 1;
+      this.turn += 1;
+    }
+
     this.state.done(Steps.EndTurn);
     return true;
   }
@@ -339,8 +314,11 @@ export class Session {
   public getState(): State {
     return this.state;
   }
+  public getCurrentPlayerId(): PlayerId {
+    return this.current_player_id;
+  }
   public getCurrentPlayer(): Player {
-    return this.getPlayer(this.state.getCurrentPlayerId());
+    return this.getPlayer(this.current_player_id);
   }
   public getPlayer(player_id: PlayerId): Player {
     if (player_id == null) {

@@ -56,6 +56,12 @@ class Main {
       let y: number = query.y;
       if (x && y && player_id) {
         let facility: Facility = new Facility("🐝", 200, player_id);
+/*
+        this.session.addProcessor(
+            Steps.BuildFacility,
+            () => this.session.buildFacility(player_id, x, y, facility));
+        this.session.runProcessors();
+*/
         if (this.session.buildFacility(player_id, x, y, facility)) {
           // TODO: integrate buildFacility and doNext.
           while (this.session.doNext()) {}
