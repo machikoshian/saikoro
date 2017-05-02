@@ -1,4 +1,5 @@
-import { Steps, Session, Player, Board, Field, Facility, PlayerId } from "./board";
+import { Steps, Session } from "./session";
+import { Player, Board, Field, Facility, PlayerId } from "./board";
 import { Dice, DiceResult } from "./dice";
 
 class HttpRequest {

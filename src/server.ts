@@ -1,5 +1,6 @@
 import { Dice } from "./dice";
-import { Session, Board, Facility, PlayerId } from "./board";
+import { Session } from "./session";
+import { Board, Facility, PlayerId } from "./board";
 
 // Moduiles from Node.js
 import * as http from "http";

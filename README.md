@@ -26,3 +26,8 @@
 
 * Require.js: http://requirejs.org/
 * Typings: https://github.com/typings/typings
+
+# Coding style
+
+* Basically this project follows https://github.com/Microsoft/TypeScript/wiki/Coding-guidelines
+* Line width: 100 chars.
