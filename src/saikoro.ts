@@ -71,8 +71,32 @@ function getFacilityColor(facility: Facility): string {
     }
 }
 
+class WebClient {
+    public player_id: PlayerId;
+    public clicked_facility_id: FacilityId = -1;
+    public clicked_card_element: HTMLElement = null;
+    public player_cards_list: FacilityId[][] = [];
+
+    public resetCards(): void {
+        if (this.clicked_card_element) {
+            this.clicked_card_element.style.borderColor = "#EEEEEE";
+            this.clicked_card_element = null;
+        }
+        this.clicked_facility_id = -1;
+    }
+
+    public onClickCard(player: number, card: number): void {
+        console.log(`clicked: card_${player}_${card}`);
+        this.resetCards();
+        this.clicked_card_element = document.getElementById(`card_${player}_${card}`);
+        this.clicked_card_element.style.borderColor = "#FFE082";
+        this.clicked_facility_id = client.player_cards_list[player][card];
+    }
+}
+
+let client: WebClient = new WebClient();
+
 let _hack_player_id: PlayerId = 0;
-let _hack_card_id_list: FacilityId[][];
 
 function callbackSession(response: string): void {
     let session: Session = Session.fromJSON(JSON.parse(response));
@@ -139,10 +163,10 @@ function callbackSession(response: string): void {
     document.getElementById("message").style.backgroundColor = getPlayerColor(player);
 
     // Update cards.
-    _hack_card_id_list = [];
+    client.player_cards_list = [];
     for (let i: number = 0; i < players.length; ++i) {
         let facility_ids: FacilityId[] = session.getPlayerCards(i).getHand();
-        _hack_card_id_list.push(facility_ids);
+        client.player_cards_list.push(facility_ids);
         for (let j: number = 0; j < Math.min(10, facility_ids.length); ++j) {
             let facility: Facility = session.getFacility(facility_ids[j]);
             document.getElementById(`card_${i}_${j}`).style.visibility = "visible";
@@ -154,15 +178,16 @@ function callbackSession(response: string): void {
             document.getElementById(`card_${i}_${j}`).style.visibility = "hidden";
         }
     }
+    client.resetCards();  // Nice to check if built or not?
 }
 
 function onClickField(x, y): void {
     console.log(`clicked: field_${x}_${y}`);
-    if (_hack_card_player_id < 0 || _hack_card_index < 0) {
+    if (client.clicked_facility_id < 0) {
         return;
     }
-    let facility_id: FacilityId = _hack_card_id_list[_hack_card_player_id][_hack_card_index];
-    HttpRequest.Send(`/build?player_id=${_hack_player_id}&x=${x}&y=${y}&facility_id=${facility_id}`,
+    HttpRequest.Send(
+        `/build?player_id=${_hack_player_id}&x=${x}&y=${y}&facility_id=${client.clicked_facility_id}`,
         callbackSession);
 }
 
@@ -170,19 +195,6 @@ function onClickDice(dice_num: number, aim: number): void {
     console.log(`clicked: dice_num:${dice_num}, aim:${aim}`);
     HttpRequest.Send(`/dice?player_id=${_hack_player_id}&dice_num=${dice_num}&aim=${aim}`,
         callbackSession);
-}
-
-let _hack_card_player_id: number = -1;
-let _hack_card_index: number = -1;
-
-function onClickCard(player: number, card: number): void {
-    console.log(`clicked: card_${player}_${card}`);
-    if (_hack_card_player_id != -1 && _hack_card_index != -1) {
-        document.getElementById(`card_${_hack_card_player_id}_${_hack_card_index}`).style.borderColor = "#EEEEEE";
-    }
-    document.getElementById(`card_${player}_${card}`).style.borderColor = "#FFE082";
-    _hack_card_player_id = player;
-    _hack_card_index = card;
 }
 
 function initBoard(column: number = 12, row: number = 5): void {
@@ -206,12 +218,9 @@ function initBoard(column: number = 12, row: number = 5): void {
     for (let p: number = 0; p < player_size; ++p) {
         for (let c: number = 0; c < card_size; ++c) {
             document.getElementById(`card_${p}_${c}`).addEventListener(
-                "click", () => { onClickCard(p, c); });
+                "click", () => { client.onClickCard(p, c); });
         }
     }
-
-
-
 }
 
 initBoard();
