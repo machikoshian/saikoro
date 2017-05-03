@@ -1,5 +1,5 @@
 import { Steps, Session } from "./session";
-import { Player, Board, Field, Facility, PlayerId } from "./board";
+import { Player, Board, Field, Facility, PlayerId, FacilityId } from "./board";
 import { Dice, DiceResult } from "./dice";
 
 class HttpRequest {
@@ -65,7 +65,7 @@ function callbackSession(response: string): void {
         for (let x: number = 0; x < board.column; ++x) {
             let facility: Facility = session.getFacility(x, y);
             let name: string = facility ? facility.getName() : "";
-            let owner_id: PlayerId = facility ? facility.getPlayerId() : null;
+            let owner_id: PlayerId = session.getOwnerIdOnBoard(x, y);
 
             document.getElementById(`field_${x}_${y}`).innerHTML = name;
             document.getElementById(`field_${x}_${y}`).style.backgroundColor =
