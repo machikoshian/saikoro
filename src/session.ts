@@ -91,10 +91,6 @@ export class PlayerCards {
     }
 
     public moveHandToField(facility_id: FacilityId): boolean {
-        console.log("moveHandToField: ");
-        console.log(facility_id);
-        console.log(this.hand);
-        console.log(this.field);
         return this.moveFacilityId(facility_id, this.hand, this.field);
     }
 
@@ -286,8 +282,6 @@ export class Session {
     private board: Board;
     private players: Player[];
     private card_manager: CardManager;
-    //private built_facilities: { [key: number]: Facility; };
-    //private next_facility_id: FacilityId;
     private state: State;
     private round: number;
     private turn: number;
@@ -298,8 +292,6 @@ export class Session {
         this.board = new Board();
         this.players = [];
         this.card_manager = new CardManager();
-        //this.built_facilities = {};
-        //this.next_facility_id = 0;
         this.state = new State();
         this.round = 0;
         this.turn = 0;
@@ -308,17 +300,11 @@ export class Session {
     }
 
     public toJSON(): Object {
-        //let facility_json = {};
-        //for (let id in this.built_facilities) {
-        //    facility_json[id] = this.built_facilities[id].toJSON();
-        //}
         return {
             class_name: "Session",
             board: this.board.toJSON(),
             players: this.players.map(player => { return player.toJSON(); }),
             card_manager: this.card_manager.toJSON(),
-            //built_facilities: facility_json,
-            //next_facility_id: this.next_facility_id,
             state: this.state.toJSON(),
             round: this.round,
             turn: this.turn,
@@ -330,17 +316,11 @@ export class Session {
     static fromJSON(json): Session {
         let board: Board = Board.fromJSON(json.board);
         let players: Player[] = json.players.map(player => { return Player.fromJSON(player); });
-        //let built_facilities: { [key: number]: Facility; } = {};
-        //for (let id in json.built_facilities) {
-        //    built_facilities[id] = Facility.fromJSON(json.built_facilities[id]);
-        //}
         let state: State = State.fromJSON(json.state);
         let session: Session = new Session();
         session.board = board;
         session.players = players;
         session.card_manager = CardManager.fromJSON(json.card_manager);
-        //session.built_facilities = built_facilities;
-        //session.next_facility_id = json.next_facility_id;
         session.state = state;
         session.round = json.round;
         session.turn = json.turn;
@@ -362,15 +342,6 @@ export class Session {
     //public addHandler(step: Steps, handler: () => void): void {
     //}
 
-    // public addPlayer(name: string, money: number, salary: number, facilities: Facility[]): boolean {
-    //     let player_id: PlayerId = this.players.length;
-    //     if (player_id > 4) {
-    //         return false;
-    //     }
-    //     // team == player_id (no 2vs2 so far).
-    //     this.players.push(new Player(player_id, name, money, salary, player_id, facilities));
-    //     return true;
-    // }
     public addPlayer(name: string, money: number, salary: number): boolean {
         let player_id: PlayerId = this.players.length;
         if (player_id > 4) {
@@ -462,7 +433,6 @@ export class Session {
                 return false;
             }
         }
-        // delete this.built_facilities[deleted_facility_id];
 
         // Build the new facility.
         if (!this.card_manager.moveHandToField(player_facility_id)) {
@@ -471,10 +441,6 @@ export class Session {
             return false;
         }
 
-        //let facility_id: FacilityId = this.next_facility_id;
-        //this.built_facilities[facility_id] = facility;
-        //this.next_facility_id++;
-        
         this.board.setFacilityId(x, y, player_facility_id);
         player.setMoney(money - total_cost);
         if (deleted_facility_id >= 0 && overwrite_cost > 0) {

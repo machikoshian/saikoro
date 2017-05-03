@@ -6,12 +6,9 @@ export type FacilityId = number;
 export class Facility {
     private name: string;
     private cost: number;
-    //private player_id: PlayerId;
-    //constructor(name: string, cost: number, player_id: PlayerId) {
     constructor(name: string, cost: number) {
         this.name = name;
         this.cost = cost;
-        //this.player_id = player_id;
     }
 
     public toJSON(): Object {
@@ -19,13 +16,11 @@ export class Facility {
             class_name: "Facility",
             name: this.name,
             cost: this.cost,
-            //player_id: this.player_id,
         }
     }
 
     static fromJSON(json) {
         return new Facility(json.name, json.cost);
-        // return new Facility(json.name, json.cost, json.player_id);
     }
 
     public getName(): string {
@@ -34,9 +29,6 @@ export class Facility {
     public getCost(): number {
         return this.cost;
     }
-    //public getPlayerId(): PlayerId {
-    //    return this.player_id;
-    //}
 }
 
 export class Player {
@@ -45,17 +37,14 @@ export class Player {
     private money: number;
     readonly salary: number;
     readonly team: number;
-    //private facilities: Facility[];
 
     constructor(id: PlayerId, name: string, money: number, salary: number,
         team: number) {
-//        team: number, facilities: Facility[]) {
         this.id = id;
         this.name = name;
         this.money = money;
         this.salary = salary;
         this.team = team;
-        //this.facilities = facilities;
     }
 
     public toJSON(): Object {
@@ -66,14 +55,10 @@ export class Player {
             money: this.money,
             salary: this.salary,
             team: this.team,
-            //facilities: this.facilities.map(facility => { return facility.toJSON(); }),
         }
     }
 
     static fromJSON(json): Player {
-        // let facilities: Facility[] =
-        //     json.facilities.map(facility => { return Facility.fromJSON(facility); });
-        // return new Player(json.id, json.name, json.money, json.salary, json.color, facilities);
         return new Player(json.id, json.name, json.money, json.salary, json.color);
     }
 
@@ -94,10 +79,6 @@ export class Player {
     public paySalary(): void {
         this.money += this.salary;
     }
-
-    // public getFacility(facility_id: FacilityId): Facility {
-    //     return this.facilities[facility_id];
-    // }
 }
 
 export class Field {

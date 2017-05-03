@@ -24,24 +24,8 @@ class Main {
             this.session.addFacility(player_id1, new Facility(names[i], 200));
         }
 
-        // let facilities0: Facility[] = [];
-        // let facilities1: Facility[] = [];
-        // const names: string[] =
-        //     ["🌾", "🐮", "🎳", "🐝", "🍴", "💆", "👕", "🐔", "🌻", "🍣", "🗻", "🍍"];
-        // const player_id0: PlayerId = 0;  // TODO: Player ID should be predefined before.
-        // const player_id1: PlayerId = 1;
-        // for (let i: number = 0; i < names.length; ++i) {
-        //     facilities0.push(new Facility(names[i], 200, player_id0));
-        //     facilities1.push(new Facility(names[i], 200, player_id1));
-        // }
-
-        // this.session = new Session();
-        // this.session.addPlayer("こしあん", 1200, 250, facilities0);
-        // this.session.addPlayer("つぶあん", 1000, 220, facilities1);
-
         let server = http.createServer();
-        server.on("request",
-            (request, response) => this.requestHandler(request, response));
+        server.on("request", (request, response) => this.requestHandler(request, response));
         server.listen("3156");
     }
 
@@ -81,15 +65,7 @@ class Main {
             let player_id: PlayerId = query.player_id;
             let x: number = Number(query.x);
             let y: number = Number(query.y);
-//            let facility_id: Facility
             if (x && y && player_id) {
-                // let facility: Facility = new Facility(names[x], 200, player_id);
-                /*
-                        this.session.addProcessor(
-                            Steps.BuildFacility,
-                            () => this.session.buildFacility(player_id, x, y, facility));
-                        this.session.runProcessors();
-                */
                 let facility_id: FacilityId = player_id * 1000 + x;
                 if (this.session.buildFacility(player_id, x, y, facility_id)) {
                     // TODO: integrate buildFacility and doNext.
