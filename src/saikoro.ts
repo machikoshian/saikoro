@@ -52,6 +52,13 @@ function getPlayerColor(player: Player): string {
     return colors[player.id];
 }
 
+function getFacilityColor(facility: Facility): string {
+    if (!facility) {
+        return "#EFF0D1";
+    }
+    return "#90CAF9";
+}
+
 let _hack_player_id: PlayerId = 0;
 
 function callbackSession(response: string): void {
@@ -70,6 +77,8 @@ function callbackSession(response: string): void {
             document.getElementById(`field_${x}_${y}`).innerHTML = name;
             document.getElementById(`field_${x}_${y}`).style.backgroundColor =
                 getPlayerColor(session.getPlayer(owner_id));
+            document.getElementById(`field_${x}_${y}`).style.borderColor =
+                getFacilityColor(facility);
         }
     }
 

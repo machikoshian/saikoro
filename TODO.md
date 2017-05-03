@@ -1,5 +1,6 @@
 * Card owner の変更への対応
 * build/ に FacilityId の追加
+* Facility にタイプの追加
 
 * process handler chain / state hook の作成
 * Dice roll への狙い目の UI 対応
