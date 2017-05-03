@@ -1,6 +1,6 @@
 import { Dice } from "./dice";
 import { Session } from "./session";
-import { Board, Facility, PlayerId, FacilityId } from "./board";
+import { Board, Facility, PlayerId, FacilityId, FacilityType } from "./board";
 
 // Moduiles from Node.js
 import * as http from "http";
@@ -20,8 +20,8 @@ class Main {
         const player_id0: PlayerId = 0;  // TODO: Player ID should be predefined before.
         const player_id1: PlayerId = 1;
         for (let i: number = 0; i < names.length; ++i) {
-            this.session.addFacility(player_id0, new Facility(names[i], 200));
-            this.session.addFacility(player_id1, new Facility(names[i], 200));
+            this.session.addFacility(player_id0, new Facility(names[i], 200, Math.floor(Math.random() * 5)));
+            this.session.addFacility(player_id1, new Facility(names[i], 200, Math.floor(Math.random() * 5)));
         }
 
         let server = http.createServer();
@@ -62,10 +62,10 @@ class Main {
         else if (pathname == "/build") {
             const names: string[] =
                 ["🌾", "🐮", "🎳", "🐝", "🍴", "💆", "👕", "🐔", "🌻", "🍣", "🗻", "🍍"];
-            let player_id: PlayerId = query.player_id;
+            let player_id: PlayerId = Number(query.player_id);
             let x: number = Number(query.x);
             let y: number = Number(query.y);
-            if (x && y && player_id) {
+            if (x != null && y != null && player_id != null) {
                 let facility_id: FacilityId = player_id * 1000 + x;
                 if (this.session.buildFacility(player_id, x, y, facility_id)) {
                     // TODO: integrate buildFacility and doNext.

@@ -1,5 +1,5 @@
 import { Steps, Session, PlayerCards } from "./session";
-import { Player, Board, Field, Facility, PlayerId, FacilityId } from "./board";
+import { Player, Board, Field, Facility, PlayerId, FacilityId, FacilityType } from "./board";
 import { Dice, DiceResult } from "./dice";
 
 class HttpRequest {
@@ -56,7 +56,19 @@ function getFacilityColor(facility: Facility): string {
     if (!facility) {
         return "#EFF0D1";
     }
-    return "#90CAF9";
+    let type: FacilityType = facility.type;
+    switch(type) {
+        case FacilityType.Gray:
+            return "#90CAF9";
+        case FacilityType.Blue:
+            return "#90CAF9";
+        case FacilityType.Green:
+            return "#A5D6A7";
+        case FacilityType.Red:
+            return "#EF9A9A";
+        case FacilityType.Purple:
+            return "#B39DDB";
+    }
 }
 
 let _hack_player_id: PlayerId = 0;
@@ -133,6 +145,7 @@ function callbackSession(response: string): void {
             document.getElementById(`card_${i}_${j}`).style.visibility = "visible";
             document.getElementById(`card_${i}_${j}_name`).innerText = facility.getName();
             document.getElementById(`card_${i}_${j}_cost`).innerText = String(facility.getCost());
+            document.getElementById(`card_${i}_${j}`).style.backgroundColor = getFacilityColor(facility);
         }
         for (let j: number = Math.min(10, facility_ids.length); j < 10; ++j) {
             document.getElementById(`card_${i}_${j}`).style.visibility = "hidden";

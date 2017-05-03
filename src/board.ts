@@ -3,12 +3,22 @@ import { Dice, DiceResult } from "./dice";
 export type PlayerId = number;
 export type FacilityId = number;
 
+export enum FacilityType {
+    Gray,
+    Blue,
+    Green,
+    Red,
+    Purple,
+}
+
 export class Facility {
-    private name: string;
-    private cost: number;
-    constructor(name: string, cost: number) {
+    readonly name: string;
+    readonly cost: number;
+    readonly type: FacilityType;
+    constructor(name: string, cost: number, type: FacilityType) {
         this.name = name;
         this.cost = cost;
+        this.type = type;
     }
 
     public toJSON(): Object {
@@ -16,11 +26,12 @@ export class Facility {
             class_name: "Facility",
             name: this.name,
             cost: this.cost,
+            type: this.type,
         }
     }
 
     static fromJSON(json) {
-        return new Facility(json.name, json.cost);
+        return new Facility(json.name, json.cost, json.type);
     }
 
     public getName(): string {
