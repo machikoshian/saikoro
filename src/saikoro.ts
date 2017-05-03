@@ -1,4 +1,4 @@
-import { Steps, Session } from "./session";
+import { Steps, Session, PlayerCards } from "./session";
 import { Player, Board, Field, Facility, PlayerId, FacilityId } from "./board";
 import { Dice, DiceResult } from "./dice";
 
@@ -63,7 +63,7 @@ function callbackSession(response: string): void {
     let board: Board = session.getBoard();
     for (let y: number = 0; y < board.row; ++y) {
         for (let x: number = 0; x < board.column; ++x) {
-            let facility: Facility = session.getFacility(x, y);
+            let facility: Facility = session.getFacilityOnBoard(x, y);
             let name: string = facility ? facility.getName() : "";
             let owner_id: PlayerId = session.getOwnerIdOnBoard(x, y);
 
@@ -99,6 +99,7 @@ function callbackSession(response: string): void {
     }
     for (let i: number = players.length; i < 4; ++i) {
         document.getElementById(`player_${i}`).style.visibility = "hidden";
+        document.getElementById(`cards_${i}`).style.visibility = "hidden";
     }
 
     // Update message.
@@ -114,6 +115,20 @@ function callbackSession(response: string): void {
     }
     document.getElementById("message").innerHTML = message;
     document.getElementById("message").style.backgroundColor = getPlayerColor(player);
+
+    // Update cards.
+    for (let i: number = 0; i < players.length; ++i) {
+        let facility_ids: FacilityId[] = session.getPlayerCards(i).getHand();
+        for (let j: number = 0; j < Math.min(10, facility_ids.length); ++j) {
+            let facility: Facility = session.getFacility(facility_ids[j]);
+            document.getElementById(`card_${i}_${j}`).style.visibility = "visible";
+            document.getElementById(`card_${i}_${j}_name`).innerText = facility.getName();
+            document.getElementById(`card_${i}_${j}_cost`).innerText = String(facility.getCost());
+        }
+        for (let j: number = Math.min(10, facility_ids.length); j < 10; ++j) {
+            document.getElementById(`card_${i}_${j}`).style.visibility = "hidden";
+        }
+    }
 }
 
 function onClickField(x, y): void {

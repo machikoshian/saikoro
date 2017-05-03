@@ -16,7 +16,7 @@ class Main {
         this.session.addPlayer("つぶあん", 1000, 220);  // 1
 
         const names: string[] =
-            ["🌾", "🐮", "🎳", "🐝", "🍴", "💆", "👕", "🐔", "🌻", "🍣", "🗻", "🍍"];
+            ["🌾", "🐮", "🎳", "🐝", "🍴", "💆"]; // , "👕", "🐔", "🌻", "🍣", "🗻", "🍍"];
         const player_id0: PlayerId = 0;  // TODO: Player ID should be predefined before.
         const player_id1: PlayerId = 1;
         for (let i: number = 0; i < names.length; ++i) {

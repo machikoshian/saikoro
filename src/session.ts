@@ -81,6 +81,10 @@ export class PlayerCards {
         return true;
     }
 
+    public getHand(): FacilityId[] {
+        return this.hand;
+    }
+
     public moveTalonToHand(facility_id: FacilityId): boolean {
         return this.moveFacilityId(facility_id, this.talon, this.hand);
     }
@@ -137,7 +141,7 @@ export class CardManager {
         }
         return new CardManager(
             facilities,
-            json.player_cards_list.map(cards => { PlayerCards.fromJSON(cards); }),
+            json.player_cards_list.map(cards => { return PlayerCards.fromJSON(cards); }),
         );
     }
 
@@ -175,7 +179,15 @@ export class CardManager {
         return Math.floor(facility_id / this.max_card_size);
     }
 
-    public getPlayerCards(facility_id: FacilityId): PlayerCards {
+    public getPlayerCards(player_id: PlayerId): PlayerCards {
+        if (player_id < 0 || this.player_cards_list.length <= player_id) {
+            console.log("WARNING: player_id is invalid.");
+            return null;
+        }
+        return this.player_cards_list[player_id];
+    }
+
+    public getPlayerCardsFromFacilityId(facility_id: FacilityId): PlayerCards {
         return this.player_cards_list[this.getOwner(facility_id)];
     }
 
@@ -202,7 +214,7 @@ export class CardManager {
             console.log("WARNING: facility_id < 0.");
             return false;
         }
-        return this.getPlayerCards(facility_id).moveFieldToDiscard(facility_id);
+        return this.getPlayerCardsFromFacilityId(facility_id).moveFieldToDiscard(facility_id);
     }
 
     public moveHandToField(facility_id: FacilityId): boolean {
@@ -210,7 +222,7 @@ export class CardManager {
             console.log("WARNING: facility_id < 0.");
             return false;
         }
-        return this.getPlayerCards(facility_id).moveHandToField(facility_id);
+        return this.getPlayerCardsFromFacilityId(facility_id).moveHandToField(facility_id);
     }
 }
 
@@ -481,14 +493,17 @@ export class Session {
     public getState(): State {
         return this.state;
     }
-    public getFacilityId(x: number, y: number): FacilityId {
+    public getFacility(facility_id: FacilityId): Facility {
+        return this.card_manager.getFacility(facility_id);
+    }
+    public getFacilityIdOnBoard(x: number, y: number): FacilityId {
         return this.board.getFacilityId(x, y);
     }
-    public getFacility(x: number, y: number): Facility {
-        return this.card_manager.getFacility(this.getFacilityId(x, y));
+    public getFacilityOnBoard(x: number, y: number): Facility {
+        return this.card_manager.getFacility(this.getFacilityIdOnBoard(x, y));
     }
     public getOwnerIdOnBoard(x: number, y: number): PlayerId {
-        return this.getOwnerId(this.getFacilityId(x, y));
+        return this.getOwnerId(this.getFacilityIdOnBoard(x, y));
     }
     public getCurrentPlayerId(): PlayerId {
         return this.current_player_id;
@@ -501,6 +516,9 @@ export class Session {
             return null;
         }
         return this.players[player_id];
+    }
+    public getPlayerCards(player_id: PlayerId): PlayerCards {
+        return this.card_manager.getPlayerCards(player_id);
     }
     public getOwnerId(facility_id: FacilityId): PlayerId {
         return this.card_manager.getOwner(facility_id);
