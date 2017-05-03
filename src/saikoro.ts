@@ -72,6 +72,7 @@ function getFacilityColor(facility: Facility): string {
 }
 
 let _hack_player_id: PlayerId = 0;
+let _hack_card_id_list: FacilityId[][];
 
 function callbackSession(response: string): void {
     let session: Session = Session.fromJSON(JSON.parse(response));
@@ -138,8 +139,10 @@ function callbackSession(response: string): void {
     document.getElementById("message").style.backgroundColor = getPlayerColor(player);
 
     // Update cards.
+    _hack_card_id_list = [];
     for (let i: number = 0; i < players.length; ++i) {
         let facility_ids: FacilityId[] = session.getPlayerCards(i).getHand();
+        _hack_card_id_list.push(facility_ids);
         for (let j: number = 0; j < Math.min(10, facility_ids.length); ++j) {
             let facility: Facility = session.getFacility(facility_ids[j]);
             document.getElementById(`card_${i}_${j}`).style.visibility = "visible";
@@ -155,7 +158,11 @@ function callbackSession(response: string): void {
 
 function onClickField(x, y): void {
     console.log(`clicked: field_${x}_${y}`);
-    HttpRequest.Send(`/build?player_id=${_hack_player_id}&x=${x}&y=${y}`,
+    if (_hack_card_player_id < 0 || _hack_card_index < 0) {
+        return;
+    }
+    let facility_id: FacilityId = _hack_card_id_list[_hack_card_player_id][_hack_card_index];
+    HttpRequest.Send(`/build?player_id=${_hack_player_id}&x=${x}&y=${y}&facility_id=${facility_id}`,
         callbackSession);
 }
 
@@ -163,6 +170,19 @@ function onClickDice(dice_num: number, aim: number): void {
     console.log(`clicked: dice_num:${dice_num}, aim:${aim}`);
     HttpRequest.Send(`/dice?player_id=${_hack_player_id}&dice_num=${dice_num}&aim=${aim}`,
         callbackSession);
+}
+
+let _hack_card_player_id: number = -1;
+let _hack_card_index: number = -1;
+
+function onClickCard(player: number, card: number): void {
+    console.log(`clicked: card_${player}_${card}`);
+    if (_hack_card_player_id != -1 && _hack_card_index != -1) {
+        document.getElementById(`card_${_hack_card_player_id}_${_hack_card_index}`).style.borderColor = "#EEEEEE";
+    }
+    document.getElementById(`card_${player}_${card}`).style.borderColor = "#FFE082";
+    _hack_card_player_id = player;
+    _hack_card_index = card;
 }
 
 function initBoard(column: number = 12, row: number = 5): void {
@@ -173,10 +193,25 @@ function initBoard(column: number = 12, row: number = 5): void {
                 "click", () => { onClickField(x, y); });
         }
     }
+
+    // Dices
     document.getElementById("dice_1").addEventListener(
         "click", () => { onClickDice(1, 0); });
     document.getElementById("dice_2").addEventListener(
         "click", () => { onClickDice(2, 0); });
+
+    // Cards
+    let player_size: number = 4;
+    let card_size: number = 10;
+    for (let p: number = 0; p < player_size; ++p) {
+        for (let c: number = 0; c < card_size; ++c) {
+            document.getElementById(`card_${p}_${c}`).addEventListener(
+                "click", () => { onClickCard(p, c); });
+        }
+    }
+
+
+
 }
 
 initBoard();

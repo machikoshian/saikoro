@@ -65,8 +65,8 @@ class Main {
             let player_id: PlayerId = Number(query.player_id);
             let x: number = Number(query.x);
             let y: number = Number(query.y);
-            if (x != null && y != null && player_id != null) {
-                let facility_id: FacilityId = player_id * 1000 + x;
+            let facility_id: FacilityId = Number(query.facility_id);
+            if (x != null && y != null && player_id != null && facility_id != null) {
                 if (this.session.buildFacility(player_id, x, y, facility_id)) {
                     // TODO: integrate buildFacility and doNext.
                     while (this.session.doNext()) { }
