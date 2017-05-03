@@ -43,14 +43,16 @@ export class Player {
     private money: number;
     readonly salary: number;
     readonly team: number;
+    private facilities: Facility[];
 
     constructor(id: PlayerId, name: string, money: number, salary: number,
-        team: number) {
+        team: number, facilities: Facility[]) {
         this.id = id;
         this.name = name;
         this.money = money;
         this.salary = salary;
         this.team = team;
+        this.facilities = facilities;
     }
 
     public toJSON(): Object {
@@ -61,11 +63,14 @@ export class Player {
             money: this.money,
             salary: this.salary,
             team: this.team,
+            facilities: this.facilities.map(facility => { return facility.toJSON(); }),
         }
     }
 
     static fromJSON(json): Player {
-        return new Player(json.id, json.name, json.money, json.salary, json.color);
+        let facilities: Facility[] =
+            json.facilities.map(facility => { return Facility.fromJSON(facility); });
+        return new Player(json.id, json.name, json.money, json.salary, json.color, facilities);
     }
 
     public getMoney(): number {
@@ -84,6 +89,10 @@ export class Player {
 
     public paySalary(): void {
         this.money += this.salary;
+    }
+
+    public getFacility(facility_id: FacilityId): Facility {
+        return this.facilities[facility_id];
     }
 }
 

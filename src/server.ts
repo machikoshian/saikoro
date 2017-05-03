@@ -1,6 +1,6 @@
 import { Dice } from "./dice";
 import { Session } from "./session";
-import { Board, Facility, PlayerId } from "./board";
+import { Board, Facility, PlayerId, FacilityId } from "./board";
 
 // Moduiles from Node.js
 import * as http from "http";
@@ -11,9 +11,20 @@ class Main {
     private session: Session;
 
     constructor() {
+        let facilities0: Facility[] = [];
+        let facilities1: Facility[] = [];
+        const names: string[] =
+            ["🌾", "🐮", "🎳", "🐝", "🍴", "💆", "👕", "🐔", "🌻", "🍣", "🗻", "🍍"];
+        const player_id0: PlayerId = 0;  // TODO: Player ID should be predefined before.
+        const player_id1: PlayerId = 1;
+        for (let i: number = 0; i < names.length; ++i) {
+            facilities0.push(new Facility(names[i], 200, player_id0));
+            facilities1.push(new Facility(names[i], 200, player_id1));
+        }
+
         this.session = new Session();
-        this.session.addPlayer("こしあん", 1200, 250);
-        this.session.addPlayer("つぶあん", 1000, 220);
+        this.session.addPlayer("こしあん", 1200, 250, facilities0);
+        this.session.addPlayer("つぶあん", 1000, 220, facilities1);
 
         let server = http.createServer();
         server.on("request",
@@ -58,14 +69,15 @@ class Main {
             let x: number = query.x;
             let y: number = query.y;
             if (x && y && player_id) {
-                let facility: Facility = new Facility(names[x], 200, player_id);
+                // let facility: Facility = new Facility(names[x], 200, player_id);
                 /*
                         this.session.addProcessor(
                             Steps.BuildFacility,
                             () => this.session.buildFacility(player_id, x, y, facility));
                         this.session.runProcessors();
                 */
-                if (this.session.buildFacility(player_id, x, y, facility)) {
+                let facility_id: FacilityId = x;
+                if (this.session.buildFacility(player_id, x, y, facility_id)) {
                     // TODO: integrate buildFacility and doNext.
                     while (this.session.doNext()) { }
                 }
