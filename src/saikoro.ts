@@ -85,6 +85,22 @@ class WebClient {
         this.clicked_facility_id = -1;
     }
 
+    public onClickField(x, y): void {
+        console.log(`clicked: field_${x}_${y}`);
+        if (this.clicked_facility_id < 0) {
+            return;
+        }
+        HttpRequest.Send(
+            `/build?player_id=${this.player_id}&x=${x}&y=${y}&facility_id=${this.clicked_facility_id}`,
+            callbackSession);
+    }
+
+    public onClickDice(dice_num: number, aim: number): void {
+        console.log(`clicked: dice_num:${dice_num}, aim:${aim}`);
+        HttpRequest.Send(`/dice?player_id=${this.player_id}&dice_num=${dice_num}&aim=${aim}`,
+            callbackSession);
+    }
+
     public onClickCard(player: number, card: number): void {
         console.log(`clicked: card_${player}_${card}`);
         this.resetCards();
@@ -96,12 +112,10 @@ class WebClient {
 
 let client: WebClient = new WebClient();
 
-let _hack_player_id: PlayerId = 0;
-
 function callbackSession(response: string): void {
     let session: Session = Session.fromJSON(JSON.parse(response));
     let player_id: PlayerId = session.getCurrentPlayerId();
-    _hack_player_id = player_id;
+    client.player_id = player_id;
 
     // Update board.
     let board: Board = session.getBoard();
@@ -181,36 +195,20 @@ function callbackSession(response: string): void {
     client.resetCards();  // Nice to check if built or not?
 }
 
-function onClickField(x, y): void {
-    console.log(`clicked: field_${x}_${y}`);
-    if (client.clicked_facility_id < 0) {
-        return;
-    }
-    HttpRequest.Send(
-        `/build?player_id=${_hack_player_id}&x=${x}&y=${y}&facility_id=${client.clicked_facility_id}`,
-        callbackSession);
-}
-
-function onClickDice(dice_num: number, aim: number): void {
-    console.log(`clicked: dice_num:${dice_num}, aim:${aim}`);
-    HttpRequest.Send(`/dice?player_id=${_hack_player_id}&dice_num=${dice_num}&aim=${aim}`,
-        callbackSession);
-}
-
 function initBoard(column: number = 12, row: number = 5): void {
     // Add click listeners.
     for (let y: number = 0; y < row; ++y) {
         for (let x: number = 0; x < column; ++x) {
             document.getElementById(`field_${x}_${y}`).addEventListener(
-                "click", () => { onClickField(x, y); });
+                "click", () => { client.onClickField(x, y); });
         }
     }
 
     // Dices
     document.getElementById("dice_1").addEventListener(
-        "click", () => { onClickDice(1, 0); });
+        "click", () => { client.onClickDice(1, 0); });
     document.getElementById("dice_2").addEventListener(
-        "click", () => { onClickDice(2, 0); });
+        "click", () => { client.onClickDice(2, 0); });
 
     // Cards
     let player_size: number = 4;
