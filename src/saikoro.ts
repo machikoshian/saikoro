@@ -1,4 +1,4 @@
-import { Steps, Session, PlayerCards } from "./session";
+import { Phase, Session, PlayerCards } from "./session";
 import { Player, Board, Field, Facility, PlayerId, FacilityId, FacilityType } from "./board";
 import { Dice, DiceResult } from "./dice";
 
@@ -190,10 +190,10 @@ class WebClient {
         let player: Player = players[player_id];
         let name: string = player.name;
         let message: string = "";
-        if (session.getState().getStep() == Steps.DiceRoll) {
+        if (session.getState().getPhase() == Phase.DiceRoll) {
             message = `🎲 ${name} のサイコロです 🎲`;
         }
-        else if (session.getState().getStep() == Steps.BuildFacility) {
+        else if (session.getState().getPhase() == Phase.BuildFacility) {
             message = this.diceResultMessage(session.getDiceResult());
             message += `  🎲 ${name} の建設です 🎲`;
         }

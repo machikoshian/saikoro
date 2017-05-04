@@ -226,7 +226,7 @@ export class CardManager {
     }
 }
 
-export enum Steps {
+export enum Phase {
     // CardDraw,
     StartTurn,
     CharacterCard,
@@ -244,49 +244,50 @@ export enum Steps {
 }
 
 export class State {
-    private step: Steps;
+    private phase: Phase;
+    private 
 
     constructor() {
-        this.step = Steps.DiceRoll;
+        this.phase = Phase.DiceRoll;
     }
 
     public toJSON(): Object {
         return {
             class_name: "State",
-            step: this.step,
+            phase: this.phase,
         }
     }
 
     static fromJSON(json): State {
         let state: State = new State();
-        state.step = json.step;
+        state.phase = json.phase;
         return state;
     }
 
-    public done(step: Steps): void {
-        if (this.step == step && step == Steps.DiceRoll) {
-            this.step = Steps.PaySalary;
+    public done(phase: Phase): void {
+        if (this.phase == phase && phase == Phase.DiceRoll) {
+            this.phase = Phase.PaySalary;
             return;
         }
 
-        if (this.step == step && step == Steps.PaySalary) {
-            this.step = Steps.BuildFacility;
+        if (this.phase == phase && phase == Phase.PaySalary) {
+            this.phase = Phase.BuildFacility;
             return;
         }
 
-        if (this.step == step && step == Steps.BuildFacility) {
-            this.step = Steps.EndTurn;
+        if (this.phase == phase && phase == Phase.BuildFacility) {
+            this.phase = Phase.EndTurn;
             return;
         }
 
-        if (this.step == step && step == Steps.EndTurn) {
-            this.step = Steps.DiceRoll;
+        if (this.phase == phase && phase == Phase.EndTurn) {
+            this.phase = Phase.DiceRoll;
             return;
         }
     }
 
-    public getStep(): Steps {
-        return this.step;
+    public getPhase(): Phase {
+        return this.phase;
     }
 }
 
@@ -342,16 +343,16 @@ export class Session {
     }
 
     public doNext(): boolean {
-        if (this.state.getStep() == Steps.PaySalary) {
+        if (this.state.getPhase() == Phase.PaySalary) {
             return this.paySalary();
         }
-        if (this.state.getStep() == Steps.EndTurn) {
+        if (this.state.getPhase() == Phase.EndTurn) {
             return this.endTurn();
         }
         return false;
     }
 
-    //public addHandler(step: Steps, handler: () => void): void {
+    //public addHandler(phase: Phase, handler: () => void): void {
     //}
 
     public addPlayer(name: string, money: number, salary: number): boolean {
@@ -368,16 +369,16 @@ export class Session {
         return this.card_manager.addFacility(player_id, facility);
     }
 
-    public isValid(player_id: PlayerId, step: Steps): boolean {
-        return (this.current_player_id == player_id && this.state.getStep() == step);
+    public isValid(player_id: PlayerId, phase: Phase): boolean {
+        return (this.current_player_id == player_id && this.state.getPhase() == phase);
     }
 
     public diceRoll(player_id: number, dice_num: number, aim: number): boolean {
-        if (!this.isValid(player_id, Steps.DiceRoll)) {
+        if (!this.isValid(player_id, Phase.DiceRoll)) {
             return false;
         }
         this.dice_result = Dice.roll(dice_num, aim);
-        this.state.done(Steps.DiceRoll);
+        this.state.done(Phase.DiceRoll);
         return true;
     }
 
@@ -397,7 +398,7 @@ export class Session {
     public buildFacility(player_id: PlayerId, x: number, y: number,
                          player_facility_id: FacilityId): boolean {
         // State is valid?
-        if (!this.isValid(player_id, Steps.BuildFacility)) {
+        if (!this.isValid(player_id, Phase.BuildFacility)) {
             return false;
         }
 
@@ -459,13 +460,13 @@ export class Session {
             this.getPlayer(this.getOwnerId(deleted_facility_id)).addMoney(overwrite_cost);
         }
 
-        this.state.done(Steps.BuildFacility);
+        this.state.done(Phase.BuildFacility);
         return true;
     }
 
     public paySalary(): boolean {
         this.getCurrentPlayer().paySalary();
-        this.state.done(Steps.PaySalary);
+        this.state.done(Phase.PaySalary);
         return true;
     }
 
@@ -480,7 +481,7 @@ export class Session {
             this.turn += 1;
         }
 
-        this.state.done(Steps.EndTurn);
+        this.state.done(Phase.EndTurn);
         return true;
     }
 
