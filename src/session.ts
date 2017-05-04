@@ -245,49 +245,57 @@ export enum Phase {
 
 export class State {
     private phase: Phase;
-    private 
+    private step: number;  // Server starts from 1. Client starts from 0.
 
-    constructor() {
-        this.phase = Phase.DiceRoll;
+    constructor(phase: Phase = Phase.DiceRoll, step: number = 1) {
+        this.phase = phase;
+        this.step = step;
     }
 
     public toJSON(): Object {
         return {
             class_name: "State",
             phase: this.phase,
+            step: this.step,
         }
     }
 
     static fromJSON(json): State {
-        let state: State = new State();
-        state.phase = json.phase;
-        return state;
+        return new State(json.phase, json.step);
     }
 
     public done(phase: Phase): void {
         if (this.phase == phase && phase == Phase.DiceRoll) {
             this.phase = Phase.PaySalary;
+            this.step++;
             return;
         }
 
         if (this.phase == phase && phase == Phase.PaySalary) {
             this.phase = Phase.BuildFacility;
+            this.step++;
             return;
         }
 
         if (this.phase == phase && phase == Phase.BuildFacility) {
             this.phase = Phase.EndTurn;
+            this.step++;
             return;
         }
 
         if (this.phase == phase && phase == Phase.EndTurn) {
             this.phase = Phase.DiceRoll;
+            this.step++;
             return;
         }
     }
 
     public getPhase(): Phase {
         return this.phase;
+    }
+
+    public getStep(): number {
+        return this.step;
     }
 }
 

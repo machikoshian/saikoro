@@ -53,6 +53,13 @@ class Main {
             return;
         }
         else if (pathname == "/board") {
+            let step: number = Number(query.step);
+            if (step >= this.session.getState().getStep()) {
+                console.log("OK");
+                response.end("OK");
+                return;
+            }
+
             let output: string = JSON.stringify(this.session.toJSON());
             console.log(output);
             response.setHeader("Content-Type", "application/json; charset=utf-8");

@@ -30,10 +30,12 @@ class HttpRequest {
 
 class WebClient {
     public player_id: PlayerId = 0;
+    public step: number = 0;
     public clicked_facility_id: FacilityId = -1;
     public clicked_card_element: HTMLElement = null;
     public player_cards_list: FacilityId[][] = [];
     public callback: (response: string) => void;
+    public check_update_timer: number = 0;
 
     constructor() {
         this.callback = this.callbackSession.bind(this);
@@ -107,6 +109,18 @@ class WebClient {
         this.clicked_facility_id = this.player_cards_list[player][card];
     }
 
+    public startCheckUpdate(): void {
+        this.check_update_timer = setInterval(this.checkUpdate.bind(this), 2000);
+    }
+    public stopCheckUpdate(): void {
+        clearInterval(this.check_update_timer);
+    }
+
+    public checkUpdate(): void {
+        console.log(`checkUpdate(${this.step})`);
+        HttpRequest.Send(`/board?step=${this.step}`, this.callback);
+    }
+
     public initBoard(column: number = 12, row: number = 5): void {
         // Add click listeners.
         for (let y: number = 0; y < row; ++y) {
@@ -131,16 +145,32 @@ class WebClient {
                     "click", () => { this.onClickCard(p, c); });
             }
         }
-
-        HttpRequest.Send("/board", this.callback);
+        this.checkUpdate();
     }
 
     // Do not directly call this method.
     // Use this.callback as a wrapper of this method.
     private callbackSession(response: string): void {
+        // If the response is "OK", the server does not have any update.
+        if (response === "OK") {
+            console.log("Already updated.");
+            return;
+        }
+        if (!response) {
+            console.log("Stop polling.");
+            this.stopCheckUpdate();
+        }
+
         let session: Session = Session.fromJSON(JSON.parse(response));
         let player_id: PlayerId = session.getCurrentPlayerId();
         this.player_id = player_id;
+        let step: number = session.getState().getStep();
+        console.log(step);
+        if (step == this.step) {
+            console.log("Already updated.");
+            return;
+        }
+        this.step = step;
 
         // Update board.
         let board: Board = session.getBoard();
@@ -223,3 +253,4 @@ class WebClient {
 
 let client: WebClient = new WebClient();
 client.initBoard();
+client.startCheckUpdate();
