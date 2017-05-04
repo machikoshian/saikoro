@@ -28,49 +28,6 @@ class HttpRequest {
     }
 }
 
-function diceResultMessage(dice: DiceResult): string {
-    let faces: string[] = ["", "⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
-
-    let d1: number = dice.dice1;
-    let d2: number = dice.dice2;
-    return `${faces[d1]} ${faces[d2]} : ${d1 + d2} です。`;
-}
-
-function callbackDice(response: string): void {
-    let dice: DiceResult = DiceResult.fromJSON(JSON.parse(response));
-    let message: string = diceResultMessage(dice);
-
-    document.getElementById("message").innerHTML = message;
-}
-
-function getPlayerColor(player: Player): string {
-    let colors = ["#909CC2", "#D9BDC5", "#90C290", "#9D8189"];
-
-    if (!player || player.id > colors.length) {
-        return "#EFF0D1";
-    }
-    return colors[player.id];
-}
-
-function getFacilityColor(facility: Facility): string {
-    if (!facility) {
-        return "#EFF0D1";
-    }
-    let type: FacilityType = facility.type;
-    switch(type) {
-        case FacilityType.Gray:
-            return "#90CAF9";
-        case FacilityType.Blue:
-            return "#90CAF9";
-        case FacilityType.Green:
-            return "#A5D6A7";
-        case FacilityType.Red:
-            return "#EF9A9A";
-        case FacilityType.Purple:
-            return "#B39DDB";
-    }
-}
-
 class WebClient {
     public player_id: PlayerId = 0;
     public clicked_facility_id: FacilityId = -1;
@@ -80,6 +37,42 @@ class WebClient {
 
     constructor() {
         this.callback = this.callbackSession.bind(this);
+    }
+
+    public diceResultMessage(dice: DiceResult): string {
+        let faces: string[] = ["", "⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
+
+        let d1: number = dice.dice1;
+        let d2: number = dice.dice2;
+        return `${faces[d1]} ${faces[d2]} : ${d1 + d2} です。`;
+    }
+
+    public getPlayerColor(player: Player): string {
+        let colors = ["#909CC2", "#D9BDC5", "#90C290", "#9D8189"];
+
+        if (!player || player.id > colors.length) {
+            return "#EFF0D1";
+        }
+        return colors[player.id];
+    }
+
+    public getFacilityColor(facility: Facility): string {
+        if (!facility) {
+            return "#EFF0D1";
+        }
+        let type: FacilityType = facility.type;
+        switch(type) {
+            case FacilityType.Gray:
+                return "#90CAF9";
+            case FacilityType.Blue:
+                return "#90CAF9";
+            case FacilityType.Green:
+                return "#A5D6A7";
+            case FacilityType.Red:
+                return "#EF9A9A";
+            case FacilityType.Purple:
+                return "#B39DDB";
+        }
     }
 
     public resetCards(): void {
@@ -157,11 +150,10 @@ class WebClient {
                 let name: string = facility ? facility.getName() : "";
                 let owner_id: PlayerId = session.getOwnerIdOnBoard(x, y);
 
-                document.getElementById(`field_${x}_${y}`).innerHTML = name;
-                document.getElementById(`field_${x}_${y}`).style.backgroundColor =
-                    getPlayerColor(session.getPlayer(owner_id));
-                document.getElementById(`field_${x}_${y}`).style.borderColor =
-                    getFacilityColor(facility);
+                let field: HTMLElement = document.getElementById(`field_${x}_${y}`);
+                field.innerHTML = name;
+                field.style.backgroundColor = this.getPlayerColor(session.getPlayer(owner_id));
+                field.style.borderColor = this.getFacilityColor(facility);
             }
         }
 
@@ -202,11 +194,11 @@ class WebClient {
             message = `🎲 ${name} のサイコロです 🎲`;
         }
         else if (session.getState().getStep() == Steps.BuildFacility) {
-            message = diceResultMessage(session.getDiceResult());
+            message = this.diceResultMessage(session.getDiceResult());
             message += `  🎲 ${name} の建設です 🎲`;
         }
         document.getElementById("message").innerHTML = message;
-        document.getElementById("message").style.backgroundColor = getPlayerColor(player);
+        document.getElementById("message").style.backgroundColor = this.getPlayerColor(player);
 
         // Update cards.
         this.player_cards_list = [];
@@ -218,7 +210,8 @@ class WebClient {
                 document.getElementById(`card_${i}_${j}`).style.visibility = "visible";
                 document.getElementById(`card_${i}_${j}_name`).innerText = facility.getName();
                 document.getElementById(`card_${i}_${j}_cost`).innerText = String(facility.getCost());
-                document.getElementById(`card_${i}_${j}`).style.backgroundColor = getFacilityColor(facility);
+                document.getElementById(`card_${i}_${j}`).style.backgroundColor =
+                    this.getFacilityColor(facility);
             }
             for (let j: number = Math.min(10, facility_ids.length); j < 10; ++j) {
                 document.getElementById(`card_${i}_${j}`).style.visibility = "hidden";
