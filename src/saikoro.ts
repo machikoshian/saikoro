@@ -72,10 +72,15 @@ function getFacilityColor(facility: Facility): string {
 }
 
 class WebClient {
-    public player_id: PlayerId;
+    public player_id: PlayerId = 0;
     public clicked_facility_id: FacilityId = -1;
     public clicked_card_element: HTMLElement = null;
     public player_cards_list: FacilityId[][] = [];
+    public callback: (response: string) => void;
+
+    constructor() {
+        this.callback = this.callbackSession.bind(this);
+    }
 
     public resetCards(): void {
         if (this.clicked_card_element) {
@@ -92,13 +97,13 @@ class WebClient {
         }
         HttpRequest.Send(
             `/build?player_id=${this.player_id}&x=${x}&y=${y}&facility_id=${this.clicked_facility_id}`,
-            callbackSession);
+            this.callback);
     }
 
     public onClickDice(dice_num: number, aim: number): void {
         console.log(`clicked: dice_num:${dice_num}, aim:${aim}`);
         HttpRequest.Send(`/dice?player_id=${this.player_id}&dice_num=${dice_num}&aim=${aim}`,
-            callbackSession);
+            this.callback);
     }
 
     public onClickCard(player: number, card: number): void {
@@ -106,120 +111,122 @@ class WebClient {
         this.resetCards();
         this.clicked_card_element = document.getElementById(`card_${player}_${card}`);
         this.clicked_card_element.style.borderColor = "#FFE082";
-        this.clicked_facility_id = client.player_cards_list[player][card];
+        this.clicked_facility_id = this.player_cards_list[player][card];
+    }
+
+    public initBoard(column: number = 12, row: number = 5): void {
+        // Add click listeners.
+        for (let y: number = 0; y < row; ++y) {
+            for (let x: number = 0; x < column; ++x) {
+                document.getElementById(`field_${x}_${y}`).addEventListener(
+                    "click", () => { this.onClickField(x, y); });
+            }
+        }
+
+        // Dices
+        document.getElementById("dice_1").addEventListener(
+            "click", () => { this.onClickDice(1, 0); });
+        document.getElementById("dice_2").addEventListener(
+            "click", () => { this.onClickDice(2, 0); });
+
+        // Cards
+        let player_size: number = 4;
+        let card_size: number = 10;
+        for (let p: number = 0; p < player_size; ++p) {
+            for (let c: number = 0; c < card_size; ++c) {
+                document.getElementById(`card_${p}_${c}`).addEventListener(
+                    "click", () => { this.onClickCard(p, c); });
+            }
+        }
+
+        HttpRequest.Send("/board", this.callback);
+    }
+
+    // Do not directly call this method.
+    // Use this.callback as a wrapper of this method.
+    private callbackSession(response: string): void {
+        let session: Session = Session.fromJSON(JSON.parse(response));
+        let player_id: PlayerId = session.getCurrentPlayerId();
+        this.player_id = player_id;
+
+        // Update board.
+        let board: Board = session.getBoard();
+        for (let y: number = 0; y < board.row; ++y) {
+            for (let x: number = 0; x < board.column; ++x) {
+                let facility: Facility = session.getFacilityOnBoard(x, y);
+                let name: string = facility ? facility.getName() : "";
+                let owner_id: PlayerId = session.getOwnerIdOnBoard(x, y);
+
+                document.getElementById(`field_${x}_${y}`).innerHTML = name;
+                document.getElementById(`field_${x}_${y}`).style.backgroundColor =
+                    getPlayerColor(session.getPlayer(owner_id));
+                document.getElementById(`field_${x}_${y}`).style.borderColor =
+                    getFacilityColor(facility);
+            }
+        }
+
+        // Update players.
+        let players: Player[] = session.getPlayers();
+        for (let i: number = 0; i < players.length; ++i) {
+            document.getElementById(`player_${i}`).style.visibility = "visible";
+            document.getElementById(`player_${i}_name`).innerHTML = players[i].name;
+
+            let money_element = document.getElementById(`player_${i}_money`);
+            let money: number = players[i].getMoney();
+            let timer = setInterval(() => {
+                let current_money = Number(money_element.innerText);
+                if (current_money == money) {
+                    clearInterval(timer);
+                    return;
+                }
+                else if (current_money > money) {
+                    current_money -= Math.min(10, current_money - money);
+                }
+                else if (current_money < money) {
+                    current_money += Math.min(10, money - current_money);
+                }
+                money_element.innerHTML = String(current_money);
+            }, 5);
+            document.getElementById(`player_${i}_salary`).innerHTML = `${players[i].salary}`;
+        }
+        for (let i: number = players.length; i < 4; ++i) {
+            document.getElementById(`player_${i}`).style.visibility = "hidden";
+            document.getElementById(`cards_${i}`).style.visibility = "hidden";
+        }
+
+        // Update message.
+        let player: Player = players[player_id];
+        let name: string = player.name;
+        let message: string = "";
+        if (session.getState().getStep() == Steps.DiceRoll) {
+            message = `🎲 ${name} のサイコロです 🎲`;
+        }
+        else if (session.getState().getStep() == Steps.BuildFacility) {
+            message = diceResultMessage(session.getDiceResult());
+            message += `  🎲 ${name} の建設です 🎲`;
+        }
+        document.getElementById("message").innerHTML = message;
+        document.getElementById("message").style.backgroundColor = getPlayerColor(player);
+
+        // Update cards.
+        this.player_cards_list = [];
+        for (let i: number = 0; i < players.length; ++i) {
+            let facility_ids: FacilityId[] = session.getPlayerCards(i).getHand();
+            this.player_cards_list.push(facility_ids);
+            for (let j: number = 0; j < Math.min(10, facility_ids.length); ++j) {
+                let facility: Facility = session.getFacility(facility_ids[j]);
+                document.getElementById(`card_${i}_${j}`).style.visibility = "visible";
+                document.getElementById(`card_${i}_${j}_name`).innerText = facility.getName();
+                document.getElementById(`card_${i}_${j}_cost`).innerText = String(facility.getCost());
+                document.getElementById(`card_${i}_${j}`).style.backgroundColor = getFacilityColor(facility);
+            }
+            for (let j: number = Math.min(10, facility_ids.length); j < 10; ++j) {
+                document.getElementById(`card_${i}_${j}`).style.visibility = "hidden";
+            }
+        }
+        this.resetCards();  // Nice to check if built or not?
     }
 }
 
 let client: WebClient = new WebClient();
-
-function callbackSession(response: string): void {
-    let session: Session = Session.fromJSON(JSON.parse(response));
-    let player_id: PlayerId = session.getCurrentPlayerId();
-    client.player_id = player_id;
-
-    // Update board.
-    let board: Board = session.getBoard();
-    for (let y: number = 0; y < board.row; ++y) {
-        for (let x: number = 0; x < board.column; ++x) {
-            let facility: Facility = session.getFacilityOnBoard(x, y);
-            let name: string = facility ? facility.getName() : "";
-            let owner_id: PlayerId = session.getOwnerIdOnBoard(x, y);
-
-            document.getElementById(`field_${x}_${y}`).innerHTML = name;
-            document.getElementById(`field_${x}_${y}`).style.backgroundColor =
-                getPlayerColor(session.getPlayer(owner_id));
-            document.getElementById(`field_${x}_${y}`).style.borderColor =
-                getFacilityColor(facility);
-        }
-    }
-
-    // Update players.
-    let players: Player[] = session.getPlayers();
-    for (let i: number = 0; i < players.length; ++i) {
-        document.getElementById(`player_${i}`).style.visibility = "visible";
-        document.getElementById(`player_${i}_name`).innerHTML = players[i].name;
-
-        let money_element = document.getElementById(`player_${i}_money`);
-        let money: number = players[i].getMoney();
-        let timer = setInterval(() => {
-            let current_money = Number(money_element.innerText);
-            if (current_money == money) {
-                clearInterval(timer);
-                return;
-            }
-            else if (current_money > money) {
-                current_money -= Math.min(10, current_money - money);
-            }
-            else if (current_money < money) {
-                current_money += Math.min(10, money - current_money);
-            }
-            money_element.innerHTML = String(current_money);
-        }, 5);
-        document.getElementById(`player_${i}_salary`).innerHTML = `${players[i].salary}`;
-    }
-    for (let i: number = players.length; i < 4; ++i) {
-        document.getElementById(`player_${i}`).style.visibility = "hidden";
-        document.getElementById(`cards_${i}`).style.visibility = "hidden";
-    }
-
-    // Update message.
-    let player: Player = players[player_id];
-    let name: string = player.name;
-    let message: string = "";
-    if (session.getState().getStep() == Steps.DiceRoll) {
-        message = `🎲 ${name} のサイコロです 🎲`;
-    }
-    else if (session.getState().getStep() == Steps.BuildFacility) {
-        message = diceResultMessage(session.getDiceResult());
-        message += `  🎲 ${name} の建設です 🎲`;
-    }
-    document.getElementById("message").innerHTML = message;
-    document.getElementById("message").style.backgroundColor = getPlayerColor(player);
-
-    // Update cards.
-    client.player_cards_list = [];
-    for (let i: number = 0; i < players.length; ++i) {
-        let facility_ids: FacilityId[] = session.getPlayerCards(i).getHand();
-        client.player_cards_list.push(facility_ids);
-        for (let j: number = 0; j < Math.min(10, facility_ids.length); ++j) {
-            let facility: Facility = session.getFacility(facility_ids[j]);
-            document.getElementById(`card_${i}_${j}`).style.visibility = "visible";
-            document.getElementById(`card_${i}_${j}_name`).innerText = facility.getName();
-            document.getElementById(`card_${i}_${j}_cost`).innerText = String(facility.getCost());
-            document.getElementById(`card_${i}_${j}`).style.backgroundColor = getFacilityColor(facility);
-        }
-        for (let j: number = Math.min(10, facility_ids.length); j < 10; ++j) {
-            document.getElementById(`card_${i}_${j}`).style.visibility = "hidden";
-        }
-    }
-    client.resetCards();  // Nice to check if built or not?
-}
-
-function initBoard(column: number = 12, row: number = 5): void {
-    // Add click listeners.
-    for (let y: number = 0; y < row; ++y) {
-        for (let x: number = 0; x < column; ++x) {
-            document.getElementById(`field_${x}_${y}`).addEventListener(
-                "click", () => { client.onClickField(x, y); });
-        }
-    }
-
-    // Dices
-    document.getElementById("dice_1").addEventListener(
-        "click", () => { client.onClickDice(1, 0); });
-    document.getElementById("dice_2").addEventListener(
-        "click", () => { client.onClickDice(2, 0); });
-
-    // Cards
-    let player_size: number = 4;
-    let card_size: number = 10;
-    for (let p: number = 0; p < player_size; ++p) {
-        for (let c: number = 0; c < card_size; ++c) {
-            document.getElementById(`card_${p}_${c}`).addEventListener(
-                "click", () => { client.onClickCard(p, c); });
-        }
-    }
-}
-
-initBoard();
-HttpRequest.Send("/board", callbackSession);
+client.initBoard();
