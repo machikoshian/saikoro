@@ -263,6 +263,7 @@ class WebClient {
                 document.getElementById(`card_${i}_${j}_name`).innerText =
                     `${area_name[facility.getArea()]} ${facility.getName()}`;
                 document.getElementById(`card_${i}_${j}_cost`).innerText = String(facility.getCost());
+                document.getElementById(`card_${i}_${j}_description`).innerText = facility.getDescription();
                 document.getElementById(`card_${i}_${j}`).style.backgroundColor =
                     this.getFacilityColor(facility);
             }
