@@ -51,6 +51,8 @@ class Main {
             session.addFacility(player_id0, Facility.fromId(Math.floor(Math.random() * 12)));
             session.addFacility(player_id1, Facility.fromId(Math.floor(Math.random() * 12)));
         }
+        session.startGame();
+        while (session.doNext()) { }
         return session;
     }
 

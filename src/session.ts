@@ -86,6 +86,17 @@ export class PlayerCards {
         return this.hand;
     }
 
+    // Move a random facility from Talon to Hand.
+    public dealToHand(): FacilityId {
+        if (this.talon.length == 0) {
+            return -1;
+        }
+        let random_index: number = Math.floor(Math.random() * this.talon.length);
+        let facility_id: FacilityId = this.talon[random_index];
+        this.moveTalonToHand(facility_id);
+        return facility_id;
+    }
+
     public moveTalonToHand(facility_id: FacilityId): boolean {
         return this.moveFacilityId(facility_id, this.talon, this.hand);
     }
@@ -159,8 +170,6 @@ export class CardManager {
         let facility_id: FacilityId = player_id * this.max_card_size + size;
         this.facilities[facility_id] = facility;
         player_cards.addTalon(facility_id);
-        // TODO: Add a correct logic to move talon to hand.
-        player_cards.moveTalonToHand(facility_id);
         return true;
     }
 
@@ -256,8 +265,9 @@ export class CardManager {
 }
 
 export enum Phase {
-    // CardDraw,
-    StartTurn,
+    StartGame,
+    // Loop b/w StartTurn and EndTurn.
+    StartTurn,  // Draw a card.
     CharacterCard,
     DiceRoll,
     // DiceRollAgain,
@@ -276,7 +286,7 @@ export class State {
     private phase: Phase;
     private step: number;  // Server starts from 1. Client starts from 0.
 
-    constructor(phase: Phase = Phase.DiceRoll, step: number = 1) {
+    constructor(phase: Phase = Phase.StartGame, step: number = 1) {
         this.phase = phase;
         this.step = step;
     }
@@ -294,6 +304,18 @@ export class State {
     }
 
     public done(phase: Phase): void {
+        if (this.phase == phase && phase == Phase.StartGame) {
+            this.phase = Phase.StartTurn;
+            this.step++;
+            return;
+        }
+
+        if (this.phase == phase && phase == Phase.StartTurn) {
+            this.phase = Phase.DiceRoll;
+            this.step++;
+            return;
+        }
+
         if (this.phase == phase && phase == Phase.DiceRoll) {
             this.phase = Phase.PaySalary;
             this.step++;
@@ -313,7 +335,7 @@ export class State {
         }
 
         if (this.phase == phase && phase == Phase.EndTurn) {
-            this.phase = Phase.DiceRoll;
+            this.phase = Phase.StartTurn;
             this.step++;
             return;
         }
@@ -380,6 +402,9 @@ export class Session {
     }
 
     public doNext(): boolean {
+        if (this.state.getPhase() == Phase.StartTurn) {
+            return this.startTurn();
+        }
         if (this.state.getPhase() == Phase.PaySalary) {
             return this.paySalary();
         }
@@ -388,9 +413,6 @@ export class Session {
         }
         return false;
     }
-
-    //public addHandler(phase: Phase, handler: () => void): void {
-    //}
 
     public addPlayer(name: string, money: number, salary: number): boolean {
         let player_id: PlayerId = this.players.length;
@@ -408,6 +430,22 @@ export class Session {
 
     public isValid(player_id: PlayerId, phase: Phase): boolean {
         return (this.current_player_id == player_id && this.state.getPhase() == phase);
+    }
+
+    public startGame(): boolean {
+        for (let r: number = 0; r < 5; r++) {
+            for (let p: PlayerId = 0; p < this.players.length; p++) {
+                this.getPlayerCards(p).dealToHand();
+            }
+        }
+        this.state.done(Phase.StartGame);
+        return true;
+    }
+
+    public startTurn(): boolean {
+        this.getPlayerCards(this.current_player_id).dealToHand();
+        this.state.done(Phase.StartTurn);
+        return true;
     }
 
     public diceRoll(player_id: number, dice_num: number, aim: number): boolean {
