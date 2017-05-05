@@ -1,6 +1,8 @@
 import { Dice } from "./dice";
 import { Session } from "./session";
-import { Board, Facility, PlayerId, FacilityId, FacilityType } from "./board";
+import { Board, PlayerId } from "./board";
+import { FacilityId, FacilityType, Facility } from "./facility";
+
 
 // Moduiles from Node.js
 import * as http from "http";
@@ -43,13 +45,11 @@ class Main {
         session.addPlayer("こしあん", 1200, 250);  // 0
         session.addPlayer("つぶあん", 1000, 220);  // 1
 
-        const names: string[] =
-            ["🌾", "🐮", "🎳", "🐝", "🍴", "💆"]; // , "👕", "🐔", "🌻", "🍣", "🗻", "🍍"];
         const player_id0: PlayerId = 0;  // TODO: Player ID should be predefined before.
         const player_id1: PlayerId = 1;
-        for (let i: number = 0; i < names.length; ++i) {
-            session.addFacility(player_id0, new Facility(names[i], 200, Math.floor(Math.random() * 5)));
-            session.addFacility(player_id1, new Facility(names[i], 200, Math.floor(Math.random() * 5)));
+        for (let i: number = 0; i < 10; ++i) {
+            session.addFacility(player_id0, Facility.fromId(Math.floor(Math.random() * 12)));
+            session.addFacility(player_id1, Facility.fromId(Math.floor(Math.random() * 12)));
         }
         return session;
     }

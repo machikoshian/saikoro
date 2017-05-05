@@ -1,5 +1,6 @@
 import { Dice, DiceResult } from "./dice";
-import { Player, Board, Field, Facility, FacilityId, PlayerId } from "./board";
+import { Player, Board, Field, PlayerId } from "./board";
+import { FacilityId, FacilityType, Facility } from "./facility";
 
 export class PlayerCards {
     private talon: FacilityId[];    // 山札
