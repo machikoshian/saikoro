@@ -233,13 +233,16 @@ class WebClient {
 
         // Update cards.
         this.player_cards_list = [];
+        const area_name: string[] =
+            ["", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩", "⑪", "⑫"];
         for (let i: number = 0; i < players.length; ++i) {
-            let facility_ids: FacilityId[] = session.getPlayerCards(i).getHand();
+            let facility_ids: FacilityId[] = session.getSortedHand(i);
             this.player_cards_list.push(facility_ids);
             for (let j: number = 0; j < Math.min(10, facility_ids.length); ++j) {
                 let facility: Facility = session.getFacility(facility_ids[j]);
                 document.getElementById(`card_${i}_${j}`).style.visibility = "visible";
-                document.getElementById(`card_${i}_${j}_name`).innerText = facility.getName();
+                document.getElementById(`card_${i}_${j}_name`).innerText =
+                    `${area_name[facility.getArea()]} ${facility.getName()}`;
                 document.getElementById(`card_${i}_${j}_cost`).innerText = String(facility.getCost());
                 document.getElementById(`card_${i}_${j}`).style.backgroundColor =
                     this.getFacilityColor(facility);

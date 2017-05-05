@@ -61,7 +61,7 @@ export class PlayerCards {
         facility_id: FacilityId, array_from: FacilityId[], array_to: FacilityId[]): boolean {
         if (facility_id < 0) {
             console.log("WARNING: facility_id < 0.");
-            return;
+            return false;
         }
         if (!this.deleteFacilityId(facility_id, array_from)) {
             console.log("WARNING: deleteFacilityId failed.");
@@ -224,6 +224,26 @@ export class CardManager {
             return false;
         }
         return this.getPlayerCardsFromFacilityId(facility_id).moveHandToField(facility_id);
+    }
+
+    public sortFacilities(facilities: FacilityId[]): FacilityId[] {
+        return facilities.sort((id1, id2) => {
+            let f1: Facility = this.facilities[id1];
+            let f2: Facility = this.facilities[id2];
+            if (f1.area !== f2.area) {
+                return f1.area - f2.area;
+            }
+            else if (f1.type !== f2.type) {
+                return f1.type - f2.type;
+            }
+            else if (f1.cost !== f2.cost) {
+                return f1.cost - f2.cost;
+            }
+            else if (f1.name !== f2.name) {
+                return f1.name < f2.name ? -1 : 1;
+            }
+            return 0;
+        });
     }
 }
 
@@ -529,6 +549,9 @@ export class Session {
     }
     public getPlayerCards(player_id: PlayerId): PlayerCards {
         return this.card_manager.getPlayerCards(player_id);
+    }
+    public getSortedHand(player_id: PlayerId): FacilityId[] {
+        return this.card_manager.sortFacilities(this.getPlayerCards(player_id).getHand());
     }
     public getOwnerId(facility_id: FacilityId): PlayerId {
         return this.card_manager.getOwner(facility_id);
