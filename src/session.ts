@@ -304,39 +304,37 @@ export class State {
     }
 
     public done(phase: Phase): void {
-        if (this.phase == phase && phase == Phase.StartGame) {
+        if (this.phase !== phase) {
+            return;
+        }
+        this.step++;
+        if (phase == Phase.StartGame) {
             this.phase = Phase.StartTurn;
-            this.step++;
             return;
         }
 
-        if (this.phase == phase && phase == Phase.StartTurn) {
+        if (phase == Phase.StartTurn) {
             this.phase = Phase.DiceRoll;
-            this.step++;
             return;
         }
 
-        if (this.phase == phase && phase == Phase.DiceRoll) {
+        if (phase == Phase.DiceRoll) {
             this.phase = Phase.PaySalary;
-            this.step++;
             return;
         }
 
-        if (this.phase == phase && phase == Phase.PaySalary) {
+        if (phase == Phase.PaySalary) {
             this.phase = Phase.BuildFacility;
-            this.step++;
             return;
         }
 
-        if (this.phase == phase && phase == Phase.BuildFacility) {
+        if (phase == Phase.BuildFacility) {
             this.phase = Phase.EndTurn;
-            this.step++;
             return;
         }
 
-        if (this.phase == phase && phase == Phase.EndTurn) {
+        if (phase == Phase.EndTurn) {
             this.phase = Phase.StartTurn;
-            this.step++;
             return;
         }
     }
@@ -402,15 +400,31 @@ export class Session {
     }
 
     public doNext(): boolean {
-        if (this.state.getPhase() == Phase.StartTurn) {
+        let phase: Phase = this.state.getPhase();
+        if (phase == Phase.StartGame) {
+            return this.startGame();
+        }
+
+        if (phase == Phase.StartTurn) {
             return this.startTurn();
         }
-        if (this.state.getPhase() == Phase.PaySalary) {
+
+        if (phase == Phase.DiceRoll) {
+            return false;  // Need interactions.
+        }
+
+        if (phase == Phase.PaySalary) {
             return this.paySalary();
         }
-        if (this.state.getPhase() == Phase.EndTurn) {
+
+        if (phase == Phase.BuildFacility) {
+            return false;  // Need interactions.
+        }
+
+        if (phase == Phase.EndTurn) {
             return this.endTurn();
         }
+
         return false;
     }
 
