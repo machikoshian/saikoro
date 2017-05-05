@@ -2,13 +2,18 @@
 
 * Typescript
 * Node.js
+* yarn
+
+* Google Cloud SDK (for deploy) 
 
 # How to init the project
 
 * npm install typescript --global
 * npm install typings --global
+* npm install yarn --global
 * cd <Dir_of_this_README.md>
 * typings install
+* yarn install
 
 # How to build
 
@@ -22,7 +27,7 @@
 ## Server
 * node out/server/server.js
 
-# Third party libraries
+# Third party tools / libraries
 
 * Require.js: http://requirejs.org/
 * Typings: https://github.com/typings/typings

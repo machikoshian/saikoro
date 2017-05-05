@@ -1,0 +1,39 @@
+{
+  "name": "saikoro",
+  "description": "Saikoro korokoro.",
+  "version": "0.0.1",
+  "private": true,
+  "license": "Apache-2.0",
+  "author": "Koshian",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/machikoshian"
+  },
+  "engines": {
+    "node": ">=4.3.2"
+  },
+  "scripts": {
+    "deploy": "gcloud app deploy",
+    "start": "node out/server/server.js",
+    "lint": "samples lint",
+    "pretest": "npm run lint",
+    "system-test": "samples test app",
+    "test": "npm run system-test",
+    "e2e-test": "samples test deploy"
+  },
+  "devDependencies": {
+    "@google-cloud/nodejs-repo-tools": "1.4.7"
+  },
+  "dependencies": {
+    "memjs": "0.10.0"
+  },
+  "cloud-repo-tools": {
+    "test": {
+      "app": {
+        "msg": "3156"
+      }
+    },
+    "requiresKeyFile": true,
+    "requiresProjectId": true
+  }
+}
