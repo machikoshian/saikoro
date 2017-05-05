@@ -91,13 +91,13 @@ class WebClient {
             return;
         }
         HttpRequest.Send(
-            `/build?player_id=${this.player_id}&x=${x}&y=${y}&facility_id=${this.clicked_facility_id}`,
+            `/command?command=build&player_id=${this.player_id}&x=${x}&y=${y}&facility_id=${this.clicked_facility_id}`,
             this.callback);
     }
 
     public onClickDice(dice_num: number, aim: number): void {
         console.log(`clicked: dice_num:${dice_num}, aim:${aim}`);
-        HttpRequest.Send(`/dice?player_id=${this.player_id}&dice_num=${dice_num}&aim=${aim}`,
+        HttpRequest.Send(`/command?command=dice&player_id=${this.player_id}&dice_num=${dice_num}&aim=${aim}`,
             this.callback);
     }
 
@@ -118,7 +118,7 @@ class WebClient {
 
     public checkUpdate(): void {
         console.log(`checkUpdate(${this.step})`);
-        HttpRequest.Send(`/board?step=${this.step}`, this.callback);
+        HttpRequest.Send(`/command?command=board&step=${this.step}`, this.callback);
     }
 
     public initBoard(column: number = 12, row: number = 5): void {
@@ -152,7 +152,7 @@ class WebClient {
     // Use this.callback as a wrapper of this method.
     private callbackSession(response: string): void {
         // If the response is "OK", the server does not have any update.
-        if (response === "OK") {
+        if (response === "{}") {
             console.log("Already updated.");
             return;
         }
