@@ -30,6 +30,7 @@ class HttpRequest {
 }
 
 class WebClient {
+    public session: Session = new Session();
     public player_id: PlayerId = 0;
     public step: number = 0;
     public clicked_facility_id: FacilityId = -1;
@@ -103,11 +104,24 @@ class WebClient {
     }
 
     public onClickCard(player: number, card: number): void {
+        if (this.session.getState().getPhase() !== Phase.BuildFacility) {
+            return;
+        }
+
         console.log(`clicked: card_${player}_${card}`);
         this.resetCards();
         this.clicked_card_element = document.getElementById(`card_${player}_${card}`);
         this.clicked_card_element.style.borderColor = "#FFE082";
         this.clicked_facility_id = this.player_cards_list[player][card];
+
+        this.updateBoard(this.session);
+
+        let x: number = this.session.getFacility(this.clicked_facility_id).getArea() - 1;
+        for (let y: number = 0; y < 5; y++) {
+            let field: HTMLElement = document.getElementById(`field_${x}_${y}`);
+            // TODO: Keep the owner's color too.
+            field.style.backgroundColor = "#FFF176";
+        }
     }
 
     public startCheckUpdate(): void {
@@ -149,6 +163,22 @@ class WebClient {
         this.checkUpdate();
     }
 
+    private updateBoard(session: Session): void {
+        let board: Board = session.getBoard();
+        for (let y: number = 0; y < board.row; ++y) {
+            for (let x: number = 0; x < board.column; ++x) {
+                let facility: Facility = session.getFacilityOnBoard(x, y);
+                let name: string = facility ? facility.getName() : "";
+                let owner_id: PlayerId = session.getOwnerIdOnBoard(x, y);
+
+                let field: HTMLElement = document.getElementById(`field_${x}_${y}`);
+                field.innerHTML = name;
+                field.style.backgroundColor = this.getPlayerColor(session.getPlayer(owner_id));
+                field.style.borderColor = this.getFacilityColor(facility);
+            }
+        }
+    }
+
     // Do not directly call this method.
     // Use this.callback as a wrapper of this method.
     private callbackSession(response: string): void {
@@ -163,6 +193,7 @@ class WebClient {
         }
 
         let session: Session = Session.fromJSON(JSON.parse(response));
+        this.session = session;
         let player_id: PlayerId = session.getCurrentPlayerId();
         this.player_id = player_id;
         let step: number = session.getState().getStep();
@@ -174,19 +205,7 @@ class WebClient {
         this.step = step;
 
         // Update board.
-        let board: Board = session.getBoard();
-        for (let y: number = 0; y < board.row; ++y) {
-            for (let x: number = 0; x < board.column; ++x) {
-                let facility: Facility = session.getFacilityOnBoard(x, y);
-                let name: string = facility ? facility.getName() : "";
-                let owner_id: PlayerId = session.getOwnerIdOnBoard(x, y);
-
-                let field: HTMLElement = document.getElementById(`field_${x}_${y}`);
-                field.innerHTML = name;
-                field.style.backgroundColor = this.getPlayerColor(session.getPlayer(owner_id));
-                field.style.borderColor = this.getFacilityColor(facility);
-            }
-        }
+        this.updateBoard(session);
 
         // Update players.
         let players: Player[] = session.getPlayers();

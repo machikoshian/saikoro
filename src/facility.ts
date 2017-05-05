@@ -12,7 +12,10 @@ export class FacilityData {
         readonly area: number,  // TODO should be range.
         readonly name: string,
         readonly cost: number,
-        readonly type: FacilityType) {}
+        readonly type: FacilityType,
+        // readonly action: ActionType,
+        // readonly action_args: {},
+        ) {}
 }
 
 let facility_data: FacilityData[] = [

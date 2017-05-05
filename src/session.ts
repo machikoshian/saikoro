@@ -210,6 +210,14 @@ export class CardManager {
         return this.player_cards_list[player_id].isInHand(facility_id);
     }
 
+    public isInArea(area: number, facility_id: FacilityId): boolean {
+        if (facility_id < 0) {
+            console.log("WARNING: facility_id < 0.");
+            return false;
+        }
+        return (this.facilities[facility_id].getArea() == area);
+    }
+
     public moveFieldToDiscard(facility_id: FacilityId): boolean {
         if (facility_id < 0) {
             console.log("WARNING: facility_id < 0.");
@@ -425,7 +433,7 @@ export class Session {
     }
 
     public buildFacility(player_id: PlayerId, x: number, y: number,
-                         player_facility_id: FacilityId): boolean {
+                         facility_id: FacilityId): boolean {
         // State is valid?
         if (!this.isValid(player_id, Phase.BuildFacility)) {
             return false;
@@ -437,25 +445,30 @@ export class Session {
         }
 
         // Facility is valid?
-        let facility: Facility = this.card_manager.getFacility(player_facility_id);
+        let facility: Facility = this.card_manager.getFacility(facility_id);
         if (!facility) {
             return false;
         }
 
         // Facility is in owner's hand?
-        if (!this.card_manager.isInHand(player_id, player_facility_id)) {
+        if (!this.card_manager.isInHand(player_id, facility_id)) {
             return false;
         }
 
         // Facility's owner is valid?
-        let facility_owner: PlayerId = this.getOwnerId(player_facility_id);
+        let facility_owner: PlayerId = this.getOwnerId(facility_id);
         if (facility_owner != player_id) {
+            return false;
+        }
+
+        // Facility's area is valid?
+        let area: number = x + 1;
+        if (!this.card_manager.isInArea(area, facility_id)) {
             return false;
         }
 
         // Money is valid?
         let player: Player = this.players[player_id];
-        // TODO: facility_id_on_board === deleted_facility_id now. unify them.
         let facility_id_on_board: FacilityId = this.board.getFacilityId(x, y);
         let overwrite_cost: number = this.getOverwriteCost(facility_id_on_board, player_id);
         let total_cost: number = facility.getCost() + overwrite_cost;
@@ -466,27 +479,25 @@ export class Session {
 
         // Update the data.
         // Delete the existing facility.
-        let deleted_facility_id: FacilityId = this.board.getFacilityId(x, y);
-        console.log(`deleted_facility_id: ${deleted_facility_id}`);
-        if (deleted_facility_id >= 0) {
-            if (!this.card_manager.moveFieldToDiscard(deleted_facility_id)) {
+        if (facility_id_on_board >= 0) {
+            if (!this.card_manager.moveFieldToDiscard(facility_id_on_board)) {
                 // Something is wrong.
-                console.log(`WARING: moveFieldToDiscard(${deleted_facility_id}) failed.`);
+                console.log(`WARING: moveFieldToDiscard(${facility_id_on_board}) failed.`);
                 return false;
             }
         }
 
         // Build the new facility.
-        if (!this.card_manager.moveHandToField(player_facility_id)) {
+        if (!this.card_manager.moveHandToField(facility_id)) {
             // Something is wrong.
-            console.log(`WARING: moveHandToField(${player_facility_id}) failed.`);
+            console.log(`WARING: moveHandToField(${facility_id}) failed.`);
             return false;
         }
 
-        this.board.setFacilityId(x, y, player_facility_id);
+        this.board.setFacilityId(x, y, facility_id);
         player.setMoney(money - total_cost);
-        if (deleted_facility_id >= 0 && overwrite_cost > 0) {
-            this.getPlayer(this.getOwnerId(deleted_facility_id)).addMoney(overwrite_cost);
+        if (facility_id_on_board >= 0 && overwrite_cost > 0) {
+            this.getPlayer(this.getOwnerId(facility_id_on_board)).addMoney(overwrite_cost);
         }
 
         this.state.done(Phase.BuildFacility);
