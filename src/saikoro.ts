@@ -230,6 +230,7 @@ class WebClient {
                 money_element.innerHTML = String(current_money);
             }, 5);
             document.getElementById(`player_${i}_salary`).innerHTML = `${players[i].salary}`;
+            document.getElementById(`player_${i}_talon`).innerHTML = `${session.getPlayerCards(i).getTalonSize()}`;
         }
         for (let i: number = players.length; i < 4; ++i) {
             document.getElementById(`player_${i}`).style.visibility = "hidden";
