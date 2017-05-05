@@ -84,6 +84,12 @@ export class Facility {
     public getCost(): number {
         return this.cost;
     }
+    public getType(): FacilityType {
+        return this.type;
+    }
+    public getPropertyValue(): number {
+        return this.property["value"] ? this.property["value"] : 0;
+    }
     public getDescription(): string {
         switch (this.type) {
             case FacilityType.Blue:

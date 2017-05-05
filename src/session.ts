@@ -251,7 +251,7 @@ export class CardManager {
         return this.getPlayerCardsFromFacilityId(facility_id).moveHandToField(facility_id);
     }
 
-    public sortFacilities(facilities: FacilityId[]): FacilityId[] {
+    public sortFacilitiesForHand(facilities: FacilityId[]): FacilityId[] {
         return facilities.sort((id1, id2) => {
             let f1: Facility = this.facilities[id1];
             let f2: Facility = this.facilities[id2];
@@ -327,6 +327,11 @@ export class State {
         }
 
         if (phase == Phase.DiceRoll) {
+            this.phase = Phase.FacilityAction;
+            return;
+        }
+
+        if (phase == Phase.FacilityAction) {
             this.phase = Phase.PaySalary;
             return;
         }
@@ -421,6 +426,10 @@ export class Session {
             return false;  // Need interactions.
         }
 
+        if (phase == Phase.FacilityAction) {
+            return this.facilityAction();
+        }
+
         if (phase == Phase.PaySalary) {
             return this.paySalary();
         }
@@ -477,6 +486,77 @@ export class Session {
         this.dice_result = Dice.roll(dice_num, aim);
         this.state.done(Phase.DiceRoll);
         return true;
+    }
+
+    public facilityAction(): boolean {
+        let number = this.dice_result.dice1 + this.dice_result.dice2;
+        if (this.dice_result.is_miracle) {
+            number = this.dice_result.miracle_dice1 + this.dice_result.miracle_dice2;
+        }
+        let facilities: FacilityId[] = [];
+        for (let y: number = 0; y < 5; y++) {
+            let facility_id: FacilityId = this.getFacilityIdOnBoard(number - 1, 4 - y);
+            if (facility_id !== -1) {
+                facilities.push(facility_id);
+            }
+        }
+
+        let type_order: FacilityType[] =
+            [FacilityType.Blue, FacilityType.Green, FacilityType.Red, FacilityType.Purple];
+        for (let type of type_order) {
+            for (let facility_id of facilities) {
+                let facility: Facility = this.getFacility(facility_id);
+                if (facility.getType() !== type) {
+                    continue;
+                }
+                this.doFacilityAction(facility_id);
+            }
+        }
+        this.state.done(Phase.FacilityAction);
+        return true;
+    }
+
+    public moveMoney(player_id_from: PlayerId, player_id_to: PlayerId, money: number): number {
+        if (player_id_from === player_id_to) {
+            return 0;
+        }
+        if (money < 0) {
+            return this.moveMoney(player_id_to, player_id_from, -money);
+        }
+        let actual: number = this.getPlayer(player_id_from).addMoney(-money);
+        this.getPlayer(player_id_to).addMoney(actual);
+        return actual;
+    }
+
+    public doFacilityAction(facility_id: FacilityId) {
+        let facility: Facility = this.getFacility(facility_id);
+        let player_id: PlayerId = this.getCurrentPlayerId();
+        let owner_id: PlayerId = this.getOwnerId(facility_id);
+        let owner: Player = this.getOwner(facility_id);
+
+        // TODO: Add event log.
+        if (facility.getType() == FacilityType.Blue) {
+            owner.addMoney(facility.getPropertyValue());
+        }
+        if (facility.getType() == FacilityType.Green) {
+            if (player_id === owner_id) {
+                owner.addMoney(facility.getPropertyValue());
+            }
+        }
+        if (facility.getType() == FacilityType.Red) {
+            if (player_id !== owner_id) {
+                let value: number = facility.getPropertyValue();
+                this.moveMoney(player_id, owner_id, value);
+            }
+        }
+        if (facility.getType() == FacilityType.Purple) {
+            if (player_id === owner_id) {
+                let value: number = facility.getPropertyValue();
+                for (let pid: number = 0; pid < this.players.length; ++pid) {
+                    this.moveMoney(pid, owner_id, value);
+                }
+            }
+        }
     }
 
     private getOverwriteCost(facility_id_on_board: FacilityId, player_id: PlayerId): number {
@@ -622,10 +702,13 @@ export class Session {
         return this.card_manager.getPlayerCards(player_id);
     }
     public getSortedHand(player_id: PlayerId): FacilityId[] {
-        return this.card_manager.sortFacilities(this.getPlayerCards(player_id).getHand());
+        return this.card_manager.sortFacilitiesForHand(this.getPlayerCards(player_id).getHand());
     }
     public getOwnerId(facility_id: FacilityId): PlayerId {
         return this.card_manager.getOwner(facility_id);
+    }
+    public getOwner(facility_id: FacilityId): Player {
+        return this.getPlayer(this.getOwnerId(facility_id));
     }
     public getDiceResult(): DiceResult {
         return this.dice_result;
