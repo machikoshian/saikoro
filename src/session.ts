@@ -101,6 +101,10 @@ export class PlayerCards {
         return this.talon.length;
     }
 
+    public getHandSize(): number {
+        return this.hand.length;
+    }
+
     public moveTalonToHand(facility_id: FacilityId): boolean {
         return this.moveFacilityId(facility_id, this.talon, this.hand);
     }
