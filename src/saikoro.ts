@@ -31,6 +31,8 @@ class HttpRequest {
 
 class WebClient {
     public session: Session = new Session();
+    public session_id: number = 0;
+    public matching_id: number = 0;
     public player_id: PlayerId = 0;
     public step: number = 0;
     public clicked_facility_id: FacilityId = -1;
@@ -94,13 +96,13 @@ class WebClient {
             return;
         }
         HttpRequest.Send(
-            `/command?command=build&player_id=${this.player_id}&x=${x}&y=${y}&facility_id=${this.clicked_facility_id}`,
+            `/command?command=build&session_id=${this.session_id}&player_id=${this.player_id}&x=${x}&y=${y}&facility_id=${this.clicked_facility_id}`,
             this.callback);
     }
 
     public onClickDice(dice_num: number, aim: number): void {
         console.log(`clicked: dice_num:${dice_num}, aim:${aim}`);
-        HttpRequest.Send(`/command?command=dice&player_id=${this.player_id}&dice_num=${dice_num}&aim=${aim}`,
+        HttpRequest.Send(`/command?command=dice&session_id=${this.session_id}&player_id=${this.player_id}&dice_num=${dice_num}&aim=${aim}`,
             this.callback);
     }
 
@@ -134,7 +136,20 @@ class WebClient {
 
     public checkUpdate(): void {
         console.log(`checkUpdate(${this.step})`);
-        HttpRequest.Send(`/command?command=board&step=${this.step}`, this.callback);
+        HttpRequest.Send(`/command?command=board&session_id=${this.session_id}&step=${this.step}`, this.callback);
+    }
+
+    public callbackMatching(response: string): void {
+        // TODO: session_id and matching_id should be different for multi player match.
+        this.session_id = Number(response);
+        this.matching_id = Number(response);
+        this.checkUpdate();
+        this.startCheckUpdate();
+    }
+
+    public matching(): void {
+        console.log("matching...");
+        HttpRequest.Send("/matching?name=こしあん", this.callbackMatching.bind(this));
     }
 
     public initBoard(column: number = 12, row: number = 5): void {
@@ -161,7 +176,7 @@ class WebClient {
                     "click", () => { this.onClickCard(p, c); });
             }
         }
-        this.checkUpdate();
+        this.matching();
     }
 
     private updateBoard(session: Session): void {
@@ -291,4 +306,3 @@ class WebClient {
 
 let client: WebClient = new WebClient();
 client.initBoard();
-client.startCheckUpdate();

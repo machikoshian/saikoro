@@ -4,14 +4,16 @@ import { FacilityId, FacilityType, Facility } from "./facility";
 export type PlayerId = number;
 
 export class Player {
+    readonly matching_id: number;
     readonly id: PlayerId;
     readonly name: string;
     private money: number;
     readonly salary: number;
     readonly team: number;
 
-    constructor(id: PlayerId, name: string, money: number, salary: number,
+    constructor(matching_id: number, id: PlayerId, name: string, money: number, salary: number,
         team: number) {
+        this.matching_id = matching_id;
         this.id = id;
         this.name = name;
         this.money = money;
@@ -22,6 +24,7 @@ export class Player {
     public toJSON(): Object {
         return {
             class_name: "Player",
+            matching_id: this.matching_id,
             id: this.id,
             name: this.name,
             money: this.money,
@@ -31,7 +34,7 @@ export class Player {
     }
 
     static fromJSON(json): Player {
-        return new Player(json.id, json.name, json.money, json.salary, json.color);
+        return new Player(json.matching_id, json.id, json.name, json.money, json.salary, json.color);
     }
 
     public getMoney(): number {

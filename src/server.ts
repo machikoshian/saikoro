@@ -42,8 +42,8 @@ class Main {
 
     private initSession(): Session {
         let session = new Session();
-        session.addPlayer("こしあん", 1200, 250);  // 0
-        session.addPlayer("つぶあん", 1000, 220);  // 1
+        session.addPlayer(0, "こしあん", 1200, 250);  // 0
+        session.addPlayer(1, "つぶあん", 1000, 220);  // 1
 
         const player_id0: PlayerId = 0;  // TODO: Player ID should be predefined before.
         const player_id1: PlayerId = 1;
@@ -125,11 +125,6 @@ class Main {
         return true;
     }
 
-    // private processMatching(matching: Matching, name: string): boolean {
-    //     let matching_id: number = matching.addPlayer(name);
-    //     return true;
-    // }
-
     private requestHandler(request, response): void {
         let url_parts = url.parse(request.url, true);
         let pathname: string = url_parts.pathname;
@@ -146,8 +141,13 @@ class Main {
         }
 
         if (pathname == "/command") {
+            let session_key: string = "session";
+            if (query.session_id) {
+                session_key = `session_${query.session_id}`;
+            }
+
             let session: Session;
-            mc.get('session', (err, value) => {
+            mc.get(session_key, (err, value) => {
                 if (value) {
                     session = Session.fromJSON(JSON.parse(value));
                 } else {
@@ -163,23 +163,55 @@ class Main {
                 }
                 response.end(output);
 
-                mc.set('session', session_json, (err) => {}, 600);
+                mc.set(session_key, session_json, (err) => {}, 600);
             });
             return;
         }
 
-        // if (pathname == "/matching") {
-        //     let matching: Matching;
-        //     mc.get('macthing', (err, value) => {
-        //         if (value) {
-        //             matching = Matching.fromJSON(JSON.parse(value));
-        //         } else {
-        //             matching = new Matching();
-        //         }
-        //         this.processMatching();
-        //     });
-        //     return;
-        // }
+        // TODO: This is a quite hacky way for testing w/o considering any race conditions.
+        if (pathname == "/matching") {
+            mc.get('matching', (err, value) => {
+                let matching: number;
+                if (value) {
+                    matching = Number(value);
+                } else {
+                    matching = 10;
+                }
+                mc.set('matching', matching + 1, (err) => {}, 600);
+
+                let session_name: string = `session_${matching}`;
+                mc.get(session_name, (session_err, session_value) => {
+                    let session: Session;
+                    if (value) {
+                        session = Session.fromJSON(JSON.parse(value));
+                    } else {
+                        session = new Session();
+                    }
+
+                    const player_id: PlayerId = session.addPlayer(matching, query.name, 1200, 250);
+                    for (let i: number = 0; i < 10; ++i) {
+                        const max_id: number = 12;
+                        const card_id: number = Math.floor(Math.random() * max_id);
+                        session.addFacility(player_id, Facility.fromId(card_id));
+                    }
+
+                    // For single play.
+                    if (player_id == 0) {
+                        session.startGame();
+                        while (session.doNext()) { }
+                    }
+
+                    let session_json: string = JSON.stringify(session.toJSON());
+
+                    console.log(session_json);
+
+                    mc.set(session_name, session_json, (err) => {}, 600);
+                });
+
+                response.end(String(matching));
+            });
+            return;
+        }
 
         this.serveStaticFiles(pathname, response);
     }
