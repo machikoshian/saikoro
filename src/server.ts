@@ -75,6 +75,21 @@ class Main {
         return;
     }
 
+    private doNext(session: Session): boolean {
+        let prev_step: number = session.getState().getStep();
+        for (let i: number = 0; i < 100; ++i) {
+            if (!session.doNext()) {
+                return true;
+            }
+            let new_step: number = session.getState().getStep();
+            if (prev_step == new_step) {
+                break;
+            }
+            prev_step = new_step;
+        }
+        return false;
+    }
+
     private processCommand(session: Session, query): boolean {
         if (query.command == "board") {
             let step: number = Number(query.step);
@@ -90,7 +105,7 @@ class Main {
             let aim = Number(query.aim);
             if (session.diceRoll(player_id, dice_num, aim)) {
                 // TODO: integrate diceRoll and doNext.
-                while (session.doNext()) { }
+                this.doNext(session);
             }
         }
 
@@ -102,7 +117,7 @@ class Main {
             if (x != null && y != null && player_id != null && facility_id != null) {
                 if (session.buildFacility(player_id, x, y, facility_id)) {
                     // TODO: integrate buildFacility and doNext.
-                    while (session.doNext()) { }
+                    this.doNext(session);
                 }
             }
         }
@@ -110,34 +125,63 @@ class Main {
         return true;
     }
 
+    // private processMatching(matching: Matching, name: string): boolean {
+    //     let matching_id: number = matching.addPlayer(name);
+    //     return true;
+    // }
+
     private requestHandler(request, response): void {
         let url_parts = url.parse(request.url, true);
         let pathname: string = url_parts.pathname;
-        if (pathname != "/command") {
-            this.serveStaticFiles(pathname, response);
+        let query = url_parts.query;
+
+        if (pathname == "/env") {
+            let output: string = "";
+            output += `MEMCACHE_URL: ${process.env.MEMCACHE_URL}\n`;
+            output += `USE_GAE_MEMCACHE: ${process.env.USE_GAE_MEMCACHE}\n`;
+            output += `GAE_MEMCACHE_HOST: ${process.env.GAE_MEMCACHE_HOST}\n`;
+            output += `GAE_MEMCACHE_PORT: ${process.env.GAE_MEMCACHE_PORT}\n`;
+            response.end(output);
             return;
         }
 
-        let query = url_parts.query;
-        let session: Session;
-        mc.get('session', (err, value) => {
-            if (value) {
-                session = Session.fromJSON(JSON.parse(value));
-            } else {
-                session = this.initSession();
-            }
+        if (pathname == "/command") {
+            let session: Session;
+            mc.get('session', (err, value) => {
+                if (value) {
+                    session = Session.fromJSON(JSON.parse(value));
+                } else {
+                    session = this.initSession();
+                }
 
-            let output: string = "{}";
-            let updated: boolean = this.processCommand(session, query);
-            response.setHeader("Content-Type", "application/json; charset=utf-8");
-            let session_json: string = JSON.stringify(session.toJSON());
-            if (updated) {
-                output = session_json;
-            }
-            response.end(output);
+                let output: string = "{}";
+                let updated: boolean = this.processCommand(session, query);
+                response.setHeader("Content-Type", "application/json; charset=utf-8");
+                let session_json: string = JSON.stringify(session.toJSON());
+                if (updated) {
+                    output = session_json;
+                }
+                response.end(output);
 
-            mc.set('session', session_json, (err) => {}, 600);
-        });
+                mc.set('session', session_json, (err) => {}, 600);
+            });
+            return;
+        }
+
+        // if (pathname == "/matching") {
+        //     let matching: Matching;
+        //     mc.get('macthing', (err, value) => {
+        //         if (value) {
+        //             matching = Matching.fromJSON(JSON.parse(value));
+        //         } else {
+        //             matching = new Matching();
+        //         }
+        //         this.processMatching();
+        //     });
+        //     return;
+        // }
+
+        this.serveStaticFiles(pathname, response);
     }
 }
 let main: Main = new Main();

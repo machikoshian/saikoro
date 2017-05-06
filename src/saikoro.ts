@@ -38,6 +38,7 @@ class WebClient {
     public player_cards_list: FacilityId[][] = [];
     public callback: (response: string) => void;
     public check_update_timer: number = 0;
+    public no_update_count: number = 0;
 
     constructor() {
         this.callback = this.callbackSession.bind(this);
@@ -182,15 +183,25 @@ class WebClient {
     // Do not directly call this method.
     // Use this.callback as a wrapper of this method.
     private callbackSession(response: string): void {
-        // If the response is "OK", the server does not have any update.
-        if (response === "{}") {
-            console.log("Already updated.");
-            return;
-        }
         if (!response) {
             console.log("Stop polling.");
             this.stopCheckUpdate();
         }
+
+        // If the response is "{}", the server does not have any update.
+        if (response === "{}") {
+            console.log("Already updated.");
+
+            // If no update continues 100 times, stop polling.
+            this.no_update_count++;
+            if (this.no_update_count > 100) {
+                console.log("No update for a while.");
+                this.stopCheckUpdate();
+            }
+            return;
+        }
+
+        this.no_update_count = 0;
 
         let session: Session = Session.fromJSON(JSON.parse(response));
         this.session = session;

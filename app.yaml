@@ -17,7 +17,12 @@ env: flex
 skip_files:
   - ^(typings/.*)
   - ^(node_modules/.*)
-#manual_scaling:
-#  instances: 1
+
+# The number of instances should be 1, because memcached is not ready.
+manual_scaling:
+  instances: 1
+
 # [END app_yaml]
+
+
 
