@@ -140,9 +140,9 @@ class WebClient {
     }
 
     public callbackMatching(response: string): void {
-        // TODO: session_id and matching_id should be different for multi player match.
-        this.session_id = Number(response);
-        this.matching_id = Number(response);
+        const response_json = JSON.parse(response);
+        this.session_id = response_json.session_id;
+        this.matching_id = response_json.matching_id;
         this.checkUpdate();
         this.startCheckUpdate();
     }

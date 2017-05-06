@@ -170,33 +170,35 @@ class Main {
 
         // TODO: This is a quite hacky way for testing w/o considering any race conditions.
         if (pathname == "/matching") {
-            mc.get('matching', (err, value) => {
-                let matching: number;
+            mc.get("matching", (err, value) => {
+                let matching_id: number;
                 if (value) {
-                    matching = Number(value);
+                    matching_id = Number(value);
                 } else {
-                    matching = 10;
+                    matching_id = 10;
                 }
-                mc.set('matching', matching + 1, (err) => {}, 600);
+                mc.set("matching", matching_id + 1, (err) => {}, 600);
 
-                let session_name: string = `session_${matching}`;
+                // TODO: This is obviously hacky way for two players. Fix it.
+                const num_players: number = 2;
+                let session_id: number = Math.floor(matching_id / num_players);
+                let session_name: string = `session_${session_id}`;
                 mc.get(session_name, (session_err, session_value) => {
                     let session: Session;
-                    if (value) {
-                        session = Session.fromJSON(JSON.parse(value));
+                    if (session_value) {
+                        session = Session.fromJSON(JSON.parse(session_value));
                     } else {
                         session = new Session();
                     }
 
-                    const player_id: PlayerId = session.addPlayer(matching, query.name, 1200, 250);
+                    const player_id: PlayerId = session.addPlayer(matching_id, query.name, 1200, 250);
                     for (let i: number = 0; i < 10; ++i) {
                         const max_id: number = 12;
                         const card_id: number = Math.floor(Math.random() * max_id);
                         session.addFacility(player_id, Facility.fromId(card_id));
                     }
 
-                    // For single play.
-                    if (player_id == 0) {
+                    if (player_id == num_players - 1) {
                         session.startGame();
                         while (session.doNext()) { }
                     }
@@ -208,7 +210,7 @@ class Main {
                     mc.set(session_name, session_json, (err) => {}, 600);
                 });
 
-                response.end(String(matching));
+                response.end(`{"matching_id":${matching_id},"session_id":${session_id}}`);
             });
             return;
         }
