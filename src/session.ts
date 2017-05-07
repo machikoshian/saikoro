@@ -669,6 +669,12 @@ export class Session {
             return false;
         }
 
+        // Is pass?  (valid action, but not build a facility).
+        if (x === -1 && y === -1 && facility_id === -1) {
+            this.state.done(Phase.BuildFacility);
+            return true;
+        }
+
         // Facility is valid?
         let facility: Facility = this.card_manager.getFacility(facility_id);
         if (!facility) {

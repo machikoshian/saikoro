@@ -106,6 +106,13 @@ class WebClient {
             this.callback);
     }
 
+    public onClickEndTurn(): void {
+        console.log("clicked: end_turn");
+        HttpRequest.Send(
+            `/command?command=build&session_id=${this.session_id}&player_id=${this.player_id}&x=-1&y=-1&facility_id=-1`,
+            this.callback);
+    }
+
     public onClickCard(player: number, card: number): void {
         if (this.session.getState().getPhase() !== Phase.BuildFacility) {
             return;
@@ -166,6 +173,10 @@ class WebClient {
             "click", () => { this.onClickDice(1, 0); });
         document.getElementById("dice_2").addEventListener(
             "click", () => { this.onClickDice(2, 0); });
+
+        // End turn
+        document.getElementById("end_turn").addEventListener(
+            "click", () => { this.onClickEndTurn(); });
 
         // Cards
         let player_size: number = 4;
@@ -279,6 +290,23 @@ class WebClient {
         }
         document.getElementById("message").innerHTML = message;
         document.getElementById("message").style.backgroundColor = this.getPlayerColor(player);
+
+        // Update buttons.
+        if (session.getState().getPhase() == Phase.DiceRoll) {
+            document.getElementById("dice_1").style.visibility = "visible";
+            document.getElementById("dice_2").style.visibility = "visible";
+        }
+        else {
+            document.getElementById("dice_1").style.visibility = "hidden";
+            document.getElementById("dice_2").style.visibility = "hidden";
+        }
+
+        if (session.getState().getPhase() == Phase.BuildFacility) {
+            document.getElementById("end_turn").style.visibility = "visible";
+        }
+        else {
+            document.getElementById("end_turn").style.visibility = "hidden";
+        }
 
         // Update cards.
         this.player_cards_list = [];
