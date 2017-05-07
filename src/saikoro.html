@@ -4,7 +4,6 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>Saikoro</title>
     <style type="text/css">
-    <!--
     #board table { border-style: solid; border-width: 1px; }
     #board td {
       width: 50px; height: 40px; background-color: #EFF0D1; text-align: center;
@@ -44,12 +43,16 @@
     td.description {
       font-size: 8px; height: 70px;
     }
-    -->
     </style>
     <script type="text/javascript" data-main="saikoro.js"
             src="third_party/require.js"></script>
   </head>
   <body>
+  <div id="matching">
+    名前: <input id="matching_name" type="text" name="name">
+    <input id="matching_button" type="button" value="スタート">
+  </div>
+  <div id="game">
     <table id="players">
       <tr>
         <td><table id="player_0" class="player">
@@ -151,5 +154,6 @@
     </tr>
     </table>
     </div>
+  </div>
   </body>
 </html>

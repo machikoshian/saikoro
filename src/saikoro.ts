@@ -51,7 +51,7 @@ class WebClient {
 
         let d1: number = dice.dice1;
         let d2: number = dice.dice2;
-        return `${faces[d1]} ${faces[d2]} : ${d1 + d2} です。`;
+        return `${faces[d1]} ${faces[d2]} : ${d1 + d2} でした。`;
     }
 
     public getPlayerColor(player: Player): string {
@@ -150,13 +150,21 @@ class WebClient {
         const response_json = JSON.parse(response);
         this.session_id = response_json.session_id;
         this.matching_id = response_json.matching_id;
+
+        document.getElementById("matching").style.display = "none";
+        document.getElementById("game").style.visibility = "visible";
+
         this.checkUpdate();
         this.startCheckUpdate();
     }
 
-    public matching(): void {
+    public onClickMatching(): void {
         console.log("matching...");
-        HttpRequest.Send("/matching?name=こしあん", this.callbackMatching.bind(this));
+        let name: string = (<HTMLInputElement>document.getElementById("matching_name")).value;
+        if (name.length === 0) {
+            return;
+        }
+        HttpRequest.Send(`/matching?name=${encodeURIComponent(name)}`, this.callbackMatching.bind(this));
     }
 
     public initBoard(column: number = 12, row: number = 5): void {
@@ -187,7 +195,10 @@ class WebClient {
                     "click", () => { this.onClickCard(p, c); });
             }
         }
-        this.matching();
+
+        document.getElementById("matching_button").addEventListener(
+            "click", () => { this.onClickMatching(); });
+        document.getElementById("game").style.visibility = "hidden";
     }
 
     private updateBoard(session: Session): void {
@@ -199,7 +210,7 @@ class WebClient {
                 let owner_id: PlayerId = session.getOwnerIdOnBoard(x, y);
 
                 let field: HTMLElement = document.getElementById(`field_${x}_${y}`);
-                field.innerHTML = name;
+                field.innerText = name;
                 field.style.backgroundColor = this.getPlayerColor(session.getPlayer(owner_id));
                 field.style.borderColor = this.getFacilityColor(facility);
             }
@@ -248,7 +259,7 @@ class WebClient {
         let players: Player[] = session.getPlayers();
         for (let i: number = 0; i < players.length; ++i) {
             document.getElementById(`player_${i}`).style.visibility = "visible";
-            document.getElementById(`player_${i}_name`).innerHTML = players[i].name;
+            document.getElementById(`player_${i}_name`).innerText = players[i].name;
 
             let money_element = document.getElementById(`player_${i}_money`);
             let money: number = players[i].getMoney();
@@ -281,14 +292,17 @@ class WebClient {
         let player: Player = players[player_id];
         let name: string = player.name;
         let message: string = "";
-        if (session.getState().getPhase() == Phase.DiceRoll) {
+        if (session.getState().getPhase() == Phase.StartGame) {
+            message = `🎲 マッチング中です 🎲`;
+        }
+        else if (session.getState().getPhase() == Phase.DiceRoll) {
             message = `🎲 ${name} のサイコロです 🎲`;
         }
         else if (session.getState().getPhase() == Phase.BuildFacility) {
             message = this.diceResultMessage(session.getDiceResult());
             message += `  🎲 ${name} の建設です 🎲`;
         }
-        document.getElementById("message").innerHTML = message;
+        document.getElementById("message").innerText = message;
         document.getElementById("message").style.backgroundColor = this.getPlayerColor(player);
 
         // Update buttons.
