@@ -259,10 +259,11 @@ class WebClient {
             let cards: PlayerCards = session.getPlayerCards(i);
             document.getElementById(`player_${i}_talon`).innerHTML =
                 `${cards.getHandSize()}　／　📇 ${cards.getTalonSize()}`;
+            document.getElementById(`cards_${i}`).style.display = "table-row";
         }
         for (let i: number = players.length; i < 4; ++i) {
             document.getElementById(`player_${i}`).style.visibility = "hidden";
-            document.getElementById(`cards_${i}`).style.visibility = "hidden";
+            document.getElementById(`cards_${i}`).style.display = "none";
         }
 
         // Update message.
@@ -288,7 +289,7 @@ class WebClient {
             this.player_cards_list.push(facility_ids);
             for (let j: number = 0; j < Math.min(10, facility_ids.length); ++j) {
                 let facility: Facility = session.getFacility(facility_ids[j]);
-                document.getElementById(`card_${i}_${j}`).style.visibility = "visible";
+                document.getElementById(`card_${i}_${j}`).style.display = "table-cell";
                 document.getElementById(`card_${i}_${j}_name`).innerText =
                     `${area_name[facility.getArea()]} ${facility.getName()}`;
                 document.getElementById(`card_${i}_${j}_cost`).innerText = String(facility.getCost());
@@ -297,7 +298,7 @@ class WebClient {
                     this.getFacilityColor(facility);
             }
             for (let j: number = Math.min(10, facility_ids.length); j < 10; ++j) {
-                document.getElementById(`card_${i}_${j}`).style.visibility = "hidden";
+                document.getElementById(`card_${i}_${j}`).style.display = "none";
             }
         }
         this.resetCards();  // Nice to check if built or not?
