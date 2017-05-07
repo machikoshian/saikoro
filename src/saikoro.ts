@@ -55,6 +55,7 @@ class WebClient {
     }
 
     public getPlayerColor(player: Player): string {
+        // TODO: Support landmark colors (set / built).
         let colors = ["#909CC2", "#D9BDC5", "#90C290", "#9D8189"];
 
         if (!player || player.id > colors.length) {
@@ -70,7 +71,7 @@ class WebClient {
         let type: FacilityType = facility.type;
         switch(type) {
             case FacilityType.Gray:
-                return "#90CAF9";
+                return "#B0BEC5";
             case FacilityType.Blue:
                 return "#90CAF9";
             case FacilityType.Green:
@@ -211,7 +212,12 @@ class WebClient {
 
                 let field: HTMLElement = document.getElementById(`field_${x}_${y}`);
                 field.innerText = name;
-                field.style.backgroundColor = this.getPlayerColor(session.getPlayer(owner_id));
+                if (facility && facility.getType() === FacilityType.Gray) {
+                    field.style.backgroundColor = this.getFacilityColor(facility);
+                }
+                else {
+                    field.style.backgroundColor = this.getPlayerColor(session.getPlayer(owner_id));
+                }
                 field.style.borderColor = this.getFacilityColor(facility);
             }
         }

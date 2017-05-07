@@ -6,13 +6,6 @@ export enum FacilityType {
     Purple,
 }
 
-export enum ActionType {
-    Blue,
-    Green,
-    Red,
-    Purple,
-}
-
 export class FacilityData {
     constructor(
         readonly id: number,
@@ -37,6 +30,8 @@ let facility_data: FacilityData[] = [
     new FacilityData(9,  10, "🍣", 100, FacilityType.Red,    {"value": 400}),
     new FacilityData(10, 11, "🗻", 300, FacilityType.Blue,   {"value": 500}),
     new FacilityData(11, 12, "🍍", 150, FacilityType.Blue,   {"value": 650}),
+    new FacilityData(12, 0, "🏯", 1500, FacilityType.Gray, {}),
+    new FacilityData(13, 0, "🏰", 2000, FacilityType.Gray, {}),
 ];
 
 export type FacilityId = number;
@@ -92,6 +87,8 @@ export class Facility {
     }
     public getDescription(): string {
         switch (this.type) {
+            case FacilityType.Gray:
+                return "ランドマーク";
             case FacilityType.Blue:
                 return `${this.property["value"]}コイン稼ぐ。\n誰のターンでも。`;
             case FacilityType.Green:

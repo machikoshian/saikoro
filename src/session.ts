@@ -144,11 +144,15 @@ export class PlayerCards {
 export class CardManager {
     private facilities: { [key: number]: Facility; };
     private player_cards_list: PlayerCards[];
+    private landmarks: FacilityId[];
+
     readonly max_card_size: number = 1000;
+    readonly landmark_id_base: number = 10000;
 
     constructor(
         facilities: { [key: number]: Facility; } = {},
-        player_cards_list: PlayerCards[] = null) {
+        player_cards_list: PlayerCards[] = null,
+        landmarks: FacilityId[] = []) {
         this.facilities = facilities;
         if (player_cards_list) {
             this.player_cards_list = player_cards_list;
@@ -158,6 +162,7 @@ export class CardManager {
                 this.player_cards_list.push(new PlayerCards());
             }
         }
+        this.landmarks = landmarks;
     }
 
     public toJSON(): Object {
@@ -169,6 +174,7 @@ export class CardManager {
             class_name: "CardManager",
             facilities: facility_json,
             player_cards_list: this.player_cards_list.map(cards => { return cards.toJSON(); }),
+            landmarks: this.landmarks,
         }
     }
 
@@ -180,6 +186,7 @@ export class CardManager {
         return new CardManager(
             facilities,
             json.player_cards_list.map(cards => { return PlayerCards.fromJSON(cards); }),
+            json.landmarks,
         );
     }
 
@@ -199,6 +206,13 @@ export class CardManager {
         return true;
     }
 
+    public addLandmark(landmark: Facility): FacilityId {
+        let facility_id: FacilityId = this.landmark_id_base + this.landmarks.length;
+        this.facilities[facility_id] = landmark;
+        this.landmarks.push(facility_id);
+        return facility_id;
+    }
+
     public getFacility(facility_id: FacilityId): Facility {
         if (facility_id < 0) {
             return null;
@@ -208,6 +222,10 @@ export class CardManager {
 
     public getOwner(facility_id: FacilityId): PlayerId {
         if (facility_id < 0) {
+            return -1;
+        }
+        if (facility_id >= this.landmark_id_base) {
+            // TODO: Support the owner of the landmark.
             return -1;
         }
         // TODO: Check actual existance of facility_id.
@@ -224,6 +242,9 @@ export class CardManager {
     }
 
     public getPlayerCardsFromFacilityId(facility_id: FacilityId): PlayerCards {
+        if (facility_id < 0 || facility_id >= this.landmark_id_base) {
+            return null;
+        }
         return this.player_cards_list[this.getOwner(facility_id)];
     }
 
@@ -491,6 +512,8 @@ export class Session {
     }
 
     public startGame(): boolean {
+        this.setLandmark();
+
         for (let r: number = 0; r < 2; r++) {
             for (let p: PlayerId = 0; p < this.players.length; p++) {
                 this.buildInitialFacility(p);
@@ -609,10 +632,20 @@ export class Session {
         let positions: [number, number][] = [];
         let facility: Facility = this.card_manager.getFacility(facility_id);
         // TODO: support multiple x. (e.g. 7-9)
-        let x: number = facility.getArea() - 1;  // area is 0-origin.
-        for (let y: number = 0; y < this.board.row; y++) {
-            if (this.getFacilityIdOnBoard(x, y) === -1) {
-                positions.push([x, y]);
+        let area: number = facility.getArea();
+        let columns: number[];
+        if (area === 0) {
+            // area === 0 means anywhere.
+            columns = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+        }
+        else {
+            columns = [area - 1];  // area is 1-origin.
+        }
+        for (let x of columns) {
+            for (let y: number = 0; y < this.board.row; y++) {
+                if (this.getFacilityIdOnBoard(x, y) === -1) {
+                    positions.push([x, y]);
+                }
             }
         }
         return positions;
@@ -640,8 +673,6 @@ export class Session {
                 continue;
             }
 
-            console.log(facility_id);
-
             if (!this.card_manager.moveTalonToField(facility_id)) {
                 // Something is wrong.
                 console.log(`WARING: moveTalonToField(${facility_id}) failed.`);
@@ -655,6 +686,22 @@ export class Session {
         }
 
         return true;  // True is returned even if no facility was built.
+    }
+
+    public setLandmark(): boolean {  // Reserve the area for landmark.
+        const facility_data_id: number = 12;
+        let landmark: Facility = Facility.fromId(facility_data_id);
+        let landmark_id: FacilityId = this.card_manager.addLandmark(landmark);
+
+        let positions: [number, number][] = shuffle(this.availablePosition(landmark_id));
+        if (positions.length === 0) {
+            console.error("Landmark cannot be built.");
+            return false;
+        }
+
+        let [x, y] = positions[0];
+        this.board.setFacilityId(x, y, landmark_id);
+        return true;
     }
 
     public buildFacility(player_id: PlayerId, x: number, y: number,
@@ -697,6 +744,8 @@ export class Session {
         if (!this.card_manager.isInArea(area, facility_id)) {
             return false;
         }
+
+        // TODO: Add to check landmark.
 
         // Money is valid?
         let player: Player = this.players[player_id];
