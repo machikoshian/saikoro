@@ -22,6 +22,11 @@ skip_files:
 manual_scaling:
   instances: 1
 
+# Configuration to try to use f1-micro.
+resources:
+  cpu: .2
+  memory_gb: .15
+
 # [END app_yaml]
 
 
