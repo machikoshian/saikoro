@@ -2,6 +2,15 @@ import { Dice, DiceResult } from "./dice";
 import { Player, Board, Field, PlayerId } from "./board";
 import { FacilityId, FacilityType, Facility } from "./facility";
 
+function shuffle(array: any[]): any[] {
+    let shuffled_array: any[] = array.slice(0);
+    for (let l: number = shuffled_array.length; l > 0; --l) {
+        let i: number = Math.floor(Math.random() * l);
+        [shuffled_array[i], shuffled_array[l-1]] = [shuffled_array[l-1], shuffled_array[i]];
+    }
+    return shuffled_array;
+}
+
 export class PlayerCards {
     private talon: FacilityId[];    // 山札
     private hand: FacilityId[];     // 手札
@@ -82,13 +91,17 @@ export class PlayerCards {
         return true;
     }
 
+    public getTalon(): FacilityId[] {
+        return this.talon;
+    }
+
     public getHand(): FacilityId[] {
         return this.hand;
     }
 
     // Move a random facility from Talon to Hand.
     public dealToHand(): FacilityId {
-        if (this.talon.length == 0) {
+        if (this.talon.length === 0) {
             return -1;
         }
         let random_index: number = Math.floor(Math.random() * this.talon.length);
@@ -112,6 +125,11 @@ export class PlayerCards {
     public isInHand(facility_id: FacilityId): boolean {
         let index: number = this.getIndex(facility_id, this.hand);
         return (index >= 0);
+    }
+
+    // Used for initial build.
+    public moveTalonToField(facility_id: FacilityId): boolean {
+        return this.moveFacilityId(facility_id, this.talon, this.field);
     }
 
     public moveHandToField(facility_id: FacilityId): boolean {
@@ -249,6 +267,15 @@ export class CardManager {
             return false;
         }
         return this.getPlayerCardsFromFacilityId(facility_id).moveHandToField(facility_id);
+    }
+
+    // Used for initial build.
+    public moveTalonToField(facility_id: FacilityId): boolean {
+        if (facility_id < 0) {
+            console.log("WARNING: facility_id < 0.");
+            return false;
+        }
+        return this.getPlayerCardsFromFacilityId(facility_id).moveTalonToField(facility_id);
     }
 
     public sortFacilitiesForHand(facilities: FacilityId[]): FacilityId[] {
@@ -464,6 +491,12 @@ export class Session {
     }
 
     public startGame(): boolean {
+        for (let r: number = 0; r < 2; r++) {
+            for (let p: PlayerId = 0; p < this.players.length; p++) {
+                this.buildInitialFacility(p);
+            }
+        }
+
         for (let r: number = 0; r < 5; r++) {
             for (let p: PlayerId = 0; p < this.players.length; p++) {
                 this.getPlayerCards(p).dealToHand();
@@ -570,6 +603,58 @@ export class Session {
         }
         // Double of the builing cost.
         return this.card_manager.getFacility(facility_id_on_board).getCost() * 2;
+    }
+
+    public availablePosition(facility_id: FacilityId): [number, number][] {
+        let positions: [number, number][] = [];
+        let facility: Facility = this.card_manager.getFacility(facility_id);
+        // TODO: support multiple x. (e.g. 7-9)
+        let x: number = facility.getArea() - 1;  // area is 0-origin.
+        for (let y: number = 0; y < this.board.row; y++) {
+            if (this.getFacilityIdOnBoard(x, y) === -1) {
+                positions.push([x, y]);
+            }
+        }
+        return positions;
+    }
+
+    // Build a facility in the player's talon.
+    // No overwrite an existing facility or no exceed the cost of the player's money.
+    public buildInitialFacility(player_id: PlayerId) {
+        // Player ID is valid?
+        if (player_id >= this.players.length) {
+            return false;
+        }
+
+        let player: Player = this.getPlayer(player_id);
+        let facility_id_list: FacilityId[] = shuffle(this.getPlayerCards(player_id).getTalon());
+
+        for (let facility_id of facility_id_list) {
+            let facility: Facility = this.card_manager.getFacility(facility_id);
+            let balance: number = player.getMoney() - facility.getCost();
+            if (balance < 0) {
+                continue;
+            }
+            let positions: [number, number][] = shuffle(this.availablePosition(facility_id));
+            if (positions.length === 0) {
+                continue;
+            }
+
+            console.log(facility_id);
+
+            if (!this.card_manager.moveTalonToField(facility_id)) {
+                // Something is wrong.
+                console.log(`WARING: moveTalonToField(${facility_id}) failed.`);
+                return false;
+            }
+
+            let [x, y] = positions[0];
+            this.board.setFacilityId(x, y, facility_id);
+            player.setMoney(balance);
+            return true;
+        }
+
+        return true;  // True is returned even if no facility was built.
     }
 
     public buildFacility(player_id: PlayerId, x: number, y: number,
