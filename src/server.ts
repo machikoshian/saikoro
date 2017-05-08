@@ -191,7 +191,7 @@ class Main {
                         session = new Session();
                     }
 
-                    const player_id: PlayerId = session.addPlayer(matching_id, query.name, 1200, 250);
+                    const player_id: PlayerId = session.addPlayer(matching_id, query.name, 12000, 250);
                     for (let i: number = 0; i < 10; ++i) {
                         const max_id: number = 12;
                         const card_id: number = Math.floor(Math.random() * max_id);

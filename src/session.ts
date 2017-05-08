@@ -318,6 +318,14 @@ export class CardManager {
             return 0;
         });
     }
+
+    // Check if the facility is overwritable regardless the cost.
+    public canOverwrite(facility_id: FacilityId): boolean {
+        if (this.landmarks.indexOf(facility_id) >= 0) {
+            return false;
+        }
+        return true;
+    }
 }
 
 export enum Phase {
@@ -745,11 +753,14 @@ export class Session {
             return false;
         }
 
-        // TODO: Add to check landmark.
+        // Facility on the board is overwritable?
+        let facility_id_on_board: FacilityId = this.board.getFacilityId(x, y);
+        if (!this.card_manager.canOverwrite(facility_id_on_board)) {
+            return false;
+        }
 
         // Money is valid?
         let player: Player = this.players[player_id];
-        let facility_id_on_board: FacilityId = this.board.getFacilityId(x, y);
         let overwrite_cost: number = this.getOverwriteCost(facility_id_on_board, player_id);
         let total_cost: number = facility.getCost() + overwrite_cost;
         let money: number = player.getMoney();
