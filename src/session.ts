@@ -747,8 +747,6 @@ export class Session {
 
     public buildFacility(player_id: PlayerId, x: number, y: number,
                          facility_id: FacilityId): boolean {
-        console.log("buildFacility");
-
         // Facility is a landmark?
         if (this.card_manager.isLandmark(facility_id)) {
             return this.buildLandmark(player_id, facility_id);

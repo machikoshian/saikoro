@@ -54,14 +54,14 @@ class WebClient {
         return `${faces[d1]} ${faces[d2]} : ${d1 + d2} でした。`;
     }
 
-    public getPlayerColor(player: Player): string {
+    public getPlayerColor(player_id: PlayerId): string {
         // TODO: Support landmark colors (set / built).
         let colors = ["#909CC2", "#D9BDC5", "#90C290", "#9D8189"];
 
-        if (!player || player.id > colors.length) {
+        if (player_id === -1 || player_id > colors.length) {
             return "#EFF0D1";
         }
-        return colors[player.id];
+        return colors[player_id];
     }
 
     public getFacilityColor(facility: Facility): string {
@@ -141,10 +141,16 @@ class WebClient {
         }
 
         console.log(`clicked: landmark_${card}`);
+
+        let clicked_facility_id: FacilityId = this.session.getLandmarks()[card];
+        if (this.session.getOwnerId(clicked_facility_id) !== -1) {
+            return;
+        }
+
         this.resetCards();
         this.clicked_card_element = document.getElementById(`landmark_${card}`);
         this.clicked_card_element.style.borderColor = "#FFE082";
-        this.clicked_facility_id = this.session.getLandmarks()[card];
+        this.clicked_facility_id = clicked_facility_id;
 
         this.updateBoard(this.session);
 
@@ -240,7 +246,7 @@ class WebClient {
                     field.style.backgroundColor = this.getFacilityColor(facility);
                 }
                 else {
-                    field.style.backgroundColor = this.getPlayerColor(session.getPlayer(owner_id));
+                    field.style.backgroundColor = this.getPlayerColor(owner_id);
                 }
                 field.style.borderColor = this.getFacilityColor(facility);
             }
@@ -333,7 +339,7 @@ class WebClient {
             message += `  🎲 ${name} の建設です 🎲`;
         }
         document.getElementById("message").innerText = message;
-        document.getElementById("message").style.backgroundColor = this.getPlayerColor(player);
+        document.getElementById("message").style.backgroundColor = this.getPlayerColor(player_id);
 
         // Update buttons.
         if (session.getState().getPhase() == Phase.DiceRoll) {
@@ -383,8 +389,14 @@ class WebClient {
             document.getElementById(`landmark_${j}_name`).innerText = facility.getName();
             document.getElementById(`landmark_${j}_cost`).innerText = String(facility.getCost());
             document.getElementById(`landmark_${j}_description`).innerText = facility.getDescription();
-            document.getElementById(`landmark_${j}`).style.backgroundColor =
-                this.getFacilityColor(facility);
+            let owner_id: PlayerId = this.session.getOwnerId(facility_ids[j]);
+            if (owner_id === -1) {
+                document.getElementById(`landmark_${j}`).style.backgroundColor =
+                    this.getFacilityColor(facility);
+            } else {
+                document.getElementById(`landmark_${j}`).style.backgroundColor =
+                    this.getPlayerColor(owner_id);
+            }
         }
         for (let j: number = Math.min(5, facility_ids.length); j < 5; ++j) {
             document.getElementById(`landmark_${j}`).style.display = "none";
