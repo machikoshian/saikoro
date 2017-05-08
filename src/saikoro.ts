@@ -135,6 +135,23 @@ class WebClient {
         }
     }
 
+    public onClickLandmark(card: number): void {
+        if (this.session.getState().getPhase() !== Phase.BuildFacility) {
+            return;
+        }
+
+        console.log(`clicked: landmark_${card}`);
+        this.resetCards();
+        this.clicked_card_element = document.getElementById(`landmark_${card}`);
+        this.clicked_card_element.style.borderColor = "#FFE082";
+        this.clicked_facility_id = this.session.getLandmarks()[card];
+
+        this.updateBoard(this.session);
+
+        let [x, y] = this.session.getPosition(this.clicked_facility_id);
+        document.getElementById(`field_${x}_${y}`).style.backgroundColor = "#FFF176";
+    }
+
     public startCheckUpdate(): void {
         this.check_update_timer = setInterval(this.checkUpdate.bind(this), 2000);
     }
@@ -197,6 +214,13 @@ class WebClient {
             }
         }
 
+        // Landmark cards
+        let landmark_size: number = 5;
+        for (let l: number = 0; l < landmark_size; ++l) {
+            document.getElementById(`landmark_${l}`).addEventListener(
+                "click", () => { this.onClickLandmark(l); });
+        }
+
         document.getElementById("matching_button").addEventListener(
             "click", () => { this.onClickMatching(); });
         document.getElementById("game").style.visibility = "hidden";
@@ -212,7 +236,7 @@ class WebClient {
 
                 let field: HTMLElement = document.getElementById(`field_${x}_${y}`);
                 field.innerText = name;
-                if (facility && facility.getType() === FacilityType.Gray) {
+                if (facility && facility.getType() === FacilityType.Gray && owner_id === -1) {
                     field.style.backgroundColor = this.getFacilityColor(facility);
                 }
                 else {
@@ -349,6 +373,23 @@ class WebClient {
                 document.getElementById(`card_${i}_${j}`).style.display = "none";
             }
         }
+
+        // Update landmarks.
+        let facility_ids: FacilityId[] = session.getLandmarks();
+        this.player_cards_list.push(facility_ids);
+        for (let j: number = 0; j < Math.min(5, facility_ids.length); ++j) {
+            let facility: Facility = session.getFacility(facility_ids[j]);
+            document.getElementById(`landmark_${j}`).style.display = "table-cell";
+            document.getElementById(`landmark_${j}_name`).innerText = facility.getName();
+            document.getElementById(`landmark_${j}_cost`).innerText = String(facility.getCost());
+            document.getElementById(`landmark_${j}_description`).innerText = facility.getDescription();
+            document.getElementById(`landmark_${j}`).style.backgroundColor =
+                this.getFacilityColor(facility);
+        }
+        for (let j: number = Math.min(5, facility_ids.length); j < 5; ++j) {
+            document.getElementById(`landmark_${j}`).style.display = "none";
+        }
+
         this.resetCards();  // Nice to check if built or not?
     }
 }

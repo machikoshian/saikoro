@@ -141,10 +141,12 @@ export class PlayerCards {
     }
 }
 
+type LandmarkInfo = [FacilityId, PlayerId];
+
 export class CardManager {
     private facilities: { [key: number]: Facility; };
     private player_cards_list: PlayerCards[];
-    private landmarks: FacilityId[];
+    private landmarks: LandmarkInfo[];
 
     readonly max_card_size: number = 1000;
     readonly landmark_id_base: number = 10000;
@@ -152,7 +154,7 @@ export class CardManager {
     constructor(
         facilities: { [key: number]: Facility; } = {},
         player_cards_list: PlayerCards[] = null,
-        landmarks: FacilityId[] = []) {
+        landmarks: LandmarkInfo[] = []) {
         this.facilities = facilities;
         if (player_cards_list) {
             this.player_cards_list = player_cards_list;
@@ -209,8 +211,35 @@ export class CardManager {
     public addLandmark(landmark: Facility): FacilityId {
         let facility_id: FacilityId = this.landmark_id_base + this.landmarks.length;
         this.facilities[facility_id] = landmark;
-        this.landmarks.push(facility_id);
+        this.landmarks.push([facility_id, -1]);  // NO_PLAYER.
         return facility_id;
+    }
+
+    public buildLandmark(player_id: PlayerId, landmark_id: FacilityId): boolean {
+        for (let landmark_info of this.landmarks) {
+            if (landmark_info[0] === landmark_id) {
+                landmark_info[1] = player_id;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public isLandmark(facility_id: FacilityId): boolean {
+        for (let landmark_info of this.landmarks) {
+            if (landmark_info[0] === facility_id) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public getLandmarks(): FacilityId[] {
+        let landmarks: FacilityId[] = [];
+        for (let landmark_info of this.landmarks) {
+            landmarks.push(landmark_info[0]);
+        }
+        return landmarks;
     }
 
     public getFacility(facility_id: FacilityId): Facility {
@@ -224,8 +253,12 @@ export class CardManager {
         if (facility_id < 0) {
             return -1;
         }
-        if (facility_id >= this.landmark_id_base) {
-            // TODO: Support the owner of the landmark.
+        if (this.isLandmark(facility_id)) {
+            for (let landmark_info of this.landmarks) {
+                if (landmark_info[0] === facility_id) {
+                    return landmark_info[1];
+                }
+            }
             return -1;
         }
         // TODO: Check actual existance of facility_id.
@@ -321,7 +354,7 @@ export class CardManager {
 
     // Check if the facility is overwritable regardless the cost.
     public canOverwrite(facility_id: FacilityId): boolean {
-        if (this.landmarks.indexOf(facility_id) >= 0) {
+        if (this.isLandmark(facility_id)) {
             return false;
         }
         return true;
@@ -714,6 +747,13 @@ export class Session {
 
     public buildFacility(player_id: PlayerId, x: number, y: number,
                          facility_id: FacilityId): boolean {
+        console.log("buildFacility");
+
+        // Facility is a landmark?
+        if (this.card_manager.isLandmark(facility_id)) {
+            return this.buildLandmark(player_id, facility_id);
+        }
+
         // State is valid?
         if (!this.isValid(player_id, Phase.BuildFacility)) {
             return false;
@@ -795,6 +835,50 @@ export class Session {
         return true;
     }
 
+    public buildLandmark(player_id: PlayerId, facility_id: FacilityId): boolean {
+        // State is valid?
+        if (!this.isValid(player_id, Phase.BuildFacility)) {
+            return false;
+        }
+
+        // Player ID is valid?
+        if (player_id >= this.players.length) {
+            return false;
+        }
+
+        // Is a landmark?
+        if (!this.card_manager.isLandmark(facility_id)) {
+            return false;
+        }
+
+        // Facility is valid?
+        let facility: Facility = this.card_manager.getFacility(facility_id);
+        if (!facility) {
+            return false;
+        }
+
+        // Isn't already built?
+        let facility_owner: PlayerId = this.getOwnerId(facility_id);
+        if (facility_owner !== -1) {
+            // Already built.
+            return false;
+        }
+
+        // Money is valid?
+        let player: Player = this.players[player_id];
+        let balance: number = player.getMoney() - facility.getCost();
+        if (balance < 0) {
+            return false;
+        }
+
+        // Update the data.
+        player.setMoney(balance);
+        this.card_manager.buildLandmark(player_id, facility_id);
+
+        this.state.done(Phase.BuildFacility);
+        return true;
+    }
+
     public paySalary(): boolean {
         this.getCurrentPlayer().paySalary();
         this.state.done(Phase.PaySalary);
@@ -855,11 +939,17 @@ export class Session {
     public getSortedHand(player_id: PlayerId): FacilityId[] {
         return this.card_manager.sortFacilitiesForHand(this.getPlayerCards(player_id).getHand());
     }
+    public getLandmarks(): FacilityId[] {
+        return this.card_manager.getLandmarks();
+    }
     public getOwnerId(facility_id: FacilityId): PlayerId {
         return this.card_manager.getOwner(facility_id);
     }
     public getOwner(facility_id: FacilityId): Player {
         return this.getPlayer(this.getOwnerId(facility_id));
+    }
+    public getPosition(facility_id: FacilityId): [number, number] {
+        return this.board.getPosition(facility_id);
     }
     public getDiceResult(): DiceResult {
         return this.dice_result;

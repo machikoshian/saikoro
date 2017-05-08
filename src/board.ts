@@ -149,6 +149,17 @@ export class Board {
         return this.fields[x][y].getFacilityId();
     }
 
+    getPosition(facility_id: FacilityId): [number, number] {
+        for (let y: number = 0; y < this.row; ++y) {
+            for (let x: number = 0; x < this.column; ++x) {
+                if (this.fields[x][y].getFacilityId() === facility_id) {
+                    return [x, y];
+                }
+            }
+        }
+        return [-1, -1];
+    }
+
     debugString(): string {
         let output: string = "";
         for (let y: number = 0; y < this.row; ++y) {
