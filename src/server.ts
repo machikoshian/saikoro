@@ -84,12 +84,12 @@ class Main {
     }
 
     private doNext(session: Session): boolean {
-        let prev_step: number = session.getState().getStep();
+        let prev_step: number = session.getStep();
         for (let i: number = 0; i < 100; ++i) {
             if (!session.doNext()) {
                 return true;
             }
-            let new_step: number = session.getState().getStep();
+            let new_step: number = session.getStep();
             if (prev_step == new_step) {
                 break;
             }
@@ -101,7 +101,7 @@ class Main {
     private processCommand(session: Session, query): boolean {
         if (query.command == "board") {
             let step: number = Number(query.step);
-            if (step >= session.getState().getStep()) {
+            if (step >= session.getStep()) {
                 // No update.
                 return false;
             }

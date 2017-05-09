@@ -375,31 +375,65 @@ export enum Phase {
     BuildFacility,
     CardRemoval,
     EndTurn,
+    EndGame,
 }
 
-export class State {
-    private phase: Phase;
+export class Session {
+    private board: Board;
+    private players: Player[];
+    private card_manager: CardManager;
     private step: number;  // Server starts from 1. Client starts from 0.
+    private phase: Phase;
+    private round: number;
+    private turn: number;
+    private current_player_id: PlayerId;
+    private dice_result: DiceResult;  // TODO: change it to Events.
 
-    constructor(phase: Phase = Phase.StartGame, step: number = 1) {
-        this.phase = phase;
-        this.step = step;
+    constructor() {
+        this.board = new Board();
+        this.players = [];
+        this.card_manager = new CardManager();
+        this.step = 1;
+        this.phase = Phase.StartGame;
+        this.round = 0;
+        this.turn = 0;
+        this.current_player_id = 0;
+        this.dice_result = null;
     }
 
     public toJSON(): Object {
         return {
-            class_name: "State",
-            phase: this.phase,
+            class_name: "Session",
+            board: this.board.toJSON(),
+            players: this.players.map(player => { return player.toJSON(); }),
+            card_manager: this.card_manager.toJSON(),
             step: this.step,
+            phase: this.phase,
+            round: this.round,
+            turn: this.turn,
+            current_player_id: this.current_player_id,
+            dice_result: this.dice_result ? this.dice_result.toJSON() : null,
         }
     }
 
-    static fromJSON(json): State {
-        return new State(json.phase, json.step);
+    static fromJSON(json): Session {
+        let board: Board = Board.fromJSON(json.board);
+        let players: Player[] = json.players.map(player => { return Player.fromJSON(player); });
+        let session: Session = new Session();
+        session.board = board;
+        session.players = players;
+        session.card_manager = CardManager.fromJSON(json.card_manager);
+        session.step = json.step,
+        session.phase = json.phase,
+        session.round = json.round;
+        session.turn = json.turn;
+        session.current_player_id = json.current_player_id;
+        session.dice_result = json.dice_result ? DiceResult.fromJSON(json.dice_result) : null;
+        return session;
     }
 
     public done(phase: Phase): void {
-        if (this.phase !== phase) {
+        if (this.phase !== phase || this.phase === Phase.EndGame) {
             return;
         }
         this.step++;
@@ -439,93 +473,32 @@ export class State {
         }
     }
 
-    public getPhase(): Phase {
-        return this.phase;
-    }
-
-    public getStep(): number {
-        return this.step;
-    }
-}
-
-export class Session {
-    private board: Board;
-    private players: Player[];
-    private card_manager: CardManager;
-    private state: State;
-    private round: number;
-    private turn: number;
-    private current_player_id: PlayerId;
-    private dice_result: DiceResult;  // TODO: change it to Events.
-
-    constructor() {
-        this.board = new Board();
-        this.players = [];
-        this.card_manager = new CardManager();
-        this.state = new State();
-        this.round = 0;
-        this.turn = 0;
-        this.current_player_id = 0;
-        this.dice_result = null;
-    }
-
-    public toJSON(): Object {
-        return {
-            class_name: "Session",
-            board: this.board.toJSON(),
-            players: this.players.map(player => { return player.toJSON(); }),
-            card_manager: this.card_manager.toJSON(),
-            state: this.state.toJSON(),
-            round: this.round,
-            turn: this.turn,
-            current_player_id: this.current_player_id,
-            dice_result: this.dice_result ? this.dice_result.toJSON() : null,
-        }
-    }
-
-    static fromJSON(json): Session {
-        let board: Board = Board.fromJSON(json.board);
-        let players: Player[] = json.players.map(player => { return Player.fromJSON(player); });
-        let state: State = State.fromJSON(json.state);
-        let session: Session = new Session();
-        session.board = board;
-        session.players = players;
-        session.card_manager = CardManager.fromJSON(json.card_manager);
-        session.state = state;
-        session.round = json.round;
-        session.turn = json.turn;
-        session.current_player_id = json.current_player_id;
-        session.dice_result = json.dice_result ? DiceResult.fromJSON(json.dice_result) : null;
-        return session;
-    }
-
     public doNext(): boolean {
-        let phase: Phase = this.state.getPhase();
-        if (phase == Phase.StartGame) {
+        if (this.phase == Phase.StartGame) {
             return this.startGame();
         }
 
-        if (phase == Phase.StartTurn) {
+        if (this.phase == Phase.StartTurn) {
             return this.startTurn();
         }
 
-        if (phase == Phase.DiceRoll) {
+        if (this.phase == Phase.DiceRoll) {
             return false;  // Need interactions.
         }
 
-        if (phase == Phase.FacilityAction) {
+        if (this.phase == Phase.FacilityAction) {
             return this.facilityAction();
         }
 
-        if (phase == Phase.PaySalary) {
+        if (this.phase == Phase.PaySalary) {
             return this.paySalary();
         }
 
-        if (phase == Phase.BuildFacility) {
+        if (this.phase == Phase.BuildFacility) {
             return false;  // Need interactions.
         }
 
-        if (phase == Phase.EndTurn) {
+        if (this.phase == Phase.EndTurn) {
             return this.endTurn();
         }
 
@@ -547,7 +520,7 @@ export class Session {
     }
 
     public isValid(player_id: PlayerId, phase: Phase): boolean {
-        return (this.current_player_id == player_id && this.state.getPhase() == phase);
+        return (this.current_player_id == player_id && this.phase == phase);
     }
 
     public startGame(): boolean {
@@ -564,13 +537,13 @@ export class Session {
                 this.getPlayerCards(p).dealToHand();
             }
         }
-        this.state.done(Phase.StartGame);
+        this.done(Phase.StartGame);
         return true;
     }
 
     public startTurn(): boolean {
         this.getPlayerCards(this.current_player_id).dealToHand();
-        this.state.done(Phase.StartTurn);
+        this.done(Phase.StartTurn);
         return true;
     }
 
@@ -579,7 +552,7 @@ export class Session {
             return false;
         }
         this.dice_result = Dice.roll(dice_num, aim);
-        this.state.done(Phase.DiceRoll);
+        this.done(Phase.DiceRoll);
         return true;
     }
 
@@ -607,7 +580,7 @@ export class Session {
                 this.doFacilityAction(facility_id);
             }
         }
-        this.state.done(Phase.FacilityAction);
+        this.done(Phase.FacilityAction);
         return true;
     }
 
@@ -762,7 +735,7 @@ export class Session {
 
         // Is pass?  (valid action, but not build a facility).
         if (x === -1 && y === -1 && facility_id === -1) {
-            this.state.done(Phase.BuildFacility);
+            this.done(Phase.BuildFacility);
             return true;
         }
 
@@ -827,7 +800,7 @@ export class Session {
             this.getPlayer(this.getOwnerId(facility_id_on_board)).addMoney(overwrite_cost);
         }
 
-        this.state.done(Phase.BuildFacility);
+        this.done(Phase.BuildFacility);
         return true;
     }
 
@@ -871,13 +844,13 @@ export class Session {
         player.setMoney(balance);
         this.card_manager.buildLandmark(player_id, facility_id);
 
-        this.state.done(Phase.BuildFacility);
+        this.done(Phase.BuildFacility);
         return true;
     }
 
     public paySalary(): boolean {
         this.getCurrentPlayer().paySalary();
-        this.state.done(Phase.PaySalary);
+        this.done(Phase.PaySalary);
         return true;
     }
 
@@ -892,8 +865,15 @@ export class Session {
             this.turn += 1;
         }
 
-        this.state.done(Phase.EndTurn);
+        this.done(Phase.EndTurn);
         return true;
+    }
+
+    public getStep(): number {
+        return this.step;
+    }
+    public getPhase(): Phase {
+        return this.phase;
     }
 
     public getBoard(): Board {
@@ -901,9 +881,6 @@ export class Session {
     }
     public getPlayers(): Player[] {
         return this.players;
-    }
-    public getState(): State {
-        return this.state;
     }
     public getFacility(facility_id: FacilityId): Facility {
         return this.card_manager.getFacility(facility_id);

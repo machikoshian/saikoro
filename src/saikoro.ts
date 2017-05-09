@@ -115,7 +115,7 @@ class WebClient {
     }
 
     public onClickCard(player: number, card: number): void {
-        if (this.session.getState().getPhase() !== Phase.BuildFacility) {
+        if (this.session.getPhase() !== Phase.BuildFacility) {
             return;
         }
 
@@ -136,7 +136,7 @@ class WebClient {
     }
 
     public onClickLandmark(card: number): void {
-        if (this.session.getState().getPhase() !== Phase.BuildFacility) {
+        if (this.session.getPhase() !== Phase.BuildFacility) {
             return;
         }
 
@@ -280,7 +280,7 @@ class WebClient {
         this.session = session;
         let player_id: PlayerId = session.getCurrentPlayerId();
         this.player_id = player_id;
-        let step: number = session.getState().getStep();
+        let step: number = session.getStep();
         console.log(step);
         if (step == this.step) {
             console.log("Already updated.");
@@ -328,13 +328,14 @@ class WebClient {
         let player: Player = players[player_id];
         let name: string = player.name;
         let message: string = "";
-        if (session.getState().getPhase() == Phase.StartGame) {
+        let phase: Phase = session.getPhase();
+        if (phase == Phase.StartGame) {
             message = `🎲 マッチング中です 🎲`;
         }
-        else if (session.getState().getPhase() == Phase.DiceRoll) {
+        else if (phase == Phase.DiceRoll) {
             message = `🎲 ${name} のサイコロです 🎲`;
         }
-        else if (session.getState().getPhase() == Phase.BuildFacility) {
+        else if (phase == Phase.BuildFacility) {
             message = this.diceResultMessage(session.getDiceResult());
             message += `  🎲 ${name} の建設です 🎲`;
         }
@@ -342,7 +343,7 @@ class WebClient {
         document.getElementById("message").style.backgroundColor = this.getPlayerColor(player_id);
 
         // Update buttons.
-        if (session.getState().getPhase() == Phase.DiceRoll) {
+        if (phase == Phase.DiceRoll) {
             document.getElementById("dice_1").style.visibility = "visible";
             document.getElementById("dice_2").style.visibility = "visible";
         }
@@ -351,7 +352,7 @@ class WebClient {
             document.getElementById("dice_2").style.visibility = "hidden";
         }
 
-        if (session.getState().getPhase() == Phase.BuildFacility) {
+        if (phase == Phase.BuildFacility) {
             document.getElementById("end_turn").style.visibility = "visible";
         }
         else {
