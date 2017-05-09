@@ -49,8 +49,8 @@ export class PlayerCards {
     private getIndex(facility_id: FacilityId, facility_array: FacilityId[]): number {
         // indexOf is type sensitive (e.g. "1" is different value from 1).
         // facility_id could be a string.
-        if (typeof facility_id !== 'number') {
-            console.log(`WARNING: facility_id(${facility_id}) is not a number`);
+        if (typeof facility_id !== "number") {
+            console.warn(`facility_id(${facility_id}) is not a number`);
             facility_id = Number(facility_id);
         }
         return facility_array.indexOf(facility_id);
@@ -59,7 +59,7 @@ export class PlayerCards {
     private deleteFacilityId(facility_id: FacilityId, facility_array: FacilityId[]): boolean {
         let index: number = this.getIndex(facility_id, facility_array);
         if (index < 0) {
-            console.log("WARNING: deleteFacilityId - index < 0.");
+            console.warn("deleteFacilityId - index < 0.");
             return false;
         }
         facility_array.splice(index, 1);
@@ -69,13 +69,11 @@ export class PlayerCards {
     private moveFacilityId(
         facility_id: FacilityId, array_from: FacilityId[], array_to: FacilityId[]): boolean {
         if (facility_id < 0) {
-            console.log("WARNING: facility_id < 0.");
+            console.warn("facility_id < 0.");
             return false;
         }
         if (!this.deleteFacilityId(facility_id, array_from)) {
-            console.log("WARNING: deleteFacilityId failed.");
-            console.log(facility_id);
-            console.log(array_from);
+            console.warn("deleteFacilityId failed.");
             return false;
         }
         array_to.push(facility_id);
@@ -84,7 +82,7 @@ export class PlayerCards {
 
     public addTalon(facility_id: FacilityId): boolean {
         if (facility_id < 0) {
-            console.log("WARNING: facility_id < 0.");
+            console.warn("facility_id < 0.");
             return false;
         }
         this.talon.push(facility_id);
@@ -268,7 +266,7 @@ export class CardManager {
 
     public getPlayerCards(player_id: PlayerId): PlayerCards {
         if (player_id < 0 || this.player_cards_list.length <= player_id) {
-            console.log("WARNING: player_id is invalid.");
+            console.warn("player_id is invalid.");
             return null;
         }
         return this.player_cards_list[player_id];
@@ -283,11 +281,11 @@ export class CardManager {
 
     public isInHand(player_id: PlayerId, facility_id: FacilityId): boolean {
         if (facility_id < 0) {
-            console.log("WARNING: facility_id < 0.");
+            console.warn("facility_id < 0.");
             return false;
         }
         if (player_id < 0 || this.player_cards_list.length <= player_id) {
-            console.log("WARNING: player_id is invalid.");
+            console.warn("player_id is invalid.");
             return false;
         }
 
@@ -301,7 +299,7 @@ export class CardManager {
 
     public isInArea(area: number, facility_id: FacilityId): boolean {
         if (facility_id < 0) {
-            console.log("WARNING: facility_id < 0.");
+            console.warn("facility_id < 0.");
             return false;
         }
         return (this.facilities[facility_id].getArea() == area);
@@ -309,7 +307,7 @@ export class CardManager {
 
     public moveFieldToDiscard(facility_id: FacilityId): boolean {
         if (facility_id < 0) {
-            console.log("WARNING: facility_id < 0.");
+            console.warn("facility_id < 0.");
             return false;
         }
         return this.getPlayerCardsFromFacilityId(facility_id).moveFieldToDiscard(facility_id);
@@ -317,7 +315,7 @@ export class CardManager {
 
     public moveHandToField(facility_id: FacilityId): boolean {
         if (facility_id < 0) {
-            console.log("WARNING: facility_id < 0.");
+            console.warn("facility_id < 0.");
             return false;
         }
         return this.getPlayerCardsFromFacilityId(facility_id).moveHandToField(facility_id);
@@ -326,7 +324,7 @@ export class CardManager {
     // Used for initial build.
     public moveTalonToField(facility_id: FacilityId): boolean {
         if (facility_id < 0) {
-            console.log("WARNING: facility_id < 0.");
+            console.warn("facility_id < 0.");
             return false;
         }
         return this.getPlayerCardsFromFacilityId(facility_id).moveTalonToField(facility_id);
@@ -716,7 +714,7 @@ export class Session {
 
             if (!this.card_manager.moveTalonToField(facility_id)) {
                 // Something is wrong.
-                console.log(`WARING: moveTalonToField(${facility_id}) failed.`);
+                console.warn(`moveTalonToField(${facility_id}) failed.`);
                 return false;
             }
 
@@ -811,7 +809,7 @@ export class Session {
         if (facility_id_on_board >= 0) {
             if (!this.card_manager.moveFieldToDiscard(facility_id_on_board)) {
                 // Something is wrong.
-                console.log(`WARING: moveFieldToDiscard(${facility_id_on_board}) failed.`);
+                console.warn(`moveFieldToDiscard(${facility_id_on_board}) failed.`);
                 return false;
             }
         }
@@ -819,7 +817,7 @@ export class Session {
         // Build the new facility.
         if (!this.card_manager.moveHandToField(facility_id)) {
             // Something is wrong.
-            console.log(`WARING: moveHandToField(${facility_id}) failed.`);
+            console.warn(`moveHandToField(${facility_id}) failed.`);
             return false;
         }
 

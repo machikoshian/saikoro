@@ -25,7 +25,8 @@
     "@google-cloud/nodejs-repo-tools": "1.4.7"
   },
   "dependencies": {
-    "memjs": "0.10.0"
+    "memjs": "0.10.0",
+    "source-map-support": "^0.4.15"
   },
   "cloud-repo-tools": {
     "test": {

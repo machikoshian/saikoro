@@ -14,4 +14,4 @@ tsc --outDir ../out/server --module commonjs --project ./ || exit
 
 cd ..
 echo "open http://localhost:3156/saikoro.html"
-node out/server/server.js
+DEBUG=1 node out/server/server.js

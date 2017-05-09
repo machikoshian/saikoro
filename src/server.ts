@@ -9,7 +9,15 @@ import * as http from "http";
 import * as url from "url";
 import * as fs from "fs";
 
-const memjs = require('memjs');
+// Set DEBUG mode if specified.
+let DEBUG: string = process.env.DEBUG || "";
+
+// Source map support.
+if (DEBUG) {
+    require("source-map-support").install();
+}
+
+const memjs = require("memjs");
 
 class MemcacheMock {
     public cache: { [key: string]: any; } = {};

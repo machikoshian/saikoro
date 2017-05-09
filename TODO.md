@@ -1,14 +1,11 @@
-* 建設済みランドマークを選択できないようにする
 * ゲーム終了の実装
 
 * Card owner の変更への対応
 * 収支変化の視覚化
 * NO_PLAYER (= -1) の実装
 * console.log 等の、開発モードとの挙動の切り替え
-* node.js の ts.map のサポート
 * キャラカードの実装
 * クリックで施設詳細を表示
-* デバッグモードの追加
 * ユニットテストの追加
 * process handler chain / state hook の作成
 * Dice roll への狙い目の UI 対応
