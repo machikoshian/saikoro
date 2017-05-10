@@ -1,5 +1,5 @@
 import { Phase, Session, PlayerCards } from "./session";
-import { Player, Board, Field, PlayerId } from "./board";
+import { Player, Board, PlayerId } from "./board";
 import { FacilityId, FacilityType, Facility } from "./facility";
 import { Dice, DiceResult } from "./dice";
 

@@ -56,103 +56,53 @@ export class Player {
     }
 }
 
-export class Field {
-    private facility_id: FacilityId;
-    readonly x: number;  // dice pips - 1
-    readonly y: number;
-
-    constructor(x: number, y: number, facility_id: FacilityId = -1) {
-        this.x = x;
-        this.y = y;
-        this.facility_id = facility_id;
-    }
-
-    public toJSON(): Object {
-        return {
-            class_name: "Field",
-            facility_id: this.facility_id,
-            x: this.x,
-            y: this.y,
-        }
-    }
-
-    static fromJSON(json): Field {
-        return new Field(json.x, json.y, json.facility_id);
-    }
-
-    public getFacilityId(): FacilityId {
-        return this.facility_id;
-    }
-
-    public setFacilityId(facility_id: FacilityId): void {
-        this.facility_id = facility_id;
-    }
-
-    debugString(): string {
-        return `(${this.x},${this.y},${this.facility_id})`;
-    }
-}
-
 export class Board {
-    readonly fields: Field[][];
-    readonly row: number = 5;
-    readonly column: number = 12;
+    private field: FacilityId[][];
+    readonly row: number;
+    readonly column: number;
 
-    constructor(fields = null) {
-        if (fields) {
-            this.fields = fields;
+    constructor(field: FacilityId[][] = null, row: number = 5, column: number = 12) {
+        this.row = row;
+        this.column = column;
+        if (field) {
+            this.field = field;
         }
         else {
-            this.fields = [];
+            this.field = [];
             for (let x: number = 0; x < this.column; ++x) {
-                this.fields[x] = [];
+                this.field[x] = [];
                 for (let y: number = 0; y < this.row; ++y) {
-                    this.fields[x][y] = new Field(x, y);
+                    this.field[x][y] = -1;  // NO_FACILITY
                 }
             }
         }
     }
 
     public toJSON(): Object {
-        let fields = [];
-        for (let x: number = 0; x < this.column; ++x) {
-            fields[x] = [];
-            for (let y: number = 0; y < this.row; ++y) {
-                fields[x][y] = this.fields[x][y].toJSON();
-            }
-        }
-
         return {
             class_name: "Board",
-            fields: fields,
+            field: this.field,
             row: this.row,
             column: this.column,
         }
     }
 
     static fromJSON(json): Board {
-        let fields = [];
-        for (let x: number = 0; x < json.column; ++x) {
-            fields[x] = [];
-            for (let y: number = 0; y < json.row; ++y) {
-                fields[x][y] = Field.fromJSON(json.fields[x][y]);
-            }
-        }
-        return new Board(fields);
+        return new Board(json.field, json.row, json.column);
     }
 
     setFacilityId(x: number, y: number, facility_id: FacilityId): void {
-        this.fields[x][y].setFacilityId(facility_id);
+        this.field[x][y] = facility_id;
     }
 
     getFacilityId(x: number, y: number): FacilityId {
-        return this.fields[x][y].getFacilityId();
+        return this.field[x][y];
     }
 
     getPosition(facility_id: FacilityId): [number, number] {
         for (let y: number = 0; y < this.row; ++y) {
             for (let x: number = 0; x < this.column; ++x) {
-                if (this.fields[x][y].getFacilityId() === facility_id) {
+                if (this.field[x][y] === facility_id) {
                     return [x, y];
                 }
             }
@@ -164,7 +114,7 @@ export class Board {
         let output: string = "";
         for (let y: number = 0; y < this.row; ++y) {
             for (let x: number = 0; x < this.column; ++x) {
-                output += this.fields[x][y].debugString();
+                output += this.field[x][y] + ", ";
             }
             output += "\n";
         }
