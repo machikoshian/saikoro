@@ -35,7 +35,7 @@ let facility_data: FacilityData[] = [
 ];
 
 export type FacilityDataId = number;
-export type FacilityId = number;
+export type CardId = number;
 
 export class Facility {
     readonly data_id: FacilityDataId;

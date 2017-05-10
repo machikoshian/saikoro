@@ -1,5 +1,5 @@
 import { Dice, DiceResult } from "./dice";
-import { FacilityId, FacilityType, Facility } from "./facility";
+import { CardId, FacilityType, Facility } from "./facility";
 
 export type PlayerId = number;
 
@@ -57,11 +57,11 @@ export class Player {
 }
 
 export class Board {
-    private field: FacilityId[][];
+    private field: CardId[][];
     readonly row: number;
     readonly column: number;
 
-    constructor(field: FacilityId[][] = null, row: number = 5, column: number = 12) {
+    constructor(field: CardId[][] = null, row: number = 5, column: number = 12) {
         this.row = row;
         this.column = column;
         if (field) {
@@ -91,18 +91,18 @@ export class Board {
         return new Board(json.field, json.row, json.column);
     }
 
-    setFacilityId(x: number, y: number, facility_id: FacilityId): void {
-        this.field[x][y] = facility_id;
+    setCardId(x: number, y: number, card_id: CardId): void {
+        this.field[x][y] = card_id;
     }
 
-    getFacilityId(x: number, y: number): FacilityId {
+    getCardId(x: number, y: number): CardId {
         return this.field[x][y];
     }
 
-    getPosition(facility_id: FacilityId): [number, number] {
+    getPosition(card_id: CardId): [number, number] {
         for (let y: number = 0; y < this.row; ++y) {
             for (let x: number = 0; x < this.column; ++x) {
-                if (this.field[x][y] === facility_id) {
+                if (this.field[x][y] === card_id) {
                     return [x, y];
                 }
             }

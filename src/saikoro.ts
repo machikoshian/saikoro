@@ -1,6 +1,6 @@
 import { Phase, Session, PlayerCards } from "./session";
 import { Player, Board, PlayerId } from "./board";
-import { FacilityId, FacilityType, Facility } from "./facility";
+import { CardId, FacilityType, Facility } from "./facility";
 import { Dice, DiceResult } from "./dice";
 
 class HttpRequest {
@@ -35,9 +35,9 @@ class WebClient {
     public matching_id: number = 0;
     public player_id: PlayerId = 0;
     public step: number = 0;
-    public clicked_facility_id: FacilityId = -1;
+    public clicked_card_id: CardId = -1;
     public clicked_card_element: HTMLElement = null;
-    public player_cards_list: FacilityId[][] = [];
+    public player_cards_list: CardId[][] = [];
     public callback: (response: string) => void;
     public check_update_timer: number = 0;
     public no_update_count: number = 0;
@@ -88,16 +88,16 @@ class WebClient {
             this.clicked_card_element.style.borderColor = "#EEEEEE";
             this.clicked_card_element = null;
         }
-        this.clicked_facility_id = -1;
+        this.clicked_card_id = -1;
     }
 
     public onClickField(x, y): void {
         console.log(`clicked: field_${x}_${y}`);
-        if (this.clicked_facility_id < 0) {
+        if (this.clicked_card_id < 0) {
             return;
         }
         HttpRequest.Send(
-            `/command?command=build&session_id=${this.session_id}&player_id=${this.player_id}&x=${x}&y=${y}&facility_id=${this.clicked_facility_id}`,
+            `/command?command=build&session_id=${this.session_id}&player_id=${this.player_id}&x=${x}&y=${y}&card_id=${this.clicked_card_id}`,
             this.callback);
     }
 
@@ -110,7 +110,7 @@ class WebClient {
     public onClickEndTurn(): void {
         console.log("clicked: end_turn");
         HttpRequest.Send(
-            `/command?command=build&session_id=${this.session_id}&player_id=${this.player_id}&x=-1&y=-1&facility_id=-1`,
+            `/command?command=build&session_id=${this.session_id}&player_id=${this.player_id}&x=-1&y=-1&card_id=-1`,
             this.callback);
     }
 
@@ -123,11 +123,11 @@ class WebClient {
         this.resetCards();
         this.clicked_card_element = document.getElementById(`card_${player}_${card}`);
         this.clicked_card_element.style.borderColor = "#FFE082";
-        this.clicked_facility_id = this.player_cards_list[player][card];
+        this.clicked_card_id = this.player_cards_list[player][card];
 
         this.updateBoard(this.session);
 
-        let x: number = this.session.getFacility(this.clicked_facility_id).getArea() - 1;
+        let x: number = this.session.getFacility(this.clicked_card_id).getArea() - 1;
         for (let y: number = 0; y < 5; y++) {
             let field: HTMLElement = document.getElementById(`field_${x}_${y}`);
             // TODO: Keep the owner's color too.
@@ -142,19 +142,19 @@ class WebClient {
 
         console.log(`clicked: landmark_${card}`);
 
-        let clicked_facility_id: FacilityId = this.session.getLandmarks()[card];
-        if (this.session.getOwnerId(clicked_facility_id) !== -1) {
+        let clicked_card_id: CardId = this.session.getLandmarks()[card];
+        if (this.session.getOwnerId(clicked_card_id) !== -1) {
             return;
         }
 
         this.resetCards();
         this.clicked_card_element = document.getElementById(`landmark_${card}`);
         this.clicked_card_element.style.borderColor = "#FFE082";
-        this.clicked_facility_id = clicked_facility_id;
+        this.clicked_card_id = clicked_card_id;
 
         this.updateBoard(this.session);
 
-        let [x, y] = this.session.getPosition(this.clicked_facility_id);
+        let [x, y] = this.session.getPosition(this.clicked_card_id);
         document.getElementById(`field_${x}_${y}`).style.backgroundColor = "#FFF176";
     }
 
@@ -369,10 +369,10 @@ class WebClient {
         const area_name: string[] =
             ["", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩", "⑪", "⑫"];
         for (let i: number = 0; i < players.length; ++i) {
-            let facility_ids: FacilityId[] = session.getSortedHand(i);
-            this.player_cards_list.push(facility_ids);
-            for (let j: number = 0; j < Math.min(10, facility_ids.length); ++j) {
-                let facility: Facility = session.getFacility(facility_ids[j]);
+            let card_ids: CardId[] = session.getSortedHand(i);
+            this.player_cards_list.push(card_ids);
+            for (let j: number = 0; j < Math.min(10, card_ids.length); ++j) {
+                let facility: Facility = session.getFacility(card_ids[j]);
                 document.getElementById(`card_${i}_${j}`).style.display = "table-cell";
                 document.getElementById(`card_${i}_${j}_name`).innerText =
                     `${area_name[facility.getArea()]} ${facility.getName()}`;
@@ -381,21 +381,21 @@ class WebClient {
                 document.getElementById(`card_${i}_${j}`).style.backgroundColor =
                     this.getFacilityColor(facility);
             }
-            for (let j: number = Math.min(10, facility_ids.length); j < 10; ++j) {
+            for (let j: number = Math.min(10, card_ids.length); j < 10; ++j) {
                 document.getElementById(`card_${i}_${j}`).style.display = "none";
             }
         }
 
         // Update landmarks.
-        let facility_ids: FacilityId[] = session.getLandmarks();
-        this.player_cards_list.push(facility_ids);
-        for (let j: number = 0; j < Math.min(5, facility_ids.length); ++j) {
-            let facility: Facility = session.getFacility(facility_ids[j]);
+        let card_ids: CardId[] = session.getLandmarks();
+        this.player_cards_list.push(card_ids);
+        for (let j: number = 0; j < Math.min(5, card_ids.length); ++j) {
+            let facility: Facility = session.getFacility(card_ids[j]);
             document.getElementById(`landmark_${j}`).style.display = "table-cell";
             document.getElementById(`landmark_${j}_name`).innerText = facility.getName();
             document.getElementById(`landmark_${j}_cost`).innerText = String(facility.getCost());
             document.getElementById(`landmark_${j}_description`).innerText = facility.getDescription();
-            let owner_id: PlayerId = this.session.getOwnerId(facility_ids[j]);
+            let owner_id: PlayerId = this.session.getOwnerId(card_ids[j]);
             if (owner_id === -1) {
                 document.getElementById(`landmark_${j}`).style.backgroundColor =
                     this.getFacilityColor(facility);
@@ -404,7 +404,7 @@ class WebClient {
                     this.getPlayerColor(owner_id);
             }
         }
-        for (let j: number = Math.min(5, facility_ids.length); j < 5; ++j) {
+        for (let j: number = Math.min(5, card_ids.length); j < 5; ++j) {
             document.getElementById(`landmark_${j}`).style.display = "none";
         }
 

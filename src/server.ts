@@ -1,7 +1,7 @@
 import { Dice } from "./dice";
 import { Session } from "./session";
 import { Board, PlayerId } from "./board";
-import { FacilityId, FacilityDataId, FacilityType, Facility } from "./facility";
+import { CardId, FacilityDataId, FacilityType, Facility } from "./facility";
 
 
 // Moduiles from Node.js
@@ -121,9 +121,9 @@ class Main {
             let player_id: PlayerId = Number(query.player_id);
             let x: number = Number(query.x);
             let y: number = Number(query.y);
-            let facility_id: FacilityId = Number(query.facility_id);
-            if (x != null && y != null && player_id != null && facility_id != null) {
-                if (session.buildFacility(player_id, x, y, facility_id)) {
+            let card_id: CardId = Number(query.card_id);
+            if (x != null && y != null && player_id != null && card_id != null) {
+                if (session.buildFacility(player_id, x, y, card_id)) {
                     // TODO: integrate buildFacility and doNext.
                     this.doNext(session);
                 }

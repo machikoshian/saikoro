@@ -1,6 +1,6 @@
 import { Dice, DiceResult } from "./dice";
 import { Player, Board, PlayerId } from "./board";
-import { FacilityId, FacilityDataId, FacilityType, Facility } from "./facility";
+import { CardId, FacilityDataId, FacilityType, Facility } from "./facility";
 
 function shuffle(array: any[]): any[] {
     let shuffled_array: any[] = array.slice(0);
@@ -12,16 +12,16 @@ function shuffle(array: any[]): any[] {
 }
 
 export class PlayerCards {
-    private talon: FacilityId[];    // 山札
-    private hand: FacilityId[];     // 手札
-    private field: FacilityId[];    // 使用中 (建設中)
-    private discard: FacilityId[];  // 捨て札
+    private talon: CardId[];    // 山札
+    private hand: CardId[];     // 手札
+    private field: CardId[];    // 使用中 (建設中)
+    private discard: CardId[];  // 捨て札
 
     constructor(
-        talon: FacilityId[] = [],
-        hand: FacilityId[] = [],
-        field: FacilityId[] = [],
-        discard: FacilityId[] = []) {
+        talon: CardId[] = [],
+        hand: CardId[] = [],
+        field: CardId[] = [],
+        discard: CardId[] = []) {
         this.talon = talon;
         this.hand = hand;
         this.field = field;
@@ -46,66 +46,66 @@ export class PlayerCards {
         return this.talon.length + this.hand.length + this.field.length + this.discard.length;
     }
 
-    private getIndex(facility_id: FacilityId, facility_array: FacilityId[]): number {
+    private getIndex(card_id: CardId, facility_array: CardId[]): number {
         // indexOf is type sensitive (e.g. "1" is different value from 1).
-        // facility_id could be a string.
-        if (typeof facility_id !== "number") {
-            console.warn(`facility_id(${facility_id}) is not a number`);
-            facility_id = Number(facility_id);
+        // card_id could be a string.
+        if (typeof card_id !== "number") {
+            console.warn(`card_id(${card_id}) is not a number`);
+            card_id = Number(card_id);
         }
-        return facility_array.indexOf(facility_id);
+        return facility_array.indexOf(card_id);
     }
 
-    private deleteFacilityId(facility_id: FacilityId, facility_array: FacilityId[]): boolean {
-        let index: number = this.getIndex(facility_id, facility_array);
+    private deleteCardId(card_id: CardId, facility_array: CardId[]): boolean {
+        let index: number = this.getIndex(card_id, facility_array);
         if (index < 0) {
-            console.warn("deleteFacilityId - index < 0.");
+            console.warn("deleteCardId - index < 0.");
             return false;
         }
         facility_array.splice(index, 1);
         return true;
     }
 
-    private moveFacilityId(
-        facility_id: FacilityId, array_from: FacilityId[], array_to: FacilityId[]): boolean {
-        if (facility_id < 0) {
-            console.warn("facility_id < 0.");
+    private moveCardId(
+        card_id: CardId, array_from: CardId[], array_to: CardId[]): boolean {
+        if (card_id < 0) {
+            console.warn("card_id < 0.");
             return false;
         }
-        if (!this.deleteFacilityId(facility_id, array_from)) {
-            console.warn("deleteFacilityId failed.");
+        if (!this.deleteCardId(card_id, array_from)) {
+            console.warn("deleteCardId failed.");
             return false;
         }
-        array_to.push(facility_id);
+        array_to.push(card_id);
         return true;
     }
 
-    public addTalon(facility_id: FacilityId): boolean {
-        if (facility_id < 0) {
-            console.warn("facility_id < 0.");
+    public addTalon(card_id: CardId): boolean {
+        if (card_id < 0) {
+            console.warn("card_id < 0.");
             return false;
         }
-        this.talon.push(facility_id);
+        this.talon.push(card_id);
         return true;
     }
 
-    public getTalon(): FacilityId[] {
+    public getTalon(): CardId[] {
         return this.talon;
     }
 
-    public getHand(): FacilityId[] {
+    public getHand(): CardId[] {
         return this.hand;
     }
 
     // Move a random facility from Talon to Hand.
-    public dealToHand(): FacilityId {
+    public dealToHand(): CardId {
         if (this.talon.length === 0) {
             return -1;
         }
         let random_index: number = Math.floor(Math.random() * this.talon.length);
-        let facility_id: FacilityId = this.talon[random_index];
-        this.moveTalonToHand(facility_id);
-        return facility_id;
+        let card_id: CardId = this.talon[random_index];
+        this.moveTalonToHand(card_id);
+        return card_id;
     }
 
     public getTalonSize(): number {
@@ -116,30 +116,30 @@ export class PlayerCards {
         return this.hand.length;
     }
 
-    public moveTalonToHand(facility_id: FacilityId): boolean {
-        return this.moveFacilityId(facility_id, this.talon, this.hand);
+    public moveTalonToHand(card_id: CardId): boolean {
+        return this.moveCardId(card_id, this.talon, this.hand);
     }
 
-    public isInHand(facility_id: FacilityId): boolean {
-        let index: number = this.getIndex(facility_id, this.hand);
+    public isInHand(card_id: CardId): boolean {
+        let index: number = this.getIndex(card_id, this.hand);
         return (index >= 0);
     }
 
     // Used for initial build.
-    public moveTalonToField(facility_id: FacilityId): boolean {
-        return this.moveFacilityId(facility_id, this.talon, this.field);
+    public moveTalonToField(card_id: CardId): boolean {
+        return this.moveCardId(card_id, this.talon, this.field);
     }
 
-    public moveHandToField(facility_id: FacilityId): boolean {
-        return this.moveFacilityId(facility_id, this.hand, this.field);
+    public moveHandToField(card_id: CardId): boolean {
+        return this.moveCardId(card_id, this.hand, this.field);
     }
 
-    public moveFieldToDiscard(facility_id: FacilityId): boolean {
-        return this.moveFacilityId(facility_id, this.field, this.discard);
+    public moveFieldToDiscard(card_id: CardId): boolean {
+        return this.moveCardId(card_id, this.field, this.discard);
     }
 }
 
-type LandmarkInfo = [FacilityId, PlayerId];
+type LandmarkInfo = [CardId, PlayerId];
 
 export class CardManager {
     private facilities: { [key: number]: Facility; };
@@ -199,21 +199,21 @@ export class CardManager {
         if (size >= this.max_card_size) {
             return false;
         }
-        // FacilityId is separated per player (i.e. player1 = 1000 - 1999).
-        let facility_id: FacilityId = player_id * this.max_card_size + size;
-        this.facilities[facility_id] = new Facility(facility_data_id);
-        player_cards.addTalon(facility_id);
+        // CardId is separated per player (i.e. player1 = 1000 - 1999).
+        let card_id: CardId = player_id * this.max_card_size + size;
+        this.facilities[card_id] = new Facility(facility_data_id);
+        player_cards.addTalon(card_id);
         return true;
     }
 
-    public addLandmark(landmark: Facility): FacilityId {
-        let facility_id: FacilityId = this.landmark_id_base + this.landmarks.length;
-        this.facilities[facility_id] = landmark;
-        this.landmarks.push([facility_id, -1]);  // NO_PLAYER.
-        return facility_id;
+    public addLandmark(landmark: Facility): CardId {
+        let card_id: CardId = this.landmark_id_base + this.landmarks.length;
+        this.facilities[card_id] = landmark;
+        this.landmarks.push([card_id, -1]);  // NO_PLAYER.
+        return card_id;
     }
 
-    public buildLandmark(player_id: PlayerId, landmark_id: FacilityId): boolean {
+    public buildLandmark(player_id: PlayerId, landmark_id: CardId): boolean {
         for (let landmark_info of this.landmarks) {
             if (landmark_info[0] === landmark_id) {
                 landmark_info[1] = player_id;
@@ -223,45 +223,45 @@ export class CardManager {
         return false;
     }
 
-    public isLandmark(facility_id: FacilityId): boolean {
+    public isLandmark(card_id: CardId): boolean {
         for (let landmark_info of this.landmarks) {
-            if (landmark_info[0] === facility_id) {
+            if (landmark_info[0] === card_id) {
                 return true;
             }
         }
         return false;
     }
 
-    public getLandmarks(): FacilityId[] {
-        let landmarks: FacilityId[] = [];
+    public getLandmarks(): CardId[] {
+        let landmarks: CardId[] = [];
         for (let landmark_info of this.landmarks) {
             landmarks.push(landmark_info[0]);
         }
         return landmarks;
     }
 
-    public getFacility(facility_id: FacilityId): Facility {
-        if (facility_id < 0) {
+    public getFacility(card_id: CardId): Facility {
+        if (card_id < 0) {
             return null;
         }
-        return this.facilities[facility_id];
+        return this.facilities[card_id];
     }
 
-    public getOwner(facility_id: FacilityId): PlayerId {
-        if (facility_id < 0) {
+    public getOwner(card_id: CardId): PlayerId {
+        if (card_id < 0) {
             return -1;
         }
-        if (this.isLandmark(facility_id)) {
+        if (this.isLandmark(card_id)) {
             for (let landmark_info of this.landmarks) {
-                if (landmark_info[0] === facility_id) {
+                if (landmark_info[0] === card_id) {
                     return landmark_info[1];
                 }
             }
             return -1;
         }
-        // TODO: Check actual existance of facility_id.
+        // TODO: Check actual existance of card_id.
         // TODO: Owner can be changed while the game.
-        return Math.floor(facility_id / this.max_card_size);
+        return Math.floor(card_id / this.max_card_size);
     }
 
     public getPlayerCards(player_id: PlayerId): PlayerCards {
@@ -272,16 +272,16 @@ export class CardManager {
         return this.player_cards_list[player_id];
     }
 
-    public getPlayerCardsFromFacilityId(facility_id: FacilityId): PlayerCards {
-        if (facility_id < 0 || facility_id >= this.landmark_id_base) {
+    public getPlayerCardsFromCardId(card_id: CardId): PlayerCards {
+        if (card_id < 0 || card_id >= this.landmark_id_base) {
             return null;
         }
-        return this.player_cards_list[this.getOwner(facility_id)];
+        return this.player_cards_list[this.getOwner(card_id)];
     }
 
-    public isInHand(player_id: PlayerId, facility_id: FacilityId): boolean {
-        if (facility_id < 0) {
-            console.warn("facility_id < 0.");
+    public isInHand(player_id: PlayerId, card_id: CardId): boolean {
+        if (card_id < 0) {
+            console.warn("card_id < 0.");
             return false;
         }
         if (player_id < 0 || this.player_cards_list.length <= player_id) {
@@ -290,47 +290,47 @@ export class CardManager {
         }
 
         // Check is owner is correct.
-        if (this.getOwner(facility_id) != player_id) {
+        if (this.getOwner(card_id) != player_id) {
             return false;
         }
 
-        return this.player_cards_list[player_id].isInHand(facility_id);
+        return this.player_cards_list[player_id].isInHand(card_id);
     }
 
-    public isInArea(area: number, facility_id: FacilityId): boolean {
-        if (facility_id < 0) {
-            console.warn("facility_id < 0.");
+    public isInArea(area: number, card_id: CardId): boolean {
+        if (card_id < 0) {
+            console.warn("card_id < 0.");
             return false;
         }
-        return (this.facilities[facility_id].getArea() == area);
+        return (this.facilities[card_id].getArea() == area);
     }
 
-    public moveFieldToDiscard(facility_id: FacilityId): boolean {
-        if (facility_id < 0) {
-            console.warn("facility_id < 0.");
+    public moveFieldToDiscard(card_id: CardId): boolean {
+        if (card_id < 0) {
+            console.warn("card_id < 0.");
             return false;
         }
-        return this.getPlayerCardsFromFacilityId(facility_id).moveFieldToDiscard(facility_id);
+        return this.getPlayerCardsFromCardId(card_id).moveFieldToDiscard(card_id);
     }
 
-    public moveHandToField(facility_id: FacilityId): boolean {
-        if (facility_id < 0) {
-            console.warn("facility_id < 0.");
+    public moveHandToField(card_id: CardId): boolean {
+        if (card_id < 0) {
+            console.warn("card_id < 0.");
             return false;
         }
-        return this.getPlayerCardsFromFacilityId(facility_id).moveHandToField(facility_id);
+        return this.getPlayerCardsFromCardId(card_id).moveHandToField(card_id);
     }
 
     // Used for initial build.
-    public moveTalonToField(facility_id: FacilityId): boolean {
-        if (facility_id < 0) {
-            console.warn("facility_id < 0.");
+    public moveTalonToField(card_id: CardId): boolean {
+        if (card_id < 0) {
+            console.warn("card_id < 0.");
             return false;
         }
-        return this.getPlayerCardsFromFacilityId(facility_id).moveTalonToField(facility_id);
+        return this.getPlayerCardsFromCardId(card_id).moveTalonToField(card_id);
     }
 
-    public sortFacilitiesForHand(facilities: FacilityId[]): FacilityId[] {
+    public sortFacilitiesForHand(facilities: CardId[]): CardId[] {
         return facilities.sort((id1, id2) => {
             let f1: Facility = this.facilities[id1];
             let f2: Facility = this.facilities[id2];
@@ -351,8 +351,8 @@ export class CardManager {
     }
 
     // Check if the facility is overwritable regardless the cost.
-    public canOverwrite(facility_id: FacilityId): boolean {
-        if (this.isLandmark(facility_id)) {
+    public canOverwrite(card_id: CardId): boolean {
+        if (this.isLandmark(card_id)) {
             return false;
         }
         return true;
@@ -468,7 +468,7 @@ export class Session {
 
         if (phase == Phase.BuildFacility) {
             // Check EndGame
-            let landmarks: FacilityId[] = this.card_manager.getLandmarks();
+            let landmarks: CardId[] = this.card_manager.getLandmarks();
             let num_landmarks: number = 0;
             for (let landmark of landmarks) {
                 if (this.card_manager.getOwner(landmark) === this.current_player_id) {
@@ -588,23 +588,23 @@ export class Session {
         if (this.dice_result.is_miracle) {
             number = this.dice_result.miracle_dice1 + this.dice_result.miracle_dice2;
         }
-        let facilities: FacilityId[] = [];
+        let facilities: CardId[] = [];
         for (let y: number = 0; y < 5; y++) {
-            let facility_id: FacilityId = this.getFacilityIdOnBoard(number - 1, 4 - y);
-            if (facility_id !== -1) {
-                facilities.push(facility_id);
+            let card_id: CardId = this.getCardIdOnBoard(number - 1, 4 - y);
+            if (card_id !== -1) {
+                facilities.push(card_id);
             }
         }
 
         let type_order: FacilityType[] =
             [FacilityType.Blue, FacilityType.Green, FacilityType.Red, FacilityType.Purple];
         for (let type of type_order) {
-            for (let facility_id of facilities) {
-                let facility: Facility = this.getFacility(facility_id);
+            for (let card_id of facilities) {
+                let facility: Facility = this.getFacility(card_id);
                 if (facility.getType() !== type) {
                     continue;
                 }
-                this.doFacilityAction(facility_id);
+                this.doFacilityAction(card_id);
             }
         }
         this.done(Phase.FacilityAction);
@@ -623,11 +623,11 @@ export class Session {
         return actual;
     }
 
-    public doFacilityAction(facility_id: FacilityId) {
-        let facility: Facility = this.getFacility(facility_id);
+    public doFacilityAction(card_id: CardId) {
+        let facility: Facility = this.getFacility(card_id);
         let player_id: PlayerId = this.getCurrentPlayerId();
-        let owner_id: PlayerId = this.getOwnerId(facility_id);
-        let owner: Player = this.getOwner(facility_id);
+        let owner_id: PlayerId = this.getOwnerId(card_id);
+        let owner: Player = this.getOwner(card_id);
 
         // TODO: Add event log.
         if (facility.getType() == FacilityType.Blue) {
@@ -654,22 +654,22 @@ export class Session {
         }
     }
 
-    private getOverwriteCost(facility_id_on_board: FacilityId, player_id: PlayerId): number {
+    private getOverwriteCost(card_id_on_board: CardId, player_id: PlayerId): number {
         // No facility on board.
-        if (facility_id_on_board == -1) {
+        if (card_id_on_board == -1) {
             return 0;
         }
         // Same owner.
-        if (this.getOwnerId(facility_id_on_board) == player_id) {
+        if (this.getOwnerId(card_id_on_board) == player_id) {
             return 0;
         }
         // Double of the builing cost.
-        return this.card_manager.getFacility(facility_id_on_board).getCost() * 2;
+        return this.card_manager.getFacility(card_id_on_board).getCost() * 2;
     }
 
-    public availablePosition(facility_id: FacilityId): [number, number][] {
+    public availablePosition(card_id: CardId): [number, number][] {
         let positions: [number, number][] = [];
-        let facility: Facility = this.card_manager.getFacility(facility_id);
+        let facility: Facility = this.card_manager.getFacility(card_id);
         // TODO: support multiple x. (e.g. 7-9)
         let area: number = facility.getArea();
         let columns: number[];
@@ -682,7 +682,7 @@ export class Session {
         }
         for (let x of columns) {
             for (let y: number = 0; y < this.board.row; y++) {
-                if (this.getFacilityIdOnBoard(x, y) === -1) {
+                if (this.getCardIdOnBoard(x, y) === -1) {
                     positions.push([x, y]);
                 }
             }
@@ -699,27 +699,27 @@ export class Session {
         }
 
         let player: Player = this.getPlayer(player_id);
-        let facility_id_list: FacilityId[] = shuffle(this.getPlayerCards(player_id).getTalon());
+        let card_id_list: CardId[] = shuffle(this.getPlayerCards(player_id).getTalon());
 
-        for (let facility_id of facility_id_list) {
-            let facility: Facility = this.card_manager.getFacility(facility_id);
+        for (let card_id of card_id_list) {
+            let facility: Facility = this.card_manager.getFacility(card_id);
             let balance: number = player.getMoney() - facility.getCost();
             if (balance < 0) {
                 continue;
             }
-            let positions: [number, number][] = shuffle(this.availablePosition(facility_id));
+            let positions: [number, number][] = shuffle(this.availablePosition(card_id));
             if (positions.length === 0) {
                 continue;
             }
 
-            if (!this.card_manager.moveTalonToField(facility_id)) {
+            if (!this.card_manager.moveTalonToField(card_id)) {
                 // Something is wrong.
-                console.warn(`moveTalonToField(${facility_id}) failed.`);
+                console.warn(`moveTalonToField(${card_id}) failed.`);
                 return false;
             }
 
             let [x, y] = positions[0];
-            this.board.setFacilityId(x, y, facility_id);
+            this.board.setCardId(x, y, card_id);
             player.setMoney(balance);
             return true;
         }
@@ -730,7 +730,7 @@ export class Session {
     public setLandmark(): boolean {  // Reserve the area for landmark.
         const facility_data_id: number = 12;
         let landmark: Facility = new Facility(facility_data_id);
-        let landmark_id: FacilityId = this.card_manager.addLandmark(landmark);
+        let landmark_id: CardId = this.card_manager.addLandmark(landmark);
 
         let positions: [number, number][] = shuffle(this.availablePosition(landmark_id));
         if (positions.length === 0) {
@@ -739,15 +739,15 @@ export class Session {
         }
 
         let [x, y] = positions[0];
-        this.board.setFacilityId(x, y, landmark_id);
+        this.board.setCardId(x, y, landmark_id);
         return true;
     }
 
     public buildFacility(player_id: PlayerId, x: number, y: number,
-                         facility_id: FacilityId): boolean {
+                         card_id: CardId): boolean {
         // Facility is a landmark?
-        if (this.card_manager.isLandmark(facility_id)) {
-            return this.buildLandmark(player_id, facility_id);
+        if (this.card_manager.isLandmark(card_id)) {
+            return this.buildLandmark(player_id, card_id);
         }
 
         // State is valid?
@@ -761,43 +761,43 @@ export class Session {
         }
 
         // Is pass?  (valid action, but not build a facility).
-        if (x === -1 && y === -1 && facility_id === -1) {
+        if (x === -1 && y === -1 && card_id === -1) {
             this.done(Phase.BuildFacility);
             return true;
         }
 
         // Facility is valid?
-        let facility: Facility = this.card_manager.getFacility(facility_id);
+        let facility: Facility = this.card_manager.getFacility(card_id);
         if (!facility) {
             return false;
         }
 
         // Facility is in owner's hand?
-        if (!this.card_manager.isInHand(player_id, facility_id)) {
+        if (!this.card_manager.isInHand(player_id, card_id)) {
             return false;
         }
 
         // Facility's owner is valid?
-        let facility_owner: PlayerId = this.getOwnerId(facility_id);
+        let facility_owner: PlayerId = this.getOwnerId(card_id);
         if (facility_owner != player_id) {
             return false;
         }
 
         // Facility's area is valid?
         let area: number = x + 1;
-        if (!this.card_manager.isInArea(area, facility_id)) {
+        if (!this.card_manager.isInArea(area, card_id)) {
             return false;
         }
 
         // Facility on the board is overwritable?
-        let facility_id_on_board: FacilityId = this.board.getFacilityId(x, y);
-        if (!this.card_manager.canOverwrite(facility_id_on_board)) {
+        let card_id_on_board: CardId = this.board.getCardId(x, y);
+        if (!this.card_manager.canOverwrite(card_id_on_board)) {
             return false;
         }
 
         // Money is valid?
         let player: Player = this.players[player_id];
-        let overwrite_cost: number = this.getOverwriteCost(facility_id_on_board, player_id);
+        let overwrite_cost: number = this.getOverwriteCost(card_id_on_board, player_id);
         let total_cost: number = facility.getCost() + overwrite_cost;
         let money: number = player.getMoney();
         if (total_cost > money) {
@@ -806,32 +806,32 @@ export class Session {
 
         // Update the data.
         // Delete the existing facility.
-        if (facility_id_on_board >= 0) {
-            if (!this.card_manager.moveFieldToDiscard(facility_id_on_board)) {
+        if (card_id_on_board >= 0) {
+            if (!this.card_manager.moveFieldToDiscard(card_id_on_board)) {
                 // Something is wrong.
-                console.warn(`moveFieldToDiscard(${facility_id_on_board}) failed.`);
+                console.warn(`moveFieldToDiscard(${card_id_on_board}) failed.`);
                 return false;
             }
         }
 
         // Build the new facility.
-        if (!this.card_manager.moveHandToField(facility_id)) {
+        if (!this.card_manager.moveHandToField(card_id)) {
             // Something is wrong.
-            console.warn(`moveHandToField(${facility_id}) failed.`);
+            console.warn(`moveHandToField(${card_id}) failed.`);
             return false;
         }
 
-        this.board.setFacilityId(x, y, facility_id);
+        this.board.setCardId(x, y, card_id);
         player.setMoney(money - total_cost);
-        if (facility_id_on_board >= 0 && overwrite_cost > 0) {
-            this.getPlayer(this.getOwnerId(facility_id_on_board)).addMoney(overwrite_cost);
+        if (card_id_on_board >= 0 && overwrite_cost > 0) {
+            this.getPlayer(this.getOwnerId(card_id_on_board)).addMoney(overwrite_cost);
         }
 
         this.done(Phase.BuildFacility);
         return true;
     }
 
-    public buildLandmark(player_id: PlayerId, facility_id: FacilityId): boolean {
+    public buildLandmark(player_id: PlayerId, card_id: CardId): boolean {
         // State is valid?
         if (!this.isValid(player_id, Phase.BuildFacility)) {
             return false;
@@ -843,18 +843,18 @@ export class Session {
         }
 
         // Is a landmark?
-        if (!this.card_manager.isLandmark(facility_id)) {
+        if (!this.card_manager.isLandmark(card_id)) {
             return false;
         }
 
         // Facility is valid?
-        let facility: Facility = this.card_manager.getFacility(facility_id);
+        let facility: Facility = this.card_manager.getFacility(card_id);
         if (!facility) {
             return false;
         }
 
         // Isn't already built?
-        let facility_owner: PlayerId = this.getOwnerId(facility_id);
+        let facility_owner: PlayerId = this.getOwnerId(card_id);
         if (facility_owner !== -1) {
             // Already built.
             return false;
@@ -869,7 +869,7 @@ export class Session {
 
         // Update the data.
         player.setMoney(balance);
-        this.card_manager.buildLandmark(player_id, facility_id);
+        this.card_manager.buildLandmark(player_id, card_id);
 
         this.done(Phase.BuildFacility);
         return true;
@@ -915,17 +915,17 @@ export class Session {
     public getPlayers(): Player[] {
         return this.players;
     }
-    public getFacility(facility_id: FacilityId): Facility {
-        return this.card_manager.getFacility(facility_id);
+    public getFacility(card_id: CardId): Facility {
+        return this.card_manager.getFacility(card_id);
     }
-    public getFacilityIdOnBoard(x: number, y: number): FacilityId {
-        return this.board.getFacilityId(x, y);
+    public getCardIdOnBoard(x: number, y: number): CardId {
+        return this.board.getCardId(x, y);
     }
     public getFacilityOnBoard(x: number, y: number): Facility {
-        return this.card_manager.getFacility(this.getFacilityIdOnBoard(x, y));
+        return this.card_manager.getFacility(this.getCardIdOnBoard(x, y));
     }
     public getOwnerIdOnBoard(x: number, y: number): PlayerId {
-        return this.getOwnerId(this.getFacilityIdOnBoard(x, y));
+        return this.getOwnerId(this.getCardIdOnBoard(x, y));
     }
     public getCurrentPlayerId(): PlayerId {
         return this.current_player_id;
@@ -942,23 +942,23 @@ export class Session {
     public getPlayerCards(player_id: PlayerId): PlayerCards {
         return this.card_manager.getPlayerCards(player_id);
     }
-    public getSortedHand(player_id: PlayerId): FacilityId[] {
+    public getSortedHand(player_id: PlayerId): CardId[] {
         return this.card_manager.sortFacilitiesForHand(this.getPlayerCards(player_id).getHand());
     }
-    public getLandmarks(): FacilityId[] {
+    public getLandmarks(): CardId[] {
         return this.card_manager.getLandmarks();
     }
-    public getOwnerId(facility_id: FacilityId): PlayerId {
-        return this.card_manager.getOwner(facility_id);
+    public getOwnerId(card_id: CardId): PlayerId {
+        return this.card_manager.getOwner(card_id);
     }
-    public getOwner(facility_id: FacilityId): Player {
-        return this.getPlayer(this.getOwnerId(facility_id));
+    public getOwner(card_id: CardId): Player {
+        return this.getPlayer(this.getOwnerId(card_id));
     }
     public getWinner(): PlayerId {
         return this.winner;
     }
-    public getPosition(facility_id: FacilityId): [number, number] {
-        return this.board.getPosition(facility_id);
+    public getPosition(card_id: CardId): [number, number] {
+        return this.board.getPosition(card_id);
     }
     public getDiceResult(): DiceResult {
         return this.dice_result;
