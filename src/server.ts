@@ -1,7 +1,7 @@
 import { Dice } from "./dice";
 import { Session } from "./session";
 import { Board, PlayerId } from "./board";
-import { FacilityId, FacilityType, Facility } from "./facility";
+import { FacilityId, FacilityDataId, FacilityType, Facility } from "./facility";
 
 
 // Moduiles from Node.js
@@ -56,8 +56,8 @@ class Main {
         const player_id0: PlayerId = 0;  // TODO: Player ID should be predefined before.
         const player_id1: PlayerId = 1;
         for (let i: number = 0; i < 10; ++i) {
-            session.addFacility(player_id0, Facility.fromId(Math.floor(Math.random() * 12)));
-            session.addFacility(player_id1, Facility.fromId(Math.floor(Math.random() * 12)));
+            session.addFacility(player_id0, Math.floor(Math.random() * 12));
+            session.addFacility(player_id1, Math.floor(Math.random() * 12));
         }
         session.startGame();
         while (session.doNext()) { }
@@ -202,8 +202,8 @@ class Main {
                     const player_id: PlayerId = session.addPlayer(matching_id, query.name, 1200, 250);
                     for (let i: number = 0; i < 10; ++i) {
                         const max_id: number = 12;
-                        const card_id: number = Math.floor(Math.random() * max_id);
-                        session.addFacility(player_id, Facility.fromId(card_id));
+                        const card_id: FacilityDataId = Math.floor(Math.random() * max_id);
+                        session.addFacility(player_id, card_id);
                     }
 
                     if (player_id == num_players - 1) {

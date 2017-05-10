@@ -34,40 +34,36 @@ let facility_data: FacilityData[] = [
     new FacilityData(13, 0, "🏰", 2000, FacilityType.Gray, {}),
 ];
 
+export type FacilityDataId = number;
 export type FacilityId = number;
 
 export class Facility {
+    readonly data_id: FacilityDataId;
     readonly name: string;
     readonly area: number;
     readonly cost: number;
     readonly type: FacilityType;
     readonly property: {};
-    constructor(name: string, area: number, cost: number, type: FacilityType, property: {}) {
-        this.name = name;
-        this.area = area;
-        this.cost = cost;
-        this.type = type;
-        this.property = property;
+
+    constructor(data_id: FacilityDataId) {
+        let data: FacilityData = facility_data[data_id];
+        this.data_id = data_id;
+        this.name = data.name;
+        this.area = data.area;
+        this.cost = data.cost;
+        this.type = data.type;
+        this.property = data.property;
     }
 
     public toJSON(): Object {
         return {
             class_name: "Facility",
-            name: this.name,
-            area: this.area,
-            cost: this.cost,
-            type: this.type,
-            property: this.property,
+            data_id: this.data_id,
         }
     }
 
     static fromJSON(json) {
-        return new Facility(json.name, json.area, json.cost, json.type, json.property);
-    }
-
-    static fromId(id:number) {
-        let data: FacilityData = facility_data[id];
-        return new Facility(data.name, data.area, data.cost, data.type, data.property);
+        return new Facility(json.data_id);
     }
 
     public getName(): string {

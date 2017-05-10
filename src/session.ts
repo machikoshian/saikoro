@@ -1,6 +1,6 @@
 import { Dice, DiceResult } from "./dice";
 import { Player, Board, PlayerId } from "./board";
-import { FacilityId, FacilityType, Facility } from "./facility";
+import { FacilityId, FacilityDataId, FacilityType, Facility } from "./facility";
 
 function shuffle(array: any[]): any[] {
     let shuffled_array: any[] = array.slice(0);
@@ -190,7 +190,7 @@ export class CardManager {
         );
     }
 
-    public addFacility(player_id: PlayerId, facility: Facility): boolean {
+    public addFacility(player_id: PlayerId, facility_data_id: FacilityDataId): boolean {
         let player_cards: PlayerCards = this.player_cards_list[player_id];
         if (player_cards == null) {
             return false;
@@ -201,7 +201,7 @@ export class CardManager {
         }
         // FacilityId is separated per player (i.e. player1 = 1000 - 1999).
         let facility_id: FacilityId = player_id * this.max_card_size + size;
-        this.facilities[facility_id] = facility;
+        this.facilities[facility_id] = new Facility(facility_data_id);
         player_cards.addTalon(facility_id);
         return true;
     }
@@ -542,8 +542,8 @@ export class Session {
         return player_id;
     }
 
-    public addFacility(player_id: PlayerId, facility: Facility): boolean {
-        return this.card_manager.addFacility(player_id, facility);
+    public addFacility(player_id: PlayerId, facility_data_id: FacilityDataId): boolean {
+        return this.card_manager.addFacility(player_id, facility_data_id);
     }
 
     public isValid(player_id: PlayerId, phase: Phase): boolean {
@@ -729,7 +729,7 @@ export class Session {
 
     public setLandmark(): boolean {  // Reserve the area for landmark.
         const facility_data_id: number = 12;
-        let landmark: Facility = Facility.fromId(facility_data_id);
+        let landmark: Facility = new Facility(facility_data_id);
         let landmark_id: FacilityId = this.card_manager.addLandmark(landmark);
 
         let positions: [number, number][] = shuffle(this.availablePosition(landmark_id));
