@@ -387,6 +387,7 @@ export class Session {
     private round: number;
     private turn: number;
     private current_player_id: PlayerId;
+    private winner: PlayerId;
     private dice_result: DiceResult;  // TODO: change it to Events.
 
     constructor() {
@@ -398,6 +399,7 @@ export class Session {
         this.round = 0;
         this.turn = 0;
         this.current_player_id = 0;
+        this.winner = -1;  // NO_PLAYER
         this.dice_result = null;
     }
 
@@ -412,6 +414,7 @@ export class Session {
             round: this.round,
             turn: this.turn,
             current_player_id: this.current_player_id,
+            winner: this.winner,
             dice_result: this.dice_result ? this.dice_result.toJSON() : null,
         }
     }
@@ -428,6 +431,7 @@ export class Session {
         session.round = json.round;
         session.turn = json.turn;
         session.current_player_id = json.current_player_id;
+        session.winner = json.winner;
         session.dice_result = json.dice_result ? DiceResult.fromJSON(json.dice_result) : null;
         return session;
     }
@@ -463,12 +467,31 @@ export class Session {
         }
 
         if (phase == Phase.BuildFacility) {
+            // Check EndGame
+            let landmarks: FacilityId[] = this.card_manager.getLandmarks();
+            let num_landmarks: number = 0;
+            for (let landmark of landmarks) {
+                if (this.card_manager.getOwner(landmark) === this.current_player_id) {
+                    num_landmarks++;
+                }
+            }
+            // TODO: support multiple landmarks.
+            if (num_landmarks > 0) {
+                this.winner = this.current_player_id;
+                this.phase = Phase.EndGame;
+                return;
+            }
             this.phase = Phase.EndTurn;
             return;
         }
 
         if (phase == Phase.EndTurn) {
             this.phase = Phase.StartTurn;
+            return;
+        }
+
+        if (phase == Phase.EndGame) {
+            // Do nothing.
             return;
         }
     }
@@ -500,6 +523,10 @@ export class Session {
 
         if (this.phase == Phase.EndTurn) {
             return this.endTurn();
+        }
+
+        if (this.phase == Phase.EndGame) {
+            return this.endGame();
         }
 
         return false;
@@ -869,6 +896,12 @@ export class Session {
         return true;
     }
 
+    public endGame(): boolean {
+        // Do nothing so far.
+        this.done(Phase.EndGame);
+        return true;
+    }
+
     public getStep(): number {
         return this.step;
     }
@@ -920,6 +953,9 @@ export class Session {
     }
     public getOwner(facility_id: FacilityId): Player {
         return this.getPlayer(this.getOwnerId(facility_id));
+    }
+    public getWinner(): PlayerId {
+        return this.winner;
     }
     public getPosition(facility_id: FacilityId): [number, number] {
         return this.board.getPosition(facility_id);

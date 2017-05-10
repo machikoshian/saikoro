@@ -339,6 +339,11 @@ class WebClient {
             message = this.diceResultMessage(session.getDiceResult());
             message += `  🎲 ${name} の建設です 🎲`;
         }
+        else if (phase == Phase.EndGame) {
+            let winner: string = session.getPlayer(session.getWinner()).name;
+            message = `🎲 ${name} の勝ちです 🎲`;
+            this.stopCheckUpdate();
+        }
         document.getElementById("message").innerText = message;
         document.getElementById("message").style.backgroundColor = this.getPlayerColor(player_id);
 

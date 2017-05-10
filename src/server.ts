@@ -188,7 +188,7 @@ class Main {
                 mc.set("matching", matching_id + 1, (err) => {}, 600);
 
                 // TODO: This is obviously hacky way for two players. Fix it.
-                const num_players: number = 1;
+                const num_players: number = 2;
                 let session_id: number = Math.floor(matching_id / num_players);
                 let session_name: string = `session_${session_id}`;
                 mc.get(session_name, (session_err, session_value) => {
@@ -199,7 +199,7 @@ class Main {
                         session = new Session();
                     }
 
-                    const player_id: PlayerId = session.addPlayer(matching_id, query.name, 12000, 250);
+                    const player_id: PlayerId = session.addPlayer(matching_id, query.name, 1200, 250);
                     for (let i: number = 0; i < 10; ++i) {
                         const max_id: number = 12;
                         const card_id: number = Math.floor(Math.random() * max_id);
