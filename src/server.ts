@@ -188,7 +188,11 @@ class Main {
                 response.end(output);
 
                 mc.set(session_key, session_json, (err) => {}, 600);
-//                ref.set(session_json_obj);
+
+                // Set data to Firebase.
+                let obj = {};
+                obj[session_key] = session_json;
+                ref.set(obj);
             });
             return;
         }
@@ -233,6 +237,11 @@ class Main {
                     console.log(session_json);
 
                     mc.set(session_name, session_json, (err) => {}, 600);
+
+                    // Set data to Firebase.
+                    let obj = {};
+                    obj[session_name] = session_json;
+                    ref.set(obj);
                 });
 
                 response.end(`{"matching_id":${matching_id},"session_id":${session_id}}`);

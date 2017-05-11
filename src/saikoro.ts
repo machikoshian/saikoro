@@ -35,6 +35,45 @@ abstract class UpdateListener {
     abstract checkUpdate(client: WebClient): void;
 }
 
+let firebase = require("firebase/app");
+require("firebase/auth");
+require("firebase/database");
+
+class FirebaseUpdateListener extends UpdateListener {
+    private ref: any;
+
+    constructor() {
+        super();
+        // Initialize Firebase
+        var config = {
+            apiKey: "AIzaSyDRJc2z_Ux19YdyhvMSEv5yK41rAPTrCPo",
+            authDomain: "saikoro-5a164.firebaseapp.com",
+            databaseURL: "https://saikoro-5a164.firebaseio.com",
+            projectId: "saikoro-5a164",
+            storageBucket: "saikoro-5a164.appspot.com",
+            messagingSenderId: "636527675008"
+        };
+        firebase.initializeApp(config);
+    }
+
+    public startCheckUpdate(client: WebClient): void {
+        this.ref = firebase.database().ref("/session");
+        this.ref.on("value", (snapshot) => {
+            let value = snapshot.val();
+            if (!value) {
+                return;
+            }
+            client.callback(value[`session_${client.session_id}`]);
+        });
+    }
+    public stopCheckUpdate(): void {
+        this.ref.off();
+    }
+    public checkUpdate(client: WebClient): void {
+        // Do nothing.
+    };
+}
+
 class HttpUpdateListener extends UpdateListener {
     public check_update_timer: any = 0;  // Timer
 
@@ -62,7 +101,8 @@ class WebClient {
     public player_cards_list: CardId[][] = [];
     public callback: (response: string) => void;
     public no_update_count: number = 0;
-    public update_listener: UpdateListener = new HttpUpdateListener();
+    public update_listener: UpdateListener = new FirebaseUpdateListener();
+//    public update_listener: UpdateListener = new HttpUpdateListener();
 
     constructor() {
         this.callback = this.callbackSession.bind(this);
