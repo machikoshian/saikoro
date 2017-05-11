@@ -1,13 +1,11 @@
 #!/bin/sh
 
-cd src
-
 # Client side (web browser)
 echo "Building client"
-tsc --outDir ../out/client --module amd --project ./ || exit
-cp -r third_party ../out/client
-cp saikoro.html ../out/client
+webpack || exit
+cp ./src/saikoro.html ./out/client
 
+cd src
 # Server side (Node.js)
 echo "Building server"
 tsc --outDir ../out/server --module commonjs --project ./ || exit

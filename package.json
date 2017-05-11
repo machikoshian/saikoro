@@ -22,13 +22,16 @@
     "e2e-test": "samples test deploy"
   },
   "devDependencies": {
-    "@google-cloud/nodejs-repo-tools": "1.4.7"
+    "@google-cloud/nodejs-repo-tools": "1.4.7",
+    "source-map-loader": "^0.2.1"
   },
   "dependencies": {
     "firebase": "^3.9.0",
     "firebase-admin": "^4.2.1",
     "memjs": "0.10.0",
-    "source-map-support": "^0.4.15"
+    "source-map-support": "^0.4.15",
+    "ts-loader": "^2.0.3",
+    "webpack": "^2.5.1"
   },
   "cloud-repo-tools": {
     "test": {

@@ -423,4 +423,4 @@ class WebClient {
 }
 
 let client: WebClient = new WebClient();
-client.initBoard();
+document.addEventListener("DOMContentLoaded", () => { client.initBoard(); });

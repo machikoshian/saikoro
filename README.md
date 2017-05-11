@@ -3,14 +3,17 @@
 * Typescript
 * Node.js
 * yarn
+* webpack
 * Google Firebase
 
 * Google Cloud SDK (for deploy) 
 
 # How to init the project
 
-* npm install typescript --global
 * npm install yarn --global
+* npm install typescript --global
+* npm link typescript
+* npm install webpack --global
 * cd <Dir_of_this_README.md>
 * yarn install
 
