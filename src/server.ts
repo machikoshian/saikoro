@@ -9,6 +9,18 @@ import * as http from "http";
 import * as url from "url";
 import * as fs from "fs";
 
+// Firebase
+var firebase_admin = require("firebase-admin");
+var service_account = require("./serviceAccountKey.json");  // This file is private.
+
+firebase_admin.initializeApp({
+    credential: firebase_admin.credential.cert(service_account),
+    databaseURL: "https://saikoro-5a164.firebaseio.com/",
+    databaseAuthVariableOverride: {
+        uid: "saikoro-server",
+    }
+});
+
 // Set DEBUG mode if specified.
 let DEBUG: string = process.env.DEBUG || "";
 
