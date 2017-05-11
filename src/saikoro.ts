@@ -29,6 +29,28 @@ class HttpRequest {
     }
 }
 
+abstract class UpdateListener {
+    abstract startCheckUpdate(client: WebClient): void;
+    abstract stopCheckUpdate(): void;
+    abstract checkUpdate(client: WebClient): void;
+}
+
+class HttpUpdateListener extends UpdateListener {
+    public check_update_timer: any = 0;  // Timer
+
+    public startCheckUpdate(client: WebClient): void {
+        this.check_update_timer = setInterval(() => { this.checkUpdate(client) }, 2000);
+    }
+    public stopCheckUpdate(): void {
+        clearInterval(this.check_update_timer);
+    }
+    public checkUpdate(client: WebClient): void {
+        console.log(`checkUpdate(${client.step})`);
+        HttpRequest.Send(`/command?command=board&session_id=${client.session_id}&step=${client.step}`,
+                         client.callback);
+    }
+}
+
 class WebClient {
     public session: Session = new Session();
     public session_id: number = 0;
@@ -39,8 +61,8 @@ class WebClient {
     public clicked_card_element: HTMLElement = null;
     public player_cards_list: CardId[][] = [];
     public callback: (response: string) => void;
-    public check_update_timer: number = 0;
     public no_update_count: number = 0;
+    public update_listener: UpdateListener = new HttpUpdateListener();
 
     constructor() {
         this.callback = this.callbackSession.bind(this);
@@ -158,18 +180,6 @@ class WebClient {
         document.getElementById(`field_${x}_${y}`).style.backgroundColor = "#FFF176";
     }
 
-    public startCheckUpdate(): void {
-        this.check_update_timer = setInterval(this.checkUpdate.bind(this), 2000);
-    }
-    public stopCheckUpdate(): void {
-        clearInterval(this.check_update_timer);
-    }
-
-    public checkUpdate(): void {
-        console.log(`checkUpdate(${this.step})`);
-        HttpRequest.Send(`/command?command=board&session_id=${this.session_id}&step=${this.step}`, this.callback);
-    }
-
     public callbackMatching(response: string): void {
         const response_json = JSON.parse(response);
         this.session_id = response_json.session_id;
@@ -178,8 +188,8 @@ class WebClient {
         document.getElementById("matching").style.display = "none";
         document.getElementById("game").style.visibility = "visible";
 
-        this.checkUpdate();
-        this.startCheckUpdate();
+        this.update_listener.checkUpdate(this);
+        this.update_listener.startCheckUpdate(this);
     }
 
     public onClickMatching(): void {
@@ -258,7 +268,7 @@ class WebClient {
     private callbackSession(response: string): void {
         if (!response) {
             console.log("Stop polling.");
-            this.stopCheckUpdate();
+            this.update_listener.stopCheckUpdate();
         }
 
         // If the response is "{}", the server does not have any update.
@@ -269,7 +279,7 @@ class WebClient {
             this.no_update_count++;
             if (this.no_update_count > 100) {
                 console.log("No update for a while.");
-                this.stopCheckUpdate();
+                this.update_listener.stopCheckUpdate();
             }
             return;
         }
@@ -342,7 +352,7 @@ class WebClient {
         else if (phase == Phase.EndGame) {
             let winner: string = session.getPlayer(session.getWinner()).name;
             message = `🎲 ${name} の勝ちです 🎲`;
-            this.stopCheckUpdate();
+            this.update_listener.stopCheckUpdate();
         }
         document.getElementById("message").innerText = message;
         document.getElementById("message").style.backgroundColor = this.getPlayerColor(player_id);

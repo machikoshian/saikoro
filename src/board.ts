@@ -34,7 +34,7 @@ export class Player {
     }
 
     static fromJSON(json): Player {
-        return new Player(json.matching_id, json.id, json.name, json.money, json.salary, json.color);
+        return new Player(json.matching_id, json.id, json.name, json.money, json.salary, json.team);
     }
 
     public getMoney(): number {

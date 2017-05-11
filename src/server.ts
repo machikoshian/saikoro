@@ -10,8 +10,8 @@ import * as url from "url";
 import * as fs from "fs";
 
 // Firebase
-var firebase_admin = require("firebase-admin");
-var service_account = require("./serviceAccountKey.json");  // This file is private.
+let firebase_admin = require("firebase-admin");
+let service_account = require("./serviceAccountKey.json");  // This file is private.
 
 firebase_admin.initializeApp({
     credential: firebase_admin.credential.cert(service_account),
@@ -20,6 +20,9 @@ firebase_admin.initializeApp({
         uid: "saikoro-server",
     }
 });
+
+let db = firebase_admin.database();
+let ref = db.ref("/session");
 
 // Set DEBUG mode if specified.
 let DEBUG: string = process.env.DEBUG || "";
@@ -177,13 +180,15 @@ class Main {
                 let output: string = "{}";
                 let updated: boolean = this.processCommand(session, query);
                 response.setHeader("Content-Type", "application/json; charset=utf-8");
-                let session_json: string = JSON.stringify(session.toJSON());
+                let session_json_obj: any = session.toJSON();
+                let session_json: string = JSON.stringify(session_json_obj);
                 if (updated) {
                     output = session_json;
                 }
                 response.end(output);
 
                 mc.set(session_key, session_json, (err) => {}, 600);
+//                ref.set(session_json_obj);
             });
             return;
         }
