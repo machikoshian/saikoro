@@ -62,21 +62,22 @@ let firebase = require("firebase/app");
 require("firebase/auth");
 require("firebase/database");
 
+// Initialize Firebase
+var config = {
+    apiKey: "AIzaSyDRJc2z_Ux19YdyhvMSEv5yK41rAPTrCPo",
+    authDomain: "saikoro-5a164.firebaseapp.com",
+    databaseURL: "https://saikoro-5a164.firebaseio.com",
+    projectId: "saikoro-5a164",
+    storageBucket: "saikoro-5a164.appspot.com",
+    messagingSenderId: "636527675008"
+};
+firebase.initializeApp(config);
+
 class FirebaseUpdateListener extends UpdateListener {
     private ref: any;
 
     constructor() {
         super();
-        // Initialize Firebase
-        var config = {
-            apiKey: "AIzaSyDRJc2z_Ux19YdyhvMSEv5yK41rAPTrCPo",
-            authDomain: "saikoro-5a164.firebaseapp.com",
-            databaseURL: "https://saikoro-5a164.firebaseio.com",
-            projectId: "saikoro-5a164",
-            storageBucket: "saikoro-5a164.appspot.com",
-            messagingSenderId: "636527675008"
-        };
-        firebase.initializeApp(config);
     }
 
     public startCheckUpdate(client: WebClient): void {
@@ -95,11 +96,28 @@ class FirebaseUpdateListener extends UpdateListener {
     public checkUpdate(client: WebClient): void {
         // Do nothing.
     }
+}
+
+class FirebaseRequestHandler extends RequestHandler {
+    constructor() {
+        super();
+    }
 
     public sendRequest(json: any, callback: (response: string) => void): void {
         let path: string;
         if (json.command === "matching") {
             path = "/matching";
+            if (!json.user_id) {
+                return;
+            }
+            let ref_matched = firebase.database().ref(`/matched/${json.user_id}`);
+            ref_matched.on("value", (snapshot) => {
+                let value = snapshot.val();
+                if (!value) {
+                    return;
+                }
+                callback(JSON.stringify(value));
+            });
         }
         else {
             path = "/command";
@@ -136,15 +154,17 @@ class WebClient {
     public session_id: number = 0;
     public matching_id: number = 0;
     public player_id: PlayerId = 0;
+    public user_id: number = Math.floor(Math.random() * 1000000);  // TODO: This should be unique
     public step: number = 0;
     public clicked_card_id: CardId = -1;
     public clicked_card_element: HTMLElement = null;
     public player_cards_list: CardId[][] = [];
     public callback: (response: string) => void;
     public no_update_count: number = 0;
-//    public update_listener: UpdateListener = new FirebaseUpdateListener();
-    public update_listener: UpdateListener = new HttpUpdateListener();
-    public request_handler: RequestHandler = new HttpRequestHandler();
+    public update_listener: UpdateListener = new FirebaseUpdateListener();
+    public request_handler: RequestHandler = new FirebaseRequestHandler();
+//    public update_listener: UpdateListener = new HttpUpdateListener();
+//    public request_handler: RequestHandler = new HttpRequestHandler();
 
     constructor() {
         this.callback = this.callbackSession.bind(this);
@@ -301,6 +321,7 @@ class WebClient {
         let request = {
             command: "matching",
             name: name,
+            user_id: this.user_id,
         };
         this.request_handler.sendRequest(request, this.callbackMatching.bind(this));
     }
