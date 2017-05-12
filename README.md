@@ -29,10 +29,6 @@
 ## Server
 * node out/server/server.js
 
-# Third party tools / libraries
-
-* Require.js: http://requirejs.org/
-
 # Coding style
 
 * Basically this project follows https://github.com/Microsoft/TypeScript/wiki/Coding-guidelines

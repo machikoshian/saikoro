@@ -23,6 +23,8 @@ firebase_admin.initializeApp({
 
 let db = firebase_admin.database();
 let ref = db.ref("/session");
+let ref_matching = db.ref("/matching");
+let ref_command = db.ref("/command");
 
 // Set DEBUG mode if specified.
 let DEBUG: string = process.env.DEBUG || "";
@@ -252,6 +254,7 @@ class Main {
         this.serveStaticFiles(pathname, response);
     }
 }
+
 let main: Main = new Main();
 
 console.log(`Port: ${process.env.PORT || 3156}`);

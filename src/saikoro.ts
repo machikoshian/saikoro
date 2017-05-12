@@ -29,6 +29,29 @@ class HttpRequest {
     }
 }
 
+abstract class RequestHandler {
+    abstract sendRequest(json: any, callback: (response: string) => void): void;
+}
+
+class HttpRequestHandler extends RequestHandler {
+    constructor() {
+        super();
+    }
+
+    public sendRequest(json: any, callback: (response: string) => void): void {
+        let params: string = Object.keys(json).map((key) => {
+            return encodeURIComponent(key) + "=" + encodeURIComponent(json[key]); }).join("&");
+        let url: string;
+        if (json.command === "matching") {
+            url = "/matching?" + params;
+        }
+        else {
+            url = "/command?" + params;
+        }
+        HttpRequest.Send(url, callback);
+    }
+}
+
 abstract class UpdateListener {
     abstract startCheckUpdate(client: WebClient): void;
     abstract stopCheckUpdate(): void;
@@ -71,7 +94,20 @@ class FirebaseUpdateListener extends UpdateListener {
     }
     public checkUpdate(client: WebClient): void {
         // Do nothing.
-    };
+    }
+
+    public sendRequest(json: any, callback: (response: string) => void): void {
+        let path: string;
+        if (json.command === "matching") {
+            path = "/matching";
+        }
+        else {
+            path = "/command";
+        }
+
+        let ref = firebase.database().ref(path);
+        ref.push(json);
+    }
 }
 
 class HttpUpdateListener extends UpdateListener {
@@ -85,8 +121,13 @@ class HttpUpdateListener extends UpdateListener {
     }
     public checkUpdate(client: WebClient): void {
         console.log(`checkUpdate(${client.step})`);
-        HttpRequest.Send(`/command?command=board&session_id=${client.session_id}&step=${client.step}`,
-                         client.callback);
+        let request = {
+            command: "board",
+            session_id: client.session_id,
+            player_id: client.player_id,
+            step: client.step,
+        };
+        client.request_handler.sendRequest(request, client.callback);
     }
 }
 
@@ -101,8 +142,9 @@ class WebClient {
     public player_cards_list: CardId[][] = [];
     public callback: (response: string) => void;
     public no_update_count: number = 0;
-    public update_listener: UpdateListener = new FirebaseUpdateListener();
-//    public update_listener: UpdateListener = new HttpUpdateListener();
+//    public update_listener: UpdateListener = new FirebaseUpdateListener();
+    public update_listener: UpdateListener = new HttpUpdateListener();
+    public request_handler: RequestHandler = new HttpRequestHandler();
 
     constructor() {
         this.callback = this.callbackSession.bind(this);
@@ -158,22 +200,40 @@ class WebClient {
         if (this.clicked_card_id < 0) {
             return;
         }
-        HttpRequest.Send(
-            `/command?command=build&session_id=${this.session_id}&player_id=${this.player_id}&x=${x}&y=${y}&card_id=${this.clicked_card_id}`,
-            this.callback);
+        let request = {
+            command: "build",
+            session_id: this.session_id,
+            player_id: this.player_id,
+            x: x,
+            y: y,
+            card_id: this.clicked_card_id,
+        };
+        this.request_handler.sendRequest(request, this.callback);
     }
 
     public onClickDice(dice_num: number, aim: number): void {
         console.log(`clicked: dice_num:${dice_num}, aim:${aim}`);
-        HttpRequest.Send(`/command?command=dice&session_id=${this.session_id}&player_id=${this.player_id}&dice_num=${dice_num}&aim=${aim}`,
-            this.callback);
+        let request = {
+            command: "dice",
+            session_id: this.session_id,
+            player_id: this.player_id,
+            dice_num: dice_num,
+            aim: aim,
+        };
+        this.request_handler.sendRequest(request, this.callback);
     }
 
     public onClickEndTurn(): void {
         console.log("clicked: end_turn");
-        HttpRequest.Send(
-            `/command?command=build&session_id=${this.session_id}&player_id=${this.player_id}&x=-1&y=-1&card_id=-1`,
-            this.callback);
+        let request = {
+            command: "build",
+            session_id: this.session_id,
+            player_id: this.player_id,
+            x: -1,
+            y: -1,
+            card_id: -1,
+        };
+        this.request_handler.sendRequest(request, this.callback);
     }
 
     public onClickCard(player: number, card: number): void {
@@ -238,7 +298,11 @@ class WebClient {
         if (name.length === 0) {
             return;
         }
-        HttpRequest.Send(`/matching?name=${encodeURIComponent(name)}`, this.callbackMatching.bind(this));
+        let request = {
+            command: "matching",
+            name: name,
+        };
+        this.request_handler.sendRequest(request, this.callbackMatching.bind(this));
     }
 
     public initBoard(column: number = 12, row: number = 5): void {
