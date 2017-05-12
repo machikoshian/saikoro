@@ -10,40 +10,46 @@ import * as url from "url";
 import * as fs from "fs";
 
 // Firebase
-let firebase_admin = require("firebase-admin");
-let service_account = require("./serviceAccountKey.json");  // This file is private.
+let ref;
 
-firebase_admin.initializeApp({
-    credential: firebase_admin.credential.cert(service_account),
-    databaseURL: "https://saikoro-5a164.firebaseio.com/",
-    databaseAuthVariableOverride: {
-        uid: "saikoro-server",
+class FirebaseServer {
+    constructor() {
+        let firebase_admin = require("firebase-admin");
+        let service_account = require("./serviceAccountKey.json");  // This file is private.
+
+        firebase_admin.initializeApp({
+            credential: firebase_admin.credential.cert(service_account),
+            databaseURL: "https://saikoro-5a164.firebaseio.com/",
+            databaseAuthVariableOverride: {
+                uid: "saikoro-server",
+            }
+        });
+
+        let db = firebase_admin.database();
+        ref = db.ref("/session");  // TODO: stop using global var.
+        let ref_matched = db.ref("/matched");
+        let ref_matching = db.ref("/matching");
+        let ref_command = db.ref("/command");
+
+        ref_matching.on("child_added", (data) => {
+            let user_id: string = data.val().user_id;
+            SessionHandler.handleMatching(data.val().name, user_id, (json) => {
+                ref_matched.child(user_id).set(json);
+            });
+        });
+
+        ref_command.on("child_added", (data) => {
+            SessionHandler.handleCommand(data.val(), (session_key, json_string) => {
+                if (json_string === "{}") {
+                    return;
+                }
+                let obj = {};
+                obj[session_key] = json_string;
+                ref.set(obj);
+            });
+        });
     }
-});
-
-let db = firebase_admin.database();
-let ref = db.ref("/session");
-let ref_matched = db.ref("/matched");
-let ref_matching = db.ref("/matching");
-let ref_command = db.ref("/command");
-
-ref_matching.on("child_added", (data) => {
-    let user_id: string = data.val().user_id;
-    SessionHandler.handleMatching(data.val().name, user_id, (json) => {
-        ref_matched.child(user_id).set(json);
-    });
-});
-
-ref_command.on("child_added", (data) => {
-    SessionHandler.handleCommand(data.val(), (session_key, json_string) => {
-        if (json_string === "{}") {
-            return;
-        }
-        let obj = {};
-        obj[session_key] = json_string;
-        ref.set(obj);
-    });
-});
+}
 
 // Set DEBUG mode if specified.
 let DEBUG: string = process.env.DEBUG || "";
@@ -292,5 +298,5 @@ class SessionHandler {
     }
 }
 
-
-let main: HttpServer = new HttpServer();
+let main_http: HttpServer = new HttpServer();
+let main_firebase: FirebaseServer = new FirebaseServer();
