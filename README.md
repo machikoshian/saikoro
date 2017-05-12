@@ -14,6 +14,7 @@
 * npm install typescript --global
 * npm link typescript
 * npm install webpack --global
+* npm install firebase --global
 * cd <Dir_of_this_README.md>
 * yarn install
 

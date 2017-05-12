@@ -1,0 +1,24 @@
+{
+  "rules": {
+    "matching": {
+      ".read": "auth.uid === 'saikoro-server'",
+      ".write": true
+    },
+    "matched": {
+      ".read": true,
+      ".write": "auth.uid === 'saikoro-server'"
+    },
+    "command": {
+      ".read": "auth.uid === 'saikoro-server'",
+      ".write": true
+    },
+    "session": {
+      ".read": true,
+      ".write": "auth.uid === 'saikoro-server'"
+    },
+    "public_resource": {
+      ".read": true,
+      ".write": true
+    },
+  }
+}

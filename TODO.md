@@ -1,4 +1,6 @@
-* クライアントからのコマンドも Firebase で可能にする。
+* Firebase での実装
+* firebase と memcache の切り替えを可能に。
+
 * 自分のカードのみを操作可能に。
 * 収支変化の視覚化
 
@@ -15,8 +17,6 @@
 * サーバーレススタンドアロンモードの実装（一人用）
 * class と CSS を明示的に分類。
 
-* Firebase での実装
-* firebase と memcache の切り替えを可能に。
 * websocket のサポート
 
 * 複数インスタンスへの対応
