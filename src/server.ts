@@ -28,11 +28,21 @@ let ref_matching = db.ref("/matching");
 let ref_command = db.ref("/command");
 
 ref_matching.on("child_added", (data) => {
-    SessionHandler.handleMatching(data.val().name, data.val().user_id, console.log);
+    let user_id: string = data.val().user_id;
+    SessionHandler.handleMatching(data.val().name, user_id, (json) => {
+        ref_matched.child(user_id).set(json);
+    });
 });
 
 ref_command.on("child_added", (data) => {
-    SessionHandler.handleCommand(data.val(), console.log);
+    SessionHandler.handleCommand(data.val(), (session_key, json_string) => {
+        if (json_string === "{}") {
+            return;
+        }
+        let obj = {};
+        obj[session_key] = json_string;
+        ref.set(obj);
+    });
 });
 
 // Set DEBUG mode if specified.
@@ -110,7 +120,7 @@ class HttpServer {
         }
 
         if (pathname == "/command") {
-            SessionHandler.handleCommand(query, (output) => {
+            SessionHandler.handleCommand(query, (session_key, output) => {
                 response.setHeader("Content-Type", "application/json; charset=utf-8");
                 response.end(output);
             });
@@ -118,7 +128,9 @@ class HttpServer {
         }
 
         if (pathname == "/matching") {
-            SessionHandler.handleMatching(query.name, query.user_id, (output) => { response.end(output); });
+            SessionHandler.handleMatching(query.name, query.user_id, (json) => {
+                response.end(JSON.stringify(json));
+            });
             return;
         }
 
@@ -193,7 +205,8 @@ class SessionHandler {
         return true;
     }
 
-    static handleCommand(query: any, callback: (string) => void): void {
+    static handleCommand(query: any,
+                         callback: (session_key: string, json_string:string) => void): void {
         let session_key: string = "session";
         if (query.session_id) {
             session_key = `session_${query.session_id}`;
@@ -217,17 +230,12 @@ class SessionHandler {
 
             mc.set(session_key, session_json, (err) => {}, 600);
 
-            callback(output);
-
-            // Set data to Firebase.
-            let obj = {};
-            obj[session_key] = session_json;
-            ref.set(obj);
+            callback(session_key, output);
         });
     }
 
     // TODO: This is a quite hacky way for testing w/o considering any race conditions.
-    static handleMatching(name: string, user_id: string, callback: (string) => void): void {
+    static handleMatching(name: string, user_id: string, callback: (json: any) => void): void {
         mc.get("matching", (err, value) => {
             let matching_id: number;
             if (value) {
@@ -264,9 +272,7 @@ class SessionHandler {
             });
 
             let matching_obj = { matching_id: matching_id, session_id: session_id };
-            ref_matched.child(user_id).set(matching_obj);
-
-            callback(JSON.stringify(matching_obj));
+            callback(matching_obj);
         });
     }
 
