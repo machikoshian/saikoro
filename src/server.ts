@@ -66,12 +66,13 @@ if (process.env.USE_GAE_MEMCACHE) {
 const mc = MEMCACHE_URL ? memjs.Client.create(MEMCACHE_URL) : new MemcacheMock();
 
 
-class Main {
+class HttpServer {
     // All variable used for sessions should be stored in memcache.
     constructor() {
         let server = http.createServer();
         server.on("request", (request, response) => this.requestHandler(request, response));
         server.listen(process.env.PORT || 3156);
+        console.log(`Port: ${process.env.PORT || 3156}`);
     }
 
     private serveStaticFiles(pathname: string, response): void {
@@ -216,6 +217,8 @@ class SessionHandler {
 
             mc.set(session_key, session_json, (err) => {}, 600);
 
+            callback(output);
+
             // Set data to Firebase.
             let obj = {};
             obj[session_key] = session_json;
@@ -284,6 +287,4 @@ class SessionHandler {
 }
 
 
-let main: Main = new Main();
-
-console.log(`Port: ${process.env.PORT || 3156}`);
+let main: HttpServer = new HttpServer();

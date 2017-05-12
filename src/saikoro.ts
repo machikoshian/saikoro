@@ -161,10 +161,10 @@ class WebClient {
     public player_cards_list: CardId[][] = [];
     public callback: (response: string) => void;
     public no_update_count: number = 0;
-    public update_listener: UpdateListener = new FirebaseUpdateListener();
-    public request_handler: RequestHandler = new FirebaseRequestHandler();
-//    public update_listener: UpdateListener = new HttpUpdateListener();
-//    public request_handler: RequestHandler = new HttpRequestHandler();
+    // public update_listener: UpdateListener = new FirebaseUpdateListener();
+    // public request_handler: RequestHandler = new FirebaseRequestHandler();
+    public update_listener: UpdateListener = new HttpUpdateListener();
+    public request_handler: RequestHandler = new HttpRequestHandler();
 
     constructor() {
         this.callback = this.callbackSession.bind(this);
