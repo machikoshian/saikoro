@@ -586,30 +586,21 @@ class WebClient {
         for (let event of events) {
             let player_id: PlayerId = -1;
             let [x, y]: [number, number] = session.getPosition(event.card_id);
-            if (event.type === EventType.Blue || event.type === EventType.Green) {
-                for (let i = 0; i < event.moneys.length; i++) {
-                    if (event.moneys[i] > 0) {
-                        player_id = i;
-                        break;
-                    }
-                }
-                effectMoneyMotion(`field_${x}_${y}`, `player_${player_id}_money`);
-            }
 
-            if (event.type === EventType.Build) {
-                for (let i = 0; i < event.moneys.length; i++) {
-                    if (event.moneys[i] < 0) {
-                        player_id = i;
-                        break;
-                    }
+            for (let i = 0; i < event.moneys.length; i++) {
+                let money: number = event.moneys[i];
+                if (money > 0) {
+                    effectMoneyMotion(`field_${x}_${y}`, `player_${i}_money`, money);
                 }
-                effectMoneyMotion(`player_${player_id}_money`, `field_${x}_${y}`);
+                else if (event.moneys[i] < 0) {
+                    effectMoneyMotion(`player_${i}_money`, `field_${x}_${y}`, money);
+                }
             }
         }
     }
 }
 
-function effectMoneyMotion(elementFrom: string, elementTo: string): void {
+function effectMoneyMotion(elementFrom: string, elementTo: string, money: number): void {
     // Animation.
     let new_node: Node = document.getElementById("money_motion").cloneNode(true);
     let money_motion: HTMLElement = <HTMLElement>document.body.appendChild(new_node);
@@ -620,6 +611,7 @@ function effectMoneyMotion(elementFrom: string, elementTo: string): void {
     let diff_x: number = rect_to.left - rect_from.left;
     let diff_y: number = rect_to.top - rect_from.top;
 
+    money_motion.innerHTML += String(money);
     money_motion.style.visibility = "visible";
     money_motion.style.zIndex = "2";
     money_motion.style.position = "absolute";

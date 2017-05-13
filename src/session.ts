@@ -693,10 +693,13 @@ export class Session {
         else if (facility.getType() === FacilityType.Purple) {
             if (player_id === owner_id) {
                 let value: number = facility.getPropertyValue();
+                event.type = EventType.Purple;
                 for (let pid: number = 0; pid < this.players.length; ++pid) {
+                    if (pid === owner_id) {
+                        continue;
+                    }
                     let amount: number = this.moveMoney(pid, owner_id, value);
-                    event.type = EventType.Purple;
-                    event.moneys[player_id] -= amount;
+                    event.moneys[pid] -= amount;
                     event.moneys[owner_id] += amount;
                 }
             }
