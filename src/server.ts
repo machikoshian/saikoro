@@ -19,9 +19,12 @@ if (DEBUG) {
 
 
 // Memcache
-const memjs = require("memjs");
+abstract class Memcache {
+    abstract get(key: string, callback: (err: any, value: any) => void): void;
+    abstract set(key: string, value: any, callback: (err: any) => void, expire: number): void;
+}
 
-class MemcacheMock {
+class MemcacheMock extends Memcache {
     public cache: { [key: string]: any; } = {};
 
     public get(key: string, callback: (err: any, value: any) => void): void {
@@ -33,12 +36,32 @@ class MemcacheMock {
     }
 }
 
-let MEMCACHE_URL: string = process.env.MEMCACHE_URL;
+class MemcacheServer extends Memcache {
+    private memcache;
 
-if (process.env.USE_GAE_MEMCACHE) {
-     MEMCACHE_URL = `${process.env.GAE_MEMCACHE_HOST}:${process.env.GAE_MEMCACHE_PORT}`;
+    constructor(url: string = "") {
+        super();
+        const memjs = require("memjs");
+        if (url) {
+            // Do nothing.
+        }
+        else if (process.env.MEMCACHE_URL) {
+            url = process.env.MEMCACHE_URL;
+        }
+        else if (process.env.USE_GAE_MEMCACHE) {
+            url = `${process.env.GAE_MEMCACHE_HOST}:${process.env.GAE_MEMCACHE_PORT}`;
+        }
+        this.memcache = memjs.Client.create(url);
+    }
+
+    public get(key: string, callback: (err: any, value: any) => void): void {
+        this.memcache.get(key, callback);
+    }
+
+    public set(key: string, value: any, callback: (err: any) => void, expire: number): void {
+        this.memcache.set(key, value, callback, expire);
+    }
 }
-
 
 // Firebase
 let firebase_admin = require("firebase-admin");
@@ -52,7 +75,7 @@ firebase_admin.initializeApp({
     }
 });
 
-class FirebaseMemcache {
+class FirebaseMemcache extends Memcache {
     public get(key: string, callback: (err: any, value: any) => void): void {
         let db = firebase_admin.database();
         let ref_memcache = db.ref("memcache").child(key);
@@ -68,8 +91,8 @@ class FirebaseMemcache {
     }
 }
 
-
-// const mc = MEMCACHE_URL ? memjs.Client.create(MEMCACHE_URL) : new MemcacheMock();
+// const mc = new MemcacheMock();
+// const mc = new MemcacheServer("localhost:11211");
 const mc = new FirebaseMemcache();
 
 class FirebaseServer {
