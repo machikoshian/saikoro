@@ -81,13 +81,15 @@ class FirebaseUpdateListener extends UpdateListener {
     }
 
     public startCheckUpdate(client: WebClient): void {
-        this.ref = firebase.database().ref("/session");
+        let session_key = "session_" + client.session_id;
+        this.ref = firebase.database().ref("session").child(session_key);
         this.ref.on("value", (snapshot) => {
             let value = snapshot.val();
             if (!value) {
                 return;
             }
-            client.callback(value[`session_${client.session_id}`]);
+            console.log(value);
+            client.callback(value);
         });
     }
     public stopCheckUpdate(): void {
@@ -106,11 +108,11 @@ class FirebaseRequestHandler extends RequestHandler {
     public sendRequest(json: any, callback: (response: string) => void): void {
         let path: string;
         if (json.command === "matching") {
-            path = "/matching";
+            path = "matching";
             if (!json.user_id) {
                 return;
             }
-            let ref_matched = firebase.database().ref(`/matched/${json.user_id}`);
+            let ref_matched = firebase.database().ref("matched").child(json.user_id);
             ref_matched.on("value", (snapshot) => {
                 let value = snapshot.val();
                 if (!value) {
@@ -120,7 +122,7 @@ class FirebaseRequestHandler extends RequestHandler {
             });
         }
         else {
-            path = "/command";
+            path = "command";
         }
 
         let ref = firebase.database().ref(path);

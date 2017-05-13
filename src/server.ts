@@ -116,30 +116,32 @@ class FirebaseServer {
         this.ref_matching.on("child_added", (data) => {
             let user_id: string = data.val().user_id;
             SessionHandler.handleMatching(data.val().name, user_id,
-            (json: any) => {
-                this.ref_matched.child(user_id).set(json);
-            },
-            (session_name: string, session_json: string) => {
-                // Copy session from /memcache to /session.
-                let obj = {};
-                obj[session_name] = session_json;
-                this.ref_session.set(obj);
-            });
+                (json: any) => {
+                    this.ref_matched.child(user_id).set(json);
+                },
+                (session_name: string, session_json: string) => {
+                    // Copy session from /memcache to /session.
+                    this.ref_session.child(session_name).set(session_json);
+                });
+            // Delete handled event.
+            this.ref_matching.child(data.key).set(null);
         });
 
         // command
         this.ref_command.on("child_added", (data) => {
-            SessionHandler.handleCommand(data.val(), (session_key, json_string) => {
-                if (json_string === "{}") {
-                    return;
-                }
-                let obj = {};
-                obj[session_key] = json_string;
-                this.ref_session.set(obj);
-            });
+            SessionHandler.handleCommand(data.val(),
+                (session_name: string, session_json: string) => {
+                    if (session_json === "{}") {
+                        return;
+                    }
+                    this.ref_session.child(session_name).set(session_json);
+                });
+            // Delete handled event.
+            this.ref_command.child(data.key).set(null);
         });
     }
 }
+
 
 class HttpServer {
     private server;
@@ -206,6 +208,7 @@ class HttpServer {
         this.serveStaticFiles(pathname, response);
     }
 }
+
 
 class SessionHandler {
     static initSession(): Session {
@@ -319,8 +322,8 @@ class SessionHandler {
             // TODO: This is obviously hacky way for two players. Fix it.
             const num_players: number = 2;
             let session_id: number = Math.floor(matching_id / num_players);
-            let session_name: string = `session_${session_id}`;
-            mc.get(session_name, (session_err, session_value) => {
+            let session_key = `session_${session_id}`;
+            mc.get(session_key, (session_err, session_value) => {
                 let session: Session;
                 if (session_value) {
                     session = Session.fromJSON(JSON.parse(session_value));
@@ -334,8 +337,8 @@ class SessionHandler {
 
                 console.log(session_json);
 
-                mc.set(session_name, session_json, (err) => {}, 600);
-                callback_session(session_name, session_json);
+                mc.set(session_key, session_json, (err) => {}, 600);
+                callback_session(session_key, session_json);
             });
 
             let matching_obj = { matching_id: matching_id, session_id: session_id };
