@@ -95,49 +95,62 @@ class FirebaseMemcache extends Memcache {
 // const mc = new MemcacheServer("localhost:11211");
 const mc = new FirebaseMemcache();
 
-class FirebaseServer {
-    constructor() {
-        let db = firebase_admin.database();
-        let ref = db.ref("/session");  // TODO: stop using global var.
-        let ref_matched = db.ref("/matched");
-        let ref_matching = db.ref("/matching");
-        let ref_command = db.ref("/command");
 
+class FirebaseServer {
+    private db;
+    private ref_session;
+    private ref_matched;
+    private ref_matching;
+    private ref_command;
+
+    constructor() {
+        this.db = firebase_admin.database();
+        this.ref_session = this.db.ref("/session");
+        this.ref_matched = this.db.ref("/matched");
+        this.ref_matching = this.db.ref("/matching");
+        this.ref_command = this.db.ref("/command");
+    }
+
+    public run() {
         // matching
-        ref_matching.on("child_added", (data) => {
+        this.ref_matching.on("child_added", (data) => {
             let user_id: string = data.val().user_id;
             SessionHandler.handleMatching(data.val().name, user_id,
             (json: any) => {
-                ref_matched.child(user_id).set(json);
+                this.ref_matched.child(user_id).set(json);
             },
             (session_name: string, session_json: string) => {
                 // Copy session from /memcache to /session.
                 let obj = {};
                 obj[session_name] = session_json;
-                ref.set(obj);
+                this.ref_session.set(obj);
             });
         });
 
         // command
-        ref_command.on("child_added", (data) => {
+        this.ref_command.on("child_added", (data) => {
             SessionHandler.handleCommand(data.val(), (session_key, json_string) => {
                 if (json_string === "{}") {
                     return;
                 }
                 let obj = {};
                 obj[session_key] = json_string;
-                ref.set(obj);
+                this.ref_session.set(obj);
             });
         });
     }
 }
 
 class HttpServer {
-    // All variable used for sessions should be stored in memcache.
+    private server;
+
     constructor() {
-        let server = http.createServer();
-        server.on("request", (request, response) => this.requestHandler(request, response));
-        server.listen(process.env.PORT || 3156);
+        this.server = http.createServer();
+    }
+
+    public run() {
+        this.server.on("request", (request, response) => this.requestHandler(request, response));
+        this.server.listen(process.env.PORT || 3156);
         console.log(`Port: ${process.env.PORT || 3156}`);
     }
 
@@ -347,4 +360,6 @@ class SessionHandler {
 }
 
 let main_http: HttpServer = new HttpServer();
+main_http.run();
 let main_firebase: FirebaseServer = new FirebaseServer();
+main_firebase.run();
