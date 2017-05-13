@@ -877,18 +877,20 @@ export class Session {
             return false;
         }
 
-        this.board.setCardId(x, y, card_id);
-        player.setMoney(money - total_cost);
-        if (card_id_on_board >= 0 && overwrite_cost > 0) {
-            this.getPlayer(this.getOwnerId(card_id_on_board)).addMoney(overwrite_cost);
-        }
-
         this.events = [];  // TODO: Consider the location to invalidate events.
         let event: Event = new Event();
         this.events.push(event);
         event.type = EventType.Build;
         event.moneys[player_id] -= total_cost;
         event.card_id = card_id;
+
+        this.board.setCardId(x, y, card_id);
+        player.setMoney(money - total_cost);
+        if (card_id_on_board >= 0 && overwrite_cost > 0) {
+            let facility_owner: PlayerId = this.getOwnerId(card_id_on_board);
+            event.moneys[facility_owner] += overwrite_cost;
+            this.getPlayer(facility_owner).addMoney(overwrite_cost);
+        }
 
         this.done(Phase.BuildFacility);
         return true;
@@ -925,7 +927,8 @@ export class Session {
 
         // Money is valid?
         let player: Player = this.players[player_id];
-        let balance: number = player.getMoney() - facility.getCost();
+        let cost: number = facility.getCost();
+        let balance: number = player.getMoney() - cost;
         if (balance < 0) {
             return false;
         }
@@ -933,6 +936,13 @@ export class Session {
         // Update the data.
         player.setMoney(balance);
         this.card_manager.buildLandmark(player_id, card_id);
+
+        this.events = [];  // TODO: Consider the location to invalidate events.
+        let event: Event = new Event();
+        this.events.push(event);
+        event.type = EventType.Build;
+        event.moneys[player_id] -= cost;
+        event.card_id = card_id;
 
         this.done(Phase.BuildFacility);
         return true;
