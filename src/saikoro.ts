@@ -573,5 +573,35 @@ class WebClient {
     }
 }
 
+// effectMoneyMotion("field_0_0", "player_0_money");
+function effectMoneyMotion(elementFrom: string, elementTo: string): void {
+    // Animation.
+    let money_motion: HTMLElement = document.getElementById("money_motion");
+    let element_from: HTMLElement = document.getElementById(elementFrom);
+    let rect_from = element_from.getBoundingClientRect();
+    let element_to: HTMLElement = document.getElementById(elementTo);
+    let rect_to = element_to.getBoundingClientRect();
+    let diff_x: number = rect_to.left - rect_from.left;
+    let diff_y: number = rect_to.top - rect_from.top;
+
+    money_motion.style.zIndex = "2";
+    money_motion.style.position = "absolute";
+    money_motion.style.width = "40px";
+    money_motion.style.height = "40px";
+    money_motion.style.top = rect_from.top + "px";
+    money_motion.style.left = rect_from.left + "px";
+
+    money_motion.style.transitionDuration = "1s";
+    money_motion.style.transform = `translate(${diff_x}px, ${diff_y}px)`;
+
+    window.setTimeout(() => {
+        effectMoneyMotion(elementTo, elementFrom);
+    }, 1250);
+
+    window.setTimeout(() => {
+        money_motion.style.display = "none";
+    }, 3000);
+}
+
 let client: WebClient = new WebClient();
 document.addEventListener("DOMContentLoaded", () => { client.initBoard(); });
