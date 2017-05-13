@@ -165,6 +165,7 @@ class WebClient {
     public no_update_count: number = 0;
     public update_listener: UpdateListener = new FirebaseUpdateListener();
     public request_handler: RequestHandler = new FirebaseRequestHandler();
+    private money_animation_timers = [null, null, null, null];
     // public update_listener: UpdateListener = new HttpUpdateListener();
     // public request_handler: RequestHandler = new HttpRequestHandler();
 
@@ -436,10 +437,15 @@ class WebClient {
 
             let money_element = document.getElementById(`player_${i}_money`);
             let money: number = players[i].getMoney();
-            let timer = setInterval(() => {
+
+            if (this.money_animation_timers[i]) {
+                clearInterval(this.money_animation_timers[i]);
+            }
+            this.money_animation_timers[i] = setInterval(() => {
                 let current_money = Number(money_element.innerText);
                 if (current_money == money) {
-                    clearInterval(timer);
+                    clearInterval(this.money_animation_timers[i]);
+                    this.money_animation_timers[i] = null;
                     return;
                 }
                 else if (current_money > money) {
@@ -450,6 +456,7 @@ class WebClient {
                 }
                 money_element.innerHTML = String(current_money);
             }, 5);
+
             document.getElementById(`player_${i}_salary`).innerHTML = `${players[i].salary}`;
             let cards: PlayerCards = session.getPlayerCards(i);
             document.getElementById(`player_${i}_talon`).innerHTML =
