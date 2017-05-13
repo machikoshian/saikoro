@@ -8,6 +8,10 @@
       ".read": true,
       ".write": "auth.uid === 'saikoro-server'"
     },
+    "memcache": {
+      ".read": "auth.uid === 'saikoro-server'",
+      ".write": "auth.uid === 'saikoro-server'"
+    },
     "command": {
       ".read": "auth.uid === 'saikoro-server'",
       ".write": true

@@ -9,48 +9,6 @@ import * as http from "http";
 import * as url from "url";
 import * as fs from "fs";
 
-// Firebase
-let ref;
-
-class FirebaseServer {
-    constructor() {
-        let firebase_admin = require("firebase-admin");
-        let service_account = require("./serviceAccountKey.json");  // This file is private.
-
-        firebase_admin.initializeApp({
-            credential: firebase_admin.credential.cert(service_account),
-            databaseURL: "https://saikoro-5a164.firebaseio.com/",
-            databaseAuthVariableOverride: {
-                uid: "saikoro-server",
-            }
-        });
-
-        let db = firebase_admin.database();
-        ref = db.ref("/session");  // TODO: stop using global var.
-        let ref_matched = db.ref("/matched");
-        let ref_matching = db.ref("/matching");
-        let ref_command = db.ref("/command");
-
-        ref_matching.on("child_added", (data) => {
-            let user_id: string = data.val().user_id;
-            SessionHandler.handleMatching(data.val().name, user_id, (json) => {
-                ref_matched.child(user_id).set(json);
-            });
-        });
-
-        ref_command.on("child_added", (data) => {
-            SessionHandler.handleCommand(data.val(), (session_key, json_string) => {
-                if (json_string === "{}") {
-                    return;
-                }
-                let obj = {};
-                obj[session_key] = json_string;
-                ref.set(obj);
-            });
-        });
-    }
-}
-
 // Set DEBUG mode if specified.
 let DEBUG: string = process.env.DEBUG || "";
 
@@ -59,6 +17,8 @@ if (DEBUG) {
     require("source-map-support").install();
 }
 
+
+// Memcache
 const memjs = require("memjs");
 
 class MemcacheMock {
@@ -79,8 +39,75 @@ if (process.env.USE_GAE_MEMCACHE) {
      MEMCACHE_URL = `${process.env.GAE_MEMCACHE_HOST}:${process.env.GAE_MEMCACHE_PORT}`;
 }
 
-const mc = MEMCACHE_URL ? memjs.Client.create(MEMCACHE_URL) : new MemcacheMock();
 
+// Firebase
+let firebase_admin = require("firebase-admin");
+let service_account = require("./serviceAccountKey.json");  // This file is private.
+
+firebase_admin.initializeApp({
+    credential: firebase_admin.credential.cert(service_account),
+    databaseURL: "https://saikoro-5a164.firebaseio.com/",
+    databaseAuthVariableOverride: {
+        uid: "saikoro-server",
+    }
+});
+
+class FirebaseMemcache {
+    public get(key: string, callback: (err: any, value: any) => void): void {
+        let db = firebase_admin.database();
+        let ref_memcache = db.ref("memcache").child(key);
+        ref_memcache.once('value').then((snapshot) => {
+            callback(null, snapshot.val());
+        });
+    }
+
+    public set(key: string, value: any, callback: (err: any) => void, expire: number): void {
+        let db = firebase_admin.database();
+        let ref_memcache = db.ref("memcache").child(key);
+        ref_memcache.set(value);
+    }
+}
+
+
+// const mc = MEMCACHE_URL ? memjs.Client.create(MEMCACHE_URL) : new MemcacheMock();
+const mc = new FirebaseMemcache();
+
+class FirebaseServer {
+    constructor() {
+        let db = firebase_admin.database();
+        let ref = db.ref("/session");  // TODO: stop using global var.
+        let ref_matched = db.ref("/matched");
+        let ref_matching = db.ref("/matching");
+        let ref_command = db.ref("/command");
+
+        // matching
+        ref_matching.on("child_added", (data) => {
+            let user_id: string = data.val().user_id;
+            SessionHandler.handleMatching(data.val().name, user_id,
+            (json: any) => {
+                ref_matched.child(user_id).set(json);
+            },
+            (session_name: string, session_json: string) => {
+                // Copy session from /memcache to /session.
+                let obj = {};
+                obj[session_name] = session_json;
+                ref.set(obj);
+            });
+        });
+
+        // command
+        ref_command.on("child_added", (data) => {
+            SessionHandler.handleCommand(data.val(), (session_key, json_string) => {
+                if (json_string === "{}") {
+                    return;
+                }
+                let obj = {};
+                obj[session_key] = json_string;
+                ref.set(obj);
+            });
+        });
+    }
+}
 
 class HttpServer {
     // All variable used for sessions should be stored in memcache.
@@ -134,9 +161,9 @@ class HttpServer {
         }
 
         if (pathname == "/matching") {
-            SessionHandler.handleMatching(query.name, query.user_id, (json) => {
-                response.end(JSON.stringify(json));
-            });
+            SessionHandler.handleMatching(query.name, query.user_id,
+                (json) => { response.end(JSON.stringify(json)); },
+                (session_name, session_json) => { console.log(session_json); });
             return;
         }
 
@@ -241,7 +268,9 @@ class SessionHandler {
     }
 
     // TODO: This is a quite hacky way for testing w/o considering any race conditions.
-    static handleMatching(name: string, user_id: string, callback: (json: any) => void): void {
+    static handleMatching(name: string, user_id: string,
+                          callback_matched: (json: any) => void,
+                          callback_session: (session_key: string, json_string:string) => void): void {
         mc.get("matching", (err, value) => {
             let matching_id: number;
             if (value) {
@@ -270,15 +299,11 @@ class SessionHandler {
                 console.log(session_json);
 
                 mc.set(session_name, session_json, (err) => {}, 600);
-
-                // Set data to Firebase.
-                let obj = {};
-                obj[session_name] = session_json;
-                ref.set(obj);
+                callback_session(session_name, session_json);
             });
 
             let matching_obj = { matching_id: matching_id, session_id: session_id };
-            callback(matching_obj);
+            callback_matched(matching_obj);
         });
     }
 
