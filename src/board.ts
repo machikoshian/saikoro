@@ -46,9 +46,11 @@ export class Player {
     }
 
     public addMoney(money: number): number {
-        let return_value = this.money + money;
-        this.money = Math.max(return_value, 0);
-        return return_value - this.money;  // can be less than money.
+        if (this.money + money < 0) {
+            money = -this.money;
+        }
+        this.money += money;
+        return money;  // can be less than money.
     }
 
     public paySalary(): void {

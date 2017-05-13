@@ -1,4 +1,4 @@
-import { Phase, Session, PlayerCards } from "./session";
+import { Phase, Session, PlayerCards, Event, EventType } from "./session";
 import { Player, Board, PlayerId } from "./board";
 import { CardId, FacilityType, Facility } from "./facility";
 import { Dice, DiceResult } from "./dice";
@@ -370,6 +370,8 @@ class WebClient {
         document.getElementById("matching_button").addEventListener(
             "click", () => { this.onClickMatching(); });
         document.getElementById("game").style.visibility = "hidden";
+
+        document.getElementById("money_motion").style.visibility = "hidden";
     }
 
     private updateBoard(session: Session): void {
@@ -417,6 +419,9 @@ class WebClient {
         this.no_update_count = 0;
 
         let session: Session = Session.fromJSON(JSON.parse(response));
+
+        this.showEvents(session);
+
         this.session = session;
         let player_id: PlayerId = session.getCurrentPlayerId();
         this.player_id = player_id;
@@ -571,12 +576,43 @@ class WebClient {
 
         this.resetCards();  // Nice to check if built or not?
     }
+
+    private showEvents(session: Session): void {
+        let events: Event[] = session.getEvents();
+        if (events.length === 0) {
+            return;
+        }
+
+        for (let event of events) {
+            let player_id: PlayerId = -1;
+            let [x, y]: [number, number] = session.getPosition(event.card_id);
+            if (event.type === EventType.Blue || event.type === EventType.Green) {
+                for (let i = 0; i < event.moneys.length; i++) {
+                    if (event.moneys[i] > 0) {
+                        player_id = i;
+                        break;
+                    }
+                }
+                effectMoneyMotion(`field_${x}_${y}`, `player_${player_id}_money`);
+            }
+
+            if (event.type === EventType.Build) {
+                for (let i = 0; i < event.moneys.length; i++) {
+                    if (event.moneys[i] < 0) {
+                        player_id = i;
+                        break;
+                    }
+                }
+                effectMoneyMotion(`player_${player_id}_money`, `field_${x}_${y}`);
+            }
+        }
+    }
 }
 
-// effectMoneyMotion("field_0_0", "player_0_money");
 function effectMoneyMotion(elementFrom: string, elementTo: string): void {
     // Animation.
-    let money_motion: HTMLElement = document.getElementById("money_motion");
+    let new_node: Node = document.getElementById("money_motion").cloneNode(true);
+    let money_motion: HTMLElement = <HTMLElement>document.body.appendChild(new_node);
     let element_from: HTMLElement = document.getElementById(elementFrom);
     let rect_from = element_from.getBoundingClientRect();
     let element_to: HTMLElement = document.getElementById(elementTo);
@@ -584,6 +620,7 @@ function effectMoneyMotion(elementFrom: string, elementTo: string): void {
     let diff_x: number = rect_to.left - rect_from.left;
     let diff_y: number = rect_to.top - rect_from.top;
 
+    money_motion.style.visibility = "visible";
     money_motion.style.zIndex = "2";
     money_motion.style.position = "absolute";
     money_motion.style.width = "40px";
@@ -595,12 +632,8 @@ function effectMoneyMotion(elementFrom: string, elementTo: string): void {
     money_motion.style.transform = `translate(${diff_x}px, ${diff_y}px)`;
 
     window.setTimeout(() => {
-        effectMoneyMotion(elementTo, elementFrom);
-    }, 1250);
-
-    window.setTimeout(() => {
-        money_motion.style.display = "none";
-    }, 3000);
+        document.body.removeChild(money_motion);
+    }, 1500);
 }
 
 let client: WebClient = new WebClient();

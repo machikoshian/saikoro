@@ -378,10 +378,43 @@ export enum Phase {
     EndGame,
 }
 
+export enum EventType {
+    None,
+    Blue,
+    Green,
+    Red,
+    Purple,
+    Build,
+}
+
+export class Event {
+    public type: EventType = EventType.None;
+    public moneys: number[] = [0, 0, 0, 0];
+    public card_id: CardId = null;
+
+    public toJSON(): Object {
+        return {
+            class_name: "Event",
+            type: this.type,
+            moneys: this.moneys,
+            card_id: this.card_id,
+        }
+    }
+
+    static fromJSON(json): Event {
+        let event = new Event();
+        event.type = json.type;
+        event.moneys = json.moneys;
+        event.card_id = json.card_id;
+        return event;
+    }
+}
+
 export class Session {
     private board: Board;
     private players: Player[];
     private card_manager: CardManager;
+    private events: Event[];
     private step: number;  // Server starts from 1. Client starts from 0.
     private phase: Phase;
     private round: number;
@@ -394,6 +427,7 @@ export class Session {
         this.board = new Board();
         this.players = [];
         this.card_manager = new CardManager();
+        this.events = [];
         this.step = 1;
         this.phase = Phase.StartGame;
         this.round = 0;
@@ -409,6 +443,7 @@ export class Session {
             board: this.board.toJSON(),
             players: this.players.map(player => { return player.toJSON(); }),
             card_manager: this.card_manager.toJSON(),
+            events: this.events.map(event => { return event.toJSON(); }),
             step: this.step,
             phase: this.phase,
             round: this.round,
@@ -426,6 +461,7 @@ export class Session {
         session.board = board;
         session.players = players;
         session.card_manager = CardManager.fromJSON(json.card_manager);
+        session.events = json.events.map(event => { return Event.fromJSON(event); });
         session.step = json.step,
         session.phase = json.phase,
         session.round = json.round;
@@ -584,6 +620,7 @@ export class Session {
     }
 
     public facilityAction(): boolean {
+        this.events = [];  // TODO: Consider the location to invalidate events.
         let number = this.dice_result.dice1 + this.dice_result.dice2;
         if (this.dice_result.is_miracle) {
             number = this.dice_result.miracle_dice1 + this.dice_result.miracle_dice2;
@@ -618,7 +655,7 @@ export class Session {
         if (money < 0) {
             return this.moveMoney(player_id_to, player_id_from, -money);
         }
-        let actual: number = this.getPlayer(player_id_from).addMoney(-money);
+        let actual: number = -(this.getPlayer(player_id_from).addMoney(-money));
         this.getPlayer(player_id_to).addMoney(actual);
         return actual;
     }
@@ -628,29 +665,45 @@ export class Session {
         let player_id: PlayerId = this.getCurrentPlayerId();
         let owner_id: PlayerId = this.getOwnerId(card_id);
         let owner: Player = this.getOwner(card_id);
+        let event: Event = new Event();
+        event.card_id = card_id;
 
         // TODO: Add event log.
-        if (facility.getType() == FacilityType.Blue) {
-            owner.addMoney(facility.getPropertyValue());
+        if (facility.getType() === FacilityType.Blue) {
+            let amount: number = owner.addMoney(facility.getPropertyValue());
+            event.type = EventType.Blue;
+            event.moneys[owner_id] += amount;
         }
-        if (facility.getType() == FacilityType.Green) {
+        else if (facility.getType() === FacilityType.Green) {
             if (player_id === owner_id) {
-                owner.addMoney(facility.getPropertyValue());
+                let amount: number = owner.addMoney(facility.getPropertyValue());
+                event.type = EventType.Green;
+                event.moneys[owner_id] += amount;
             }
         }
-        if (facility.getType() == FacilityType.Red) {
+        else if (facility.getType() === FacilityType.Red) {
             if (player_id !== owner_id) {
                 let value: number = facility.getPropertyValue();
-                this.moveMoney(player_id, owner_id, value);
+                let amount: number = this.moveMoney(player_id, owner_id, value);
+                event.type = EventType.Red;
+                event.moneys[player_id] += amount;
+                event.moneys[owner_id] -= amount;
             }
         }
-        if (facility.getType() == FacilityType.Purple) {
+        else if (facility.getType() === FacilityType.Purple) {
             if (player_id === owner_id) {
                 let value: number = facility.getPropertyValue();
                 for (let pid: number = 0; pid < this.players.length; ++pid) {
-                    this.moveMoney(pid, owner_id, value);
+                    let amount: number = this.moveMoney(pid, owner_id, value);
+                    event.type = EventType.Purple;
+                    event.moneys[player_id] -= amount;
+                    event.moneys[owner_id] += amount;
                 }
             }
+        }
+
+        if (event.type !== EventType.None) {
+            this.events.push(event);
         }
     }
 
@@ -827,6 +880,13 @@ export class Session {
             this.getPlayer(this.getOwnerId(card_id_on_board)).addMoney(overwrite_cost);
         }
 
+        this.events = [];  // TODO: Consider the location to invalidate events.
+        let event: Event = new Event();
+        this.events.push(event);
+        event.type = EventType.Build;
+        event.moneys[player_id] -= total_cost;
+        event.card_id = card_id;
+
         this.done(Phase.BuildFacility);
         return true;
     }
@@ -902,6 +962,9 @@ export class Session {
         return true;
     }
 
+    public getEvents(): Event[] {
+        return this.events;
+    }
     public getStep(): number {
         return this.step;
     }
