@@ -30,8 +30,22 @@ let facility_data: FacilityData[] = [
     new FacilityData(9,  10, "🍣", 100, FacilityType.Red,    {"value": 400}),
     new FacilityData(10, 11, "🗻", 300, FacilityType.Blue,   {"value": 500}),
     new FacilityData(11, 12, "🍍", 150, FacilityType.Blue,   {"value": 650}),
-    new FacilityData(12, 0, "🏯", 1500, FacilityType.Gray, {}),
-    new FacilityData(13, 0, "🏰", 2000, FacilityType.Gray, {}),
+
+    new FacilityData(12,  1,  "🍣", 200, FacilityType.Red,    {"value": 600}),
+    new FacilityData(13,  2,  "🐟", 100, FacilityType.Green,  {"value": 550}),
+    new FacilityData(14,  3,  "💈", 100, FacilityType.Green,  {"value": 450}),
+    new FacilityData(15,  4,  "📖", 200, FacilityType.Green,  {"value": 400}),
+    new FacilityData(16,  5,  "📰", 100, FacilityType.Purple, {"value": 300}),
+    new FacilityData(17,  6,  "🍱", 100, FacilityType.Red,    {"value": 300}),
+    new FacilityData(18,  7,  "🍕", 100, FacilityType.Red,    {"value": 300}),
+    new FacilityData(19,  8,  "🍅", 100, FacilityType.Blue,   {"value": 250}),
+    new FacilityData(20,  9,  "🚗", 400, FacilityType.Green,  {"value": 800}),
+    new FacilityData(21,  10, "🍎", 100, FacilityType.Blue,   {"value": 350}),
+    new FacilityData(22, 11, "👓", 100, FacilityType.Green,   {"value": 1000}),
+    new FacilityData(23, 12, "🔨", 300, FacilityType.Purple,  {"value": 2000}),
+
+    new FacilityData(24, 0, "🏯", 1500, FacilityType.Gray, {}),
+    new FacilityData(25, 0, "🏰", 2000, FacilityType.Gray, {}),
 ];
 
 export type FacilityDataId = number;

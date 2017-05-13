@@ -4,6 +4,8 @@
 echo "Building client"
 webpack || exit
 cp ./src/saikoro.html ./out/client
+cp ./out/client/* ./public/
+cp ./src/saikoro.html ./public/index.html
 
 cd src
 # Server side (Node.js)

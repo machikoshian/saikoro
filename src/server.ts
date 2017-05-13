@@ -91,9 +91,9 @@ class FirebaseMemcache extends Memcache {
     }
 }
 
-const mc = new MemcacheMock();
+// const mc = new MemcacheMock();
 // const mc = new MemcacheServer("localhost:11211");
-// const mc = new FirebaseMemcache();
+const mc = new FirebaseMemcache();
 
 
 class FirebaseServer {
@@ -345,7 +345,7 @@ class SessionHandler {
     static addNewPlayer(session: Session, user_id: string, name: string, num_players: number): PlayerId {
         const player_id: PlayerId = session.addPlayer(user_id, name, 1200, 250);
         const num_cards = 10;
-        const max_id: number = 12;
+        const max_id: number = 24;
         for (let i: number = 0; i < num_cards; ++i) {
             const card_id: FacilityDataId = Math.floor(Math.random() * max_id);
             session.addFacility(player_id, card_id);
@@ -362,5 +362,5 @@ class SessionHandler {
 
 let main_http: HttpServer = new HttpServer();
 main_http.run();
-// let main_firebase: FirebaseServer = new FirebaseServer();
-// main_firebase.run();
+let main_firebase: FirebaseServer = new FirebaseServer();
+main_firebase.run();
