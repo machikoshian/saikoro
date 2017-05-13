@@ -91,9 +91,9 @@ class FirebaseMemcache extends Memcache {
     }
 }
 
-// const mc = new MemcacheMock();
+const mc = new MemcacheMock();
 // const mc = new MemcacheServer("localhost:11211");
-const mc = new FirebaseMemcache();
+// const mc = new FirebaseMemcache();
 
 
 class FirebaseServer {
@@ -211,13 +211,11 @@ class HttpServer {
 
 
 class SessionHandler {
-    static initSession(): Session {
+    static initSession(): Session {  // This is a stub, not to be used for production.
         let session = new Session();
-        session.addPlayer(0, "こしあん", 1200, 250);  // 0
-        session.addPlayer(1, "つぶあん", 1000, 220);  // 1
+        const player_id0: PlayerId = session.addPlayer("0", "こしあん", 1200, 250);
+        const player_id1: PlayerId = session.addPlayer("1", "つぶあん", 1000, 220);
 
-        const player_id0: PlayerId = 0;  // TODO: Player ID should be predefined before.
-        const player_id1: PlayerId = 1;
         for (let i: number = 0; i < 10; ++i) {
             session.addFacility(player_id0, Math.floor(Math.random() * 12));
             session.addFacility(player_id1, Math.floor(Math.random() * 12));
@@ -331,11 +329,9 @@ class SessionHandler {
                     session = new Session();
                 }
 
-                SessionHandler.addNewPlayer(session, matching_id, name, num_players);
+                SessionHandler.addNewPlayer(session, user_id, name, num_players);
 
                 let session_json: string = JSON.stringify(session.toJSON());
-
-                console.log(session_json);
 
                 mc.set(session_key, session_json, (err) => {}, 600);
                 callback_session(session_key, session_json);
@@ -346,8 +342,8 @@ class SessionHandler {
         });
     }
 
-    static addNewPlayer(session: Session, matching_id: number, name: string, num_players: number): void {
-        const player_id: PlayerId = session.addPlayer(matching_id, name, 1200, 250);
+    static addNewPlayer(session: Session, user_id: string, name: string, num_players: number): PlayerId {
+        const player_id: PlayerId = session.addPlayer(user_id, name, 1200, 250);
         const num_cards = 10;
         const max_id: number = 12;
         for (let i: number = 0; i < num_cards; ++i) {
@@ -359,10 +355,12 @@ class SessionHandler {
             session.startGame();
             SessionHandler.doNext(session);
         }
+
+        return player_id;
     }
 }
 
 let main_http: HttpServer = new HttpServer();
 main_http.run();
-let main_firebase: FirebaseServer = new FirebaseServer();
-main_firebase.run();
+// let main_firebase: FirebaseServer = new FirebaseServer();
+// main_firebase.run();

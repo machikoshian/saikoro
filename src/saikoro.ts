@@ -156,18 +156,20 @@ class WebClient {
     public session_id: number = 0;
     public matching_id: number = 0;
     public player_id: PlayerId = 0;
-    public user_id: number = Math.floor(Math.random() * 1000000);  // TODO: This should be unique
+    // TODO: user_id should be unique.
+    public user_id: string = String(Math.floor(Math.random() * 1000000));
     public step: number = 0;
     public clicked_card_id: CardId = -1;
     public clicked_card_element: HTMLElement = null;
     public player_cards_list: CardId[][] = [];
     public callback: (response: string) => void;
     public no_update_count: number = 0;
-    public update_listener: UpdateListener = new FirebaseUpdateListener();
-    public request_handler: RequestHandler = new FirebaseRequestHandler();
     private money_animation_timers = [null, null, null, null];
-    // public update_listener: UpdateListener = new HttpUpdateListener();
-    // public request_handler: RequestHandler = new HttpRequestHandler();
+
+    // public update_listener: UpdateListener = new FirebaseUpdateListener();
+    // public request_handler: RequestHandler = new FirebaseRequestHandler();
+    public update_listener: UpdateListener = new HttpUpdateListener();
+    public request_handler: RequestHandler = new HttpRequestHandler();
 
     constructor() {
         this.callback = this.callbackSession.bind(this);
@@ -432,11 +434,12 @@ class WebClient {
         // Update players.
         let players: Player[] = session.getPlayers();
         for (let i: number = 0; i < players.length; ++i) {
+            let player: Player = players[i];
             document.getElementById(`player_${i}`).style.visibility = "visible";
-            document.getElementById(`player_${i}_name`).innerText = players[i].name;
+            document.getElementById(`player_${i}_name`).innerText = player.name;
 
             let money_element = document.getElementById(`player_${i}_money`);
-            let money: number = players[i].getMoney();
+            let money: number = player.getMoney();
 
             if (this.money_animation_timers[i]) {
                 clearInterval(this.money_animation_timers[i]);
@@ -457,11 +460,18 @@ class WebClient {
                 money_element.innerHTML = String(current_money);
             }, 5);
 
-            document.getElementById(`player_${i}_salary`).innerHTML = `${players[i].salary}`;
+            document.getElementById(`player_${i}_salary`).innerHTML = `${player.salary}`;
             let cards: PlayerCards = session.getPlayerCards(i);
             document.getElementById(`player_${i}_talon`).innerHTML =
                 `${cards.getHandSize()}　／　📇 ${cards.getTalonSize()}`;
-            document.getElementById(`cards_${i}`).style.display = "table-row";
+
+            if (player.user_id === this.user_id) {
+                document.getElementById(`cards_${i}`).style.display = "table-row";
+            }
+            else {
+                document.getElementById(`cards_${i}`).style.display = "none";
+            }
+
         }
         for (let i: number = players.length; i < 4; ++i) {
             document.getElementById(`player_${i}`).style.visibility = "hidden";
@@ -469,8 +479,8 @@ class WebClient {
         }
 
         // Update message.
-        let player: Player = players[player_id];
-        let name: string = player.name;
+        let current_player: Player = players[player_id];
+        let name: string = current_player.name;
         let message: string = "";
         let phase: Phase = session.getPhase();
         if (phase == Phase.StartGame) {
@@ -492,6 +502,13 @@ class WebClient {
         document.getElementById("message").style.backgroundColor = this.getPlayerColor(player_id);
 
         // Update buttons.
+        if (current_player.user_id === this.user_id) {
+            document.getElementById("dice").style.display = "";
+        }
+        else {
+            document.getElementById("dice").style.display = "none";
+        }
+
         if (phase == Phase.DiceRoll) {
             document.getElementById("dice_1").style.visibility = "visible";
             document.getElementById("dice_2").style.visibility = "visible";

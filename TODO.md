@@ -1,8 +1,6 @@
-* Firebase での実装
-* firebase と memcache の切り替えを可能に。
-
-* 自分のカードのみを操作可能に。
 * 収支変化の視覚化
+
+* 使用済み matched データの削除。
 
 * Card owner の変更への対応
 * NO_PLAYER (= -1) の実装
