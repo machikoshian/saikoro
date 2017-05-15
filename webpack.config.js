@@ -5,16 +5,14 @@ module.exports = {
     },
     devtool: "source-map",
     resolve: {
-        extensions: [".js", ".ts"]
+        extensions: [".js", ".ts"],
     },
-    module: {
-        rules: [
+    module : {
+        loaders: [
             {
-                test: /\.tsx?$/,
-                use: [
-                    { loader: "ts-loader" }
-                ]
+                test   : /\.ts$/,
+                loader : "ts-loader",
             }
         ]
-    }
+    },
 };

@@ -166,10 +166,10 @@ class WebClient {
     public no_update_count: number = 0;
     private money_animation_timers = [null, null, null, null];
 
-    public update_listener: UpdateListener = new FirebaseUpdateListener();
-    public request_handler: RequestHandler = new FirebaseRequestHandler();
-    // public update_listener: UpdateListener = new HttpUpdateListener();
-    // public request_handler: RequestHandler = new HttpRequestHandler();
+    // public update_listener: UpdateListener = new FirebaseUpdateListener();
+    // public request_handler: RequestHandler = new FirebaseRequestHandler();
+    public update_listener: UpdateListener = new HttpUpdateListener();
+    public request_handler: RequestHandler = new HttpRequestHandler();
 
     constructor() {
         this.callback = this.callbackSession.bind(this);

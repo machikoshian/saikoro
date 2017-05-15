@@ -17,11 +17,18 @@ if (DEBUG) {
     require("source-map-support").install();
 }
 
+class KeyValue {
+    constructor(
+        public key: string = "",
+        public value: any = null) {}
+}
 
 // Memcache
 abstract class Memcache {
     abstract get(key: string, callback: (err: any, value: any) => void): void;
     abstract set(key: string, value: any, callback: (err: any) => void, expire: number): void;
+    abstract getWithPromise(key: string): Promise<KeyValue>;
+    abstract setWithPromise(key: string, value: any): Promise<KeyValue>;
 }
 
 class MemcacheMock extends Memcache {
@@ -31,9 +38,26 @@ class MemcacheMock extends Memcache {
         callback(null, this.cache[key]);
     }
 
+    public getWithPromise(key: string): Promise<KeyValue> {
+        return new Promise<KeyValue>((resolve, reject) => {
+            let data: KeyValue = new KeyValue(key, this.cache[key]);
+            resolve(data);
+        });
+    }
+
     public set(key: string, value: any, callback: (err: any) => void, expire: number): void {
         this.cache[key] = value;
+        callback(null);
     }
+
+    public setWithPromise(key: string, value: any): Promise<KeyValue> {
+        this.cache[key] = value;
+        return new Promise<KeyValue>((resolve, reject) => {
+            let data: KeyValue = new KeyValue(key, value);
+            resolve(data);
+        });
+    }
+
 }
 
 class MemcacheServer extends Memcache {
@@ -58,8 +82,24 @@ class MemcacheServer extends Memcache {
         this.memcache.get(key, callback);
     }
 
+    public getWithPromise(key: string): Promise<KeyValue> {
+        return new Promise<KeyValue>((resolve, reject) => {
+            this.memcache.get(key, (err, value) => {
+                resolve(new KeyValue(key, value));
+            });
+        });
+    }
+
     public set(key: string, value: any, callback: (err: any) => void, expire: number): void {
         this.memcache.set(key, value, callback, expire);
+    }
+
+    public setWithPromise(key: string, value: any): Promise<KeyValue> {
+        return new Promise<KeyValue>((resolve, reject) => {
+            this.memcache.set(key, value, (err, value) => {
+                resolve(new KeyValue(key, value));
+            }, 600);
+        });
     }
 }
 
@@ -84,16 +124,32 @@ class FirebaseMemcache extends Memcache {
         });
     }
 
+    public getWithPromise(key: string): Promise<KeyValue> {
+        let db = firebase_admin.database();
+        let ref_memcache = db.ref("memcache").child(key);
+        return ref_memcache.once('value').then((snapshot) => {
+            return new KeyValue(key, snapshot.val());
+        });
+    }
+
     public set(key: string, value: any, callback: (err: any) => void, expire: number): void {
         let db = firebase_admin.database();
         let ref_memcache = db.ref("memcache").child(key);
-        ref_memcache.set(value);
+        ref_memcache.set(value).then((unused) => { callback(null); });
+    }
+
+    public setWithPromise(key: string, value: any): Promise<KeyValue> {
+        let db = firebase_admin.database();
+        let ref_memcache = db.ref("memcache").child(key);
+        return ref_memcache.set(value).then((snapshot) => {
+            return new KeyValue(key, value);
+        });
     }
 }
 
-// const mc = new MemcacheMock();
+const mc = new MemcacheMock();
 // const mc = new MemcacheServer("localhost:11211");
-const mc = new FirebaseMemcache();
+// const mc = new FirebaseMemcache();
 
 
 class FirebaseServer {
@@ -283,24 +339,22 @@ class SessionHandler {
         }
 
         let session: Session;
-        mc.get(session_key, (err, value) => {
-            if (value) {
-                session = Session.fromJSON(JSON.parse(value));
+        let updated: boolean = false;
+        mc.getWithPromise(session_key).then((data) => {
+            if (data.value) {
+                session = Session.fromJSON(JSON.parse(data.value));
             } else {
                 session = SessionHandler.initSession();
             }
 
-            let output: string = "{}";
             let updated: boolean = SessionHandler.processCommand(session, query);
-            let session_json_obj: any = session.toJSON();
-            let session_json: string = JSON.stringify(session_json_obj);
-            if (updated) {
-                output = session_json;
+            if (!updated) {
+                return new KeyValue(data.key, "{}");
             }
-
-            mc.set(session_key, session_json, (err) => {}, 600);
-
-            callback(session_key, output);
+            let session_json: string = JSON.stringify(session.toJSON());
+            return mc.setWithPromise(session_key, session_json);
+        }).then((data) => {
+            callback(data.key, data.value);
         });
     }
 
@@ -308,36 +362,41 @@ class SessionHandler {
     static handleMatching(name: string, user_id: string,
                           callback_matched: (json: any) => void,
                           callback_session: (session_key: string, json_string:string) => void): void {
-        mc.get("matching", (err, value) => {
+        const num_players: number = 2;
+        let matching_obj = {};
+
+        mc.getWithPromise("matching").then((data) => {
             let matching_id: number;
-            if (value) {
-                matching_id = Number(value);
+            if (data.value) {
+                matching_id = Number(data.value);
             } else {
                 matching_id = 10;
             }
-            mc.set("matching", matching_id + 1, (err) => {}, 600);
+            return mc.setWithPromise("matching", matching_id + 1);
+        }).then((data) => {
+            let matching_id: number = data.value - 1;
 
             // TODO: This is obviously hacky way for two players. Fix it.
-            const num_players: number = 2;
             let session_id: number = Math.floor(matching_id / num_players);
             let session_key = `session_${session_id}`;
-            mc.get(session_key, (session_err, session_value) => {
-                let session: Session;
-                if (session_value) {
-                    session = Session.fromJSON(JSON.parse(session_value));
-                } else {
-                    session = new Session();
-                }
+            matching_obj = { matching_id: matching_id, session_id: session_id };
 
-                SessionHandler.addNewPlayer(session, user_id, name, num_players);
+            return mc.getWithPromise(session_key);
+        }).then((data) => {
+            let session: Session;
+            if (data.value) {
+                session = Session.fromJSON(JSON.parse(data.value));
+            } else {
+                session = new Session();
+            }
 
-                let session_json: string = JSON.stringify(session.toJSON());
+            SessionHandler.addNewPlayer(session, user_id, name, num_players);
 
-                mc.set(session_key, session_json, (err) => {}, 600);
-                callback_session(session_key, session_json);
-            });
+            let session_json: string = JSON.stringify(session.toJSON());
 
-            let matching_obj = { matching_id: matching_id, session_id: session_id };
+            return mc.setWithPromise(data.key, session_json);
+        }).then((data) => {
+            callback_session(data.key, data.value);
             callback_matched(matching_obj);
         });
     }
@@ -362,5 +421,5 @@ class SessionHandler {
 
 let main_http: HttpServer = new HttpServer();
 main_http.run();
-let main_firebase: FirebaseServer = new FirebaseServer();
-main_firebase.run();
+// let main_firebase: FirebaseServer = new FirebaseServer();
+// main_firebase.run();

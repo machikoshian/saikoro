@@ -10,7 +10,7 @@ cp ./src/saikoro.html ./public/index.html
 cd src
 # Server side (Node.js)
 echo "Building server"
-tsc --outDir ../out/server --module commonjs --project ./ || exit
+tsc --outDir ../out/server --module commonjs --target es6 --sourceMap server.ts || exit
 cp ../serviceAccountKey.json ../out/server
 
 cd ..

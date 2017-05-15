@@ -3,7 +3,6 @@
     "sourceMap": true
   },
   "files": [
-    "saikoro.ts",
-    "server.ts"
+    "saikoro.ts"
   ]
 }
