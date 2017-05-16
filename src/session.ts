@@ -686,8 +686,8 @@ export class Session {
                 let value: number = facility.getPropertyValue();
                 let amount: number = this.moveMoney(player_id, owner_id, value);
                 event.type = EventType.Red;
-                event.moneys[player_id] += amount;
-                event.moneys[owner_id] -= amount;
+                event.moneys[player_id] -= amount;
+                event.moneys[owner_id] += amount;
             }
         }
         else if (facility.getType() === FacilityType.Purple) {
