@@ -151,6 +151,12 @@ const mc = new MemcacheMock();
 // const mc = new MemcacheServer("localhost:11211");
 // const mc = new FirebaseMemcache();
 
+class MatchedData {
+    constructor(
+        public matching_id: string = "",
+        public session_id: string = "",
+        public session_string: string = "") {}
+}
 
 class FirebaseServer {
     private db;
@@ -171,29 +177,31 @@ class FirebaseServer {
         // matching
         this.ref_matching.on("child_added", (data) => {
             let user_id: string = data.val().user_id;
-            SessionHandler.handleMatching(data.val().name, user_id,
-                (json: any) => {
-                    this.ref_matched.child(user_id).set(json);
-                },
-                (session_name: string, session_json: string) => {
-                    // Copy session from /memcache to /session.
-                    this.ref_session.child(session_name).set(session_json);
-                });
-            // Delete handled event.
-            this.ref_matching.child(data.key).set(null);
+
+            SessionHandler.handleMatching(data.val().name, user_id).then((matched: MatchedData) => {
+                return Promise.all([
+                    this.ref_session.child(matched.session_id).set(matched.session_string),
+                    this.ref_matched.child(user_id).set({ matching_id: matched.matching_id,
+                                                          session_id: matched.session_id }),
+                    // Delete handled event.
+                    this.ref_matching.child(user_id).set(null)
+                ]);
+            });
         });
 
         // command
         this.ref_command.on("child_added", (data) => {
-            SessionHandler.handleCommand(data.val(),
-                (session_name: string, session_json: string) => {
-                    if (session_json === "{}") {
-                        return;
-                    }
-                    this.ref_session.child(session_name).set(session_json);
-                });
-            // Delete handled event.
-            this.ref_command.child(data.key).set(null);
+            SessionHandler.handleCommand(data.val()).then((session_data) => {
+                let session_string = session_data.value;
+                let promises: Promise<{}>[] = [];
+
+                if (session_string !== "{}") {
+                    promises.push(this.ref_session.child(session_data.key).set(session_string));
+                }
+                // Delete handled event.
+                promises.push(this.ref_command.child(data.key).set(null));
+                return Promise.all(promises);
+            });
         });
     }
 }
@@ -247,17 +255,19 @@ class HttpServer {
         }
 
         if (pathname == "/command") {
-            SessionHandler.handleCommand(query, (session_key, output) => {
+            SessionHandler.handleCommand(query).then((data: KeyValue) => {
                 response.setHeader("Content-Type", "application/json; charset=utf-8");
-                response.end(output);
+                response.end(data.value);
             });
             return;
         }
 
         if (pathname == "/matching") {
-            SessionHandler.handleMatching(query.name, query.user_id,
-                (json) => { response.end(JSON.stringify(json)); },
-                (session_name, session_json) => { console.log(session_json); });
+            SessionHandler.handleMatching(query.name, query.user_id).then((matched: MatchedData) => {
+                response.end(JSON.stringify({ matching_id: matched.matching_id,
+                                              session_id: matched.session_id }));
+                console.log(matched.session_string);
+            });
             return;
         }
 
@@ -331,8 +341,7 @@ class SessionHandler {
         return true;
     }
 
-    static handleCommand(query: any,
-                         callback: (session_key: string, json_string:string) => void): void {
+    static handleCommand(query: any): Promise<KeyValue> {
         let session_key: string = "session";
         if (query.session_id) {
             session_key = `session_${query.session_id}`;
@@ -340,7 +349,7 @@ class SessionHandler {
 
         let session: Session;
         let updated: boolean = false;
-        mc.getWithPromise(session_key).then((data) => {
+        return mc.getWithPromise(session_key).then((data) => {
             if (data.value) {
                 session = Session.fromJSON(JSON.parse(data.value));
             } else {
@@ -353,19 +362,16 @@ class SessionHandler {
             }
             let session_json: string = JSON.stringify(session.toJSON());
             return mc.setWithPromise(session_key, session_json);
-        }).then((data) => {
-            callback(data.key, data.value);
         });
     }
 
     // TODO: This is a quite hacky way for testing w/o considering any race conditions.
-    static handleMatching(name: string, user_id: string,
-                          callback_matched: (json: any) => void,
-                          callback_session: (session_key: string, json_string:string) => void): void {
+    static handleMatching(name: string, user_id: string): Promise<MatchedData> {
         const num_players: number = 2;
-        let matching_obj = {};
+        let matched_data: MatchedData = new MatchedData();
 
-        mc.getWithPromise("matching").then((data) => {
+        // TODO: Some operations can be performed in parallel.
+        return mc.getWithPromise("matching").then((data) => {
             let matching_id: number;
             if (data.value) {
                 matching_id = Number(data.value);
@@ -379,25 +385,28 @@ class SessionHandler {
             // TODO: This is obviously hacky way for two players. Fix it.
             let session_id: number = Math.floor(matching_id / num_players);
             let session_key = `session_${session_id}`;
-            matching_obj = { matching_id: matching_id, session_id: session_id };
 
+            matched_data.matching_id = String(matching_id);
+            matched_data.session_id = String(session_id);
             return mc.getWithPromise(session_key);
         }).then((data) => {
+            let session_key: string = data.key;
+            let session_value: string = data.value;
             let session: Session;
-            if (data.value) {
-                session = Session.fromJSON(JSON.parse(data.value));
+            if (session_value) {
+                session = Session.fromJSON(JSON.parse(session_value));
             } else {
                 session = new Session();
             }
 
             SessionHandler.addNewPlayer(session, user_id, name, num_players);
 
-            let session_json: string = JSON.stringify(session.toJSON());
+            let session_string: string = JSON.stringify(session.toJSON());
+            matched_data.session_string = session_string;
 
-            return mc.setWithPromise(data.key, session_json);
+            return mc.setWithPromise(session_key, session_string);
         }).then((data) => {
-            callback_session(data.key, data.value);
-            callback_matched(matching_obj);
+            return matched_data;
         });
     }
 
