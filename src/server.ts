@@ -147,9 +147,9 @@ class FirebaseMemcache extends Memcache {
     }
 }
 
-const mc = new MemcacheMock();
+// const mc = new MemcacheMock();
 // const mc = new MemcacheServer("localhost:11211");
-// const mc = new FirebaseMemcache();
+const mc = new FirebaseMemcache();
 
 class MatchedData {
     constructor(
@@ -167,10 +167,10 @@ class FirebaseServer {
 
     constructor() {
         this.db = firebase_admin.database();
-        this.ref_session = this.db.ref("/session");
-        this.ref_matched = this.db.ref("/matched");
-        this.ref_matching = this.db.ref("/matching");
-        this.ref_command = this.db.ref("/command");
+        this.ref_session = this.db.ref("session");
+        this.ref_matched = this.db.ref("matched");
+        this.ref_matching = this.db.ref("matching");
+        this.ref_command = this.db.ref("command");
     }
 
     public run() {
@@ -180,11 +180,11 @@ class FirebaseServer {
 
             SessionHandler.handleMatching(data.val().name, user_id).then((matched: MatchedData) => {
                 return Promise.all([
-                    this.ref_session.child(matched.session_id).set(matched.session_string),
+                    this.ref_session.child(`session_${matched.session_id}`).set(matched.session_string),
                     this.ref_matched.child(user_id).set({ matching_id: matched.matching_id,
                                                           session_id: matched.session_id }),
                     // Delete handled event.
-                    this.ref_matching.child(user_id).set(null)
+                    this.ref_matching.child(data.key).set(null)
                 ]);
             });
         });
@@ -430,5 +430,5 @@ class SessionHandler {
 
 let main_http: HttpServer = new HttpServer();
 main_http.run();
-// let main_firebase: FirebaseServer = new FirebaseServer();
-// main_firebase.run();
+let main_firebase: FirebaseServer = new FirebaseServer();
+main_firebase.run();
