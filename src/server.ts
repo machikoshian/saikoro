@@ -173,35 +173,44 @@ class FirebaseServer {
         this.ref_command = this.db.ref("command");
     }
 
+    public onMatching(data): Promise<{}> {
+        let user_id: string = data.val().user_id;
+
+        return SessionHandler.handleMatching(data.val().name, user_id).then(
+                (matched: MatchedData) => {
+            return Promise.all([
+                this.ref_session.child(`session_${matched.session_id}`).set(matched.session_string),
+                this.ref_matched.child(user_id).set({ matching_id: matched.matching_id,
+                                                        session_id: matched.session_id }),
+                // Delete handled event.
+                this.ref_matching.child(data.key).set(null)
+            ]);
+        });
+    }
+
+    public onCommand(data): Promise<{}> {
+        return SessionHandler.handleCommand(data.val()).then((session_data) => {
+            let session_string = session_data.value;
+            let promises: Promise<{}>[] = [];
+
+            if (session_string !== "{}") {
+                promises.push(this.ref_session.child(session_data.key).set(session_string));
+            }
+            // Delete handled event.
+            promises.push(this.ref_command.child(data.key).set(null));
+            return Promise.all(promises);
+        });
+    }
+
     public run() {
         // matching
         this.ref_matching.on("child_added", (data) => {
-            let user_id: string = data.val().user_id;
-
-            SessionHandler.handleMatching(data.val().name, user_id).then((matched: MatchedData) => {
-                return Promise.all([
-                    this.ref_session.child(`session_${matched.session_id}`).set(matched.session_string),
-                    this.ref_matched.child(user_id).set({ matching_id: matched.matching_id,
-                                                          session_id: matched.session_id }),
-                    // Delete handled event.
-                    this.ref_matching.child(data.key).set(null)
-                ]);
-            });
+            return this.onMatching(data);
         });
 
         // command
         this.ref_command.on("child_added", (data) => {
-            SessionHandler.handleCommand(data.val()).then((session_data) => {
-                let session_string = session_data.value;
-                let promises: Promise<{}>[] = [];
-
-                if (session_string !== "{}") {
-                    promises.push(this.ref_session.child(session_data.key).set(session_string));
-                }
-                // Delete handled event.
-                promises.push(this.ref_command.child(data.key).set(null));
-                return Promise.all(promises);
-            });
+            return this.onCommand(data);
         });
     }
 }
