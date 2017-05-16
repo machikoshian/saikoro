@@ -147,10 +147,6 @@ class FirebaseMemcache extends Memcache {
     }
 }
 
-// const mc = new MemcacheMock();
-// const mc = new MemcacheServer("localhost:11211");
-const mc = new FirebaseMemcache();
-
 class MatchedData {
     constructor(
         public matching_id: string = "",
@@ -164,8 +160,10 @@ class FirebaseServer {
     private ref_matched;
     private ref_matching;
     private ref_command;
+    private session_handler: SessionHandler;
 
-    constructor() {
+    constructor(session_handler: SessionHandler) {
+        this.session_handler = session_handler;
         this.db = firebase_admin.database();
         this.ref_session = this.db.ref("session");
         this.ref_matched = this.db.ref("matched");
@@ -176,7 +174,7 @@ class FirebaseServer {
     public onMatching(data): Promise<{}> {
         let user_id: string = data.val().user_id;
 
-        return SessionHandler.handleMatching(data.val().name, user_id).then(
+        return this.session_handler.handleMatching(data.val().name, user_id).then(
                 (matched: MatchedData) => {
             return Promise.all([
                 this.ref_session.child(`session_${matched.session_id}`).set(matched.session_string),
@@ -189,7 +187,7 @@ class FirebaseServer {
     }
 
     public onCommand(data): Promise<{}> {
-        return SessionHandler.handleCommand(data.val()).then((session_data) => {
+        return this.session_handler.handleCommand(data.val()).then((session_data) => {
             let session_string = session_data.value;
             let promises: Promise<{}>[] = [];
 
@@ -218,8 +216,10 @@ class FirebaseServer {
 
 class HttpServer {
     private server;
+    private session_handler: SessionHandler;
 
-    constructor() {
+    constructor(session_handler: SessionHandler) {
+        this.session_handler = session_handler;
         this.server = http.createServer();
     }
 
@@ -264,7 +264,7 @@ class HttpServer {
         }
 
         if (pathname == "/command") {
-            SessionHandler.handleCommand(query).then((data: KeyValue) => {
+            this.session_handler.handleCommand(query).then((data: KeyValue) => {
                 response.setHeader("Content-Type", "application/json; charset=utf-8");
                 response.end(data.value);
             });
@@ -272,7 +272,8 @@ class HttpServer {
         }
 
         if (pathname == "/matching") {
-            SessionHandler.handleMatching(query.name, query.user_id).then((matched: MatchedData) => {
+            this.session_handler.handleMatching(query.name, query.user_id).then(
+                    (matched: MatchedData) => {
                 response.end(JSON.stringify({ matching_id: matched.matching_id,
                                               session_id: matched.session_id }));
                 console.log(matched.session_string);
@@ -286,7 +287,12 @@ class HttpServer {
 
 
 class SessionHandler {
-    static initSession(): Session {  // This is a stub, not to be used for production.
+    private mc: Memcache;
+    constructor(mc: Memcache) {
+        this.mc = mc;
+    }
+
+    public initSession(): Session {  // This is a stub, not to be used for production.
         let session = new Session();
         const player_id0: PlayerId = session.addPlayer("0", "こしあん", 1200, 250);
         const player_id1: PlayerId = session.addPlayer("1", "つぶあん", 1000, 220);
@@ -296,11 +302,11 @@ class SessionHandler {
             session.addFacility(player_id1, Math.floor(Math.random() * 12));
         }
         session.startGame();
-        SessionHandler.doNext(session);
+        this.doNext(session);
         return session;
     }
 
-    static doNext(session: Session): boolean {
+    public doNext(session: Session): boolean {
         let prev_step: number = session.getStep();
         for (let i: number = 0; i < 100; ++i) {
             if (!session.doNext()) {
@@ -315,7 +321,7 @@ class SessionHandler {
         return false;
     }
 
-    static processCommand(session: Session, query): boolean {
+    public processCommand(session: Session, query): boolean {
         if (query.command == "board") {
             let step: number = Number(query.step);
             if (step >= session.getStep()) {
@@ -330,7 +336,7 @@ class SessionHandler {
             let aim = Number(query.aim);
             if (session.diceRoll(player_id, dice_num, aim)) {
                 // TODO: integrate diceRoll and doNext.
-                SessionHandler.doNext(session);
+                this.doNext(session);
             }
         }
 
@@ -342,7 +348,7 @@ class SessionHandler {
             if (x != null && y != null && player_id != null && card_id != null) {
                 if (session.buildFacility(player_id, x, y, card_id)) {
                     // TODO: integrate buildFacility and doNext.
-                    SessionHandler.doNext(session);
+                    this.doNext(session);
                 }
             }
         }
@@ -350,7 +356,7 @@ class SessionHandler {
         return true;
     }
 
-    static handleCommand(query: any): Promise<KeyValue> {
+    public handleCommand(query: any): Promise<KeyValue> {
         let session_key: string = "session";
         if (query.session_id) {
             session_key = `session_${query.session_id}`;
@@ -358,36 +364,36 @@ class SessionHandler {
 
         let session: Session;
         let updated: boolean = false;
-        return mc.getWithPromise(session_key).then((data) => {
+        return this.mc.getWithPromise(session_key).then((data) => {
             if (data.value) {
                 session = Session.fromJSON(JSON.parse(data.value));
             } else {
-                session = SessionHandler.initSession();
+                session = this.initSession();
             }
 
-            let updated: boolean = SessionHandler.processCommand(session, query);
+            let updated: boolean = this.processCommand(session, query);
             if (!updated) {
                 return new KeyValue(data.key, "{}");
             }
             let session_json: string = JSON.stringify(session.toJSON());
-            return mc.setWithPromise(session_key, session_json);
+            return this.mc.setWithPromise(session_key, session_json);
         });
     }
 
     // TODO: This is a quite hacky way for testing w/o considering any race conditions.
-    static handleMatching(name: string, user_id: string): Promise<MatchedData> {
+    public handleMatching(name: string, user_id: string): Promise<MatchedData> {
         const num_players: number = 2;
         let matched_data: MatchedData = new MatchedData();
 
         // TODO: Some operations can be performed in parallel.
-        return mc.getWithPromise("matching").then((data) => {
+        return this.mc.getWithPromise("matching").then((data) => {
             let matching_id: number;
             if (data.value) {
                 matching_id = Number(data.value);
             } else {
                 matching_id = 10;
             }
-            return mc.setWithPromise("matching", matching_id + 1);
+            return this.mc.setWithPromise("matching", matching_id + 1);
         }).then((data) => {
             let matching_id: number = data.value - 1;
 
@@ -397,7 +403,7 @@ class SessionHandler {
 
             matched_data.matching_id = String(matching_id);
             matched_data.session_id = String(session_id);
-            return mc.getWithPromise(session_key);
+            return this.mc.getWithPromise(session_key);
         }).then((data) => {
             let session_key: string = data.key;
             let session_value: string = data.value;
@@ -408,18 +414,18 @@ class SessionHandler {
                 session = new Session();
             }
 
-            SessionHandler.addNewPlayer(session, user_id, name, num_players);
+            this.addNewPlayer(session, user_id, name, num_players);
 
             let session_string: string = JSON.stringify(session.toJSON());
             matched_data.session_string = session_string;
 
-            return mc.setWithPromise(session_key, session_string);
+            return this.mc.setWithPromise(session_key, session_string);
         }).then((data) => {
             return matched_data;
         });
     }
 
-    static addNewPlayer(session: Session, user_id: string, name: string, num_players: number): PlayerId {
+    public addNewPlayer(session: Session, user_id: string, name: string, num_players: number): PlayerId {
         const player_id: PlayerId = session.addPlayer(user_id, name, 1200, 250);
         const num_cards = 10;
         const max_id: number = 24;
@@ -430,14 +436,20 @@ class SessionHandler {
 
         if (player_id == num_players - 1) {
             session.startGame();
-            SessionHandler.doNext(session);
+            this.doNext(session);
         }
 
         return player_id;
     }
 }
 
-let main_http: HttpServer = new HttpServer();
+// const mc = new MemcacheMock();
+// const mc = new MemcacheServer("localhost:11211");
+const mc = new FirebaseMemcache();
+
+let session_handler: SessionHandler = new SessionHandler(mc);
+
+let main_http: HttpServer = new HttpServer(session_handler);
 main_http.run();
-let main_firebase: FirebaseServer = new FirebaseServer();
+let main_firebase: FirebaseServer = new FirebaseServer(session_handler);
 main_firebase.run();

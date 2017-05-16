@@ -166,12 +166,12 @@ class WebClient {
     public no_update_count: number = 0;
     private money_animation_timers = [null, null, null, null];
 
-    public update_listener: UpdateListener = new FirebaseUpdateListener();
-    public request_handler: RequestHandler = new FirebaseRequestHandler();
-    // public update_listener: UpdateListener = new HttpUpdateListener();
-    // public request_handler: RequestHandler = new HttpRequestHandler();
+    public update_listener: UpdateListener;
+    public request_handler: RequestHandler;
 
-    constructor() {
+    constructor(update_listener: UpdateListener, request_handler: RequestHandler) {
+        this.update_listener = update_listener;
+        this.request_handler = request_handler;
         this.callback = this.callbackSession.bind(this);
     }
 
@@ -628,5 +628,10 @@ function effectMoneyMotion(elementFrom: string, elementTo: string, money: number
     }, 1500);
 }
 
-let client: WebClient = new WebClient();
+// let update_listener: UpdateListener = new FirebaseUpdateListener();
+// let request_handler: RequestHandler = new FirebaseRequestHandler();
+let update_listener: UpdateListener = new HttpUpdateListener();
+let request_handler: RequestHandler = new HttpRequestHandler();
+
+let client: WebClient = new WebClient(update_listener, request_handler);
 document.addEventListener("DOMContentLoaded", () => { client.initBoard(); });
