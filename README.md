@@ -22,13 +22,19 @@
 
 * ./build.sh
 
-# How to run
-
-## Web browser
-* open out/client/saikoro.html
+# How to run in a local machine.
 
 ## Server
 * node out/server/server.js
+
+## Web browser
+* open http://localhost:3156/
+
+# How to deploy
+* firebase deploy
+
+* public/ is for Firebase hosting.
+* functions/ is for Firebase functions.
 
 # Coding style
 

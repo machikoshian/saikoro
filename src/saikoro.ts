@@ -628,10 +628,10 @@ function effectMoneyMotion(elementFrom: string, elementTo: string, money: number
     }, 1500);
 }
 
-// let update_listener: UpdateListener = new FirebaseUpdateListener();
-// let request_handler: RequestHandler = new FirebaseRequestHandler();
-let update_listener: UpdateListener = new HttpUpdateListener();
-let request_handler: RequestHandler = new HttpRequestHandler();
+let update_listener: UpdateListener = new FirebaseUpdateListener();
+let request_handler: RequestHandler = new FirebaseRequestHandler();
+// let update_listener: UpdateListener = new HttpUpdateListener();
+// let request_handler: RequestHandler = new HttpRequestHandler();
 
 let client: WebClient = new WebClient(update_listener, request_handler);
 document.addEventListener("DOMContentLoaded", () => { client.initBoard(); });
