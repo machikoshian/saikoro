@@ -165,7 +165,6 @@ class WebClient {
     public player_cards_list: CardId[][] = [];
     public callback: (response: string) => void;
     public no_update_count: number = 0;
-    private money_animation_timers = [null, null, null, null];
     private view: HtmlView = new HtmlView();
 
     public update_listener: UpdateListener;
@@ -400,51 +399,9 @@ class WebClient {
         this.updateBoard(session);
 
         // Update players.
+        this.view.drawPlayers(session);
+
         let players: Player[] = session.getPlayers();
-        for (let i: number = 0; i < players.length; ++i) {
-            let player: Player = players[i];
-            document.getElementById(`player_${i}`).style.visibility = "visible";
-            document.getElementById(`player_${i}_name`).innerText = player.name;
-
-            let money_element = document.getElementById(`player_${i}_money`);
-            let money: number = player.getMoney();
-
-            if (this.money_animation_timers[i]) {
-                clearInterval(this.money_animation_timers[i]);
-            }
-            this.money_animation_timers[i] = setInterval(() => {
-                let current_money = Number(money_element.innerText);
-                if (current_money == money) {
-                    clearInterval(this.money_animation_timers[i]);
-                    this.money_animation_timers[i] = null;
-                    return;
-                }
-                else if (current_money > money) {
-                    current_money -= Math.min(10, current_money - money);
-                }
-                else if (current_money < money) {
-                    current_money += Math.min(10, money - current_money);
-                }
-                money_element.innerHTML = String(current_money);
-            }, 5);
-
-            document.getElementById(`player_${i}_salary`).innerHTML = `${player.salary}`;
-            let cards: PlayerCards = session.getPlayerCards(i);
-            document.getElementById(`player_${i}_talon`).innerHTML =
-                `${cards.getHandSize()}　／　📇 ${cards.getTalonSize()}`;
-
-            if (player.user_id === this.user_id) {
-                document.getElementById(`cards_${i}`).style.display = "table-row";
-            }
-            else {
-                document.getElementById(`cards_${i}`).style.display = "none";
-            }
-
-        }
-        for (let i: number = players.length; i < 4; ++i) {
-            document.getElementById(`player_${i}`).style.visibility = "hidden";
-            document.getElementById(`cards_${i}`).style.display = "none";
-        }
 
         // Update message.
         let current_player: Player = players[player_id];
@@ -494,6 +451,19 @@ class WebClient {
         }
 
         // Update cards.
+        for (let i: number = 0; i < players.length; ++i) {
+            let player: Player = players[i];
+            if (player.user_id === this.user_id) {
+                document.getElementById(`cards_${i}`).style.display = "table-row";
+            }
+            else {
+                document.getElementById(`cards_${i}`).style.display = "none";
+            }
+        }
+        for (let i: number = players.length; i < 4; ++i) {
+            document.getElementById(`cards_${i}`).style.display = "none";
+        }
+
         this.player_cards_list = [];
         const area_name: string[] =
             ["", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩", "⑪", "⑫"];

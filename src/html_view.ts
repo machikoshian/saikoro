@@ -4,6 +4,8 @@ import { CardId, FacilityType, Facility } from "./facility";
 import { Dice, DiceResult } from "./dice";
 
 export class HtmlView {
+    private money_animation_timers = [null, null, null, null];
+
     public getPlayerColor(player_id: PlayerId): string {
         // TODO: Support landmark colors (set / built).
         let colors = ["#909CC2", "#D9BDC5", "#90C290", "#9D8189"];
@@ -30,6 +32,45 @@ export class HtmlView {
                 return "#EF9A9A";
             case FacilityType.Purple:
                 return "#B39DDB";
+        }
+    }
+
+    public drawPlayers(session: Session): void {
+        let players: Player[] = session.getPlayers();
+        for (let i: number = 0; i < players.length; ++i) {
+            let player: Player = players[i];
+            document.getElementById(`player_${i}`).style.visibility = "visible";
+            document.getElementById(`player_${i}_name`).innerText = player.name;
+
+            let money_element = document.getElementById(`player_${i}_money`);
+            let money: number = player.getMoney();
+
+            if (this.money_animation_timers[i]) {
+                clearInterval(this.money_animation_timers[i]);
+            }
+            this.money_animation_timers[i] = setInterval(() => {
+                let current_money = Number(money_element.innerText);
+                if (current_money == money) {
+                    clearInterval(this.money_animation_timers[i]);
+                    this.money_animation_timers[i] = null;
+                    return;
+                }
+                else if (current_money > money) {
+                    current_money -= Math.min(10, current_money - money);
+                }
+                else if (current_money < money) {
+                    current_money += Math.min(10, money - current_money);
+                }
+                money_element.innerHTML = String(current_money);
+            }, 5);
+
+            document.getElementById(`player_${i}_salary`).innerHTML = `${player.salary}`;
+            let cards: PlayerCards = session.getPlayerCards(i);
+            document.getElementById(`player_${i}_talon`).innerHTML =
+                `${cards.getHandSize()}　／　📇 ${cards.getTalonSize()}`;
+        }
+        for (let i: number = players.length; i < 4; ++i) {
+            document.getElementById(`player_${i}`).style.visibility = "hidden";
         }
     }
 
