@@ -18,6 +18,34 @@ export abstract class Memcache {
     abstract setWithPromise(key: string, value: any): Promise<KeyValue>;
 }
 
+export class MemcacheMock extends Memcache {
+    public cache: { [key: string]: any; } = {};
+
+    public get(key: string, callback: (err: any, value: any) => void): void {
+        callback(null, this.cache[key]);
+    }
+
+    public getWithPromise(key: string): Promise<KeyValue> {
+        return new Promise<KeyValue>((resolve, reject) => {
+            let data: KeyValue = new KeyValue(key, this.cache[key]);
+            resolve(data);
+        });
+    }
+
+    public set(key: string, value: any, callback: (err: any) => void, expire: number): void {
+        this.cache[key] = value;
+        callback(null);
+    }
+
+    public setWithPromise(key: string, value: any): Promise<KeyValue> {
+        this.cache[key] = value;
+        return new Promise<KeyValue>((resolve, reject) => {
+            let data: KeyValue = new KeyValue(key, value);
+            resolve(data);
+        });
+    }
+}
+
 export class MatchedData {
     constructor(
         public matching_id: string = "",

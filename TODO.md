@@ -15,6 +15,7 @@
 * サーバーレススタンドアロンモードの実装（一人用）
 * class と CSS を明示的に分類。
 * 赤の評価順をプレーヤーから左回りに変更。
+* Firebase.onDisconnect への対応
 
 * websocket のサポート
 

@@ -1,4 +1,4 @@
-import { KeyValue, Memcache, MatchedData, SessionHandler } from "./session_handler";
+import { KeyValue, Memcache, MemcacheMock, MatchedData, SessionHandler } from "./session_handler";
 import { FirebaseMemcache, FirebaseServer } from "./firebase_server";
 
 // Moduiles from Node.js
@@ -130,13 +130,13 @@ class HttpServer {
 }
 
 
-// const mc = new MemcacheMock();
+const mc = new MemcacheMock();
 // const mc = new MemcacheServer("localhost:11211");
-const mc = new FirebaseMemcache();
+// const mc = new FirebaseMemcache();
 
 let session_handler: SessionHandler = new SessionHandler(mc);
 
 let main_http: HttpServer = new HttpServer(session_handler);
 main_http.run();
-let main_firebase: FirebaseServer = new FirebaseServer(session_handler);
-main_firebase.run();
+// let main_firebase: FirebaseServer = new FirebaseServer(session_handler);
+// main_firebase.run();
