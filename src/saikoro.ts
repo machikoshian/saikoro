@@ -176,14 +176,6 @@ class WebClient {
         this.callback = this.callbackSession.bind(this);
     }
 
-    public diceResultMessage(dice: DiceResult): string {
-        let faces: string[] = ["", "⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
-
-        let d1: number = dice.dice1;
-        let d2: number = dice.dice2;
-        return `${faces[d1]} ${faces[d2]} : ${d1 + d2} でした。`;
-    }
-
     public resetCards(): void {
         if (this.clicked_card_element) {
             this.clicked_card_element.style.borderColor = "#EEEEEE";
@@ -244,7 +236,7 @@ class WebClient {
         this.clicked_card_element.style.borderColor = "#FFE082";
         this.clicked_card_id = this.player_cards_list[player][card];
 
-        this.updateBoard(this.session);
+        this.view.updateBoard(this.session);
 
         let x: number = this.session.getFacility(this.clicked_card_id).getArea() - 1;
         for (let y: number = 0; y < 5; y++) {
@@ -271,7 +263,7 @@ class WebClient {
         this.clicked_card_element.style.borderColor = "#FFE082";
         this.clicked_card_id = clicked_card_id;
 
-        this.updateBoard(this.session);
+        this.view.updateBoard(this.session);
 
         let [x, y] = this.session.getPosition(this.clicked_card_id);
         document.getElementById(`field_${x}_${y}`).style.backgroundColor = "#FFF176";
@@ -346,17 +338,6 @@ class WebClient {
         document.getElementById("money_motion").style.visibility = "hidden";
     }
 
-    private updateBoard(session: Session): void {
-        let board: Board = session.getBoard();
-        for (let y: number = 0; y < board.row; ++y) {
-            for (let x: number = 0; x < board.column; ++x) {
-                let facility: Facility = session.getFacilityOnBoard(x, y);
-                let owner_id: PlayerId = session.getOwnerIdOnBoard(x, y);
-                this.view.drawField(x, y, facility, owner_id);
-            }
-        }
-    }
-
     // Do not directly call this method.
     // Use this.callback as a wrapper of this method.
     private callbackSession(response: string): void {
@@ -377,12 +358,16 @@ class WebClient {
             }
             return;
         }
-
         this.no_update_count = 0;
 
         let session: Session = Session.fromJSON(JSON.parse(response));
 
-        this.showEvents(session);
+        let phase: Phase = session.getPhase();
+        if (phase == Phase.EndGame) {
+            this.update_listener.stopCheckUpdate();
+        }
+
+        this.view.showEvents(session);
 
         this.session = session;
         let player_id: PlayerId = session.getCurrentPlayerId();
@@ -395,138 +380,19 @@ class WebClient {
         }
         this.step = step;
 
-        // Update board.
-        this.updateBoard(session);
-
-        // Update players.
-        this.view.drawPlayers(session);
-
-        let players: Player[] = session.getPlayers();
-
-        // Update message.
-        let current_player: Player = players[player_id];
-        let name: string = current_player.name;
-        let message: string = "";
-        let phase: Phase = session.getPhase();
-        if (phase == Phase.StartGame) {
-            message = `🎲 マッチング中です 🎲`;
-        }
-        else if (phase == Phase.DiceRoll) {
-            message = `🎲 ${name} のサイコロです 🎲`;
-        }
-        else if (phase == Phase.BuildFacility) {
-            message = this.diceResultMessage(session.getDiceResult());
-            message += `  🎲 ${name} の建設です 🎲`;
-        }
-        else if (phase == Phase.EndGame) {
-            let winner: string = session.getPlayer(session.getWinner()).name;
-            message = `🎲 ${name} の勝ちです 🎲`;
-            this.update_listener.stopCheckUpdate();
-        }
-        document.getElementById("message").innerText = message;
-        document.getElementById("message").style.backgroundColor = this.view.getPlayerColor(player_id);
-
-        // Update buttons.
-        if (current_player.user_id === this.user_id) {
-            document.getElementById("dice").style.display = "";
-        }
-        else {
-            document.getElementById("dice").style.display = "none";
-        }
-
-        if (phase == Phase.DiceRoll) {
-            document.getElementById("dice_1").style.visibility = "visible";
-            document.getElementById("dice_2").style.visibility = "visible";
-        }
-        else {
-            document.getElementById("dice_1").style.visibility = "hidden";
-            document.getElementById("dice_2").style.visibility = "hidden";
-        }
-
-        if (phase == Phase.BuildFacility) {
-            document.getElementById("end_turn").style.visibility = "visible";
-        }
-        else {
-            document.getElementById("end_turn").style.visibility = "hidden";
-        }
-
-        // Update cards.
-        for (let i: number = 0; i < players.length; ++i) {
-            let player: Player = players[i];
-            if (player.user_id === this.user_id) {
-                document.getElementById(`cards_${i}`).style.display = "table-row";
-            }
-            else {
-                document.getElementById(`cards_${i}`).style.display = "none";
-            }
-        }
-        for (let i: number = players.length; i < 4; ++i) {
-            document.getElementById(`cards_${i}`).style.display = "none";
-        }
-
+        // Update cards list.
         this.player_cards_list = [];
-        const area_name: string[] =
-            ["", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩", "⑪", "⑫"];
+        let players: Player[] = session.getPlayers();
         for (let i: number = 0; i < players.length; ++i) {
             let card_ids: CardId[] = session.getSortedHand(i);
             this.player_cards_list.push(card_ids);
-            for (let j: number = 0; j < Math.min(10, card_ids.length); ++j) {
-                let facility: Facility = session.getFacility(card_ids[j]);
-                document.getElementById(`card_${i}_${j}`).style.display = "table-cell";
-                document.getElementById(`card_${i}_${j}_name`).innerText =
-                    `${area_name[facility.getArea()]} ${facility.getName()}`;
-                document.getElementById(`card_${i}_${j}_cost`).innerText = String(facility.getCost());
-                document.getElementById(`card_${i}_${j}_description`).innerText = facility.getDescription();
-                document.getElementById(`card_${i}_${j}`).style.backgroundColor =
-                    this.view.getFacilityColor(facility);
-            }
-            for (let j: number = Math.min(10, card_ids.length); j < 10; ++j) {
-                document.getElementById(`card_${i}_${j}`).style.display = "none";
-            }
         }
-
-        // Update landmarks.
         let card_ids: CardId[] = session.getLandmarks();
         this.player_cards_list.push(card_ids);
-        for (let j: number = 0; j < Math.min(5, card_ids.length); ++j) {
-            let facility: Facility = session.getFacility(card_ids[j]);
-            document.getElementById(`landmark_${j}`).style.display = "table-cell";
-            document.getElementById(`landmark_${j}_name`).innerText = facility.getName();
-            document.getElementById(`landmark_${j}_cost`).innerText = String(facility.getCost());
-            document.getElementById(`landmark_${j}_description`).innerText = facility.getDescription();
-            let owner_id: PlayerId = this.session.getOwnerId(card_ids[j]);
-            if (owner_id === -1) {
-                document.getElementById(`landmark_${j}`).style.backgroundColor =
-                    this.view.getFacilityColor(facility);
-            } else {
-                document.getElementById(`landmark_${j}`).style.backgroundColor =
-                    this.view.getPlayerColor(owner_id);
-            }
-        }
-        for (let j: number = Math.min(5, card_ids.length); j < 5; ++j) {
-            document.getElementById(`landmark_${j}`).style.display = "none";
-        }
+
+        this.view.updateView(session, this.user_id);
 
         this.resetCards();  // Nice to check if built or not?
-    }
-
-    private showEvents(session: Session): void {
-        let events: Event[] = session.getEvents();
-        if (events.length === 0) {
-            return;
-        }
-
-        for (let event of events) {
-            let [x, y]: [number, number] = session.getPosition(event.card_id);
-
-            for (let pid = 0; pid < event.moneys.length; pid++) {
-                let money: number = event.moneys[pid];
-                if (money === 0) {
-                    continue;
-                }
-                this.view.drawMoneyMotion(money, pid, x, y);
-            }
-        }
     }
 }
 

@@ -35,6 +35,136 @@ export class HtmlView {
         }
     }
 
+    public diceResultMessage(dice: DiceResult): string {
+        let faces: string[] = ["", "⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
+
+        let d1: number = dice.dice1;
+        let d2: number = dice.dice2;
+        return `${faces[d1]} ${faces[d2]} : ${d1 + d2} でした。`;
+    }
+
+    public updateView(session: Session, user_id: string): void {
+        // Update board.
+        this.updateBoard(session);
+
+        // Update players.
+        this.drawPlayers(session);
+
+        let player_id: PlayerId = session.getCurrentPlayerId();
+        let players: Player[] = session.getPlayers();
+
+        // Update message.
+        let current_player: Player = players[player_id];
+        let name: string = current_player.name;
+        let message: string = "";
+        let phase: Phase = session.getPhase();
+        if (phase == Phase.StartGame) {
+            message = `🎲 マッチング中です 🎲`;
+        }
+        else if (phase == Phase.DiceRoll) {
+            message = `🎲 ${name} のサイコロです 🎲`;
+        }
+        else if (phase == Phase.BuildFacility) {
+            message = this.diceResultMessage(session.getDiceResult());
+            message += `  🎲 ${name} の建設です 🎲`;
+        }
+        else if (phase == Phase.EndGame) {
+            let winner: string = session.getPlayer(session.getWinner()).name;
+            message = `🎲 ${name} の勝ちです 🎲`;
+        }
+        document.getElementById("message").innerText = message;
+        document.getElementById("message").style.backgroundColor = this.getPlayerColor(player_id);
+
+        // Update buttons.
+        if (current_player.user_id === user_id) {
+            document.getElementById("dice").style.display = "";
+        }
+        else {
+            document.getElementById("dice").style.display = "none";
+        }
+
+        if (phase == Phase.DiceRoll) {
+            document.getElementById("dice_1").style.visibility = "visible";
+            document.getElementById("dice_2").style.visibility = "visible";
+        }
+        else {
+            document.getElementById("dice_1").style.visibility = "hidden";
+            document.getElementById("dice_2").style.visibility = "hidden";
+        }
+
+        if (phase == Phase.BuildFacility) {
+            document.getElementById("end_turn").style.visibility = "visible";
+        }
+        else {
+            document.getElementById("end_turn").style.visibility = "hidden";
+        }
+
+        // Update cards.
+        for (let i: number = 0; i < players.length; ++i) {
+            let player: Player = players[i];
+            if (player.user_id === user_id) {
+                document.getElementById(`cards_${i}`).style.display = "table-row";
+            }
+            else {
+                document.getElementById(`cards_${i}`).style.display = "none";
+            }
+        }
+        for (let i: number = players.length; i < 4; ++i) {
+            document.getElementById(`cards_${i}`).style.display = "none";
+        }
+
+        const area_name: string[] =
+            ["", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩", "⑪", "⑫"];
+        for (let i: number = 0; i < players.length; ++i) {
+            let card_ids: CardId[] = session.getSortedHand(i);
+            for (let j: number = 0; j < Math.min(10, card_ids.length); ++j) {
+                let facility: Facility = session.getFacility(card_ids[j]);
+                document.getElementById(`card_${i}_${j}`).style.display = "table-cell";
+                document.getElementById(`card_${i}_${j}_name`).innerText =
+                    `${area_name[facility.getArea()]} ${facility.getName()}`;
+                document.getElementById(`card_${i}_${j}_cost`).innerText = String(facility.getCost());
+                document.getElementById(`card_${i}_${j}_description`).innerText = facility.getDescription();
+                document.getElementById(`card_${i}_${j}`).style.backgroundColor =
+                    this.getFacilityColor(facility);
+            }
+            for (let j: number = Math.min(10, card_ids.length); j < 10; ++j) {
+                document.getElementById(`card_${i}_${j}`).style.display = "none";
+            }
+        }
+
+        // Update landmarks.
+        let card_ids: CardId[] = session.getLandmarks();
+        for (let j: number = 0; j < Math.min(5, card_ids.length); ++j) {
+            let facility: Facility = session.getFacility(card_ids[j]);
+            document.getElementById(`landmark_${j}`).style.display = "table-cell";
+            document.getElementById(`landmark_${j}_name`).innerText = facility.getName();
+            document.getElementById(`landmark_${j}_cost`).innerText = String(facility.getCost());
+            document.getElementById(`landmark_${j}_description`).innerText = facility.getDescription();
+            let owner_id: PlayerId = session.getOwnerId(card_ids[j]);
+            if (owner_id === -1) {
+                document.getElementById(`landmark_${j}`).style.backgroundColor =
+                    this.getFacilityColor(facility);
+            } else {
+                document.getElementById(`landmark_${j}`).style.backgroundColor =
+                    this.getPlayerColor(owner_id);
+            }
+        }
+        for (let j: number = Math.min(5, card_ids.length); j < 5; ++j) {
+            document.getElementById(`landmark_${j}`).style.display = "none";
+        }
+    }
+
+    public updateBoard(session: Session): void {
+        let board: Board = session.getBoard();
+        for (let y: number = 0; y < board.row; ++y) {
+            for (let x: number = 0; x < board.column; ++x) {
+                let facility: Facility = session.getFacilityOnBoard(x, y);
+                let owner_id: PlayerId = session.getOwnerIdOnBoard(x, y);
+                this.drawField(x, y, facility, owner_id);
+            }
+        }
+    }
+
     public drawPlayers(session: Session): void {
         let players: Player[] = session.getPlayers();
         for (let i: number = 0; i < players.length; ++i) {
@@ -74,17 +204,23 @@ export class HtmlView {
         }
     }
 
-    public drawField(x: number, y: number, facility: Facility, owner_id: PlayerId): void {
-        let name: string = facility ? facility.getName() : "";
-        let field: HTMLElement = document.getElementById(`field_${x}_${y}`);
-        field.innerText = name;
-        if (facility && facility.getType() === FacilityType.Gray && owner_id === -1) {
-            field.style.backgroundColor = this.getFacilityColor(facility);
+    public showEvents(session: Session): void {
+        let events: Event[] = session.getEvents();
+        if (events.length === 0) {
+            return;
         }
-        else {
-            field.style.backgroundColor = this.getPlayerColor(owner_id);
+
+        for (let event of events) {
+            let [x, y]: [number, number] = session.getPosition(event.card_id);
+
+            for (let pid = 0; pid < event.moneys.length; pid++) {
+                let money: number = event.moneys[pid];
+                if (money === 0) {
+                    continue;
+                }
+                this.drawMoneyMotion(money, pid, x, y);
+            }
         }
-        field.style.borderColor = this.getFacilityColor(facility);
     }
 
     public drawMoneyMotion(money: number, player_id: PlayerId, x: number, y: number): void {
@@ -122,5 +258,18 @@ export class HtmlView {
         window.setTimeout(() => {
             document.body.removeChild(money_motion);
         }, 1500);
+    }
+
+    private drawField(x: number, y: number, facility: Facility, owner_id: PlayerId): void {
+        let name: string = facility ? facility.getName() : "";
+        let field: HTMLElement = document.getElementById(`field_${x}_${y}`);
+        field.innerText = name;
+        if (facility && facility.getType() === FacilityType.Gray && owner_id === -1) {
+            field.style.backgroundColor = this.getFacilityColor(facility);
+        }
+        else {
+            field.style.backgroundColor = this.getPlayerColor(owner_id);
+        }
+        field.style.borderColor = this.getFacilityColor(facility);
     }
 }
