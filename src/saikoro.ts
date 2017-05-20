@@ -160,9 +160,6 @@ export class WebClient {
     // TODO: user_id should be unique.
     public user_id: string = String(Math.floor(Math.random() * 1000000));
     public step: number = 0;
-    public clicked_card_id: CardId = -1;
-    public clicked_card_element: HTMLElement = null;
-    public player_cards_list: CardId[][] = [];
     public callback: (response: string) => void;
     public no_update_count: number = 0;
     private view: HtmlView;
@@ -177,26 +174,14 @@ export class WebClient {
         this.callback = this.callbackSession.bind(this);
     }
 
-    public resetCards(): void {
-        if (this.clicked_card_element) {
-            this.clicked_card_element.style.borderColor = "#EEEEEE";
-            this.clicked_card_element = null;
-        }
-        this.clicked_card_id = -1;
-    }
-
-    public onClickField(x, y): void {
-        console.log(`clicked: field_${x}_${y}`);
-        if (this.clicked_card_id < 0) {
-            return;
-        }
+    public buildFacility(x: number, y: number, card_id: CardId): void {
         let request = {
             command: "build",
             session_id: this.session_id,
             player_id: this.player_id,
             x: x,
             y: y,
-            card_id: this.clicked_card_id,
+            card_id: card_id,
         };
         this.request_handler.sendRequest(request, this.callback);
     }
@@ -213,7 +198,7 @@ export class WebClient {
         this.request_handler.sendRequest(request, this.callback);
     }
 
-    public onClickEndTurn(): void {
+    public endTurn(): void {
         console.log("clicked: end_turn");
         let request = {
             command: "build",
@@ -224,50 +209,6 @@ export class WebClient {
             card_id: -1,
         };
         this.request_handler.sendRequest(request, this.callback);
-    }
-
-    public onClickCard(player: number, card: number): void {
-        if (this.session.getPhase() !== Phase.BuildFacility) {
-            return;
-        }
-
-        console.log(`clicked: card_${player}_${card}`);
-        this.resetCards();
-        this.clicked_card_element = document.getElementById(`card_${player}_${card}`);
-        this.clicked_card_element.style.borderColor = "#FFE082";
-        this.clicked_card_id = this.player_cards_list[player][card];
-
-        this.view.updateBoard(this.session);
-
-        let x: number = this.session.getFacility(this.clicked_card_id).getArea() - 1;
-        for (let y: number = 0; y < 5; y++) {
-            let field: HTMLElement = document.getElementById(`field_${x}_${y}`);
-            // TODO: Keep the owner's color too.
-            field.style.backgroundColor = "#FFF176";
-        }
-    }
-
-    public onClickLandmark(card: number): void {
-        if (this.session.getPhase() !== Phase.BuildFacility) {
-            return;
-        }
-
-        console.log(`clicked: landmark_${card}`);
-
-        let clicked_card_id: CardId = this.session.getLandmarks()[card];
-        if (this.session.getOwnerId(clicked_card_id) !== -1) {
-            return;
-        }
-
-        this.resetCards();
-        this.clicked_card_element = document.getElementById(`landmark_${card}`);
-        this.clicked_card_element.style.borderColor = "#FFE082";
-        this.clicked_card_id = clicked_card_id;
-
-        this.view.updateBoard(this.session);
-
-        let [x, y] = this.session.getPosition(this.clicked_card_id);
-        document.getElementById(`field_${x}_${y}`).style.backgroundColor = "#FFF176";
     }
 
     public callbackMatching(response: string): void {
@@ -332,8 +273,6 @@ export class WebClient {
             this.update_listener.stopCheckUpdate();
         }
 
-        this.view.showEvents(session);
-
         this.session = session;
         let player_id: PlayerId = session.getCurrentPlayerId();
         this.player_id = player_id;
@@ -345,19 +284,7 @@ export class WebClient {
         }
         this.step = step;
 
-        // Update cards list.
-        this.player_cards_list = [];
-        let players: Player[] = session.getPlayers();
-        for (let i: number = 0; i < players.length; ++i) {
-            let card_ids: CardId[] = session.getSortedHand(i);
-            this.player_cards_list.push(card_ids);
-        }
-        let card_ids: CardId[] = session.getLandmarks();
-        this.player_cards_list.push(card_ids);
-
         this.view.updateView(session, this.user_id);
-
-        this.resetCards();  // Nice to check if built or not?
     }
 }
 

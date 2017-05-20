@@ -7,6 +7,10 @@ import { WebClient } from "./saikoro";  // TODO: circular dependency.
 export class HtmlView {
     private money_animation_timers = [null, null, null, null];
     private client: WebClient;  // TODO: create a super class.
+    private session: Session = null;
+    private clicked_card_id: CardId = -1;
+    private clicked_card_element: HTMLElement = null;
+    private player_cards_list: CardId[][] = [];
 
     constructor(client: WebClient) {
         this.client = client;
@@ -54,14 +58,28 @@ export class HtmlView {
     }
 
     public updateView(session: Session, user_id: string): void {
+        this.session = session;
+
+        // Show event animations.
+        this.showEvents();
+
+        // Update cards list.
+        this.player_cards_list = [];
+        let players: Player[] = session.getPlayers();
+        for (let i: number = 0; i < players.length; ++i) {
+            let card_ids: CardId[] = session.getSortedHand(i);
+            this.player_cards_list.push(card_ids);
+        }
+        let landmark_ids: CardId[] = session.getLandmarks();
+        this.player_cards_list.push(landmark_ids);
+
         // Update board.
-        this.updateBoard(session);
+        this.updateBoard();
 
         // Update players.
-        this.drawPlayers(session);
+        this.drawPlayers();
 
         let player_id: PlayerId = session.getCurrentPlayerId();
-        let players: Player[] = session.getPlayers();
 
         // Update message.
         let current_player: Player = players[player_id];
@@ -143,14 +161,13 @@ export class HtmlView {
         }
 
         // Update landmarks.
-        let card_ids: CardId[] = session.getLandmarks();
-        for (let j: number = 0; j < Math.min(5, card_ids.length); ++j) {
-            let facility: Facility = session.getFacility(card_ids[j]);
+        for (let j: number = 0; j < Math.min(5, landmark_ids.length); ++j) {
+            let facility: Facility = session.getFacility(landmark_ids[j]);
             document.getElementById(`landmark_${j}`).style.display = "table-cell";
             document.getElementById(`landmark_${j}_name`).innerText = facility.getName();
             document.getElementById(`landmark_${j}_cost`).innerText = String(facility.getCost());
             document.getElementById(`landmark_${j}_description`).innerText = facility.getDescription();
-            let owner_id: PlayerId = session.getOwnerId(card_ids[j]);
+            let owner_id: PlayerId = session.getOwnerId(landmark_ids[j]);
             if (owner_id === -1) {
                 document.getElementById(`landmark_${j}`).style.backgroundColor =
                     this.getFacilityColor(facility);
@@ -159,25 +176,75 @@ export class HtmlView {
                     this.getPlayerColor(owner_id);
             }
         }
-        for (let j: number = Math.min(5, card_ids.length); j < 5; ++j) {
+        for (let j: number = Math.min(5, landmark_ids.length); j < 5; ++j) {
             document.getElementById(`landmark_${j}`).style.display = "none";
         }
+
+        this.resetCards();  // Nice to check if built or not?
     }
 
     public onClickField(x, y): void {
-        this.client.onClickField(x, y);
+        console.log(`clicked: field_${x}_${y}`);
+        if (this.clicked_card_id < 0) {
+            return;
+        }
+        this.client.buildFacility(x, y, this.clicked_card_id);
     }
 
     public onClickEndTurn(): void {
-        this.client.onClickEndTurn();
+        this.client.endTurn();
+    }
+
+    public resetCards(): void {
+        if (this.clicked_card_element) {
+            this.clicked_card_element.style.borderColor = "#EEEEEE";
+            this.clicked_card_element = null;
+        }
+        this.clicked_card_id = -1;
     }
 
     public onClickCard(player: number, card: number): void {
-        this.client.onClickCard(player, card);
+        if (this.session.getPhase() !== Phase.BuildFacility) {
+            return;
+        }
+
+        console.log(`clicked: card_${player}_${card}`);
+        this.resetCards();
+        this.clicked_card_element = document.getElementById(`card_${player}_${card}`);
+        this.clicked_card_element.style.borderColor = "#FFE082";
+        this.clicked_card_id = this.player_cards_list[player][card];
+
+        this.updateBoard();
+
+        let x: number = this.session.getFacility(this.clicked_card_id).getArea() - 1;
+        for (let y: number = 0; y < 5; y++) {
+            let field: HTMLElement = document.getElementById(`field_${x}_${y}`);
+            // TODO: Keep the owner's color too.
+            field.style.backgroundColor = "#FFF176";
+        }
     }
 
     public onClickLandmark(card: number): void {
-        this.client.onClickLandmark(card);
+        if (this.session.getPhase() !== Phase.BuildFacility) {
+            return;
+        }
+
+        console.log(`clicked: landmark_${card}`);
+
+        let clicked_card_id: CardId = this.session.getLandmarks()[card];
+        if (this.session.getOwnerId(clicked_card_id) !== -1) {
+            return;
+        }
+
+        this.resetCards();
+        this.clicked_card_element = document.getElementById(`landmark_${card}`);
+        this.clicked_card_element.style.borderColor = "#FFE082";
+        this.clicked_card_id = clicked_card_id;
+
+        this.updateBoard();
+
+        let [x, y] = this.session.getPosition(this.clicked_card_id);
+        document.getElementById(`field_${x}_${y}`).style.backgroundColor = "#FFF176";
     }
 
     public initView(column: number = 12, row: number = 5):void {
@@ -219,7 +286,8 @@ export class HtmlView {
         document.getElementById("money_motion").style.visibility = "hidden";
     }
 
-    public updateBoard(session: Session): void {
+    public updateBoard(): void {
+        let session: Session = this.session;
         let board: Board = session.getBoard();
         for (let y: number = 0; y < board.row; ++y) {
             for (let x: number = 0; x < board.column; ++x) {
@@ -230,7 +298,8 @@ export class HtmlView {
         }
     }
 
-    public drawPlayers(session: Session): void {
+    public drawPlayers(): void {
+        let session: Session = this.session;
         let players: Player[] = session.getPlayers();
         for (let i: number = 0; i < players.length; ++i) {
             let player: Player = players[i];
@@ -269,14 +338,14 @@ export class HtmlView {
         }
     }
 
-    public showEvents(session: Session): void {
-        let events: Event[] = session.getEvents();
+    public showEvents(): void {
+        let events: Event[] = this.session.getEvents();
         if (events.length === 0) {
             return;
         }
 
         for (let event of events) {
-            let [x, y]: [number, number] = session.getPosition(event.card_id);
+            let [x, y]: [number, number] = this.session.getPosition(event.card_id);
 
             for (let pid = 0; pid < event.moneys.length; pid++) {
                 let money: number = event.moneys[pid];
