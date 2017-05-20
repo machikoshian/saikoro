@@ -1,11 +1,10 @@
-* 収支変化の視覚化
-
+* キャラカードの実装
 * 使用済み matched データの削除。
 
+* abstract View クラスの作成
 * Card owner の変更への対応
 * NO_PLAYER (= -1) の実装
 * console.log 等の、開発モードとの挙動の切り替え
-* キャラカードの実装
 * クリックで施設詳細を表示
 * ユニットテストの追加
 * process handler chain / state hook の作成

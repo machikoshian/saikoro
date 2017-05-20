@@ -31,6 +31,27 @@ class HttpRequest {
     }
 }
 
+class HttpUpdateListener extends UpdateListener {
+    public check_update_timer: any = 0;  // Timer
+
+    public startCheckUpdate(client: Client): void {
+        this.check_update_timer = setInterval(() => { this.checkUpdate(client) }, 2000);
+    }
+    public stopCheckUpdate(): void {
+        clearInterval(this.check_update_timer);
+    }
+    public checkUpdate(client: Client): void {
+        console.log(`checkUpdate(${client.step})`);
+        let request = {
+            command: "board",
+            session_id: client.session_id,
+            player_id: client.player_id,
+            step: client.step,
+        };
+        client.request_handler.sendRequest(request, client.callback);
+    }
+}
+
 class HttpRequestHandler extends RequestHandler {
     constructor() {
         super();
@@ -72,7 +93,7 @@ class FirebaseUpdateListener extends UpdateListener {
         super();
     }
 
-    public startCheckUpdate(client: WebClient): void {
+    public startCheckUpdate(client: Client): void {
         let session_key = "session_" + client.session_id;
         this.ref = firebase.database().ref("session").child(session_key);
         this.ref.on("value", (snapshot) => {
@@ -87,7 +108,7 @@ class FirebaseUpdateListener extends UpdateListener {
     public stopCheckUpdate(): void {
         this.ref.off();
     }
-    public checkUpdate(client: WebClient): void {
+    public checkUpdate(client: Client): void {
         // Do nothing.
     }
 }
@@ -122,34 +143,8 @@ class FirebaseRequestHandler extends RequestHandler {
     }
 }
 
-class HttpUpdateListener extends UpdateListener {
-    public check_update_timer: any = 0;  // Timer
-
-    public startCheckUpdate(client: WebClient): void {
-        this.check_update_timer = setInterval(() => { this.checkUpdate(client) }, 2000);
-    }
-    public stopCheckUpdate(): void {
-        clearInterval(this.check_update_timer);
-    }
-    public checkUpdate(client: WebClient): void {
-        console.log(`checkUpdate(${client.step})`);
-        let request = {
-            command: "board",
-            session_id: client.session_id,
-            player_id: client.player_id,
-            step: client.step,
-        };
-        client.request_handler.sendRequest(request, client.callback);
-    }
-}
-
+// TODO: can be merged with Client?
 export class WebClient extends Client {
-    public session_id: number = 0;
-    public matching_id: number = 0;
-    public player_id: PlayerId = 0;
-    // TODO: user_id should be unique.
-    public user_id: string = String(Math.floor(Math.random() * 1000000));
-    public step: number = 0;
     private no_update_count: number = 0;
     private view: HtmlView;
     public callback: RequestCallback;

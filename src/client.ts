@@ -1,14 +1,7 @@
-import { Phase, Session, PlayerCards, Event, EventType } from "./session";
-import { Player, Board, PlayerId } from "./board";
-import { CardId, FacilityType, Facility } from "./facility";
-import { Dice, DiceResult } from "./dice";
-import { HtmlView } from "./html_view";
+import { CardId } from "./facility";
+import { PlayerId } from "./board";
 
 export type RequestCallback = (response: string) => void;
-
-export abstract class RequestHandler {
-    abstract sendRequest(json: any, callback: RequestCallback): void;
-}
 
 export abstract class UpdateListener {
     abstract startCheckUpdate(client: Client): void;
@@ -16,9 +9,20 @@ export abstract class UpdateListener {
     abstract checkUpdate(client: Client): void;
 }
 
+export abstract class RequestHandler {
+    abstract sendRequest(json: any, callback: RequestCallback): void;
+}
+
 export abstract class Client {
     public update_listener: UpdateListener;
     public request_handler: RequestHandler;
+
+    public session_id: number = 0;
+    public matching_id: number = 0;
+    public player_id: PlayerId = 0;
+    // TODO: user_id should be unique.
+    public user_id: string = String(Math.floor(Math.random() * 1000000));
+    public step: number = 0;
     public callback: RequestCallback;
 
     constructor(update_listener: UpdateListener,
