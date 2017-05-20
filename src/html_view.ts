@@ -2,9 +2,19 @@ import { Phase, Session, PlayerCards, Event, EventType } from "./session";
 import { Player, Board, PlayerId } from "./board";
 import { CardId, FacilityType, Facility } from "./facility";
 import { Dice, DiceResult } from "./dice";
+import { WebClient } from "./saikoro";  // TODO: circular dependency.
 
 export class HtmlView {
     private money_animation_timers = [null, null, null, null];
+    private client: WebClient;  // TODO: create a super class.
+
+    constructor(client: WebClient) {
+        this.client = client;
+    }
+
+    public onClickDice(dice_num: number, aim: number): void {
+        this.client.rollDice(dice_num, aim);
+    }
 
     public getPlayerColor(player_id: PlayerId): string {
         // TODO: Support landmark colors (set / built).
@@ -152,6 +162,61 @@ export class HtmlView {
         for (let j: number = Math.min(5, card_ids.length); j < 5; ++j) {
             document.getElementById(`landmark_${j}`).style.display = "none";
         }
+    }
+
+    public onClickField(x, y): void {
+        this.client.onClickField(x, y);
+    }
+
+    public onClickEndTurn(): void {
+        this.client.onClickEndTurn();
+    }
+
+    public onClickCard(player: number, card: number): void {
+        this.client.onClickCard(player, card);
+    }
+
+    public onClickLandmark(card: number): void {
+        this.client.onClickLandmark(card);
+    }
+
+    public initView(column: number = 12, row: number = 5):void {
+        // Add click listeners.
+        for (let y: number = 0; y < row; ++y) {
+            for (let x: number = 0; x < column; ++x) {
+                document.getElementById(`field_${x}_${y}`).addEventListener(
+                    "click", () => { this.onClickField(x, y); });
+            }
+        }
+
+        // Dices
+        document.getElementById("dice_1").addEventListener(
+            "click", () => { this.onClickDice(1, 0); });
+        document.getElementById("dice_2").addEventListener(
+            "click", () => { this.onClickDice(2, 0); });
+
+        // End turn
+        document.getElementById("end_turn").addEventListener(
+            "click", () => { this.onClickEndTurn(); });
+
+        // Cards
+        let player_size: number = 4;
+        let card_size: number = 10;
+        for (let p: number = 0; p < player_size; ++p) {
+            for (let c: number = 0; c < card_size; ++c) {
+                document.getElementById(`card_${p}_${c}`).addEventListener(
+                    "click", () => { this.onClickCard(p, c); });
+            }
+        }
+
+        // Landmark cards
+        let landmark_size: number = 5;
+        for (let l: number = 0; l < landmark_size; ++l) {
+            document.getElementById(`landmark_${l}`).addEventListener(
+                "click", () => { this.onClickLandmark(l); });
+        }
+
+        document.getElementById("money_motion").style.visibility = "hidden";
     }
 
     public updateBoard(session: Session): void {

@@ -152,7 +152,7 @@ class HttpUpdateListener extends UpdateListener {
     }
 }
 
-class WebClient {
+export class WebClient {
     public session: Session = new Session();
     public session_id: number = 0;
     public matching_id: number = 0;
@@ -165,7 +165,7 @@ class WebClient {
     public player_cards_list: CardId[][] = [];
     public callback: (response: string) => void;
     public no_update_count: number = 0;
-    private view: HtmlView = new HtmlView();
+    private view: HtmlView;
 
     public update_listener: UpdateListener;
     public request_handler: RequestHandler;
@@ -173,6 +173,7 @@ class WebClient {
     constructor(update_listener: UpdateListener, request_handler: RequestHandler) {
         this.update_listener = update_listener;
         this.request_handler = request_handler;
+        this.view = new HtmlView(this);
         this.callback = this.callbackSession.bind(this);
     }
 
@@ -200,7 +201,7 @@ class WebClient {
         this.request_handler.sendRequest(request, this.callback);
     }
 
-    public onClickDice(dice_num: number, aim: number): void {
+    public rollDice(dice_num: number, aim: number): void {
         console.log(`clicked: dice_num:${dice_num}, aim:${aim}`);
         let request = {
             command: "dice",
@@ -295,47 +296,11 @@ class WebClient {
         this.request_handler.sendRequest(request, this.callbackMatching.bind(this));
     }
 
-    public initBoard(column: number = 12, row: number = 5): void {
-        // Add click listeners.
-        for (let y: number = 0; y < row; ++y) {
-            for (let x: number = 0; x < column; ++x) {
-                document.getElementById(`field_${x}_${y}`).addEventListener(
-                    "click", () => { this.onClickField(x, y); });
-            }
-        }
-
-        // Dices
-        document.getElementById("dice_1").addEventListener(
-            "click", () => { this.onClickDice(1, 0); });
-        document.getElementById("dice_2").addEventListener(
-            "click", () => { this.onClickDice(2, 0); });
-
-        // End turn
-        document.getElementById("end_turn").addEventListener(
-            "click", () => { this.onClickEndTurn(); });
-
-        // Cards
-        let player_size: number = 4;
-        let card_size: number = 10;
-        for (let p: number = 0; p < player_size; ++p) {
-            for (let c: number = 0; c < card_size; ++c) {
-                document.getElementById(`card_${p}_${c}`).addEventListener(
-                    "click", () => { this.onClickCard(p, c); });
-            }
-        }
-
-        // Landmark cards
-        let landmark_size: number = 5;
-        for (let l: number = 0; l < landmark_size; ++l) {
-            document.getElementById(`landmark_${l}`).addEventListener(
-                "click", () => { this.onClickLandmark(l); });
-        }
-
+    public initBoard(): void {
+        this.view.initView();
         document.getElementById("matching_button").addEventListener(
             "click", () => { this.onClickMatching(); });
         document.getElementById("game").style.visibility = "hidden";
-
-        document.getElementById("money_motion").style.visibility = "hidden";
     }
 
     // Do not directly call this method.
