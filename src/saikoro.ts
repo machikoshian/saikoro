@@ -1,3 +1,4 @@
+import { RequestCallback, RequestHandler, UpdateListener, Client } from "./client";
 import { Phase, Session, PlayerCards, Event, EventType } from "./session";
 import { Player, Board, PlayerId } from "./board";
 import { CardId, FacilityType, Facility } from "./facility";
@@ -5,7 +6,7 @@ import { Dice, DiceResult } from "./dice";
 import { HtmlView } from "./html_view";
 
 class HttpRequest {
-    static Send(url: string, callback: (response: string) => void) {
+    static Send(url: string, callback: RequestCallback) {
         let xhr: XMLHttpRequest = new XMLHttpRequest();
         xhr.onreadystatechange = () => HttpRequest.OnReadyStateChange(xhr,
             callback);
@@ -30,16 +31,12 @@ class HttpRequest {
     }
 }
 
-abstract class RequestHandler {
-    abstract sendRequest(json: any, callback: (response: string) => void): void;
-}
-
 class HttpRequestHandler extends RequestHandler {
     constructor() {
         super();
     }
 
-    public sendRequest(json: any, callback: (response: string) => void): void {
+    public sendRequest(json: any, callback: RequestCallback): void {
         let params: string = Object.keys(json).map((key) => {
             return encodeURIComponent(key) + "=" + encodeURIComponent(json[key]); }).join("&");
         let url: string;
@@ -51,12 +48,6 @@ class HttpRequestHandler extends RequestHandler {
         }
         HttpRequest.Send(url, callback);
     }
-}
-
-abstract class UpdateListener {
-    abstract startCheckUpdate(client: WebClient): void;
-    abstract stopCheckUpdate(): void;
-    abstract checkUpdate(client: WebClient): void;
 }
 
 let firebase = require("firebase/app");
@@ -106,7 +97,7 @@ class FirebaseRequestHandler extends RequestHandler {
         super();
     }
 
-    public sendRequest(json: any, callback: (response: string) => void): void {
+    public sendRequest(json: any, callback: RequestCallback): void {
         let path: string;
         if (json.command === "matching") {
             path = "matching";
@@ -152,26 +143,26 @@ class HttpUpdateListener extends UpdateListener {
     }
 }
 
-export class WebClient {
-    public session: Session = new Session();
+export class WebClient extends Client {
     public session_id: number = 0;
     public matching_id: number = 0;
     public player_id: PlayerId = 0;
     // TODO: user_id should be unique.
     public user_id: string = String(Math.floor(Math.random() * 1000000));
     public step: number = 0;
-    public callback: (response: string) => void;
-    public no_update_count: number = 0;
+    private no_update_count: number = 0;
     private view: HtmlView;
+    public callback: RequestCallback;
 
-    public update_listener: UpdateListener;
-    public request_handler: RequestHandler;
-
-    constructor(update_listener: UpdateListener, request_handler: RequestHandler) {
-        this.update_listener = update_listener;
-        this.request_handler = request_handler;
+    constructor(update_listener: UpdateListener,
+                request_handler: RequestHandler) {
+        super(update_listener, request_handler);
+        this.callback =  this.callbackSession.bind(this);
         this.view = new HtmlView(this);
-        this.callback = this.callbackSession.bind(this);
+    }
+
+    public initBoard(): void {
+        this.view.initView();
     }
 
     public buildFacility(x: number, y: number, card_id: CardId): void {
@@ -211,21 +202,8 @@ export class WebClient {
         this.request_handler.sendRequest(request, this.callback);
     }
 
-    public callbackMatching(response: string): void {
-        const response_json = JSON.parse(response);
-        this.session_id = response_json.session_id;
-        this.matching_id = response_json.matching_id;
-
-        document.getElementById("matching").style.display = "none";
-        document.getElementById("game").style.visibility = "visible";
-
-        this.update_listener.checkUpdate(this);
-        this.update_listener.startCheckUpdate(this);
-    }
-
-    public onClickMatching(): void {
+    public startMatching(name: string): void {
         console.log("matching...");
-        let name: string = (<HTMLInputElement>document.getElementById("matching_name")).value;
         if (name.length === 0) {
             return;
         }
@@ -237,11 +215,13 @@ export class WebClient {
         this.request_handler.sendRequest(request, this.callbackMatching.bind(this));
     }
 
-    public initBoard(): void {
-        this.view.initView();
-        document.getElementById("matching_button").addEventListener(
-            "click", () => { this.onClickMatching(); });
-        document.getElementById("game").style.visibility = "hidden";
+    private callbackMatching(response: string): void {
+        const response_json = JSON.parse(response);
+        this.session_id = response_json.session_id;
+        this.matching_id = response_json.matching_id;
+
+        this.update_listener.checkUpdate(this);
+        this.update_listener.startCheckUpdate(this);
     }
 
     // Do not directly call this method.
@@ -268,17 +248,15 @@ export class WebClient {
 
         let session: Session = Session.fromJSON(JSON.parse(response));
 
-        let phase: Phase = session.getPhase();
-        if (phase == Phase.EndGame) {
+        if (session.getPhase() === Phase.EndGame) {
             this.update_listener.stopCheckUpdate();
         }
 
-        this.session = session;
-        let player_id: PlayerId = session.getCurrentPlayerId();
-        this.player_id = player_id;
+        this.player_id = session.getCurrentPlayerId();
+
         let step: number = session.getStep();
         console.log(step);
-        if (step == this.step) {
+        if (step === this.step) {
             console.log("Already updated.");
             return;
         }

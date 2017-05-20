@@ -16,11 +16,120 @@ export class HtmlView {
         this.client = client;
     }
 
-    public onClickDice(dice_num: number, aim: number): void {
+    public initView(column: number = 12, row: number = 5):void {
+        // Add click listeners.
+        // Matching.
+        document.getElementById("matching_button").addEventListener(
+            "click", () => { this.onClickMatching(); });
+        document.getElementById("game").style.visibility = "hidden";
+
+        // Fields
+        for (let y: number = 0; y < row; ++y) {
+            for (let x: number = 0; x < column; ++x) {
+                document.getElementById(`field_${x}_${y}`).addEventListener(
+                    "click", () => { this.onClickField(x, y); });
+            }
+        }
+
+        // Dices
+        document.getElementById("dice_1").addEventListener(
+            "click", () => { this.onClickDice(1, 0); });
+        document.getElementById("dice_2").addEventListener(
+            "click", () => { this.onClickDice(2, 0); });
+
+        // End turn
+        document.getElementById("end_turn").addEventListener(
+            "click", () => { this.onClickEndTurn(); });
+
+        // Cards
+        let player_size: number = 4;
+        let card_size: number = 10;
+        for (let p: number = 0; p < player_size; ++p) {
+            for (let c: number = 0; c < card_size; ++c) {
+                document.getElementById(`card_${p}_${c}`).addEventListener(
+                    "click", () => { this.onClickCard(p, c); });
+            }
+        }
+
+        // Landmark cards
+        let landmark_size: number = 5;
+        for (let l: number = 0; l < landmark_size; ++l) {
+            document.getElementById(`landmark_${l}`).addEventListener(
+                "click", () => { this.onClickLandmark(l); });
+        }
+
+        document.getElementById("money_motion").style.visibility = "hidden";
+    }
+
+    private onClickDice(dice_num: number, aim: number): void {
         this.client.rollDice(dice_num, aim);
     }
 
-    public getPlayerColor(player_id: PlayerId): string {
+    private onClickField(x, y): void {
+        console.log(`clicked: field_${x}_${y}`);
+        if (this.clicked_card_id < 0) {
+            return;
+        }
+        this.client.buildFacility(x, y, this.clicked_card_id);
+    }
+
+    private onClickEndTurn(): void {
+        this.client.endTurn();
+    }
+
+    private onClickMatching(): void {
+        let name: string = (<HTMLInputElement>document.getElementById("matching_name")).value;
+        if (name.length === 0) {
+            return;
+        }
+        this.client.startMatching(name);
+    }
+
+    private onClickCard(player: number, card: number): void {
+        if (this.session.getPhase() !== Phase.BuildFacility) {
+            return;
+        }
+
+        console.log(`clicked: card_${player}_${card}`);
+        this.resetCards();
+        this.clicked_card_element = document.getElementById(`card_${player}_${card}`);
+        this.clicked_card_element.style.borderColor = "#FFE082";
+        this.clicked_card_id = this.player_cards_list[player][card];
+
+        this.drawBoard();
+
+        let x: number = this.session.getFacility(this.clicked_card_id).getArea() - 1;
+        for (let y: number = 0; y < 5; y++) {
+            let field: HTMLElement = document.getElementById(`field_${x}_${y}`);
+            // TODO: Keep the owner's color too.
+            field.style.backgroundColor = "#FFF176";
+        }
+    }
+
+    private onClickLandmark(card: number): void {
+        if (this.session.getPhase() !== Phase.BuildFacility) {
+            return;
+        }
+
+        console.log(`clicked: landmark_${card}`);
+
+        let clicked_card_id: CardId = this.session.getLandmarks()[card];
+        if (this.session.getOwnerId(clicked_card_id) !== -1) {
+            return;
+        }
+
+        this.resetCards();
+        this.clicked_card_element = document.getElementById(`landmark_${card}`);
+        this.clicked_card_element.style.borderColor = "#FFE082";
+        this.clicked_card_id = clicked_card_id;
+
+        this.drawBoard();
+
+        let [x, y] = this.session.getPosition(this.clicked_card_id);
+        document.getElementById(`field_${x}_${y}`).style.backgroundColor = "#FFF176";
+    }
+
+    private getPlayerColor(player_id: PlayerId): string {
         // TODO: Support landmark colors (set / built).
         let colors = ["#909CC2", "#D9BDC5", "#90C290", "#9D8189"];
 
@@ -30,7 +139,7 @@ export class HtmlView {
         return colors[player_id];
     }
 
-    public getFacilityColor(facility: Facility): string {
+    private getFacilityColor(facility: Facility): string {
         if (!facility) {
             return "#EFF0D1";
         }
@@ -49,7 +158,7 @@ export class HtmlView {
         }
     }
 
-    public diceResultMessage(dice: DiceResult): string {
+    private getDiceResultMessage(dice: DiceResult): string {
         let faces: string[] = ["", "⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
 
         let d1: number = dice.dice1;
@@ -57,11 +166,23 @@ export class HtmlView {
         return `${faces[d1]} ${faces[d2]} : ${d1 + d2} でした。`;
     }
 
+    private resetCards(): void {
+        if (this.clicked_card_element) {
+            this.clicked_card_element.style.borderColor = "#EEEEEE";
+            this.clicked_card_element = null;
+        }
+        this.clicked_card_id = -1;
+    }
+
     public updateView(session: Session, user_id: string): void {
         this.session = session;
 
+        // Hide the matching view and show the board view.
+        document.getElementById("matching").style.display = "none";
+        document.getElementById("game").style.visibility = "visible";
+
         // Show event animations.
-        this.showEvents();
+        this.drawEvents();
 
         // Update cards list.
         this.player_cards_list = [];
@@ -74,7 +195,7 @@ export class HtmlView {
         this.player_cards_list.push(landmark_ids);
 
         // Update board.
-        this.updateBoard();
+        this.drawBoard();
 
         // Update players.
         this.drawPlayers();
@@ -93,7 +214,7 @@ export class HtmlView {
             message = `🎲 ${name} のサイコロです 🎲`;
         }
         else if (phase == Phase.BuildFacility) {
-            message = this.diceResultMessage(session.getDiceResult());
+            message = this.getDiceResultMessage(session.getDiceResult());
             message += `  🎲 ${name} の建設です 🎲`;
         }
         else if (phase == Phase.EndGame) {
@@ -183,110 +304,7 @@ export class HtmlView {
         this.resetCards();  // Nice to check if built or not?
     }
 
-    public onClickField(x, y): void {
-        console.log(`clicked: field_${x}_${y}`);
-        if (this.clicked_card_id < 0) {
-            return;
-        }
-        this.client.buildFacility(x, y, this.clicked_card_id);
-    }
-
-    public onClickEndTurn(): void {
-        this.client.endTurn();
-    }
-
-    public resetCards(): void {
-        if (this.clicked_card_element) {
-            this.clicked_card_element.style.borderColor = "#EEEEEE";
-            this.clicked_card_element = null;
-        }
-        this.clicked_card_id = -1;
-    }
-
-    public onClickCard(player: number, card: number): void {
-        if (this.session.getPhase() !== Phase.BuildFacility) {
-            return;
-        }
-
-        console.log(`clicked: card_${player}_${card}`);
-        this.resetCards();
-        this.clicked_card_element = document.getElementById(`card_${player}_${card}`);
-        this.clicked_card_element.style.borderColor = "#FFE082";
-        this.clicked_card_id = this.player_cards_list[player][card];
-
-        this.updateBoard();
-
-        let x: number = this.session.getFacility(this.clicked_card_id).getArea() - 1;
-        for (let y: number = 0; y < 5; y++) {
-            let field: HTMLElement = document.getElementById(`field_${x}_${y}`);
-            // TODO: Keep the owner's color too.
-            field.style.backgroundColor = "#FFF176";
-        }
-    }
-
-    public onClickLandmark(card: number): void {
-        if (this.session.getPhase() !== Phase.BuildFacility) {
-            return;
-        }
-
-        console.log(`clicked: landmark_${card}`);
-
-        let clicked_card_id: CardId = this.session.getLandmarks()[card];
-        if (this.session.getOwnerId(clicked_card_id) !== -1) {
-            return;
-        }
-
-        this.resetCards();
-        this.clicked_card_element = document.getElementById(`landmark_${card}`);
-        this.clicked_card_element.style.borderColor = "#FFE082";
-        this.clicked_card_id = clicked_card_id;
-
-        this.updateBoard();
-
-        let [x, y] = this.session.getPosition(this.clicked_card_id);
-        document.getElementById(`field_${x}_${y}`).style.backgroundColor = "#FFF176";
-    }
-
-    public initView(column: number = 12, row: number = 5):void {
-        // Add click listeners.
-        for (let y: number = 0; y < row; ++y) {
-            for (let x: number = 0; x < column; ++x) {
-                document.getElementById(`field_${x}_${y}`).addEventListener(
-                    "click", () => { this.onClickField(x, y); });
-            }
-        }
-
-        // Dices
-        document.getElementById("dice_1").addEventListener(
-            "click", () => { this.onClickDice(1, 0); });
-        document.getElementById("dice_2").addEventListener(
-            "click", () => { this.onClickDice(2, 0); });
-
-        // End turn
-        document.getElementById("end_turn").addEventListener(
-            "click", () => { this.onClickEndTurn(); });
-
-        // Cards
-        let player_size: number = 4;
-        let card_size: number = 10;
-        for (let p: number = 0; p < player_size; ++p) {
-            for (let c: number = 0; c < card_size; ++c) {
-                document.getElementById(`card_${p}_${c}`).addEventListener(
-                    "click", () => { this.onClickCard(p, c); });
-            }
-        }
-
-        // Landmark cards
-        let landmark_size: number = 5;
-        for (let l: number = 0; l < landmark_size; ++l) {
-            document.getElementById(`landmark_${l}`).addEventListener(
-                "click", () => { this.onClickLandmark(l); });
-        }
-
-        document.getElementById("money_motion").style.visibility = "hidden";
-    }
-
-    public updateBoard(): void {
+    public drawBoard(): void {
         let session: Session = this.session;
         let board: Board = session.getBoard();
         for (let y: number = 0; y < board.row; ++y) {
@@ -298,7 +316,7 @@ export class HtmlView {
         }
     }
 
-    public drawPlayers(): void {
+    private drawPlayers(): void {
         let session: Session = this.session;
         let players: Player[] = session.getPlayers();
         for (let i: number = 0; i < players.length; ++i) {
@@ -338,7 +356,7 @@ export class HtmlView {
         }
     }
 
-    public showEvents(): void {
+    private drawEvents(): void {
         let events: Event[] = this.session.getEvents();
         if (events.length === 0) {
             return;
@@ -357,7 +375,7 @@ export class HtmlView {
         }
     }
 
-    public drawMoneyMotion(money: number, player_id: PlayerId, x: number, y: number): void {
+    private drawMoneyMotion(money: number, player_id: PlayerId, x: number, y: number): void {
         if (money > 0) {
             this.effectMoneyMotion(`field_${x}_${y}`, `player_${player_id}_money`, money);
         }
@@ -366,7 +384,7 @@ export class HtmlView {
         }
     }
 
-    public effectMoneyMotion(elementFrom: string, elementTo: string, money: number): void {
+    private effectMoneyMotion(elementFrom: string, elementTo: string, money: number): void {
         // Animation.
         let new_node: Node = document.getElementById("money_motion").cloneNode(true);
         let money_motion: HTMLElement = <HTMLElement>document.body.appendChild(new_node);
