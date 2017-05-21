@@ -452,31 +452,18 @@ export class HtmlView {
         // Animation.
         let new_node: Node = document.getElementById("char_motion").cloneNode(true);
         let char_motion: HTMLElement = <HTMLElement>document.body.appendChild(new_node);
-        let element_from: HTMLElement = document.getElementById(`player_${player_id}_money`);
-        let rect_from = element_from.getBoundingClientRect();
-        let element_to: HTMLElement = document.getElementById("field_5_2");
-        let rect_to = element_to.getBoundingClientRect();
-        let diff_x: number = rect_to.left - rect_from.left;
-        let diff_y: number = rect_to.top - rect_from.top;
-
-        char_motion.style.visibility = "visible";
-        char_motion.style.zIndex = "2";
-        char_motion.style.position = "absolute";
-        char_motion.style.top = rect_from.top + "px";
-        char_motion.style.left = rect_from.left + "px";
-
-        char_motion.style.transitionDuration = "1s";
-        char_motion.style.transform = `translate(${diff_x}px, ${diff_y}px)`;
-
-        window.setTimeout(() => {
-            document.body.removeChild(char_motion);
-        }, 1500);
+        this.effectElementMotion(char_motion, `player_${player_id}_money`, "field_5_2");
     }
 
     private effectMoneyMotion(elementFrom: string, elementTo: string, money: number): void {
         // Animation.
         let new_node: Node = document.getElementById("money_motion").cloneNode(true);
         let money_motion: HTMLElement = <HTMLElement>document.body.appendChild(new_node);
+        money_motion.innerHTML += String(money);
+        this.effectElementMotion(money_motion, elementFrom, elementTo);
+    }
+
+    private effectElementMotion(element: HTMLElement, elementFrom: string, elementTo: string): void {
         let element_from: HTMLElement = document.getElementById(elementFrom);
         let rect_from = element_from.getBoundingClientRect();
         let element_to: HTMLElement = document.getElementById(elementTo);
@@ -484,20 +471,17 @@ export class HtmlView {
         let diff_x: number = rect_to.left - rect_from.left;
         let diff_y: number = rect_to.top - rect_from.top;
 
-        money_motion.innerHTML += String(money);
-        money_motion.style.visibility = "visible";
-        money_motion.style.zIndex = "2";
-        money_motion.style.position = "absolute";
-        money_motion.style.width = "40px";
-        money_motion.style.height = "40px";
-        money_motion.style.top = rect_from.top + "px";
-        money_motion.style.left = rect_from.left + "px";
+        element.style.visibility = "visible";
+        element.style.zIndex = "2";
+        element.style.position = "absolute";
+        element.style.top = rect_from.top + "px";
+        element.style.left = rect_from.left + "px";
 
-        money_motion.style.transitionDuration = "1s";
-        money_motion.style.transform = `translate(${diff_x}px, ${diff_y}px)`;
+        element.style.transitionDuration = "1s";
+        element.style.transform = `translate(${diff_x}px, ${diff_y}px)`;
 
         window.setTimeout(() => {
-            document.body.removeChild(money_motion);
+            document.body.removeChild(element);
         }, 1500);
     }
 
