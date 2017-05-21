@@ -1,6 +1,6 @@
 import { Dice, DiceResult } from "./dice";
 import { Player, Board, PlayerId } from "./board";
-import { CardId, FacilityDataId, FacilityType, Facility } from "./facility";
+import { CardId, FacilityDataId, FacilityType, Facility, Character, CharacterData, CharacterDataId } from "./facility";
 
 function shuffle(array: any[]): any[] {
     let shuffled_array: any[] = array.slice(0);
@@ -143,6 +143,7 @@ type LandmarkInfo = [CardId, PlayerId];
 
 export class CardManager {
     private facilities: { [key: number]: Facility; };
+    private characters: { [key: number]: Character; };
     private player_cards_list: PlayerCards[];
     private landmarks: LandmarkInfo[];
 
@@ -151,9 +152,11 @@ export class CardManager {
 
     constructor(
         facilities: { [key: number]: Facility; } = {},
+        characters: { [key: number]: Character; } = {},
         player_cards_list: PlayerCards[] = null,
         landmarks: LandmarkInfo[] = []) {
         this.facilities = facilities;
+        this.characters = characters;
         if (player_cards_list) {
             this.player_cards_list = player_cards_list;
         } else {
@@ -170,9 +173,14 @@ export class CardManager {
         for (let id in this.facilities) {
             facility_json[id] = this.facilities[id].toJSON();
         }
+        let character_json = {};
+        for (let id in this.characters) {
+            character_json[id] = this.characters[id].toJSON();
+        }
         return {
             class_name: "CardManager",
             facilities: facility_json,
+            characters: character_json,
             player_cards_list: this.player_cards_list.map(cards => { return cards.toJSON(); }),
             landmarks: this.landmarks,
         }
@@ -183,8 +191,13 @@ export class CardManager {
         for (let id in json.facilities) {
             facilities[id] = Facility.fromJSON(json.facilities[id]);
         }
+        let characters: { [key: number]: Character; } = {};
+        for (let id in json.characters) {
+            characters[id] = Character.fromJSON(json.characters[id]);
+        }
         return new CardManager(
             facilities,
+            characters,
             json.player_cards_list.map(cards => { return PlayerCards.fromJSON(cards); }),
             json.landmarks,
         );
@@ -206,6 +219,24 @@ export class CardManager {
         return true;
     }
 
+    public addCharacter(player_id: PlayerId, character_data_id: CharacterDataId): boolean {
+        let player_cards: PlayerCards = this.player_cards_list[player_id];
+        if (player_cards == null) {
+            return false;
+        }
+        let size: number = player_cards.getSize();
+        if (size >= this.max_card_size) {
+            return false;
+        }
+        // Character card ID starts from 500.
+        const char_base: CardId = 500;
+        // CardId is separated per player (i.e. player1 = 1000 - 1999).
+        let card_id: CardId = player_id * this.max_card_size + char_base + size;
+        this.characters[card_id] = new Character(character_data_id);
+        player_cards.addTalon(card_id);
+        return true;
+    }
+
     public addLandmark(landmark: Facility): CardId {
         let card_id: CardId = this.landmark_id_base + this.landmarks.length;
         this.facilities[card_id] = landmark;
@@ -221,6 +252,17 @@ export class CardManager {
             }
         }
         return false;
+    }
+
+    public isCharacter(card_id: CardId): boolean {
+        return (this.characters[card_id] != undefined);
+    }
+
+    public getCharacter(card_id: CardId): Character {
+        if (card_id < 0) {
+            return null;
+        }
+        return this.characters[card_id];
     }
 
     public isLandmark(card_id: CardId): boolean {
@@ -330,8 +372,25 @@ export class CardManager {
         return this.getPlayerCardsFromCardId(card_id).moveTalonToField(card_id);
     }
 
+    private compareCharacters(id1: CardId, id2: CardId): number {
+        let char1: Character = this.characters[id1];
+        let char2: Character = this.characters[id2];
+        return char1.data_id - char2.data_id;
+    }
+
     public sortFacilitiesForHand(facilities: CardId[]): CardId[] {
         return facilities.sort((id1, id2) => {
+            // Check cases of character cards.
+            let c1: number = this.isCharacter(id1) ? 1 : 0;
+            let c2: number = this.isCharacter(id2) ? 1 : 0;
+            if (c1 + c2 === 2) {
+                return this.compareCharacters(id1, id2);
+            }
+            else if (c1 + c2 === 1) {
+                return c1 - c2;
+            }
+
+            // Both IDs represents facilities.
             let f1: Facility = this.facilities[id1];
             let f2: Facility = this.facilities[id2];
             if (f1.area !== f2.area) {
@@ -582,6 +641,10 @@ export class Session {
         return this.card_manager.addFacility(player_id, facility_data_id);
     }
 
+    public addCharacter(player_id: PlayerId, character_data_id: CharacterDataId): boolean {
+        return this.card_manager.addCharacter(player_id, character_data_id);
+    }
+
     public isValid(player_id: PlayerId, phase: Phase): boolean {
         return (this.current_player_id == player_id && this.phase == phase);
     }
@@ -758,6 +821,9 @@ export class Session {
         let card_id_list: CardId[] = shuffle(this.getPlayerCards(player_id).getTalon());
 
         for (let card_id of card_id_list) {
+            if (this.isCharacter(card_id)) {
+                continue;
+            }
             let facility: Facility = this.card_manager.getFacility(card_id);
             let balance: number = player.getMoney() - facility.getCost();
             if (balance < 0) {
@@ -1038,5 +1104,11 @@ export class Session {
     }
     public getDiceResult(): DiceResult {
         return this.dice_result;
+    }
+    public isCharacter(card_id: CardId): boolean {
+        return this.card_manager.isCharacter(card_id);
+    }
+    public getCharacter(card_id: CardId): Character {
+        return this.card_manager.getCharacter(card_id);
     }
 }

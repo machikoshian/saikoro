@@ -1,7 +1,7 @@
 import { Dice } from "./dice";
 import { Session } from "./session";
 import { Board, PlayerId } from "./board";
-import { CardId, FacilityDataId, FacilityType, Facility } from "./facility";
+import { CardId, FacilityDataId, FacilityType, Facility, CharacterDataId } from "./facility";
 
 
 export class KeyValue {
@@ -199,6 +199,13 @@ export class SessionHandler {
         for (let i: number = 0; i < num_cards; ++i) {
             const card_id: FacilityDataId = Math.floor(Math.random() * max_id);
             session.addFacility(player_id, card_id);
+        }
+
+        const num_chars = 2;
+        const max_char_id = 2;
+        for (let i: number = 0; i < num_chars; ++i) {
+            const card_id: CharacterDataId = Math.floor(Math.random() * max_char_id);
+            session.addCharacter(player_id, card_id);
         }
 
         if (player_id == num_players - 1) {

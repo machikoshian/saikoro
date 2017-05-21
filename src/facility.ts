@@ -1,3 +1,25 @@
+export enum CharacterType {
+    None,
+    DiceDelta,  // Add N to dice results.
+    SalaryFactor,  // Multiply the salary.
+}
+
+export class CharacterData {
+    constructor(
+        readonly id: number,  // Unique number.
+        readonly name: string,
+        readonly type: CharacterType,
+        readonly property: {},
+    ) {}
+}
+
+let character_data: CharacterData[] = [
+    new CharacterData(1000, "大学生", CharacterType.DiceDelta, {"delta": 3, "round": 1}),
+    new CharacterData(1001, "幼稚園児", CharacterType.DiceDelta, {"delta": -2, "round": 2}),
+];
+
+export type CharacterDataId = number;
+
 export enum FacilityType {
     Gray,
     Blue,
@@ -8,7 +30,7 @@ export enum FacilityType {
 
 export class FacilityData {
     constructor(
-        readonly id: number,
+        readonly id: number,  // Unique number.
         readonly area: number,  // TODO should be range.
         readonly name: string,
         readonly cost: number,
@@ -113,3 +135,49 @@ export class Facility {
 
 }
 
+export class Character {
+    readonly data_id: CharacterDataId;
+    readonly name: string;
+    readonly type: CharacterType;
+    readonly property: {};
+
+    constructor(data_id: CharacterDataId) {
+        let data: CharacterData = character_data[data_id];
+        this.data_id = data_id;
+        this.name = data.name;
+        this.type = data.type;
+        this.property = data.property;
+    }
+
+    public toJSON(): Object {
+        return {
+            class_name: "Character",
+            data_id: this.data_id,
+        }
+    }
+
+    static fromJSON(json) {
+        return new Character(json.data_id);
+    }
+
+    public getName(): string {
+        return this.name;
+    }
+    public getType(): CharacterType {
+        return this.type;
+    }
+    public getPropertyValue(): number {
+        return this.property["value"] ? this.property["value"] : 0;
+    }
+    public getDescription(): string {
+        switch (this.type) {
+            case CharacterType.None:
+                return "";
+            case CharacterType.DiceDelta:
+                let delta: number = this.property["delta"];
+                let delta_str: string = ((delta > 0) ? "+" : "") + delta;
+                return `サイコロの目を${delta_str}する。\n${this.property["round"]}ラウンド`;
+        }
+        return "";
+    }
+}

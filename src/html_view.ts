@@ -1,6 +1,6 @@
 import { Phase, Session, PlayerCards, Event, EventType } from "./session";
 import { Player, Board, PlayerId } from "./board";
-import { CardId, FacilityType, Facility } from "./facility";
+import { CardId, FacilityType, Facility, CharacterType, Character } from "./facility";
 import { Dice, DiceResult } from "./dice";
 import { WebClient } from "./saikoro";  // TODO: circular dependency.
 
@@ -267,14 +267,25 @@ export class HtmlView {
         for (let i: number = 0; i < players.length; ++i) {
             let card_ids: CardId[] = session.getSortedHand(i);
             for (let j: number = 0; j < Math.min(10, card_ids.length); ++j) {
-                let facility: Facility = session.getFacility(card_ids[j]);
-                document.getElementById(`card_${i}_${j}`).style.display = "table-cell";
-                document.getElementById(`card_${i}_${j}_name`).innerText =
-                    `${area_name[facility.getArea()]} ${facility.getName()}`;
-                document.getElementById(`card_${i}_${j}_cost`).innerText = String(facility.getCost());
-                document.getElementById(`card_${i}_${j}_description`).innerText = facility.getDescription();
-                document.getElementById(`card_${i}_${j}`).style.backgroundColor =
-                    this.getFacilityColor(facility);
+                let card_id: CardId = card_ids[j];
+                if (session.isCharacter(card_id)) {
+                    let character: Character = session.getCharacter(card_id);
+                    document.getElementById(`card_${i}_${j}`).style.display = "table-cell";
+                    document.getElementById(`card_${i}_${j}_name`).innerText = character.getName();
+                    document.getElementById(`card_${i}_${j}_cost`).innerText = "";
+                    document.getElementById(`card_${i}_${j}_description`).innerText = character.getDescription();
+                    document.getElementById(`card_${i}_${j}`).style.backgroundColor = "#FFF9C4";
+                }
+                else {
+                    let facility: Facility = session.getFacility(card_id);
+                    document.getElementById(`card_${i}_${j}`).style.display = "table-cell";
+                    document.getElementById(`card_${i}_${j}_name`).innerText =
+                        `${area_name[facility.getArea()]} ${facility.getName()}`;
+                    document.getElementById(`card_${i}_${j}_cost`).innerText = String(facility.getCost());
+                    document.getElementById(`card_${i}_${j}_description`).innerText = facility.getDescription();
+                    document.getElementById(`card_${i}_${j}`).style.backgroundColor =
+                        this.getFacilityColor(facility);
+                }
             }
             for (let j: number = Math.min(10, card_ids.length); j < 10; ++j) {
                 document.getElementById(`card_${i}_${j}`).style.display = "none";
