@@ -37,6 +37,10 @@ export class HtmlView {
         document.getElementById("dice_2").addEventListener(
             "click", () => { this.onClickDice(2, 0); });
 
+        // Character
+        document.getElementById("char_card").addEventListener(
+            "click", () => { this.onClickCharacter(); });
+
         // End turn
         document.getElementById("end_turn").addEventListener(
             "click", () => { this.onClickEndTurn(); });
@@ -59,10 +63,7 @@ export class HtmlView {
         }
 
         document.getElementById("money_motion").style.visibility = "hidden";
-    }
-
-    private onClickDice(dice_num: number, aim: number): void {
-        this.client.rollDice(dice_num, aim);
+        document.getElementById("char_motion").style.visibility = "hidden";
     }
 
     private onClickField(x, y): void {
@@ -71,6 +72,14 @@ export class HtmlView {
             return;
         }
         this.client.buildFacility(x, y, this.clicked_card_id);
+    }
+
+    private onClickDice(dice_num: number, aim: number): void {
+        this.client.rollDice(dice_num, aim);
+    }
+
+    private onClickCharacter(): void {
+        this.client.characterCard(this.clicked_card_id);
     }
 
     private onClickEndTurn(): void {
@@ -86,7 +95,23 @@ export class HtmlView {
     }
 
     private onClickCard(player: number, card: number): void {
-        if (this.session.getPhase() !== Phase.BuildFacility) {
+        let clicked_card_id: CardId = this.player_cards_list[player][card];
+        let phase: Phase = this.session.getPhase();
+        let is_char: boolean = this.session.isCharacter(clicked_card_id);
+
+        if (phase === Phase.CharacterCard) {
+            if (!is_char) {
+                return;
+            }
+        }
+
+        else if (phase === Phase.BuildFacility) {
+            if (is_char) {
+                return;
+            }
+        }
+
+        else {
             return;
         }
 
@@ -94,15 +119,21 @@ export class HtmlView {
         this.resetCards();
         this.clicked_card_element = document.getElementById(`card_${player}_${card}`);
         this.clicked_card_element.style.borderColor = "#FFE082";
-        this.clicked_card_id = this.player_cards_list[player][card];
+        this.clicked_card_id = clicked_card_id;
 
         this.drawBoard();
 
-        let x: number = this.session.getFacility(this.clicked_card_id).getArea() - 1;
-        for (let y: number = 0; y < 5; y++) {
-            let field: HTMLElement = document.getElementById(`field_${x}_${y}`);
-            // TODO: Keep the owner's color too.
-            field.style.backgroundColor = "#FFF176";
+        if (phase === Phase.CharacterCard) {
+            document.getElementById("char_card").style.backgroundColor = "#FFCA28";
+        }
+
+        if (phase === Phase.BuildFacility) {
+            let x: number = this.session.getFacility(this.clicked_card_id).getArea() - 1;
+            for (let y: number = 0; y < 5; y++) {
+                let field: HTMLElement = document.getElementById(`field_${x}_${y}`);
+                // TODO: Keep the owner's color too.
+                field.style.backgroundColor = "#FFF176";
+            }
         }
     }
 
@@ -210,6 +241,9 @@ export class HtmlView {
         if (phase == Phase.StartGame) {
             message = `🎲 マッチング中です 🎲`;
         }
+        else if (phase == Phase.CharacterCard) {
+            message = `🎲 ${name} のキャラカードまたはサイコロです 🎲`;
+        }
         else if (phase == Phase.DiceRoll) {
             message = `🎲 ${name} のサイコロです 🎲`;
         }
@@ -232,7 +266,15 @@ export class HtmlView {
             document.getElementById("dice").style.display = "none";
         }
 
-        if (phase == Phase.DiceRoll) {
+        if (phase == Phase.CharacterCard) {
+            document.getElementById("char_card").style.visibility = "visible";
+            document.getElementById("char_card").style.backgroundColor = "#EFF0D1";
+        }
+        else {
+            document.getElementById("char_card").style.visibility = "hidden";
+        }
+
+        if (phase == Phase.CharacterCard || phase == Phase.DiceRoll) {
             document.getElementById("dice_1").style.visibility = "visible";
             document.getElementById("dice_2").style.visibility = "visible";
         }
@@ -374,6 +416,13 @@ export class HtmlView {
         }
 
         for (let event of events) {
+            // Character card
+            if (event.type === EventType.Character) {
+                this.effectCharacter(this.session.getCurrentPlayerId(), event.card_id);
+                continue;
+            }
+
+            // Money motion
             let [x, y]: [number, number] = this.session.getPosition(event.card_id);
 
             for (let pid = 0; pid < event.moneys.length; pid++) {
@@ -393,6 +442,35 @@ export class HtmlView {
         else if (money < 0) {
             this.effectMoneyMotion(`player_${player_id}_money`, `field_${x}_${y}`, money);
         }
+    }
+
+    private effectCharacter(player_id: PlayerId, card_id: CardId): void {
+        let character: Character = this.session.getCharacter(card_id);
+        document.getElementById("char_motion_name").innerText = character.name;
+        document.getElementById("char_motion_description").innerText = character.getDescription();
+
+        // Animation.
+        let new_node: Node = document.getElementById("char_motion").cloneNode(true);
+        let char_motion: HTMLElement = <HTMLElement>document.body.appendChild(new_node);
+        let element_from: HTMLElement = document.getElementById(`player_${player_id}_money`);
+        let rect_from = element_from.getBoundingClientRect();
+        let element_to: HTMLElement = document.getElementById("field_5_2");
+        let rect_to = element_to.getBoundingClientRect();
+        let diff_x: number = rect_to.left - rect_from.left;
+        let diff_y: number = rect_to.top - rect_from.top;
+
+        char_motion.style.visibility = "visible";
+        char_motion.style.zIndex = "2";
+        char_motion.style.position = "absolute";
+        char_motion.style.top = rect_from.top + "px";
+        char_motion.style.left = rect_from.left + "px";
+
+        char_motion.style.transitionDuration = "1s";
+        char_motion.style.transform = `translate(${diff_x}px, ${diff_y}px)`;
+
+        window.setTimeout(() => {
+            document.body.removeChild(char_motion);
+        }, 1500);
     }
 
     private effectMoneyMotion(elementFrom: string, elementTo: string, money: number): void {

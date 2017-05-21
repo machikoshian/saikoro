@@ -97,6 +97,15 @@ export class SessionHandler {
             }
         }
 
+        else if (query.command == "character") {
+            let player_id: PlayerId = Number(query.player_id);
+            let card_id: CardId = Number(query.card_id);
+            if (session.useCharacter(player_id, card_id)) {
+                // TODO: integrate buildFacility and doNext.
+                this.doNext(session);
+            }
+        }
+
         else if (query.command == "dice") {
             let player_id: PlayerId = Number(query.player_id);
             let dice_num = Number(query.dice_num);

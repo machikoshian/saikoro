@@ -184,6 +184,16 @@ export class WebClient extends Client {
         this.request_handler.sendRequest(request, this.callback);
     }
 
+    public characterCard(card_id: CardId): void {
+        let request = {
+            command: "character",
+            session_id: this.session_id,
+            player_id: this.player_id,
+            card_id: card_id,
+        };
+        this.request_handler.sendRequest(request, this.callback);
+    }
+
     public endTurn(): void {
         console.log("clicked: end_turn");
         let request = {

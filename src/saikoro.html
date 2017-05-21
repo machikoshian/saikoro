@@ -31,10 +31,25 @@
       font-size: 40px; text-align: center;
       border-radius: 10px; background-color: #EEEEEE;
     }
+    #char_card {
+      width: 80px; height: 60px; padding: 10px;
+      text-align: center;
+      border-radius: 10px; background-color: #EFF0D1;
+    }
     #end_turn {
       width: 80px; height: 60px; padding: 10px;
       text-align: center;
       border-radius: 10px; background-color: #FFCA28;
+    }
+    /* Motion elements should have width and height. */
+    #money_motion {
+      width: 40px; height: 40px;
+    }
+    #char_motion {
+      width: 90px; height: 120px;
+    }
+    #char_motion_card {
+      background-color: #FFF9C4;
     }
     td.card {
       width: 90px; background-color: #90CAF9;
@@ -98,6 +113,7 @@
       <td id="dice_1" class="dice_button">🎲</td>
       <td id="dice_2" class="dice_button">🎲🎲</td>
       <td>　　　</td>
+      <td id="char_card">キャラカード</td>
       <td id="end_turn">ターン終了</td>
     </tr></table>
     </div>
@@ -163,6 +179,11 @@
   </div>
   <div id="money_motion">
     💸
+  </div>
+  <div id="char_motion">
+    <table><tr>
+      <td id="char_motion_card" class="card"><table><tr><td id="char_motion_name">名前</td><tr><td id="char_motion_description" class="description">説明</td></tr></table></td>
+    </tr></table>
   </div>
   </body>
 </html>

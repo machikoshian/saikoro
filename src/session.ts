@@ -134,6 +134,10 @@ export class PlayerCards {
         return this.moveCardId(card_id, this.hand, this.field);
     }
 
+    public moveHandToDiscard(card_id: CardId): boolean {
+        return this.moveCardId(card_id, this.hand, this.discard);
+    }
+
     public moveFieldToDiscard(card_id: CardId): boolean {
         return this.moveCardId(card_id, this.field, this.discard);
     }
@@ -363,6 +367,14 @@ export class CardManager {
         return this.getPlayerCardsFromCardId(card_id).moveHandToField(card_id);
     }
 
+    public moveHandToDiscard(card_id: CardId): boolean {
+        if (card_id < 0) {
+            console.warn("card_id < 0.");
+            return false;
+        }
+        return this.getPlayerCardsFromCardId(card_id).moveHandToDiscard(card_id);
+    }
+
     // Used for initial build.
     public moveTalonToField(card_id: CardId): boolean {
         if (card_id < 0) {
@@ -444,6 +456,7 @@ export enum EventType {
     Red,
     Purple,
     Build,
+    Character,
 }
 
 export class Event {
@@ -531,8 +544,19 @@ export class Session {
         return session;
     }
 
+    public isValidPhase(phase: Phase): boolean {
+        if (this.phase === phase) {
+            return true;
+        }
+        // Character card can be skipped.
+        if (this.phase === Phase.CharacterCard && phase === Phase.DiceRoll) {
+            return true;
+        }
+        return false;
+    }
+
     public done(phase: Phase): void {
-        if (this.phase !== phase || this.phase === Phase.EndGame) {
+        if (!this.isValidPhase(phase) || this.phase === Phase.EndGame) {
             return;
         }
         this.step++;
@@ -542,6 +566,11 @@ export class Session {
         }
 
         if (phase == Phase.StartTurn) {
+            this.phase = Phase.CharacterCard;
+            return;
+        }
+
+        if (phase == Phase.CharacterCard) {
             this.phase = Phase.DiceRoll;
             return;
         }
@@ -600,6 +629,10 @@ export class Session {
             return this.startTurn();
         }
 
+        if (this.phase == Phase.CharacterCard) {
+            return false;  // Need interactions.
+        }
+
         if (this.phase == Phase.DiceRoll) {
             return false;  // Need interactions.
         }
@@ -646,7 +679,7 @@ export class Session {
     }
 
     public isValid(player_id: PlayerId, phase: Phase): boolean {
-        return (this.current_player_id == player_id && this.phase == phase);
+        return (this.current_player_id === player_id && this.isValidPhase(phase));
     }
 
     public startGame(): boolean {
@@ -865,6 +898,39 @@ export class Session {
         return true;
     }
 
+    public useCharacter(player_id: PlayerId, card_id: CardId): boolean {
+        if (!this.isValid(player_id, Phase.CharacterCard)) {
+            return false;
+        }
+
+        // Is character.
+        if (!this.isCharacter(card_id)) {
+            return false;
+        }
+
+        // Facility is in owner's hand?
+        if (!this.card_manager.isInHand(player_id, card_id)) {
+            return false;
+        }
+
+        // Apply the effect of the card.
+        this.events = [];  // TODO: Consider the location to invalidate events.
+        let event: Event = new Event();
+        event.type = EventType.Character;
+        event.card_id = card_id;
+        this.events.push(event);
+
+        // Move the card to discard.
+        if (!this.card_manager.moveHandToDiscard(card_id)) {
+            // Something is wrong.
+            console.warn(`moveHandToDiscard(${card_id}) failed.`);
+            return false;
+        }
+
+        this.done(Phase.CharacterCard);
+        return true;
+    }
+
     public buildFacility(player_id: PlayerId, x: number, y: number,
                          card_id: CardId): boolean {
         // Facility is a landmark?
@@ -877,13 +943,9 @@ export class Session {
             return false;
         }
 
-        // Player ID is valid?
-        if (player_id >= this.players.length) {
-            return false;
-        }
-
         // Is pass?  (valid action, but not build a facility).
         if (x === -1 && y === -1 && card_id === -1) {
+            this.events = [];  // TODO: Consider the location to invalidate events.
             this.done(Phase.BuildFacility);
             return true;
         }
@@ -965,11 +1027,6 @@ export class Session {
     public buildLandmark(player_id: PlayerId, card_id: CardId): boolean {
         // State is valid?
         if (!this.isValid(player_id, Phase.BuildFacility)) {
-            return false;
-        }
-
-        // Player ID is valid?
-        if (player_id >= this.players.length) {
             return false;
         }
 

@@ -34,6 +34,7 @@ export abstract class Client {
     abstract initBoard(): void;
     abstract buildFacility(x: number, y: number, card_id: CardId): void;
     abstract rollDice(dice_num: number, aim: number): void;
+    abstract characterCard(card_id: CardId): void;
     abstract endTurn(): void;
     abstract startMatching(name: string): void;
 }
