@@ -31,7 +31,7 @@ class HttpRequest {
     }
 }
 
-class HttpUpdateListener extends UpdateListener {
+export class HttpUpdateListener extends UpdateListener {
     public check_update_timer: any = 0;  // Timer
 
     public startCheckUpdate(client: Client): void {
@@ -52,7 +52,7 @@ class HttpUpdateListener extends UpdateListener {
     }
 }
 
-class HttpRequestHandler extends RequestHandler {
+export class HttpRequestHandler extends RequestHandler {
     constructor() {
         super();
     }
@@ -86,7 +86,7 @@ var config = {
 };
 firebase.initializeApp(config);
 
-class FirebaseUpdateListener extends UpdateListener {
+export class FirebaseUpdateListener extends UpdateListener {
     private ref: any;
 
     constructor() {
@@ -113,7 +113,7 @@ class FirebaseUpdateListener extends UpdateListener {
     }
 }
 
-class FirebaseRequestHandler extends RequestHandler {
+export class FirebaseRequestHandler extends RequestHandler {
     constructor() {
         super();
     }
@@ -223,11 +223,3 @@ export class WebClient extends Client {
         this.view.updateView(session, this.user_id);
     }
 }
-
-// let update_listener: UpdateListener = new FirebaseUpdateListener();
-// let request_handler: RequestHandler = new FirebaseRequestHandler();
-let update_listener: UpdateListener = new HttpUpdateListener();
-let request_handler: RequestHandler = new HttpRequestHandler();
-
-let client: WebClient = new WebClient(update_listener, request_handler);
-document.addEventListener("DOMContentLoaded", () => { client.initBoard(); });

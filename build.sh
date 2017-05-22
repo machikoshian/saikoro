@@ -1,13 +1,14 @@
 #!/bin/sh
 
 # Client side (web browser)
-echo "Building client"
-webpack || exit
-cp ./src/saikoro.html ./out/client
+echo "Building http client"
+webpack --config webpack.config.http.js || exit
+cp ./src/saikoro.html ./out/client/
 
 # Firebase hosting
-cp ./out/client/* ./public/
-cp ./out/saikoro.html ./public/index.html
+echo "Building firebase client"
+webpack --config webpack.config.firebase.js || exit
+cp ./src/saikoro.html ./public/index.html
 
 cd src
 # Server side (Node.js)
