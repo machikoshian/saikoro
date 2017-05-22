@@ -1,6 +1,7 @@
 import { Dice, DiceResult } from "./dice";
 import { Player, Board, PlayerId } from "./board";
-import { CardId, FacilityDataId, FacilityType, Facility, Character, CharacterData, CharacterDataId } from "./facility";
+import { CardId, FacilityDataId, FacilityType, Facility,
+         Character, CharacterData, CharacterDataId, CharacterType } from "./facility";
 
 function shuffle(array: any[]): any[] {
     let shuffled_array: any[] = array.slice(0);
@@ -430,6 +431,81 @@ export class CardManager {
     }
 }
 
+export class CardEffect {
+    readonly data_id: CharacterDataId;
+    readonly character: Character;  // TODO: Nice to merge it to CardManager?
+    readonly round: number;
+    readonly turn: number;
+
+    constructor(data_id: CharacterDataId, round: number, turn: number) {
+        this.data_id = data_id;
+        this.character = new Character(data_id);
+        this.round = round;
+        this.turn = turn;
+    }
+
+    public toJSON(): Object {
+        return {
+            class_name: "CardEffect",
+            data_id: this.data_id,
+            // Character is not encoded. data_id can reproduce Character.
+            round: this.round,
+            turn: this.turn,
+        };
+    }
+
+    static fromJSON(json): CardEffect {
+        return new CardEffect(json.data_id, json.round, json.turn);
+    }
+}
+
+export class EffectManager {
+    private cards: CardEffect[];
+    constructor(cards: CardEffect[] = []) {
+        this.cards = cards;
+    }
+
+    public toJSON(): Object {
+        let cards: Object[] = this.cards.map((card) => { return card.toJSON(); });
+        return {
+            class_name: "EffectManager",
+            cards: cards,
+        };
+    }
+
+    static fromJSON(json): EffectManager {
+        let cards: CardEffect[] = json.cards.map((card) => { return CardEffect.fromJSON(card); });
+        return new EffectManager(cards);
+    }
+
+    public addCard(data_id: CharacterDataId, round: number, turn: number): void {
+        this.cards.push(new CardEffect(data_id, round, turn));
+    }
+
+    // Remove expired cards.
+    public expire(round: number, turn: number): void {
+        let new_cards: CardEffect[] = [];
+        const round_factor: number = 10;  // Any number >= 4.
+        for (let card of this.cards) {
+            if ((card.round + card.character.round) * round_factor + card.turn >
+                round * round_factor + turn) {
+                new_cards.push(card);
+            }
+        }
+        this.cards = new_cards;
+    }
+
+    public getDiceDelta(): number {
+        let delta: number = 0;
+        for (let card of this.cards) {
+            if (card.character.type === CharacterType.DiceDelta) {
+                delta += card.character.property["delta"];
+            }
+        }
+        return delta;
+    }
+}
+
 export enum Phase {
     StartGame,
     // Loop b/w StartTurn and EndTurn.
@@ -486,6 +562,7 @@ export class Session {
     private board: Board;
     private players: Player[];
     private card_manager: CardManager;
+    private effect_manager: EffectManager;
     private events: Event[];
     private step: number;  // Server starts from 1. Client starts from 0.
     private phase: Phase;
@@ -499,6 +576,7 @@ export class Session {
         this.board = new Board();
         this.players = [];
         this.card_manager = new CardManager();
+        this.effect_manager = new EffectManager();
         this.events = [];
         this.step = 1;
         this.phase = Phase.StartGame;
@@ -515,6 +593,7 @@ export class Session {
             board: this.board.toJSON(),
             players: this.players.map(player => { return player.toJSON(); }),
             card_manager: this.card_manager.toJSON(),
+            effect_manager: this.effect_manager.toJSON(),
             events: this.events.map(event => { return event.toJSON(); }),
             step: this.step,
             phase: this.phase,
@@ -523,7 +602,7 @@ export class Session {
             current_player_id: this.current_player_id,
             winner: this.winner,
             dice_result: this.dice_result ? this.dice_result.toJSON() : null,
-        }
+        };
     }
 
     static fromJSON(json): Session {
@@ -533,6 +612,7 @@ export class Session {
         session.board = board;
         session.players = players;
         session.card_manager = CardManager.fromJSON(json.card_manager);
+        session.effect_manager = EffectManager.fromJSON(json.effect_manager);
         session.events = json.events.map(event => { return Event.fromJSON(event); });
         session.step = json.step,
         session.phase = json.phase,
@@ -701,6 +781,7 @@ export class Session {
     }
 
     public startTurn(): boolean {
+        this.effect_manager.expire(this.round, this.turn);
         this.getPlayerCards(this.current_player_id).dealToHand();
         this.done(Phase.StartTurn);
         return true;
@@ -710,17 +791,20 @@ export class Session {
         if (!this.isValid(player_id, Phase.DiceRoll)) {
             return false;
         }
-        this.dice_result = Dice.roll(dice_num, aim);
+        let delta: number = this.effect_manager.getDiceDelta();
+        this.dice_result = Dice.roll(dice_num, aim, delta);
         this.done(Phase.DiceRoll);
         return true;
     }
 
     public facilityAction(): boolean {
         this.events = [];  // TODO: Consider the location to invalidate events.
-        let number = this.dice_result.dice1 + this.dice_result.dice2;
-        if (this.dice_result.is_miracle) {
-            number = this.dice_result.miracle_dice1 + this.dice_result.miracle_dice2;
+        let number: number = this.dice_result.result();
+        if (number < 1 || 12 < number) {
+            this.done(Phase.FacilityAction);
+            return true;
         }
+
         let facilities: CardId[] = [];
         for (let y: number = 0; y < 5; y++) {
             let card_id: CardId = this.getCardIdOnBoard(number - 1, 4 - y);
@@ -912,6 +996,10 @@ export class Session {
         if (!this.card_manager.isInHand(player_id, card_id)) {
             return false;
         }
+
+        // Add card to the effect manager.
+        let char_data_id: CharacterDataId = this.card_manager.getCharacter(card_id).data_id;
+        this.effect_manager.addCard(char_data_id, this.round, this.turn);
 
         // Apply the effect of the card.
         this.events = [];  // TODO: Consider the location to invalidate events.
@@ -1167,5 +1255,8 @@ export class Session {
     }
     public getCharacter(card_id: CardId): Character {
         return this.card_manager.getCharacter(card_id);
+    }
+    public getDiceDelta(): number {
+        return this.effect_manager.getDiceDelta();
     }
 }

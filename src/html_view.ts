@@ -189,12 +189,21 @@ export class HtmlView {
         }
     }
 
+    private getDiceDeltaMessage(delta: number): string {
+        if (delta === 0) {
+            return "";
+        }
+        let unit: string = (delta > 0) ? "+" : "";
+        return `(${unit}${delta})`;
+    }
+
     private getDiceResultMessage(dice: DiceResult): string {
         let faces: string[] = ["", "⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
 
         let d1: number = dice.dice1;
         let d2: number = dice.dice2;
-        return `${faces[d1]} ${faces[d2]} : ${d1 + d2} でした。`;
+        let delta: string = this.getDiceDeltaMessage(dice.delta);
+        return `${faces[d1]} ${faces[d2]} ${delta}: ${dice.result()} でした。`;
     }
 
     private resetCards(): void {
@@ -242,10 +251,12 @@ export class HtmlView {
             message = `🎲 マッチング中です 🎲`;
         }
         else if (phase == Phase.CharacterCard) {
-            message = `🎲 ${name} のキャラカードまたはサイコロです 🎲`;
+            let delta: string = this.getDiceDeltaMessage(session.getDiceDelta());
+            message = `🎲 ${name} のキャラカードまたはサイコロ${delta}です 🎲`;
         }
         else if (phase == Phase.DiceRoll) {
-            message = `🎲 ${name} のサイコロです 🎲`;
+            let delta: string = this.getDiceDeltaMessage(session.getDiceDelta());
+            message = `🎲 ${name} のサイコロ${delta}です 🎲`;
         }
         else if (phase == Phase.BuildFacility) {
             message = this.getDiceResultMessage(session.getDiceResult());

@@ -9,13 +9,14 @@ export class CharacterData {
         readonly id: number,  // Unique number.
         readonly name: string,
         readonly type: CharacterType,
+        readonly round: number,
         readonly property: {},
     ) {}
 }
 
 let character_data: CharacterData[] = [
-    new CharacterData(1000, "大学生", CharacterType.DiceDelta, {"delta": 3, "round": 1}),
-    new CharacterData(1001, "幼稚園児", CharacterType.DiceDelta, {"delta": -2, "round": 2}),
+    new CharacterData(1000, "大学生", CharacterType.DiceDelta, 1, {"delta": 3}),
+    new CharacterData(1001, "幼稚園児", CharacterType.DiceDelta, 2, {"delta": -2}),
 ];
 
 export type CharacterDataId = number;
@@ -139,6 +140,7 @@ export class Character {
     readonly data_id: CharacterDataId;
     readonly name: string;
     readonly type: CharacterType;
+    readonly round: number;
     readonly property: {};
 
     constructor(data_id: CharacterDataId) {
@@ -146,6 +148,7 @@ export class Character {
         this.data_id = data_id;
         this.name = data.name;
         this.type = data.type;
+        this.round = data.round;
         this.property = data.property;
     }
 
@@ -176,7 +179,7 @@ export class Character {
             case CharacterType.DiceDelta:
                 let delta: number = this.property["delta"];
                 let delta_str: string = ((delta > 0) ? "+" : "") + delta;
-                return `サイコロの目を${delta_str}する。\n${this.property["round"]}ラウンド`;
+                return `サイコロの目を${delta_str}する。\n${this.round}ラウンド`;
         }
         return "";
     }
