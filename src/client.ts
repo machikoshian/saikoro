@@ -31,10 +31,48 @@ export abstract class Client {
         this.request_handler = request_handler;
     }
 
+    public sendRequest(request: any): void {
+        request.session_id = this.session_id;
+        request.player_id = this.player_id;
+        this.request_handler.sendRequest(request, this.callback);
+    }
+
     abstract initBoard(): void;
-    abstract buildFacility(x: number, y: number, card_id: CardId): void;
-    abstract rollDice(dice_num: number, aim: number): void;
-    abstract characterCard(card_id: CardId): void;
-    abstract endTurn(): void;
     abstract startMatching(name: string): void;
+}
+
+// Move this class to a Saikoro specific file.
+export class Request {
+    static buildFacility(x: number, y: number, card_id: CardId): Object {
+        return {
+            command: "build",
+            x: x,
+            y: y,
+            card_id: card_id,
+        };
+    }
+
+    static rollDice(dice_num: number, aim: number): Object {
+        return {
+            command: "dice",
+            dice_num: dice_num,
+            aim: aim,
+        };
+    }
+
+    static characterCard(card_id: CardId): Object {
+        return {
+            command: "character",
+            card_id: card_id,
+        };
+    }
+
+    static endTurn(): Object {
+        return {
+            command: "build",
+            x: -1,
+            y: -1,
+            card_id: -1,
+        };
+    }
 }

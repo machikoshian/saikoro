@@ -2,17 +2,17 @@ import { Phase, Session, PlayerCards, Event, EventType } from "./session";
 import { Player, Board, PlayerId } from "./board";
 import { CardId, FacilityType, Facility, CharacterType, Character } from "./facility";
 import { Dice, DiceResult } from "./dice";
-import { WebClient } from "./saikoro";  // TODO: circular dependency.
+import { Client, Request } from "./client";
 
 export class HtmlView {
     private money_animation_timers = [null, null, null, null];
-    private client: WebClient;  // TODO: create a super class.
+    private client: Client;
     private session: Session = null;
     private clicked_card_id: CardId = -1;
     private clicked_card_element: HTMLElement = null;
     private player_cards_list: CardId[][] = [];
 
-    constructor(client: WebClient) {
+    constructor(client: Client) {
         this.client = client;
     }
 
@@ -71,19 +71,19 @@ export class HtmlView {
         if (this.clicked_card_id < 0) {
             return;
         }
-        this.client.buildFacility(x, y, this.clicked_card_id);
+        this.client.sendRequest(Request.buildFacility(x, y, this.clicked_card_id));
     }
 
     private onClickDice(dice_num: number, aim: number): void {
-        this.client.rollDice(dice_num, aim);
+        this.client.sendRequest(Request.rollDice(dice_num, aim));
     }
 
     private onClickCharacter(): void {
-        this.client.characterCard(this.clicked_card_id);
+        this.client.sendRequest(Request.characterCard(this.clicked_card_id));
     }
 
     private onClickEndTurn(): void {
-        this.client.endTurn();
+        this.client.sendRequest(Request.endTurn());
     }
 
     private onClickMatching(): void {

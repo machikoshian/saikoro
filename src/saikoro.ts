@@ -160,53 +160,6 @@ export class WebClient extends Client {
         this.view.initView();
     }
 
-    public buildFacility(x: number, y: number, card_id: CardId): void {
-        let request = {
-            command: "build",
-            session_id: this.session_id,
-            player_id: this.player_id,
-            x: x,
-            y: y,
-            card_id: card_id,
-        };
-        this.request_handler.sendRequest(request, this.callback);
-    }
-
-    public rollDice(dice_num: number, aim: number): void {
-        console.log(`clicked: dice_num:${dice_num}, aim:${aim}`);
-        let request = {
-            command: "dice",
-            session_id: this.session_id,
-            player_id: this.player_id,
-            dice_num: dice_num,
-            aim: aim,
-        };
-        this.request_handler.sendRequest(request, this.callback);
-    }
-
-    public characterCard(card_id: CardId): void {
-        let request = {
-            command: "character",
-            session_id: this.session_id,
-            player_id: this.player_id,
-            card_id: card_id,
-        };
-        this.request_handler.sendRequest(request, this.callback);
-    }
-
-    public endTurn(): void {
-        console.log("clicked: end_turn");
-        let request = {
-            command: "build",
-            session_id: this.session_id,
-            player_id: this.player_id,
-            x: -1,
-            y: -1,
-            card_id: -1,
-        };
-        this.request_handler.sendRequest(request, this.callback);
-    }
-
     public startMatching(name: string): void {
         console.log("matching...");
         if (name.length === 0) {
