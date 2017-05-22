@@ -247,22 +247,22 @@ export class HtmlView {
         let name: string = current_player.name;
         let message: string = "";
         let phase: Phase = session.getPhase();
-        if (phase == Phase.StartGame) {
+        if (phase === Phase.StartGame) {
             message = `🎲 マッチング中です 🎲`;
         }
-        else if (phase == Phase.CharacterCard) {
+        else if (phase === Phase.CharacterCard) {
             let delta: string = this.getDiceDeltaMessage(session.getDiceDelta());
             message = `🎲 ${name} のキャラカードまたはサイコロ${delta}です 🎲`;
         }
-        else if (phase == Phase.DiceRoll) {
+        else if (phase === Phase.DiceRoll) {
             let delta: string = this.getDiceDeltaMessage(session.getDiceDelta());
             message = `🎲 ${name} のサイコロ${delta}です 🎲`;
         }
-        else if (phase == Phase.BuildFacility) {
+        else if (phase === Phase.BuildFacility) {
             message = this.getDiceResultMessage(session.getDiceResult());
             message += `  🎲 ${name} の建設です 🎲`;
         }
-        else if (phase == Phase.EndGame) {
+        else if (phase === Phase.EndGame) {
             let winner: string = session.getPlayer(session.getWinner()).name;
             message = `🎲 ${name} の勝ちです 🎲`;
         }
@@ -277,7 +277,7 @@ export class HtmlView {
             document.getElementById("dice").style.display = "none";
         }
 
-        if (phase == Phase.CharacterCard) {
+        if (phase === Phase.CharacterCard) {
             document.getElementById("char_card").style.visibility = "visible";
             document.getElementById("char_card").style.backgroundColor = "#EFF0D1";
         }
@@ -285,7 +285,7 @@ export class HtmlView {
             document.getElementById("char_card").style.visibility = "hidden";
         }
 
-        if (phase == Phase.CharacterCard || phase == Phase.DiceRoll) {
+        if (phase === Phase.CharacterCard || phase === Phase.DiceRoll) {
             document.getElementById("dice_1").style.visibility = "visible";
             document.getElementById("dice_2").style.visibility = "visible";
         }
@@ -294,7 +294,7 @@ export class HtmlView {
             document.getElementById("dice_2").style.visibility = "hidden";
         }
 
-        if (phase == Phase.BuildFacility) {
+        if (phase === Phase.BuildFacility) {
             document.getElementById("end_turn").style.visibility = "visible";
         }
         else {
@@ -396,7 +396,7 @@ export class HtmlView {
             }
             this.money_animation_timers[i] = setInterval(() => {
                 let current_money = Number(money_element.innerText);
-                if (current_money == money) {
+                if (current_money === money) {
                     clearInterval(this.money_animation_timers[i]);
                     this.money_animation_timers[i] = null;
                     return;

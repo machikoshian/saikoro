@@ -337,7 +337,7 @@ export class CardManager {
         }
 
         // Check is owner is correct.
-        if (this.getOwner(card_id) != player_id) {
+        if (this.getOwner(card_id) !== player_id) {
             return false;
         }
 
@@ -349,7 +349,7 @@ export class CardManager {
             console.warn("card_id < 0.");
             return false;
         }
-        return (this.facilities[card_id].getArea() == area);
+        return (this.facilities[card_id].getArea() === area);
     }
 
     public moveFieldToDiscard(card_id: CardId): boolean {
@@ -640,37 +640,37 @@ export class Session {
             return;
         }
         this.step++;
-        if (phase == Phase.StartGame) {
+        if (phase === Phase.StartGame) {
             this.phase = Phase.StartTurn;
             return;
         }
 
-        if (phase == Phase.StartTurn) {
+        if (phase === Phase.StartTurn) {
             this.phase = Phase.CharacterCard;
             return;
         }
 
-        if (phase == Phase.CharacterCard) {
+        if (phase === Phase.CharacterCard) {
             this.phase = Phase.DiceRoll;
             return;
         }
 
-        if (phase == Phase.DiceRoll) {
+        if (phase === Phase.DiceRoll) {
             this.phase = Phase.FacilityAction;
             return;
         }
 
-        if (phase == Phase.FacilityAction) {
+        if (phase === Phase.FacilityAction) {
             this.phase = Phase.PaySalary;
             return;
         }
 
-        if (phase == Phase.PaySalary) {
+        if (phase === Phase.PaySalary) {
             this.phase = Phase.BuildFacility;
             return;
         }
 
-        if (phase == Phase.BuildFacility) {
+        if (phase === Phase.BuildFacility) {
             // Check EndGame
             let landmarks: CardId[] = this.card_manager.getLandmarks();
             let num_landmarks: number = 0;
@@ -689,51 +689,51 @@ export class Session {
             return;
         }
 
-        if (phase == Phase.EndTurn) {
+        if (phase === Phase.EndTurn) {
             this.phase = Phase.StartTurn;
             return;
         }
 
-        if (phase == Phase.EndGame) {
+        if (phase === Phase.EndGame) {
             // Do nothing.
             return;
         }
     }
 
     public doNext(): boolean {
-        if (this.phase == Phase.StartGame) {
+        if (this.phase === Phase.StartGame) {
             return this.startGame();
         }
 
-        if (this.phase == Phase.StartTurn) {
+        if (this.phase === Phase.StartTurn) {
             return this.startTurn();
         }
 
-        if (this.phase == Phase.CharacterCard) {
+        if (this.phase === Phase.CharacterCard) {
             return false;  // Need interactions.
         }
 
-        if (this.phase == Phase.DiceRoll) {
+        if (this.phase === Phase.DiceRoll) {
             return false;  // Need interactions.
         }
 
-        if (this.phase == Phase.FacilityAction) {
+        if (this.phase === Phase.FacilityAction) {
             return this.facilityAction();
         }
 
-        if (this.phase == Phase.PaySalary) {
+        if (this.phase === Phase.PaySalary) {
             return this.paySalary();
         }
 
-        if (this.phase == Phase.BuildFacility) {
+        if (this.phase === Phase.BuildFacility) {
             return false;  // Need interactions.
         }
 
-        if (this.phase == Phase.EndTurn) {
+        if (this.phase === Phase.EndTurn) {
             return this.endTurn();
         }
 
-        if (this.phase == Phase.EndGame) {
+        if (this.phase === Phase.EndGame) {
             return this.endGame();
         }
 
@@ -745,7 +745,7 @@ export class Session {
         if (player_id > 4) {
             return -1;
         }
-        // team == player_id (no 2vs2 so far).
+        // team === player_id (no 2vs2 so far).
         this.players.push(new Player(user_id, player_id, name, money, salary, player_id));
         return player_id;
     }
@@ -892,11 +892,11 @@ export class Session {
 
     private getOverwriteCost(card_id_on_board: CardId, player_id: PlayerId): number {
         // No facility on board.
-        if (card_id_on_board == -1) {
+        if (card_id_on_board === -1) {
             return 0;
         }
         // Same owner.
-        if (this.getOwnerId(card_id_on_board) == player_id) {
+        if (this.getOwnerId(card_id_on_board) === player_id) {
             return 0;
         }
         // Double of the builing cost.
@@ -1051,7 +1051,7 @@ export class Session {
 
         // Facility's owner is valid?
         let facility_owner: PlayerId = this.getOwnerId(card_id);
-        if (facility_owner != player_id) {
+        if (facility_owner !== player_id) {
             return false;
         }
 
@@ -1166,7 +1166,7 @@ export class Session {
     }
 
     public endTurn(): boolean {
-        if (this.current_player_id == this.players.length - 1) {
+        if (this.current_player_id === this.players.length - 1) {
             this.current_player_id = 0;
             this.round += 1;
             this.turn = 0;

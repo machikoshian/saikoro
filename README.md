@@ -41,3 +41,8 @@
 * Basically this project follows https://github.com/Microsoft/TypeScript/wiki/Coding-guidelines
 * Line width: 100 chars.
 * Use "".
+* Use ===, but not == except for comparisons with null/undefined.
+  + GOOD: var1 === var2
+  + GOOD: var1 == null
+  + BAD: var1 == var2
+  

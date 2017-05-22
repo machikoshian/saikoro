@@ -43,11 +43,11 @@ export class DiceResult {
 
 export class Dice {
     static roll(dice_num: number, aim: number = 0, delta: number = 0): DiceResult {
-        let dice2_factor: number = (dice_num == 2) ? 1 : 0;
+        let dice2_factor: number = (dice_num === 2) ? 1 : 0;
 
         let dice1: number = Dice.roll1();
         let dice2: number = Dice.roll1() * dice2_factor;
-        if (dice1 + dice2 == aim) {
+        if (dice1 + dice2 === aim) {
             // Lucky, but not miracle lucky.
             return new DiceResult(dice1, dice2, delta, false);
         }
@@ -55,7 +55,7 @@ export class Dice {
         // Try again for miracle.
         let miracle_dice1: number = Dice.roll1();
         let miracle_dice2: number = Dice.roll1() * dice2_factor;
-        if (miracle_dice1 + miracle_dice2 == aim) {
+        if (miracle_dice1 + miracle_dice2 === aim) {
             return new DiceResult(dice1, dice2, delta, true, miracle_dice1, miracle_dice2);
         }
         return new DiceResult(dice1, dice2, delta, false);

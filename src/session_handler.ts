@@ -80,7 +80,7 @@ export class SessionHandler {
                 return true;
             }
             let new_step: number = session.getStep();
-            if (prev_step == new_step) {
+            if (prev_step === new_step) {
                 break;
             }
             prev_step = new_step;
@@ -89,7 +89,7 @@ export class SessionHandler {
     }
 
     public processCommand(session: Session, query): boolean {
-        if (query.command == "board") {
+        if (query.command === "board") {
             let step: number = Number(query.step);
             if (step >= session.getStep()) {
                 // No update.
@@ -97,7 +97,7 @@ export class SessionHandler {
             }
         }
 
-        else if (query.command == "character") {
+        else if (query.command === "character") {
             let player_id: PlayerId = Number(query.player_id);
             let card_id: CardId = Number(query.card_id);
             if (session.useCharacter(player_id, card_id)) {
@@ -106,7 +106,7 @@ export class SessionHandler {
             }
         }
 
-        else if (query.command == "dice") {
+        else if (query.command === "dice") {
             let player_id: PlayerId = Number(query.player_id);
             let dice_num = Number(query.dice_num);
             let aim = Number(query.aim);
@@ -116,7 +116,7 @@ export class SessionHandler {
             }
         }
 
-        else if (query.command == "build") {
+        else if (query.command === "build") {
             let player_id: PlayerId = Number(query.player_id);
             let x: number = Number(query.x);
             let y: number = Number(query.y);
@@ -217,7 +217,7 @@ export class SessionHandler {
             session.addCharacter(player_id, card_id);
         }
 
-        if (player_id == num_players - 1) {
+        if (player_id === num_players - 1) {
             session.startGame();
             this.doNext(session);
         }

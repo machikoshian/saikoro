@@ -74,7 +74,7 @@ class HttpServer {
     }
 
     private serveStaticFiles(pathname: string, response): void {
-        if (pathname == "/") {
+        if (pathname === "/") {
             pathname = "/saikoro.html";
         }
 
@@ -97,7 +97,7 @@ class HttpServer {
         let pathname: string = url_parts.pathname;
         let query = url_parts.query;
 
-        if (pathname == "/env") {
+        if (pathname === "/env") {
             let output: string = "";
             output += `MEMCACHE_URL: ${process.env.MEMCACHE_URL}\n`;
             output += `USE_GAE_MEMCACHE: ${process.env.USE_GAE_MEMCACHE}\n`;
@@ -107,7 +107,7 @@ class HttpServer {
             return;
         }
 
-        if (pathname == "/command") {
+        if (pathname === "/command") {
             this.session_handler.handleCommand(query).then((data: KeyValue) => {
                 response.setHeader("Content-Type", "application/json; charset=utf-8");
                 response.end(data.value);
@@ -115,7 +115,7 @@ class HttpServer {
             return;
         }
 
-        if (pathname == "/matching") {
+        if (pathname === "/matching") {
             this.session_handler.handleMatching(query.name, query.user_id).then(
                     (matched: MatchedData) => {
                 response.end(JSON.stringify({ matching_id: matched.matching_id,
