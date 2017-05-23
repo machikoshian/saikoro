@@ -533,6 +533,7 @@ export enum EventType {
     Purple,
     Build,
     Character,
+    Quit,
 }
 
 export class Event {
@@ -1183,6 +1184,19 @@ export class Session {
     public endGame(): boolean {
         // Do nothing so far.
         this.done(Phase.EndGame);
+        return true;
+    }
+
+    public quit(player_id: PlayerId): boolean {
+        this.events = [];  // TODO: Consider the location to invalidate events.
+        let event: Event = new Event();
+        this.events.push(event);
+        event.type = EventType.Quit;
+        event.moneys[player_id] = -1;
+
+        // TODO: Do not end the game. Swith to AI.
+        this.phase = Phase.EndGame;
+        this.step++;
         return true;
     }
 

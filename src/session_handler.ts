@@ -129,6 +129,13 @@ export class SessionHandler {
             }
         }
 
+        else if (query.command === "quit") {
+            let player_id: PlayerId = Number(query.player_id);
+            if (session.quit(player_id)) {
+                this.doNext(session);
+            }
+        }
+
         return true;
     }
 

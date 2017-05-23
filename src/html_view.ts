@@ -263,8 +263,23 @@ export class HtmlView {
             message += `  🎲 ${name} の建設です 🎲`;
         }
         else if (phase === Phase.EndGame) {
-            let winner: string = session.getPlayer(session.getWinner()).name;
-            message = `🎲 ${name} の勝ちです 🎲`;
+            let events: Event[] = this.session.getEvents();
+            let quited: boolean = false;
+            for (let event of events) {
+                if (event.type === EventType.Quit) {
+                    quited = true;
+                    for (let i = 0; i < event.moneys.length; ++i) {
+                        if (event.moneys[i] !== 0) {
+                            message = `🎲 ${players[i].name} が切断しました 🎲`;
+                        }
+                    }
+                    break;
+                }
+            }
+            if (!quited) {
+                let winner: string = session.getPlayer(session.getWinner()).name;
+                message = `🎲 ${name} の勝ちです 🎲`;
+            }
         }
         document.getElementById("message").innerText = message;
         document.getElementById("message").style.backgroundColor = this.getPlayerColor(player_id);
@@ -433,15 +448,24 @@ export class HtmlView {
                 continue;
             }
 
-            // Money motion
-            let [x, y]: [number, number] = this.session.getPosition(event.card_id);
+            const money_motion: EventType[] = [
+                EventType.Blue,
+                EventType.Green,
+                EventType.Red,
+                EventType.Purple,
+                EventType.Build,
+            ];
+            if (money_motion.indexOf(event.type) !== -1) {
+                // Money motion
+                let [x, y]: [number, number] = this.session.getPosition(event.card_id);
 
-            for (let pid = 0; pid < event.moneys.length; pid++) {
-                let money: number = event.moneys[pid];
-                if (money === 0) {
-                    continue;
+                for (let pid = 0; pid < event.moneys.length; pid++) {
+                    let money: number = event.moneys[pid];
+                    if (money === 0) {
+                        continue;
+                    }
+                    this.drawMoneyMotion(money, pid, x, y);
                 }
-                this.drawMoneyMotion(money, pid, x, y);
             }
         }
     }

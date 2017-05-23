@@ -75,4 +75,10 @@ export class Request {
             card_id: -1,
         };
     }
+
+    static quit(): Object {
+        return {
+            command: "quit",
+        };
+    }
 }
