@@ -2,7 +2,7 @@ import { Dice } from "./dice";
 import { Session } from "./session";
 import { Board, PlayerId } from "./board";
 import { CardId, FacilityDataId, FacilityType, Facility, CharacterDataId } from "./facility";
-
+import { AutoPlay } from "./auto_play";
 
 export class KeyValue {
     constructor(
@@ -61,8 +61,8 @@ export class SessionHandler {
 
     public initSession(): Session {  // This is a stub, not to be used for production.
         let session = new Session();
-        const player_id0: PlayerId = session.addPlayer("0", "こしあん", 1200, 250);
-        const player_id1: PlayerId = session.addPlayer("1", "つぶあん", 1000, 220);
+        const player_id0: PlayerId = session.addPlayer("0", "こしあん", 1200, 250, false);
+        const player_id1: PlayerId = session.addPlayer("1", "つぶあん", 1000, 220, false);
 
         for (let i: number = 0; i < 10; ++i) {
             session.addFacility(player_id0, Math.floor(Math.random() * 12));
@@ -75,15 +75,28 @@ export class SessionHandler {
 
     public doNext(session: Session): boolean {
         let prev_step: number = session.getStep();
+
         for (let i: number = 0; i < 100; ++i) {
-            if (!session.doNext()) {
-                return true;
-            }
+            let cont: boolean = session.doNext();
             let new_step: number = session.getStep();
+            if (cont) {
+                prev_step = new_step;
+                continue;
+            }
+
+            if (session.getCurrentPlayer().isAuto()) {
+                cont = AutoPlay.play(session);
+                new_step = session.getStep();
+            }
+            if (cont) {
+                prev_step = new_step;
+                continue;
+            }
+
             if (prev_step === new_step) {
                 break;
             }
-            prev_step = new_step;
+            return true;
         }
         return false;
     }
@@ -197,7 +210,10 @@ export class SessionHandler {
                 session = new Session();
             }
 
-            this.addNewPlayer(session, user_id, name, num_players);
+            this.addNewPlayer(session, user_id, name, num_players, false);
+
+            // Add NPC.
+            this.addNewPlayer(session, "0", "NPC", num_players, true);
 
             let session_string: string = JSON.stringify(session.toJSON());
             matched_data.session_string = session_string;
@@ -208,8 +224,8 @@ export class SessionHandler {
         });
     }
 
-    public addNewPlayer(session: Session, user_id: string, name: string, num_players: number): PlayerId {
-        const player_id: PlayerId = session.addPlayer(user_id, name, 1200, 250);
+    public addNewPlayer(session: Session, user_id: string, name: string, num_players: number, is_auto: boolean): PlayerId {
+        const player_id: PlayerId = session.addPlayer(user_id, name, 1200, 250, is_auto);
         const num_cards = 10;
         const max_id: number = 24;
         for (let i: number = 0; i < num_cards; ++i) {

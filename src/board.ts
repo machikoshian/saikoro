@@ -10,15 +10,17 @@ export class Player {
     private money: number;
     readonly salary: number;
     readonly team: number;
+    private is_auto: boolean;
 
     constructor(user_id: string, id: PlayerId, name: string, money: number, salary: number,
-        team: number) {
+        team: number, is_auto: boolean = false) {
         this.user_id = user_id;
         this.id = id;
         this.name = name;
         this.money = money;
         this.salary = salary;
         this.team = team;
+        this.is_auto = is_auto;
     }
 
     public toJSON(): Object {
@@ -30,11 +32,13 @@ export class Player {
             money: this.money,
             salary: this.salary,
             team: this.team,
+            is_auto: this.is_auto,
         }
     }
 
     static fromJSON(json): Player {
-        return new Player(json.user_id, json.id, json.name, json.money, json.salary, json.team);
+        return new Player(json.user_id, json.id, json.name, json.money, json.salary, json.team,
+                          json.is_auto);
     }
 
     public getMoney(): number {
@@ -55,6 +59,14 @@ export class Player {
 
     public paySalary(): void {
         this.money += this.salary;
+    }
+
+    public isAuto(): boolean {
+        return this.is_auto;
+    }
+
+    public setAuto(is_auto: boolean): void {
+        this.is_auto = is_auto;
     }
 }
 

@@ -9,7 +9,7 @@
 * ユニットテストの追加
 * process handler chain / state hook の作成
 * Dice roll への狙い目の UI 対応
-* イベントログの実装 (for animation)
+* イベントログに step 数を足す。
 * マッチング機能の書き直し
 * サーバーレススタンドアロンモードの実装（一人用）
 * class と CSS を明示的に分類。

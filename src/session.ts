@@ -741,13 +741,14 @@ export class Session {
         return false;
     }
 
-    public addPlayer(user_id: string, name: string, money: number, salary: number): number {
+    public addPlayer(user_id: string, name: string, money: number, salary: number,
+                     is_auto: boolean): number {
         let player_id: PlayerId = this.players.length;
         if (player_id > 4) {
             return -1;
         }
         // team === player_id (no 2vs2 so far).
-        this.players.push(new Player(user_id, player_id, name, money, salary, player_id));
+        this.players.push(new Player(user_id, player_id, name, money, salary, player_id, is_auto));
         return player_id;
     }
 
