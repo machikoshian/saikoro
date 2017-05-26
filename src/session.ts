@@ -533,28 +533,35 @@ export enum EventType {
     Purple,
     Build,
     Character,
+    Dice,
     Quit,
 }
 
 export class Event {
+    public step: number = 0;
     public type: EventType = EventType.None;
     public moneys: number[] = [0, 0, 0, 0];
     public card_id: CardId = null;
+    public dice: DiceResult = null;
 
     public toJSON(): Object {
         return {
             class_name: "Event",
+            step: this.step,
             type: this.type,
             moneys: this.moneys,
             card_id: this.card_id,
+            dice: this.dice ? this.dice.toJSON() : null,
         }
     }
 
     static fromJSON(json): Event {
         let event = new Event();
+        event.step = json.step;
         event.type = json.type;
         event.moneys = json.moneys;
         event.card_id = json.card_id;
+        event.dice = json.dice ? DiceResult.fromJSON(json.dice) : null;
         return event;
     }
 }
@@ -795,12 +802,17 @@ export class Session {
         }
         let delta: number = this.effect_manager.getDiceDelta();
         this.dice_result = Dice.roll(dice_num, aim, delta);
+        let event: Event = new Event();
+        this.events.push(event);
+        event.type = EventType.Dice;
+        event.dice = this.dice_result;
+        event.moneys[player_id] = 1;
         this.done(Phase.DiceRoll);
         return true;
     }
 
     public facilityAction(): boolean {
-        this.events = [];  // TODO: Consider the location to invalidate events.
+        // this.events = [];  // TODO: Consider the location to invalidate events.
         let number: number = this.dice_result.result();
         if (number < 1 || 12 < number) {
             this.done(Phase.FacilityAction);
@@ -848,6 +860,7 @@ export class Session {
         let owner_id: PlayerId = this.getOwnerId(card_id);
         let owner: Player = this.getOwner(card_id);
         let event: Event = new Event();
+        event.step = this.step;
         event.card_id = card_id;
 
         // TODO: Add event log.
@@ -1004,10 +1017,11 @@ export class Session {
         this.effect_manager.addCard(char_data_id, this.round, this.turn);
 
         // Apply the effect of the card.
-        this.events = [];  // TODO: Consider the location to invalidate events.
+        // this.events = [];  // TODO: Consider the location to invalidate events.
         let event: Event = new Event();
         event.type = EventType.Character;
         event.card_id = card_id;
+        event.step = this.step;
         this.events.push(event);
 
         // Move the card to discard.
@@ -1035,7 +1049,7 @@ export class Session {
 
         // Is pass?  (valid action, but not build a facility).
         if (x === -1 && y === -1 && card_id === -1) {
-            this.events = [];  // TODO: Consider the location to invalidate events.
+            // this.events = [];  // TODO: Consider the location to invalidate events.
             this.done(Phase.BuildFacility);
             return true;
         }
@@ -1095,9 +1109,10 @@ export class Session {
             return false;
         }
 
-        this.events = [];  // TODO: Consider the location to invalidate events.
+        // this.events = [];  // TODO: Consider the location to invalidate events.
         let event: Event = new Event();
         this.events.push(event);
+        event.step = this.step;
         event.type = EventType.Build;
         event.moneys[player_id] -= total_cost;
         event.card_id = card_id;
@@ -1150,9 +1165,10 @@ export class Session {
         player.setMoney(balance);
         this.card_manager.buildLandmark(player_id, card_id);
 
-        this.events = [];  // TODO: Consider the location to invalidate events.
+        // this.events = [];  // TODO: Consider the location to invalidate events.
         let event: Event = new Event();
         this.events.push(event);
+        event.step = this.step;
         event.type = EventType.Build;
         event.moneys[player_id] -= cost;
         event.card_id = card_id;
@@ -1189,9 +1205,10 @@ export class Session {
     }
 
     public quit(player_id: PlayerId): boolean {
-        this.events = [];  // TODO: Consider the location to invalidate events.
+        // this.events = [];  // TODO: Consider the location to invalidate events.
         let event: Event = new Event();
         this.events.push(event);
+        event.step = this.step;
         event.type = EventType.Quit;
         event.moneys[player_id] = -1;
 

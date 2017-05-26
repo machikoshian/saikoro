@@ -6,11 +6,14 @@ import { Client, Request } from "./client";
 
 export class HtmlView {
     private money_animation_timers = [null, null, null, null];
+    private message_timer = null;
     private client: Client;
     private session: Session = null;
     private clicked_card_id: CardId = -1;
     private clicked_card_element: HTMLElement = null;
     private player_cards_list: CardId[][] = [];
+    private last_step: number = -1;
+    private messages: [string, string][] = [];
 
     constructor(client: Client) {
         this.client = client;
@@ -44,6 +47,9 @@ export class HtmlView {
         // End turn
         document.getElementById("end_turn").addEventListener(
             "click", () => { this.onClickEndTurn(); });
+
+        // Message
+        this.showMessage("");
 
         // Cards
         let player_size: number = 4;
@@ -240,51 +246,11 @@ export class HtmlView {
         // Update players.
         this.drawPlayers();
 
-        let player_id: PlayerId = session.getCurrentPlayerId();
-
-        // Update message.
-        let current_player: Player = players[player_id];
-        let name: string = current_player.name;
-        let message: string = "";
-        let phase: Phase = session.getPhase();
-        if (phase === Phase.StartGame) {
-            message = `🎲 マッチング中です 🎲`;
-        }
-        else if (phase === Phase.CharacterCard) {
-            let delta: string = this.getDiceDeltaMessage(session.getDiceDelta());
-            message = `🎲 ${name} のキャラカードまたはサイコロ${delta}です 🎲`;
-        }
-        else if (phase === Phase.DiceRoll) {
-            let delta: string = this.getDiceDeltaMessage(session.getDiceDelta());
-            message = `🎲 ${name} のサイコロ${delta}です 🎲`;
-        }
-        else if (phase === Phase.BuildFacility) {
-            message = this.getDiceResultMessage(session.getDiceResult());
-            message += `  🎲 ${name} の建設です 🎲`;
-        }
-        else if (phase === Phase.EndGame) {
-            let events: Event[] = this.session.getEvents();
-            let quited: boolean = false;
-            for (let event of events) {
-                if (event.type === EventType.Quit) {
-                    quited = true;
-                    for (let i = 0; i < event.moneys.length; ++i) {
-                        if (event.moneys[i] !== 0) {
-                            message = `🎲 ${players[i].name} が切断しました 🎲`;
-                        }
-                    }
-                    break;
-                }
-            }
-            if (!quited) {
-                let winner: string = session.getPlayer(session.getWinner()).name;
-                message = `🎲 ${name} の勝ちです 🎲`;
-            }
-        }
-        document.getElementById("message").innerText = message;
-        document.getElementById("message").style.backgroundColor = this.getPlayerColor(player_id);
+        // Update messages.
+        this.drawMessages();
 
         // Update buttons.
+        let current_player: Player = session.getCurrentPlayer();
         if (current_player.user_id === user_id) {
             document.getElementById("dice").style.display = "";
         }
@@ -292,6 +258,7 @@ export class HtmlView {
             document.getElementById("dice").style.display = "none";
         }
 
+        let phase: Phase = session.getPhase();
         if (phase === Phase.CharacterCard) {
             document.getElementById("char_card").style.visibility = "visible";
             document.getElementById("char_card").style.backgroundColor = "#EFF0D1";
@@ -381,6 +348,7 @@ export class HtmlView {
         }
 
         this.resetCards();  // Nice to check if built or not?
+        this.last_step = session.getStep();
     }
 
     public drawBoard(): void {
@@ -435,6 +403,84 @@ export class HtmlView {
         }
     }
 
+    public drawMessages(): void {
+        let session = this.session;
+
+        let players: Player[] = session.getPlayers();
+        let player_id: PlayerId = session.getCurrentPlayerId();
+
+        // Update message.
+        let current_player: Player = players[player_id];
+        let name: string =  current_player.name;
+        let phase: Phase = session.getPhase();
+        let message: string = "";
+        let color: string = this.getPlayerColor(player_id);
+        if (phase === Phase.StartGame) {
+            message = "🎲 マッチング中です 🎲";
+            this.messages.push([message, color]);
+        }
+        else if (phase === Phase.CharacterCard) {
+            let delta: string = this.getDiceDeltaMessage(session.getDiceDelta());
+            message = `🎲 ${name} のキャラカードまたはサイコロ${delta}です 🎲`;
+            this.messages.push([message, color]);
+        }
+        else if (phase === Phase.DiceRoll) {
+            let delta: string = this.getDiceDeltaMessage(session.getDiceDelta());
+            message = `🎲 ${name} のサイコロ${delta}です 🎲`;
+            this.messages.push([message, color]);
+        }
+        else if (phase === Phase.BuildFacility) {
+            message = this.getDiceResultMessage(session.getDiceResult());
+            this.messages.push([message, color]);
+            message = `  🎲 ${name} の建設です 🎲`;
+            this.messages.push([message, color]);
+        }
+        else if (phase === Phase.EndGame) {
+            let events: Event[] = this.session.getEvents();
+            let quited: boolean = false;
+            for (let event of events) {
+                if (event.type === EventType.Quit) {
+                    quited = true;
+                    for (let i = 0; i < event.moneys.length; ++i) {
+                        if (event.moneys[i] !== 0) {
+                            message = `🎲 ${players[i].name} が切断しました 🎲`;
+                            this.messages.push([message, this.getPlayerColor(i)]);
+                        }
+                    }
+                    break;
+                }
+            }
+            if (!quited) {
+                let winner: string = session.getPlayer(session.getWinner()).name;
+                message = `🎲 ${name} の勝ちです 🎲`;
+                this.messages.push([message, this.getPlayerColor(session.getWinner())]);
+            }
+        }
+
+        if (this.showMessageFromQueue()) {
+            this.message_timer = setInterval(() => {
+                if (!this.showMessageFromQueue()) {
+                    this.message_timer = null;
+                }
+            }, 2000);
+        }
+    }
+
+    private showMessageFromQueue(): boolean {
+        if (this.messages.length === 0) {
+            return false;
+        }
+
+        let [message, color]: [string, string] = this.messages.shift();
+        this.showMessage(message, color);
+        return true;
+    }
+
+    private showMessage(message: string, color: string = "#EFF0D1"): void {
+        document.getElementById("message").innerText = message;
+        document.getElementById("message").style.backgroundColor = color;
+    }
+
     private drawEvents(): void {
         let events: Event[] = this.session.getEvents();
         if (events.length === 0) {
@@ -442,6 +488,25 @@ export class HtmlView {
         }
 
         for (let event of events) {
+            // Skip passed events.
+            if (event.step < this.last_step) {
+                continue;
+            }
+
+            // Dice
+            if (event.type == EventType.Dice) {
+                let message: string = this.getDiceResultMessage(event.dice);
+                let color: string = this.getPlayerColor(-1);
+                for (let i = 0; i < event.moneys.length; ++i) {
+                    if (event.moneys[i] !== 0) {
+                        color = this.getPlayerColor(i);
+                        break;
+                    }
+                }
+                this.messages.push([message, color]);
+                continue;
+            }
+
             // Character card
             if (event.type === EventType.Character) {
                 this.effectCharacter(this.session.getCurrentPlayerId(), event.card_id);
