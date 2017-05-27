@@ -806,6 +806,7 @@ export class Session {
         this.events.push(event);
         event.type = EventType.Dice;
         event.dice = this.dice_result;
+        event.step = this.step;
         event.moneys[player_id] = 1;
         this.done(Phase.DiceRoll);
         return true;

@@ -4,22 +4,70 @@ import { CardId, FacilityType, Facility, CharacterType, Character } from "./faci
 import { Dice, DiceResult } from "./dice";
 import { Client, Request } from "./client";
 
+class MessageView {
+    private element: HTMLElement;
+    private message_timer = null;
+    private messages: [string, string][] = [];
+
+    constructor (element: HTMLElement) {
+        this.element = element;
+        this.showMessage("");
+    }
+
+    public push(message: string, color: string = ""): void {
+        this.messages.push([message, color]);
+    }
+
+    public drawMessage(): void {
+        if (this.message_timer) {
+            // If setInterval is ongoing, use that one. No additional action.
+        }
+        else {
+            // Show the first message soon.
+            this.showMessageFromQueue();
+            // Keep the above message at least 2 sec.
+            this.message_timer = setInterval(() => {
+                if (!this.showMessageFromQueue()) {
+                    this.message_timer = null;
+                }
+            }, 2000);
+        }
+    }
+
+    private showMessageFromQueue(): boolean {
+        if (this.messages.length === 0) {
+            return false;
+        }
+
+        let [message, color]: [string, string] = this.messages.shift();
+        this.showMessage(message, color);
+        return true;
+    }
+
+    private showMessage(message: string, color: string = "#EFF0D1"): void {
+        this.element.innerText = message;
+        this.element.style.backgroundColor = color;
+    }
+}
+
 export class HtmlView {
     private money_animation_timers = [null, null, null, null];
-    private message_timer = null;
     private client: Client;
     private session: Session = null;
     private clicked_card_id: CardId = -1;
     private clicked_card_element: HTMLElement = null;
     private player_cards_list: CardId[][] = [];
     private last_step: number = -1;
-    private messages: [string, string][] = [];
+    private message_view: MessageView;
 
     constructor(client: Client) {
         this.client = client;
     }
 
     public initView(column: number = 12, row: number = 5):void {
+        // Message
+        this.message_view = new MessageView(document.getElementById("message"));
+
         // Add click listeners.
         // Matching.
         document.getElementById("matching_button").addEventListener(
@@ -47,9 +95,6 @@ export class HtmlView {
         // End turn
         document.getElementById("end_turn").addEventListener(
             "click", () => { this.onClickEndTurn(); });
-
-        // Message
-        this.showMessage("");
 
         // Cards
         let player_size: number = 4;
@@ -417,23 +462,23 @@ export class HtmlView {
         let color: string = this.getPlayerColor(player_id);
         if (phase === Phase.StartGame) {
             message = "🎲 マッチング中です 🎲";
-            this.messages.push([message, color]);
+            this.message_view.push(message, color);
         }
         else if (phase === Phase.CharacterCard) {
             let delta: string = this.getDiceDeltaMessage(session.getDiceDelta());
             message = `🎲 ${name} のキャラカードまたはサイコロ${delta}です 🎲`;
-            this.messages.push([message, color]);
+            this.message_view.push(message, color);
         }
         else if (phase === Phase.DiceRoll) {
             let delta: string = this.getDiceDeltaMessage(session.getDiceDelta());
             message = `🎲 ${name} のサイコロ${delta}です 🎲`;
-            this.messages.push([message, color]);
+            this.message_view.push(message, color);
         }
         else if (phase === Phase.BuildFacility) {
-            message = this.getDiceResultMessage(session.getDiceResult());
-            this.messages.push([message, color]);
+            // message = this.getDiceResultMessage(session.getDiceResult());
+            // this.messages.push([message, color]);
             message = `  🎲 ${name} の建設です 🎲`;
-            this.messages.push([message, color]);
+            this.message_view.push(message, color);
         }
         else if (phase === Phase.EndGame) {
             let events: Event[] = this.session.getEvents();
@@ -444,7 +489,7 @@ export class HtmlView {
                     for (let i = 0; i < event.moneys.length; ++i) {
                         if (event.moneys[i] !== 0) {
                             message = `🎲 ${players[i].name} が切断しました 🎲`;
-                            this.messages.push([message, this.getPlayerColor(i)]);
+                            this.message_view.push(message, this.getPlayerColor(i));
                         }
                     }
                     break;
@@ -453,32 +498,12 @@ export class HtmlView {
             if (!quited) {
                 let winner: string = session.getPlayer(session.getWinner()).name;
                 message = `🎲 ${name} の勝ちです 🎲`;
-                this.messages.push([message, this.getPlayerColor(session.getWinner())]);
+                this.message_view.push(message, this.getPlayerColor(session.getWinner()));
             }
         }
 
-        if (this.showMessageFromQueue()) {
-            this.message_timer = setInterval(() => {
-                if (!this.showMessageFromQueue()) {
-                    this.message_timer = null;
-                }
-            }, 2000);
-        }
-    }
+        this.message_view.drawMessage();
 
-    private showMessageFromQueue(): boolean {
-        if (this.messages.length === 0) {
-            return false;
-        }
-
-        let [message, color]: [string, string] = this.messages.shift();
-        this.showMessage(message, color);
-        return true;
-    }
-
-    private showMessage(message: string, color: string = "#EFF0D1"): void {
-        document.getElementById("message").innerText = message;
-        document.getElementById("message").style.backgroundColor = color;
     }
 
     private drawEvents(): void {
@@ -503,7 +528,7 @@ export class HtmlView {
                         break;
                     }
                 }
-                this.messages.push([message, color]);
+                this.message_view.push(message, color);
                 continue;
             }
 
