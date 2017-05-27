@@ -19,18 +19,20 @@ class MessageView {
     }
 
     public drawMessage(): void {
+        const interval: number = 2500;  // msec.
         if (this.message_timer) {
             // If setInterval is ongoing, use that one. No additional action.
         }
         else {
             // Show the first message soon.
             this.showMessageFromQueue();
-            // Keep the above message at least 2 sec.
+            // After 2.5 sec, continuously call showMessageFromQueue every 2.5 sec.
             this.message_timer = setInterval(() => {
                 if (!this.showMessageFromQueue()) {
-                    this.message_timer = null;
+                    // If the queue is empty, clear the timer after 2.5 sec.
+                    setTimeout(() => { this.message_timer = null; }, interval);
                 }
-            }, 2000);
+            }, interval);
         }
     }
 
