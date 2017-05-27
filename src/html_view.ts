@@ -26,7 +26,9 @@ export class HtmlView {
         // Add click listeners.
         // Matching.
         document.getElementById("matching_button").addEventListener(
-            "click", () => { this.onClickMatching(); });
+            "click", () => { this.onClickMatching(1); });
+        document.getElementById("matching_button_2players").addEventListener(
+            "click", () => { this.onClickMatching(2); });
         document.getElementById("game").style.visibility = "hidden";
 
         // Fields
@@ -92,12 +94,12 @@ export class HtmlView {
         this.client.sendRequest(Request.endTurn());
     }
 
-    private onClickMatching(): void {
+    private onClickMatching(mode: number): void {
         let name: string = (<HTMLInputElement>document.getElementById("matching_name")).value;
         if (name.length === 0) {
             return;
         }
-        this.client.startMatching(name);
+        this.client.startMatching(name, mode);
     }
 
     private onClickCard(player: number, card: number): void {

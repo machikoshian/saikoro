@@ -94,7 +94,7 @@ export class FirebaseUpdateListener extends UpdateListener {
     }
 
     public startCheckUpdate(client: Client): void {
-        let session_key = "session_" + client.session_id;
+        let session_key = `session_${client.session_id}`;
         this.ref = firebase.database().ref("session").child(session_key);
         this.ref.on("value", (snapshot) => {
             let value = snapshot.val();
@@ -160,7 +160,7 @@ export class WebClient extends Client {
         this.view.initView();
     }
 
-    public startMatching(name: string): void {
+    public startMatching(name: string, mode: number): void {
         console.log("matching...");
         if (name.length === 0) {
             return;
@@ -168,6 +168,7 @@ export class WebClient extends Client {
         let request = {
             command: "matching",
             name: name,
+            mode: mode,
             user_id: this.user_id,
         };
         this.request_handler.sendRequest(request, this.callbackMatching.bind(this));

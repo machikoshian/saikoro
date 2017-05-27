@@ -19,6 +19,7 @@ export abstract class Client {
 
     public session_id: number = 0;
     public matching_id: number = 0;
+    public mode: number = 0;
     public player_id: PlayerId = 0;
     // TODO: user_id should be unique.
     public user_id: string = String(Math.floor(Math.random() * 1000000));
@@ -38,7 +39,7 @@ export abstract class Client {
     }
 
     abstract initBoard(): void;
-    abstract startMatching(name: string): void;
+    abstract startMatching(name: string, mode: number): void;  // TODO: Use enum for mode.
 }
 
 // Move this class to a Saikoro specific file.

@@ -177,25 +177,32 @@ export class SessionHandler {
     }
 
     // TODO: This is a quite hacky way for testing w/o considering any race conditions.
-    public handleMatching(name: string, user_id: string): Promise<MatchedData> {
-        const num_players: number = 1;
-        const num_npc: number = 1;  // TODO: support more than 1.
+    public handleMatching(name: string, mode_str: string, user_id: string): Promise<MatchedData> {
+        let mode: number = Number(mode_str);
+        let num_players: number = 1;
+        let num_npc: number = 1;  // TODO: support more than 1.
+        if (mode === 2) {
+            num_players = 2;
+            num_npc = 0;
+        }
+
         let matched_data: MatchedData = new MatchedData();
+        let matching_key: string = `matching_${mode}`;
 
         // TODO: Some operations can be performed in parallel.
-        return this.mc.getWithPromise("matching").then((data) => {
+        return this.mc.getWithPromise(matching_key).then((data) => {
             let matching_id: number;
             if (data.value) {
                 matching_id = Number(data.value);
             } else {
                 matching_id = 10;
             }
-            return this.mc.setWithPromise("matching", matching_id + 1);
+            return this.mc.setWithPromise(matching_key, matching_id + 1);
         }).then((data) => {
             let matching_id: number = data.value - 1;
 
-            // TODO: This is obviously hacky way for two players. Fix it.
-            let session_id: number = Math.floor(matching_id / num_players);
+            // FIXIT: This is an obviously hacky way for two players. Fix it.
+            let session_id: number = mode * 100000 + Math.floor(matching_id / num_players);
             let session_key = `session_${session_id}`;
 
             matched_data.matching_id = String(matching_id);

@@ -64,7 +64,7 @@ export class FirebaseServer {
     public onMatching(data): Promise<{}> {
         let user_id: string = data.val().user_id;
 
-        return this.session_handler.handleMatching(data.val().name, user_id).then(
+        return this.session_handler.handleMatching(data.val().name, data.val().mode, user_id).then(
                 (matched: MatchedData) => {
             return Promise.all([
                 this.ref_session.child(`session_${matched.session_id}`).set(matched.session_string),

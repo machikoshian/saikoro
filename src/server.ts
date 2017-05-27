@@ -116,7 +116,7 @@ class HttpServer {
         }
 
         if (pathname === "/matching") {
-            this.session_handler.handleMatching(query.name, query.user_id).then(
+            this.session_handler.handleMatching(query.name, query.mode, query.user_id).then(
                     (matched: MatchedData) => {
                 response.end(JSON.stringify({ matching_id: matched.matching_id,
                                               session_id: matched.session_id }));
