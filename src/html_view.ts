@@ -361,40 +361,42 @@ export class HtmlView {
         }
     }
 
+    private effectPlayersMoney(pid: PlayerId, money: number): void {
+        let player: Player = this.session.getPlayer(pid);
+        let money_element = document.getElementById(`player_${pid}_money`);
+
+        if (this.money_animation_timers[pid]) {
+            clearInterval(this.money_animation_timers[pid]);
+        }
+        this.money_animation_timers[pid] = setInterval(() => {
+            let current_money = Number(money_element.innerText);
+            if (current_money === money) {
+                clearInterval(this.money_animation_timers[pid]);
+                this.money_animation_timers[pid] = null;
+                return;
+            }
+            else if (current_money > money) {
+                current_money -= Math.min(10, current_money - money);
+            }
+            else if (current_money < money) {
+                current_money += Math.min(10, money - current_money);
+            }
+            money_element.innerHTML = String(current_money);
+        }, 5);
+    }
+
     private drawPlayers(): void {
-        let session: Session = this.session;
-        let players: Player[] = session.getPlayers();
+        let players: Player[] = this.session.getPlayers();
         for (let i: number = 0; i < players.length; ++i) {
             let player: Player = players[i];
             document.getElementById(`player_${i}`).style.visibility = "visible";
             document.getElementById(`player_${i}_name`).innerText = player.name;
-
-            let money_element = document.getElementById(`player_${i}_money`);
-            let money: number = player.getMoney();
-
-            if (this.money_animation_timers[i]) {
-                clearInterval(this.money_animation_timers[i]);
-            }
-            this.money_animation_timers[i] = setInterval(() => {
-                let current_money = Number(money_element.innerText);
-                if (current_money === money) {
-                    clearInterval(this.money_animation_timers[i]);
-                    this.money_animation_timers[i] = null;
-                    return;
-                }
-                else if (current_money > money) {
-                    current_money -= Math.min(10, current_money - money);
-                }
-                else if (current_money < money) {
-                    current_money += Math.min(10, money - current_money);
-                }
-                money_element.innerHTML = String(current_money);
-            }, 5);
-
             document.getElementById(`player_${i}_salary`).innerHTML = `${player.salary}`;
-            let cards: PlayerCards = session.getPlayerCards(i);
+            let cards: PlayerCards = this.session.getPlayerCards(i);
             document.getElementById(`player_${i}_talon`).innerHTML =
                 `${cards.getHandSize()}　／　📇 ${cards.getTalonSize()}`;
+
+            this.effectPlayersMoney(i, player.getMoney());
         }
         for (let i: number = players.length; i < 4; ++i) {
             document.getElementById(`player_${i}`).style.visibility = "hidden";
