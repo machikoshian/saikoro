@@ -4,55 +4,8 @@ import { CardId, FacilityType, Facility, CharacterType, Character } from "./faci
 import { Dice, DiceResult } from "./dice";
 import { Client, Request } from "./client";
 
-class MessageView {
-    private element: HTMLElement;
-    private message_timer = null;
-    private messages: [string, string][] = [];
-
-    constructor (element: HTMLElement) {
-        this.element = element;
-        this.showMessage("");
-    }
-
-    public push(message: string, color: string = ""): void {
-        this.messages.push([message, color]);
-    }
-
-    public drawMessage(): void {
-        const interval: number = 2500;  // msec.
-        if (this.message_timer) {
-            // If setInterval is ongoing, use that one. No additional action.
-        }
-        else {
-            // Show the first message soon.
-            this.showMessageFromQueue();
-            // After 2.5 sec, continuously call showMessageFromQueue every 2.5 sec.
-            this.message_timer = setInterval(() => {
-                if (!this.showMessageFromQueue()) {
-                    // If the queue is empty, clear the timer after 2.5 sec.
-                    setTimeout(() => { this.message_timer = null; }, interval);
-                }
-            }, interval);
-        }
-    }
-
-    private showMessageFromQueue(): boolean {
-        if (this.messages.length === 0) {
-            return false;
-        }
-
-        let [message, color]: [string, string] = this.messages.shift();
-        this.showMessage(message, color);
-        return true;
-    }
-
-    private showMessage(message: string, color: string = "#EFF0D1"): void {
-        this.element.innerText = message;
-        this.element.style.backgroundColor = color;
-    }
-}
-
 export class HtmlView {
+    private event_drawer_timer = null;
     private money_animation_timers = [null, null, null, null];
     private client: Client;
     private session: Session = null;
@@ -60,7 +13,7 @@ export class HtmlView {
     private clicked_card_element: HTMLElement = null;
     private player_cards_list: CardId[][] = [];
     private last_step: number = -1;
-    private message_view: MessageView;
+    private drawn_step: number = -1;
 
     constructor(client: Client) {
         this.client = client;
@@ -68,7 +21,7 @@ export class HtmlView {
 
     public initView(column: number = 12, row: number = 5):void {
         // Message
-        this.message_view = new MessageView(document.getElementById("message"));
+        this.drawMessage("");
 
         // Add click listeners.
         // Matching.
@@ -256,7 +209,8 @@ export class HtmlView {
         let d1: number = dice.dice1;
         let d2: number = dice.dice2;
         let delta: string = this.getDiceDeltaMessage(dice.delta);
-        return `${faces[d1]} ${faces[d2]} ${delta}: ${dice.result()} でした。`;
+        let name: string = this.session.getCurrentPlayer().name;
+        return `${name} のサイコロは ${faces[d1]} ${faces[d2]} ${delta}: ${dice.result()} でした。`;
     }
 
     private resetCards(): void {
@@ -292,9 +246,6 @@ export class HtmlView {
 
         // Update players.
         this.drawPlayers();
-
-        // Update messages.
-        this.drawMessages();
 
         // Update buttons.
         let current_player: Player = session.getCurrentPlayer();
@@ -450,7 +401,13 @@ export class HtmlView {
         }
     }
 
-    public drawMessages(): void {
+    public drawMessage(message: string, color: string = "#EFF0D1"): void {
+        let element = document.getElementById("message");
+        element.innerText = message;
+        element.style.backgroundColor = color;
+    }
+
+    public drawStatusMessage(): boolean {  // TODO: rename it.
         let session = this.session;
 
         let players: Player[] = session.getPlayers();
@@ -464,25 +421,27 @@ export class HtmlView {
         let color: string = this.getPlayerColor(player_id);
         if (phase === Phase.StartGame) {
             message = "🎲 マッチング中です 🎲";
-            this.message_view.push(message, color);
+            this.drawMessage(message, color);
+            return true;
         }
-        else if (phase === Phase.CharacterCard) {
+        if (phase === Phase.CharacterCard) {
             let delta: string = this.getDiceDeltaMessage(session.getDiceDelta());
             message = `🎲 ${name} のキャラカードまたはサイコロ${delta}です 🎲`;
-            this.message_view.push(message, color);
+            this.drawMessage(message, color);
+            return true;
         }
-        else if (phase === Phase.DiceRoll) {
+        if (phase === Phase.DiceRoll) {
             let delta: string = this.getDiceDeltaMessage(session.getDiceDelta());
             message = `🎲 ${name} のサイコロ${delta}です 🎲`;
-            this.message_view.push(message, color);
+            this.drawMessage(message, color);
+            return true;
         }
-        else if (phase === Phase.BuildFacility) {
-            // message = this.getDiceResultMessage(session.getDiceResult());
-            // this.messages.push([message, color]);
-            message = `  🎲 ${name} の建設です 🎲`;
-            this.message_view.push(message, color);
+        if (phase === Phase.BuildFacility) {
+            message = `🎲 ${name} の建設です 🎲`;
+            this.drawMessage(message, color);
+            return true;
         }
-        else if (phase === Phase.EndGame) {
+        if (phase === Phase.EndGame) {
             let events: Event[] = this.session.getEvents();
             let quited: boolean = false;
             for (let event of events) {
@@ -491,7 +450,7 @@ export class HtmlView {
                     for (let i = 0; i < event.moneys.length; ++i) {
                         if (event.moneys[i] !== 0) {
                             message = `🎲 ${players[i].name} が切断しました 🎲`;
-                            this.message_view.push(message, this.getPlayerColor(i));
+                            this.drawMessage(message, this.getPlayerColor(i));
                         }
                     }
                     break;
@@ -500,28 +459,57 @@ export class HtmlView {
             if (!quited) {
                 let winner: string = session.getPlayer(session.getWinner()).name;
                 message = `🎲 ${name} の勝ちです 🎲`;
-                this.message_view.push(message, this.getPlayerColor(session.getWinner()));
+                this.drawMessage(message, this.getPlayerColor(session.getWinner()));
             }
+            return true;
         }
-
-        this.message_view.drawMessage();
-
+        return false;
     }
 
-    private drawEvents(): void {
+    public drawEvents(): void {
+        const interval: number = 2000;  // msec.
+        if (this.event_drawer_timer) {
+            // If setInterval is ongoing, use that one. No additional action.
+        }
+        else {
+            // Show the first message soon.
+            this.drawEvent();
+            // After 2 sec, continuously call showMessageFromQueue every 2 sec.
+            this.event_drawer_timer = setInterval(() => {
+                if (!this.drawEvent()) {
+                    // If the queue is empty, clear the timer.
+                   clearInterval(this.event_drawer_timer);
+                   this.event_drawer_timer = null;
+                }
+            }, interval);
+        }
+    }
+
+    private drawEvent(): boolean {
         let events: Event[] = this.session.getEvents();
-        if (events.length === 0) {
-            return;
+        let step: number = -1;
+        let i: number = 0;
+        for (; i < events.length; ++i) {
+            // Skip passed events.
+            if (events[i].step > this.drawn_step) {
+                step = events[i].step;
+                break;
+            }
+        }
+        if (step === -1) {
+            // All event has been drawn.
+            this.drawStatusMessage();
+            return false;
         }
 
-        for (let event of events) {
-            // Skip passed events.
-            if (event.step < this.last_step) {
-                continue;
+        for (; i < events.length; ++i) {
+            let event: Event = events[i];
+            if (event.step !== step) {
+                break;
             }
 
             // Dice
-            if (event.type == EventType.Dice) {
+            if (event.type === EventType.Dice) {
                 let message: string = this.getDiceResultMessage(event.dice);
                 let color: string = this.getPlayerColor(-1);
                 for (let i = 0; i < event.moneys.length; ++i) {
@@ -530,7 +518,7 @@ export class HtmlView {
                         break;
                     }
                 }
-                this.message_view.push(message, color);
+                this.drawMessage(message, color);
                 continue;
             }
 
@@ -560,6 +548,8 @@ export class HtmlView {
                 }
             }
         }
+        this.drawn_step = step;
+        return true;
     }
 
     private drawMoneyMotion(money: number, player_id: PlayerId, x: number, y: number): void {
