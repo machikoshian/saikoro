@@ -1,5 +1,6 @@
 import { UpdateListener, RequestHandler, Client } from "./client";
-import { HttpUpdateListener, HttpRequestHandler, WebClient } from "./saikoro";
+import { HttpUpdateListener, HttpRequestHandler } from "./http_client";
+import { WebClient } from "./saikoro";
 
 let update_listener: UpdateListener = new HttpUpdateListener();
 let request_handler: RequestHandler = new HttpRequestHandler();

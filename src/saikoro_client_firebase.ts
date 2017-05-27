@@ -1,5 +1,6 @@
 import { UpdateListener, RequestHandler, Client } from "./client";
-import { FirebaseUpdateListener, FirebaseRequestHandler, WebClient } from "./saikoro";
+import { FirebaseUpdateListener, FirebaseRequestHandler } from "./firebase_client";
+import { WebClient } from "./saikoro";
 
 let update_listener: UpdateListener = new FirebaseUpdateListener();
 let request_handler: RequestHandler = new FirebaseRequestHandler();
