@@ -178,7 +178,8 @@ export class SessionHandler {
 
     // TODO: This is a quite hacky way for testing w/o considering any race conditions.
     public handleMatching(name: string, user_id: string): Promise<MatchedData> {
-        const num_players: number = 2;
+        const num_players: number = 1;
+        const num_npc: number = 1;  // TODO: support more than 1.
         let matched_data: MatchedData = new MatchedData();
 
         // TODO: Some operations can be performed in parallel.
@@ -210,10 +211,12 @@ export class SessionHandler {
                 session = new Session();
             }
 
-            this.addNewPlayer(session, user_id, name, num_players, false);
+            this.addNewPlayer(session, user_id, name, num_players + num_npc, false);
 
             // Add NPC.
-            this.addNewPlayer(session, "0", "NPC", num_players, true);
+            if (num_npc === 1) {  // TODO: support more than 1.
+                this.addNewPlayer(session, "0", "NPC", num_players + num_npc, true);
+            }
 
             let session_string: string = JSON.stringify(session.toJSON());
             matched_data.session_string = session_string;
