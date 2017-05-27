@@ -244,9 +244,6 @@ export class HtmlView {
         // Update board.
         this.drawBoard();
 
-        // Update players.
-        this.drawPlayers();
-
         // Update buttons.
         let current_player: Player = session.getCurrentPlayer();
         if (current_player.user_id === user_id) {
@@ -361,15 +358,22 @@ export class HtmlView {
         }
     }
 
-    private effectPlayersMoney(pid: PlayerId, money: number): void {
-        let player: Player = this.session.getPlayer(pid);
+    public getDisplayedMoney(pid: PlayerId): number {
         let money_element = document.getElementById(`player_${pid}_money`);
+        return Number(money_element.innerText);        
+    }
 
+    public setDisplayedMoney(pid: PlayerId, money: number): void {
+        let money_element = document.getElementById(`player_${pid}_money`);
+        money_element.innerText = String(money);
+    }
+
+    private effectPlayersMoney(pid: PlayerId, money: number): void {
         if (this.money_animation_timers[pid]) {
             clearInterval(this.money_animation_timers[pid]);
         }
         this.money_animation_timers[pid] = setInterval(() => {
-            let current_money = Number(money_element.innerText);
+            let current_money = this.getDisplayedMoney(pid);
             if (current_money === money) {
                 clearInterval(this.money_animation_timers[pid]);
                 this.money_animation_timers[pid] = null;
@@ -381,7 +385,7 @@ export class HtmlView {
             else if (current_money < money) {
                 current_money += Math.min(10, money - current_money);
             }
-            money_element.innerHTML = String(current_money);
+            this.setDisplayedMoney(pid, current_money);
         }, 5);
     }
 
@@ -498,9 +502,11 @@ export class HtmlView {
                 break;
             }
         }
+
         if (step === -1) {
-            // All event has been drawn.
+            // All events have been drawn. Then, draw the current status.
             this.drawStatusMessage();
+            this.drawPlayers();
             return false;
         }
 
@@ -562,6 +568,7 @@ export class HtmlView {
         else if (money < 0) {
             this.effectMoneyMotion(`player_${player_id}_money`, `field_${x}_${y}`, money);
         }
+        this.effectPlayersMoney(player_id, this.getDisplayedMoney(player_id) + money);
     }
 
     private effectCharacter(player_id: PlayerId, card_id: CardId): void {
