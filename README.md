@@ -20,9 +20,10 @@
 
 # How to build
 
-* ./build.sh (for all)
-* ./build_http.sh (for local development)
+* ./build.sh (for all except for standalone)
+* ./build_http.sh (for local http server)
 * ./build_firebase.sh (for firebase only)
+* ./build_standalone.sh (for local file)
 
 # How to run in a local machine.
 
