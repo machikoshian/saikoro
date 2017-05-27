@@ -203,13 +203,13 @@ export class HtmlView {
         return `(${unit}${delta})`;
     }
 
-    private getDiceResultMessage(dice: DiceResult): string {
+    private getDiceResultMessage(dice: DiceResult, pid: PlayerId): string {
         let faces: string[] = ["", "⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
 
         let d1: number = dice.dice1;
         let d2: number = dice.dice2;
         let delta: string = this.getDiceDeltaMessage(dice.delta);
-        let name: string = this.session.getCurrentPlayer().name;
+        let name: string = this.session.getPlayer(pid).name;
         return `${name} のサイコロは ${faces[d1]} ${faces[d2]} ${delta}: ${dice.result()} でした。`;
     }
 
@@ -510,11 +510,12 @@ export class HtmlView {
 
             // Dice
             if (event.type === EventType.Dice) {
-                let message: string = this.getDiceResultMessage(event.dice);
+                let message: string = "";
                 let color: string = this.getPlayerColor(-1);
-                for (let i = 0; i < event.moneys.length; ++i) {
-                    if (event.moneys[i] !== 0) {
-                        color = this.getPlayerColor(i);
+                for (let pid = 0; pid < event.moneys.length; ++pid) {
+                    if (event.moneys[pid] !== 0) {
+                        message = this.getDiceResultMessage(event.dice, pid);
+                        color = this.getPlayerColor(pid);
                         break;
                     }
                 }
