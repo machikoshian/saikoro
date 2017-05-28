@@ -294,58 +294,68 @@ export class HtmlView {
             document.getElementById(`cards_${i}`).style.display = "none";
         }
 
-        const area_name: string[] =
-            ["", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩", "⑪", "⑫"];
         for (let i: number = 0; i < players.length; ++i) {
             let card_ids: CardId[] = session.getSortedHand(i);
-            for (let j: number = 0; j < Math.min(10, card_ids.length); ++j) {
-                let card_id: CardId = card_ids[j];
-                if (session.isCharacter(card_id)) {
-                    let character: Character = session.getCharacter(card_id);
-                    document.getElementById(`card_${i}_${j}`).style.display = "table-cell";
-                    document.getElementById(`card_${i}_${j}_name`).innerText = character.getName();
-                    document.getElementById(`card_${i}_${j}_cost`).innerText = "";
-                    document.getElementById(`card_${i}_${j}_description`).innerText = character.getDescription();
-                    document.getElementById(`card_${i}_${j}`).style.backgroundColor = "#FFF9C4";
-                }
-                else {
-                    let facility: Facility = session.getFacility(card_id);
-                    document.getElementById(`card_${i}_${j}`).style.display = "table-cell";
-                    document.getElementById(`card_${i}_${j}_name`).innerText =
-                        `${area_name[facility.getArea()]} ${facility.getName()}`;
-                    document.getElementById(`card_${i}_${j}_cost`).innerText = String(facility.getCost());
-                    document.getElementById(`card_${i}_${j}_description`).innerText = facility.getDescription();
-                    document.getElementById(`card_${i}_${j}`).style.backgroundColor =
-                        this.getFacilityColor(facility);
-                }
-            }
-            for (let j: number = Math.min(10, card_ids.length); j < 10; ++j) {
-                document.getElementById(`card_${i}_${j}`).style.display = "none";
+            for (let j: number = 0; j < 10; ++j) {
+                this.drawCard(`card_${i}_${j}`, (j < card_ids.length) ? card_ids[j] : -1);
             }
         }
 
         // Update landmarks.
-        for (let j: number = 0; j < Math.min(5, landmark_ids.length); ++j) {
-            let facility: Facility = session.getFacility(landmark_ids[j]);
-            document.getElementById(`landmark_${j}`).style.display = "table-cell";
-            document.getElementById(`landmark_${j}_name`).innerText = facility.getName();
-            document.getElementById(`landmark_${j}_cost`).innerText = String(facility.getCost());
-            document.getElementById(`landmark_${j}_description`).innerText = facility.getDescription();
-            let owner_id: PlayerId = session.getOwnerId(landmark_ids[j]);
-            if (owner_id === -1) {
-                document.getElementById(`landmark_${j}`).style.backgroundColor =
-                    this.getFacilityColor(facility);
-            } else {
-                document.getElementById(`landmark_${j}`).style.backgroundColor =
-                    this.getPlayerColor(owner_id);
-            }
-        }
-        for (let j: number = Math.min(5, landmark_ids.length); j < 5; ++j) {
-            document.getElementById(`landmark_${j}`).style.display = "none";
+        for (let j: number = 0; j < 5; ++j) {
+            this.drawCard(`landmark_${j}`, (j < landmark_ids.length) ? landmark_ids[j] : -1);
         }
 
         this.resetCards();  // Nice to check if built or not?
         this.last_step = session.getStep();
+    }
+
+    public drawCard(element_id: string, card_id: CardId): void {
+        // No card
+        if (card_id === -1) {
+            document.getElementById(element_id).style.display = "none";
+            return;
+        }
+
+        // Character
+        if (this.session.isCharacter(card_id)) {
+            let character: Character = this.session.getCharacter(card_id);
+            document.getElementById(element_id).style.display = "table-cell";
+            document.getElementById(element_id + "_name").innerText = character.getName();
+            document.getElementById(element_id + "_cost").innerText = "";
+            document.getElementById(element_id + "_description").innerText = character.getDescription();
+            document.getElementById(element_id).style.backgroundColor = "#FFF9C4";
+            return;
+        }
+
+        // Landmark
+        if (this.session.isLandmark(card_id)) {
+            let landmark: Facility = this.session.getFacility(card_id);
+            document.getElementById(element_id).style.display = "table-cell";
+            document.getElementById(element_id + "_name").innerText = landmark.getName();
+            document.getElementById(element_id + "_cost").innerText = String(landmark.getCost());
+            document.getElementById(element_id + "_description").innerText = landmark.getDescription();
+            let owner_id: PlayerId = this.session.getOwnerId(card_id);
+            if (owner_id === -1) {
+                document.getElementById(element_id).style.backgroundColor =
+                    this.getFacilityColor(landmark);
+            } else {
+                document.getElementById(element_id).style.backgroundColor =
+                    this.getPlayerColor(owner_id);
+            }
+            return;
+        }
+
+        // Facility
+        const area_name: string[] =
+            ["", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩", "⑪", "⑫"];
+        let facility: Facility = this.session.getFacility(card_id);
+        document.getElementById(element_id).style.display = "table-cell";
+        document.getElementById(element_id + "_name").innerText =
+            `${area_name[facility.getArea()]} ${facility.getName()}`;
+        document.getElementById(element_id + "_cost").innerText = String(facility.getCost());
+        document.getElementById(element_id + "_description").innerText = facility.getDescription();
+        document.getElementById(element_id).style.backgroundColor = this.getFacilityColor(facility);
     }
 
     public drawBoard(): void {

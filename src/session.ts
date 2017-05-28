@@ -1265,6 +1265,9 @@ export class Session {
     public getSortedHand(player_id: PlayerId): CardId[] {
         return this.card_manager.sortFacilitiesForHand(this.getPlayerCards(player_id).getHand());
     }
+    public isLandmark(card_id: CardId): boolean {
+        return this.card_manager.isLandmark(card_id);
+    }
     public getLandmarks(): CardId[] {
         return this.card_manager.getLandmarks();
     }
