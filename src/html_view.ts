@@ -138,11 +138,13 @@ export class HtmlView {
         }
 
         if (phase === Phase.BuildFacility) {
-            let x: number = this.session.getFacility(this.clicked_card_id).getArea() - 1;
-            for (let y: number = 0; y < 5; y++) {
-                let field: HTMLElement = document.getElementById(`field_${x}_${y}`);
-                // TODO: Keep the owner's color too.
-                field.style.backgroundColor = "#FFF176";
+            for (let area of this.session.getFacility(this.clicked_card_id).getArea()) {
+                let x: number = area - 1;
+                for (let y: number = 0; y < 5; y++) {
+                    let field: HTMLElement = document.getElementById(`field_${x}_${y}`);
+                    // TODO: Keep the owner's color too.
+                    field.style.backgroundColor = "#FFF176";
+                }
             }
         }
     }
@@ -372,9 +374,9 @@ export class HtmlView {
         const area_name: string[] =
             ["", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩", "⑪", "⑫"];
         let facility: Facility = this.session.getFacility(card_id);
+        let area: string = facility.getArea().map((i) => { return area_name[i]; }).join(",");
         document.getElementById(element_id).style.display = "table-cell";
-        document.getElementById(element_id + "_name").innerText =
-            `${area_name[facility.getArea()]} ${facility.getName()}`;
+        document.getElementById(element_id + "_name").innerText = `${area} ${facility.getName()}`;
         document.getElementById(element_id + "_cost").innerText = String(facility.getCost());
         document.getElementById(element_id + "_description").innerText = facility.getDescription();
         document.getElementById(element_id).style.backgroundColor = this.getFacilityColor(facility);

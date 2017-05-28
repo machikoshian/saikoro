@@ -6,7 +6,6 @@
 * Card owner の変更への対応
 * NO_PLAYER (= -1) の実装
 * console.log 等の、開発モードとの挙動の切り替え
-* クリックで施設詳細を表示
 * ユニットテストの追加
 * process handler chain / state hook の作成
 * Dice roll への狙い目の UI 対応
@@ -15,6 +14,8 @@
 * class と CSS を明示的に分類。
 * 赤の評価順をプレーヤーから左回りに変更。
 * Firebase.onDisconnect への対応
+* 2マス施設への対応
+* 施設データを JSON で管理
 
 * websocket のサポート
 

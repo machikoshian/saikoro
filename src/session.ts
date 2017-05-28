@@ -349,7 +349,7 @@ export class CardManager {
             console.warn("card_id < 0.");
             return false;
         }
-        return (this.facilities[card_id].getArea() === area);
+        return (this.facilities[card_id].getArea().indexOf(area) !== -1);
     }
 
     public moveFieldToDiscard(card_id: CardId): boolean {
@@ -391,6 +391,18 @@ export class CardManager {
         return char1.data_id - char2.data_id;
     }
 
+    private compareAreas(area1: number[], area2: number[]): number {
+        let len1: number = area1.length;
+        let len2: number = area2.length;
+        for (let i: number = 0; i < Math.min(len1, len2); ++i) {
+            if (area1[i] === area2[i]) {
+                continue;
+            }
+            return area1[i] - area2[i];
+        }
+        return len1 - len2;
+    }
+
     public sortFacilitiesForHand(facilities: CardId[]): CardId[] {
         return facilities.sort((id1, id2) => {
             // Check cases of character cards.
@@ -406,8 +418,9 @@ export class CardManager {
             // Both IDs represents facilities.
             let f1: Facility = this.facilities[id1];
             let f2: Facility = this.facilities[id2];
-            if (f1.area !== f2.area) {
-                return f1.area - f2.area;
+            let comp_area = this.compareAreas(f1.area, f2.area);
+            if (comp_area !== 0) {
+                return comp_area;
             }
             else if (f1.type !== f2.type) {
                 return f1.type - f2.type;
@@ -923,14 +936,14 @@ export class Session {
         let positions: [number, number][] = [];
         let facility: Facility = this.card_manager.getFacility(card_id);
         // TODO: support multiple x. (e.g. 7-9)
-        let area: number = facility.getArea();
+        let area: number[] = facility.getArea();
         let columns: number[];
-        if (area === 0) {
-            // area === 0 means anywhere.
+        if (area.length === 0) {
+            // area.length === 0 means anywhere.
             columns = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
         }
         else {
-            columns = [area - 1];  // area is 1-origin.
+            columns = area.map((x) => { return x - 1; });  // area is 1-origin.
         }
         for (let x of columns) {
             for (let y: number = 0; y < this.board.row; y++) {
