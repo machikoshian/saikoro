@@ -826,7 +826,6 @@ export class Session {
     }
 
     public facilityAction(): boolean {
-        // this.events = [];  // TODO: Consider the location to invalidate events.
         let number: number = this.dice_result.result();
         if (number < 1 || 12 < number) {
             this.done(Phase.FacilityAction);
@@ -1031,7 +1030,6 @@ export class Session {
         this.effect_manager.addCard(char_data_id, this.round, this.turn);
 
         // Apply the effect of the card.
-        // this.events = [];  // TODO: Consider the location to invalidate events.
         let event: Event = new Event();
         event.type = EventType.Character;
         event.card_id = card_id;
@@ -1063,7 +1061,6 @@ export class Session {
 
         // Is pass?  (valid action, but not build a facility).
         if (x === -1 && y === -1 && card_id === -1) {
-            // this.events = [];  // TODO: Consider the location to invalidate events.
             this.done(Phase.BuildFacility);
             return true;
         }
@@ -1123,7 +1120,6 @@ export class Session {
             return false;
         }
 
-        // this.events = [];  // TODO: Consider the location to invalidate events.
         let event: Event = new Event();
         this.events.push(event);
         event.step = this.step;
@@ -1179,7 +1175,6 @@ export class Session {
         player.setMoney(balance);
         this.card_manager.buildLandmark(player_id, card_id);
 
-        // this.events = [];  // TODO: Consider the location to invalidate events.
         let event: Event = new Event();
         this.events.push(event);
         event.step = this.step;
@@ -1219,7 +1214,6 @@ export class Session {
     }
 
     public quit(player_id: PlayerId): boolean {
-        // this.events = [];  // TODO: Consider the location to invalidate events.
         let event: Event = new Event();
         this.events.push(event);
         event.step = this.step;
