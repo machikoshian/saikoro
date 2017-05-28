@@ -45,10 +45,10 @@
     #money_motion {
       width: 40px; height: 40px;
     }
-    #char_motion {
+    #char_motion_node {
       width: 90px; height: 120px;
     }
-    #char_motion_card {
+    #char_motion {
       background-color: #FFF9C4;
     }
     td.card {
@@ -182,9 +182,14 @@
   <div id="money_motion">
     💸
   </div>
-  <div id="char_motion">
+  <div id="char_motion_node">
     <table><tr>
-      <td id="char_motion_card" class="card"><table><tr><td id="char_motion_name">名前</td><tr><td id="char_motion_description" class="description">説明</td></tr></table></td>
+      <td id="char_motion" class="card"><table><tr><td id="char_motion_name">名前</td></tr><tr><td id="char_motion_cost"></td></tr><tr><td id="char_motion_description" class="description">説明</td></tr></table></td>
+    </tr></table>
+  </div>
+  <div id="field_card_node">
+    <table><tr>
+      <td id="field_card" class="card"><table><tr><td id="field_card_name">① 🏬</td></tr><tr><td id="field_card_cost">250</td></tr><tr><td id="field_card_description" class="description">説明</td></tr></table></td>
     </tr></table>
   </div>
   </body>

@@ -70,13 +70,15 @@ export class HtmlView {
                 "click", () => { this.onClickLandmark(l); });
         }
 
-        document.getElementById("money_motion").style.visibility = "hidden";
-        document.getElementById("char_motion").style.visibility = "hidden";
+        document.getElementById("money_motion").style.display = "none";
+        document.getElementById("char_motion_node").style.display = "none";
+        document.getElementById("field_card_node").style.display = "none";
     }
 
     private onClickField(x, y): void {
         console.log(`clicked: field_${x}_${y}`);
         if (this.clicked_card_id < 0) {
+            this.drawFieldInfo(x, y);
             return;
         }
         this.client.sendRequest(Request.buildFacility(x, y, this.clicked_card_id));
@@ -308,6 +310,26 @@ export class HtmlView {
 
         this.resetCards();  // Nice to check if built or not?
         this.last_step = session.getStep();
+    }
+
+    public drawFieldInfo(x, y): void {
+        let card_id: CardId = this.session.getCardIdOnBoard(x, y);
+        let element: HTMLElement = document.getElementById("field_card_node");
+
+        if (card_id === -1) {
+            element.style.display = "none";
+            return;
+        }
+
+        this.drawCard("field_card", card_id);
+        let position: string = (x < 6) ? "field_10_1" : "field_0_1";
+        let pos_rect: ClientRect = document.getElementById(position).getBoundingClientRect();
+
+        element.style.display = "";
+        element.style.zIndex = "2";
+        element.style.position = "absolute";
+        element.style.top = pos_rect.top + "px";
+        element.style.left = pos_rect.left + "px";
     }
 
     public drawCard(element_id: string, card_id: CardId): void {
@@ -584,13 +606,12 @@ export class HtmlView {
     }
 
     private effectCharacter(player_id: PlayerId, card_id: CardId): void {
-        let character: Character = this.session.getCharacter(card_id);
-        document.getElementById("char_motion_name").innerText = character.name;
-        document.getElementById("char_motion_description").innerText = character.getDescription();
+        this.drawCard("char_motion", card_id);
 
         // Animation.
-        let new_node: Node = document.getElementById("char_motion").cloneNode(true);
+        let new_node: Node = document.getElementById("char_motion_node").cloneNode(true);
         let char_motion: HTMLElement = <HTMLElement>document.body.appendChild(new_node);
+        char_motion.style.display = "";
         this.effectElementMotion(char_motion, `player_${player_id}_money`, "field_5_2");
     }
 
@@ -598,6 +619,7 @@ export class HtmlView {
         // Animation.
         let new_node: Node = document.getElementById("money_motion").cloneNode(true);
         let money_motion: HTMLElement = <HTMLElement>document.body.appendChild(new_node);
+        money_motion.style.display = "";
         money_motion.innerHTML += String(money);
         this.effectElementMotion(money_motion, elementFrom, elementTo);
     }
