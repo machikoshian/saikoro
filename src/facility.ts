@@ -52,7 +52,7 @@ let facility_data: FacilityData[] = [
     new FacilityData(7,  1, [8],    "🐔", 250, FacilityType.Red,    {"value": 250}),
     new FacilityData(8,  1, [8,9],  "🌻", 200, FacilityType.Blue,   {"value": 400}),
     new FacilityData(9,  1, [10],   "🍣", 100, FacilityType.Red,    {"value": 400}),
-    new FacilityData(10, 2, [10],   "🗻", 300, FacilityType.Blue,   {"value": 500}),
+    new FacilityData(10, 1, [10],   "🗻", 300, FacilityType.Blue,   {"value": 500}),
     new FacilityData(11, 1, [12],   "🍍", 150, FacilityType.Blue,   {"value": 650}),
 
     new FacilityData(12, 1, [1],  "🍣", 200, FacilityType.Red,    {"value": 600}),
@@ -68,7 +68,7 @@ let facility_data: FacilityData[] = [
     new FacilityData(22, 1, [11], "👓", 100, FacilityType.Green,  {"value": 1000}),
     new FacilityData(23, 1, [12], "🔨", 300, FacilityType.Purple, {"value": 2000}),
 
-    new FacilityData(24, 1, [], "🏯", 1500, FacilityType.Gray, {}),
+    new FacilityData(24, 2, [], "🏯", 1500, FacilityType.Gray, {}),
     new FacilityData(25, 1, [], "🏰", 2000, FacilityType.Gray, {}),
 ];
 

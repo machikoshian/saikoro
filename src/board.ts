@@ -70,6 +70,9 @@ export class Player {
     }
 }
 
+export const NO_FACILITY: number = -1;
+export const MULTIPLE: number = -2;
+
 export class Board {
     private field: CardId[][];
     readonly row: number;
@@ -105,12 +108,22 @@ export class Board {
         return new Board(json.field, json.row, json.column);
     }
 
-    setCardId(x: number, y: number, card_id: CardId): void {
+    setCardId(x: number, y: number, card_id: CardId, size: number = 1): void {
         this.field[x][y] = card_id;
+        for (let i: number = 1; i < size; ++i) {
+            this.field[x+i][y] = MULTIPLE;
+        }
     }
 
     getCardId(x: number, y: number): CardId {
-        return this.field[x][y];
+        let card_id: CardId = NO_FACILITY;
+        for (let i: number = x; i >= 0; --i) {
+            card_id = this.field[i][y];
+            if (card_id !== MULTIPLE) {
+                break;
+            }
+        }
+        return card_id;
     }
 
     getPosition(card_id: CardId): [number, number] {

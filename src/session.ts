@@ -940,7 +940,7 @@ export class Session {
         let columns: number[];
         if (area.length === 0) {
             // area.length === 0 means anywhere.
-            columns = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+            columns = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].splice(0, 13 - facility.size);
         }
         else {
             columns = area.map((x) => { return x - 1; });  // area is 1-origin.
@@ -1007,7 +1007,7 @@ export class Session {
         }
 
         let [x, y] = positions[0];
-        this.board.setCardId(x, y, landmark_id);
+        this.board.setCardId(x, y, landmark_id, landmark.size);
         return true;
     }
 
