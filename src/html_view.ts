@@ -4,6 +4,9 @@ import { CardId, FacilityType, Facility, CharacterType, Character } from "./faci
 import { Dice, DiceResult } from "./dice";
 import { Client, Request } from "./client";
 
+const COLOR_FIELD: string = "#EFF0D1";
+const COLOR_LANDMARK: string = "#B0BEC5";
+
 export class HtmlView {
     private event_drawer_timer = null;
     private money_animation_timers = [null, null, null, null];
@@ -395,15 +398,42 @@ export class HtmlView {
     }
 
     public drawBoard(): void {
-        let session: Session = this.session;
-        let board: Board = session.getBoard();
+        const board: Board = this.session.getBoard();
         for (let y: number = 0; y < board.row; ++y) {
             for (let x: number = 0; x < board.column; ++x) {
-                let facility: Facility = session.getFacilityOnBoard(x, y);
-                let owner_id: PlayerId = session.getOwnerIdOnBoard(x, y);
-                this.drawField(x, y, facility, owner_id);
+                this.drawField(x, y);
             }
         }
+    }
+
+    private drawField(x: number, y: number): void {
+        const board: Board = this.session.getBoard();
+        const facility_id: CardId = board.getRawCardId(x, y);
+        let field: HTMLElement = document.getElementById(`field_${x}_${y}`);
+
+        if (facility_id === -1) {
+            field.innerText = "";
+            field.style.backgroundColor = COLOR_FIELD;
+            field.style.borderColor = COLOR_FIELD;
+            return;
+        }
+
+        if (facility_id === -2) {
+            field.style.display = "none";
+            return;
+        }
+
+        let facility: Facility = this.session.getFacility(facility_id);
+        let owner_id: PlayerId = this.session.getOwnerId(facility_id);
+        // (ownder_id === -1) means a prebuild landmark.
+        let owner_color: string =
+            (owner_id === -1) ? COLOR_LANDMARK : this.getPlayerColor(owner_id);
+
+        field.innerText = facility.getName();
+        field.style.backgroundColor = owner_color;
+        field.style.borderColor = this.getFacilityColor(facility);
+
+        (<HTMLTableCellElement>field).colSpan = facility.size;
     }
 
     public getDisplayedMoney(pid: PlayerId): number {
@@ -658,18 +688,5 @@ export class HtmlView {
         window.setTimeout(() => {
             document.body.removeChild(element);
         }, 1500);
-    }
-
-    private drawField(x: number, y: number, facility: Facility, owner_id: PlayerId): void {
-        let name: string = facility ? facility.getName() : "";
-        let field: HTMLElement = document.getElementById(`field_${x}_${y}`);
-        field.innerText = name;
-        if (facility && facility.getType() === FacilityType.Gray && owner_id === -1) {
-            field.style.backgroundColor = this.getFacilityColor(facility);
-        }
-        else {
-            field.style.backgroundColor = this.getPlayerColor(owner_id);
-        }
-        field.style.borderColor = this.getFacilityColor(facility);
     }
 }

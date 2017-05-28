@@ -108,14 +108,14 @@ export class Board {
         return new Board(json.field, json.row, json.column);
     }
 
-    setCardId(x: number, y: number, card_id: CardId, size: number = 1): void {
+    public setCardId(x: number, y: number, card_id: CardId, size: number = 1): void {
         this.field[x][y] = card_id;
         for (let i: number = 1; i < size; ++i) {
             this.field[x+i][y] = MULTIPLE;
         }
     }
 
-    getCardId(x: number, y: number): CardId {
+    public getCardId(x: number, y: number): CardId {
         let card_id: CardId = NO_FACILITY;
         for (let i: number = x; i >= 0; --i) {
             card_id = this.field[i][y];
@@ -126,7 +126,11 @@ export class Board {
         return card_id;
     }
 
-    getPosition(card_id: CardId): [number, number] {
+    public getRawCardId(x: number, y: number): CardId {
+        return this.field[x][y];
+    }
+
+    public getPosition(card_id: CardId): [number, number] {
         for (let y: number = 0; y < this.row; ++y) {
             for (let x: number = 0; x < this.column; ++x) {
                 if (this.field[x][y] === card_id) {
@@ -137,7 +141,7 @@ export class Board {
         return [-1, -1];
     }
 
-    debugString(): string {
+    public debugString(): string {
         let output: string = "";
         for (let y: number = 0; y < this.row; ++y) {
             for (let x: number = 0; x < this.column; ++x) {
