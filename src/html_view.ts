@@ -371,15 +371,27 @@ export class HtmlView {
         }
 
         // Facility
-        const area_name: string[] =
-            ["", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩", "⑪", "⑫"];
         let facility: Facility = this.session.getFacility(card_id);
-        let area: string = facility.getArea().map((i) => { return area_name[i]; }).join(",");
+        let area: string = this.getFacilityAreaString(facility);
         document.getElementById(element_id).style.display = "table-cell";
         document.getElementById(element_id + "_name").innerText = `${area} ${facility.getName()}`;
         document.getElementById(element_id + "_cost").innerText = String(facility.getCost());
         document.getElementById(element_id + "_description").innerText = facility.getDescription();
         document.getElementById(element_id).style.backgroundColor = this.getFacilityColor(facility);
+    }
+
+    private getFacilityAreaString(facility: Facility): string {
+        const area_name: string[] =
+            ["", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩", "⑪", "⑫", ""];
+
+        let area: string = facility.getArea().map((i) => {
+            if (facility.size === 2) {  // TODO: support more than 2, if necessary.
+                return `${area_name[i]}+${area_name[i + 1]}`;
+            }
+            return area_name[i];
+        }).join(",");
+
+        return area;
     }
 
     public drawBoard(): void {

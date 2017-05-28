@@ -32,6 +32,7 @@ export enum FacilityType {
 export class FacilityData {
     constructor(
         readonly id: number,  // Unique number.
+        readonly size: number,
         readonly area: number[],  // TODO should be range.
         readonly name: string,
         readonly cost: number,
@@ -41,34 +42,34 @@ export class FacilityData {
 }
 
 let facility_data: FacilityData[] = [
-    new FacilityData(0,  [1],  "🌾", 100, FacilityType.Blue,   {"value": 300}),
-    new FacilityData(1,  [2],  "🐮", 100, FacilityType.Blue,   {"value": 250}),
-    new FacilityData(2,  [3],  "🎳", 200, FacilityType.Purple, {"value": 300}),
-    new FacilityData(3,  [4],  "🐝", 200, FacilityType.Blue,   {"value": 300}),
-    new FacilityData(4,  [5],  "🍴", 200, FacilityType.Red,    {"value": 400}),
-    new FacilityData(5,  [6],  "💆", 150, FacilityType.Green,  {"value": 450}),
-    new FacilityData(6,  [7],  "👕", 200, FacilityType.Green,  {"value": 400}),
-    new FacilityData(7,  [8],  "🐔", 250, FacilityType.Red,    {"value": 250}),
-    new FacilityData(8,  [8,9],  "🌻", 200, FacilityType.Blue,   {"value": 400}),
-    new FacilityData(9,  [10], "🍣", 100, FacilityType.Red,    {"value": 400}),
-    new FacilityData(10, [11], "🗻", 300, FacilityType.Blue,   {"value": 500}),
-    new FacilityData(11, [12], "🍍", 150, FacilityType.Blue,   {"value": 650}),
+    new FacilityData(0,  1, [1],    "🌾", 100, FacilityType.Blue,   {"value": 300}),
+    new FacilityData(1,  1, [2],    "🐮", 100, FacilityType.Blue,   {"value": 250}),
+    new FacilityData(2,  1, [3],    "🎳", 200, FacilityType.Purple, {"value": 300}),
+    new FacilityData(3,  1, [4],    "🐝", 200, FacilityType.Blue,   {"value": 300}),
+    new FacilityData(4,  1, [5],    "🍴", 200, FacilityType.Red,    {"value": 400}),
+    new FacilityData(5,  1, [6],    "💆", 150, FacilityType.Green,  {"value": 450}),
+    new FacilityData(6,  1, [7],    "👕", 200, FacilityType.Green,  {"value": 400}),
+    new FacilityData(7,  1, [8],    "🐔", 250, FacilityType.Red,    {"value": 250}),
+    new FacilityData(8,  1, [8,9],  "🌻", 200, FacilityType.Blue,   {"value": 400}),
+    new FacilityData(9,  1, [10],   "🍣", 100, FacilityType.Red,    {"value": 400}),
+    new FacilityData(10, 2, [10],   "🗻", 300, FacilityType.Blue,   {"value": 500}),
+    new FacilityData(11, 1, [12],   "🍍", 150, FacilityType.Blue,   {"value": 650}),
 
-    new FacilityData(12,  [1],  "🍣", 200, FacilityType.Red,    {"value": 600}),
-    new FacilityData(13,  [2],  "🐟", 100, FacilityType.Green,  {"value": 550}),
-    new FacilityData(14,  [3],  "💈", 100, FacilityType.Green,  {"value": 450}),
-    new FacilityData(15,  [4],  "📖", 200, FacilityType.Green,  {"value": 400}),
-    new FacilityData(16,  [5],  "📰", 100, FacilityType.Purple, {"value": 300}),
-    new FacilityData(17,  [6],  "🍱", 100, FacilityType.Red,    {"value": 300}),
-    new FacilityData(18,  [7],  "🍕", 100, FacilityType.Red,    {"value": 300}),
-    new FacilityData(19,  [8],  "🍅", 100, FacilityType.Blue,   {"value": 250}),
-    new FacilityData(20,  [9],  "🚗", 400, FacilityType.Green,  {"value": 800}),
-    new FacilityData(21,  [10], "🍎", 100, FacilityType.Blue,   {"value": 350}),
-    new FacilityData(22, [11], "👓", 100, FacilityType.Green,   {"value": 1000}),
-    new FacilityData(23, [12], "🔨", 300, FacilityType.Purple,  {"value": 2000}),
+    new FacilityData(12, 1, [1],  "🍣", 200, FacilityType.Red,    {"value": 600}),
+    new FacilityData(13, 1, [2],  "🐟", 100, FacilityType.Green,  {"value": 550}),
+    new FacilityData(14, 1, [3],  "💈", 100, FacilityType.Green,  {"value": 450}),
+    new FacilityData(15, 1, [4],  "📖", 200, FacilityType.Green,  {"value": 400}),
+    new FacilityData(16, 1, [5],  "📰", 100, FacilityType.Purple, {"value": 300}),
+    new FacilityData(17, 1, [6],  "🍱", 100, FacilityType.Red,    {"value": 300}),
+    new FacilityData(18, 1, [7],  "🍕", 100, FacilityType.Red,    {"value": 300}),
+    new FacilityData(19, 1, [8],  "🍅", 100, FacilityType.Blue,   {"value": 250}),
+    new FacilityData(20, 1, [9],  "🚗", 400, FacilityType.Green,  {"value": 800}),
+    new FacilityData(21, 1, [10], "🍎", 100, FacilityType.Blue,   {"value": 350}),
+    new FacilityData(22, 1, [11], "👓", 100, FacilityType.Green,  {"value": 1000}),
+    new FacilityData(23, 1, [12], "🔨", 300, FacilityType.Purple, {"value": 2000}),
 
-    new FacilityData(24, [], "🏯", 1500, FacilityType.Gray, {}),
-    new FacilityData(25, [], "🏰", 2000, FacilityType.Gray, {}),
+    new FacilityData(24, 1, [], "🏯", 1500, FacilityType.Gray, {}),
+    new FacilityData(25, 1, [], "🏰", 2000, FacilityType.Gray, {}),
 ];
 
 export type FacilityDataId = number;
@@ -77,6 +78,7 @@ export type CardId = number;
 export class Facility {
     readonly data_id: FacilityDataId;
     readonly name: string;
+    readonly size: number;
     readonly area: number[];
     readonly cost: number;
     readonly type: FacilityType;
@@ -86,6 +88,7 @@ export class Facility {
         let data: FacilityData = facility_data[data_id];
         this.data_id = data_id;
         this.name = data.name;
+        this.size = data.size;
         this.area = data.area;
         this.cost = data.cost;
         this.type = data.type;
@@ -105,6 +108,9 @@ export class Facility {
 
     public getName(): string {
         return this.name;
+    }
+    public getSize(): number {
+        return this.size;
     }
     public getArea(): number[] {
         return this.area;
