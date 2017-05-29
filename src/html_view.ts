@@ -6,6 +6,7 @@ import { Client, Request } from "./client";
 
 const COLOR_FIELD: string = "#EFF0D1";
 const COLOR_LANDMARK: string = "#B0BEC5";
+const COLOR_CLICKABLE: string = "#FFCA28";
 
 export class HtmlView {
     private event_drawer_timer = null;
@@ -37,7 +38,7 @@ export class HtmlView {
         // Fields
         for (let y: number = 0; y < row; ++y) {
             for (let x: number = 0; x < column; ++x) {
-                document.getElementById(`field_${x}_${y}`).addEventListener(
+                document.getElementById(`click_${x}_${y}`).addEventListener(
                     "click", () => { this.onClickField(x, y); });
             }
         }
@@ -144,9 +145,7 @@ export class HtmlView {
             for (let area of this.session.getFacility(this.clicked_card_id).getArea()) {
                 let x: number = area - 1;
                 for (let y: number = 0; y < 5; y++) {
-                    let field: HTMLElement = document.getElementById(`field_${x}_${y}`);
-                    // TODO: Keep the owner's color too.
-                    field.style.backgroundColor = "#FFF176";
+                    document.getElementById(`click_${x}_${y}`).style.borderColor = COLOR_CLICKABLE;
                 }
             }
         }
@@ -172,7 +171,7 @@ export class HtmlView {
         this.drawBoard();
 
         let [x, y] = this.session.getPosition(this.clicked_card_id);
-        document.getElementById(`field_${x}_${y}`).style.backgroundColor = "#FFF176";
+        document.getElementById(`click_${x}_${y}`).style.borderColor = COLOR_CLICKABLE;
     }
 
     private getPlayerColor(player_id: PlayerId): string {
@@ -410,6 +409,8 @@ export class HtmlView {
         const board: Board = this.session.getBoard();
         const facility_id: CardId = board.getRawCardId(x, y);
         let field: HTMLElement = document.getElementById(`field_${x}_${y}`);
+
+        document.getElementById(`click_${x}_${y}`).style.borderColor = "transparent";
 
         if (facility_id === -1) {
             field.innerText = "";
