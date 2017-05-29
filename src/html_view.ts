@@ -411,6 +411,8 @@ export class HtmlView {
         let field: HTMLElement = document.getElementById(`field_${x}_${y}`);
 
         document.getElementById(`click_${x}_${y}`).style.borderColor = "transparent";
+        (<HTMLTableCellElement>field).colSpan = 1;
+        field.style.display = "";
 
         if (facility_id === -1) {
             field.innerText = "";
@@ -431,6 +433,7 @@ export class HtmlView {
             (owner_id === -1) ? COLOR_LANDMARK : this.getPlayerColor(owner_id);
 
         field.innerText = facility.getName();
+        field.style.display = "";
         field.style.backgroundColor = owner_color;
         field.style.borderColor = this.getFacilityColor(facility);
 

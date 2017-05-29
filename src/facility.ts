@@ -44,7 +44,7 @@ export class FacilityData {
 let facility_data: FacilityData[] = [
     new FacilityData(0,  1, [1],    "🌾", 100, FacilityType.Blue,   {"value": 300}),
     new FacilityData(1,  1, [2],    "🐮", 100, FacilityType.Blue,   {"value": 250}),
-    new FacilityData(2,  1, [3],    "🎳", 200, FacilityType.Purple, {"value": 300}),
+    new FacilityData(2,  2, [3],    "🎳", 200, FacilityType.Purple, {"value": 300}),
     new FacilityData(3,  1, [4],    "🐝", 200, FacilityType.Blue,   {"value": 300}),
     new FacilityData(4,  1, [5],    "🍴", 200, FacilityType.Red,    {"value": 400}),
     new FacilityData(5,  1, [6],    "💆", 150, FacilityType.Green,  {"value": 450}),
@@ -52,7 +52,7 @@ let facility_data: FacilityData[] = [
     new FacilityData(7,  1, [8],    "🐔", 250, FacilityType.Red,    {"value": 250}),
     new FacilityData(8,  1, [8,9],  "🌻", 200, FacilityType.Blue,   {"value": 400}),
     new FacilityData(9,  1, [10],   "🍣", 100, FacilityType.Red,    {"value": 400}),
-    new FacilityData(10, 1, [10],   "🗻", 300, FacilityType.Blue,   {"value": 500}),
+    new FacilityData(10, 2, [10],   "🗻", 300, FacilityType.Blue,   {"value": 500}),
     new FacilityData(11, 1, [12],   "🍍", 150, FacilityType.Blue,   {"value": 650}),
 
     new FacilityData(12, 1, [1],  "🍣", 200, FacilityType.Red,    {"value": 600}),

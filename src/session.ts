@@ -918,17 +918,24 @@ export class Session {
         }
     }
 
-    private getOverwriteCost(card_id_on_board: CardId, player_id: PlayerId): number {
-        // No facility on board.
-        if (card_id_on_board === -1) {
-            return 0;
+    private getOverwriteCosts(x: number, y: number, size: number): number[] {
+        let costs = [0, 0, 0, 0];
+        let prev_id: number = -1;
+        for (let i: number = 0; i < size; ++i) {
+            let card_id: CardId = this.board.getCardId(x + i, y);
+            if (card_id === -1 || card_id === prev_id) {
+                continue;
+            }
+            prev_id = card_id;
+
+            let owner_id: PlayerId = this.getOwnerId(card_id);
+            if (owner_id === this.getCurrentPlayerId()) {
+                continue;
+            }
+
+            costs[owner_id] += this.getFacility(card_id).getCost() * 2;
         }
-        // Same owner.
-        if (this.getOwnerId(card_id_on_board) === player_id) {
-            return 0;
-        }
-        // Double of the builing cost.
-        return this.card_manager.getFacility(card_id_on_board).getCost() * 2;
+        return costs;
     }
 
     public availablePosition(card_id: CardId): [number, number][] {
@@ -986,7 +993,7 @@ export class Session {
             }
 
             let [x, y] = positions[0];
-            this.board.setCardId(x, y, card_id);
+            this.board.setCardId(x, y, card_id, facility.size);
             player.setMoney(balance);
             return true;
         }
@@ -1088,28 +1095,42 @@ export class Session {
             return false;
         }
 
-        // Facility on the board is overwritable?
-        let card_id_on_board: CardId = this.board.getCardId(x, y);
-        if (!this.card_manager.canOverwrite(card_id_on_board)) {
-            return false;
+        let event: Event = new Event();
+
+        for (let i: number = 0; i < facility.size; ++i) {
+            // Facility on the board is overwritable?
+            let card_id_on_board: CardId = this.board.getCardId(x + i, y);
+            if (!this.card_manager.canOverwrite(card_id_on_board)) {
+                return false;
+            }
         }
 
         // Money is valid?
+        let overwrite_costs: number[] = this.getOverwriteCosts(x, y, facility.size);
+        let total_cost: number = facility.cost;
+        for (let i: number = 0; i < overwrite_costs.length; ++i) {
+            total_cost += overwrite_costs[i];
+        }
+
         let player: Player = this.players[player_id];
-        let overwrite_cost: number = this.getOverwriteCost(card_id_on_board, player_id);
-        let total_cost: number = facility.getCost() + overwrite_cost;
-        let money: number = player.getMoney();
-        if (total_cost > money) {
+        if (total_cost > player.getMoney()) {
             return false;
         }
 
         // Update the data.
-        // Delete the existing facility.
-        if (card_id_on_board >= 0) {
-            if (!this.card_manager.moveFieldToDiscard(card_id_on_board)) {
-                // Something is wrong.
-                console.warn(`moveFieldToDiscard(${card_id_on_board}) failed.`);
-                return false;
+        for (let i: number = 0; i < facility.size; ++i) {
+            let card_id_on_board: CardId = this.board.removeCard(x + i, y);
+            if (card_id_on_board === -1) {
+                continue;
+            }
+
+            // Delete the existing facility.
+            if (card_id_on_board >= 0) {
+                if (!this.card_manager.moveFieldToDiscard(card_id_on_board)) {
+                    // Something is wrong.
+                    console.warn(`moveFieldToDiscard(${card_id_on_board}) failed.`);
+                    return false;
+                }
             }
         }
 
@@ -1120,19 +1141,17 @@ export class Session {
             return false;
         }
 
-        let event: Event = new Event();
         this.events.push(event);
         event.step = this.step;
         event.type = EventType.Build;
+        event.moneys = overwrite_costs;
         event.moneys[player_id] -= total_cost;
         event.card_id = card_id;
 
-        this.board.setCardId(x, y, card_id);
-        player.setMoney(money - total_cost);
-        if (card_id_on_board >= 0 && overwrite_cost > 0) {
-            let facility_owner: PlayerId = this.getOwnerId(card_id_on_board);
-            event.moneys[facility_owner] += overwrite_cost;
-            this.getPlayer(facility_owner).addMoney(overwrite_cost);
+        this.board.setCardId(x, y, card_id, facility.size);
+        player.addMoney(-total_cost);
+        for (let i: number = 0; i < this.players.length; ++i) {
+            this.players[i].addMoney(overwrite_costs[i]);
         }
 
         this.done(Phase.BuildFacility);

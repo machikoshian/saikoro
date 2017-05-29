@@ -71,7 +71,7 @@ export class Player {
 }
 
 export const NO_FACILITY: number = -1;
-export const MULTIPLE: number = -2;
+export const MULTIPLE: number = -2;  // Used for facilities whose size is more than 1.
 
 export class Board {
     private field: CardId[][];
@@ -106,6 +106,34 @@ export class Board {
 
     static fromJSON(json): Board {
         return new Board(json.field, json.row, json.column);
+    }
+
+    public removeCard(x: number, y: number): CardId {
+        if (this.field[x][y] === NO_FACILITY) {
+            return NO_FACILITY;
+        }
+
+        // Find the left most.
+        let i: number = x;
+        for (; i >= 0; --i) {
+            if (this.field[i][y] !== MULTIPLE) {
+                break;
+            }
+        }
+
+        // Delete the left most, which has the card id.
+        let card_id: CardId = this.field[i][y];
+        this.field[i][y] = NO_FACILITY;
+
+        // Delete the rest of right parts (=== MULTIPLE).
+        i++;
+        for (; i < this.column; ++i) {
+            if (this.field[i][y] !== MULTIPLE) {
+                break;
+            }
+            this.field[i][y] = NO_FACILITY;
+        }
+        return card_id;
     }
 
     public setCardId(x: number, y: number, card_id: CardId, size: number = 1): void {
