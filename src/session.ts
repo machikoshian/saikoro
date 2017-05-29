@@ -2,15 +2,7 @@ import { Dice, DiceResult } from "./dice";
 import { Player, Board, PlayerId } from "./board";
 import { CardId, FacilityDataId, FacilityType, Facility,
          Character, CharacterData, CharacterDataId, CharacterType } from "./facility";
-
-function shuffle(array: any[]): any[] {
-    let shuffled_array: any[] = array.slice(0);
-    for (let l: number = shuffled_array.length; l > 0; --l) {
-        let i: number = Math.floor(Math.random() * l);
-        [shuffled_array[i], shuffled_array[l-1]] = [shuffled_array[l-1], shuffled_array[i]];
-    }
-    return shuffled_array;
-}
+import { shuffle } from "./utils";
 
 export class PlayerCards {
     private talon: CardId[];    // 山札

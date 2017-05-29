@@ -14,8 +14,8 @@
 * class と CSS を明示的に分類。
 * 赤の評価順をプレーヤーから左回りに変更。
 * Firebase.onDisconnect への対応
-* 2マス施設への対応
 * 施設データを JSON で管理
+* デッキ作成のサポート
 
 * websocket のサポート
 

@@ -221,8 +221,10 @@ export class SessionHandler {
             this.addNewPlayer(session, user_id, name, num_players + num_npc, false);
 
             // Add NPC.
+            const NPC_NAMES = [ "ごましお (NPC)", "グラ (NPC)", "ヂータ (NPC)", "エル (NPC)"];
+            let npc_name: string = NPC_NAMES[Math.floor(Math.random() * NPC_NAMES.length)];
             if (num_npc === 1) {  // TODO: support more than 1.
-                this.addNewPlayer(session, "0", "NPC", num_players + num_npc, true);
+                this.addNewPlayer(session, "0", npc_name, num_players + num_npc, true);
             }
 
             let session_string: string = JSON.stringify(session.toJSON());
