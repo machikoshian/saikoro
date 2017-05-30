@@ -437,9 +437,16 @@ export class Session {
         else {
             columns = area.map((x) => { return x - 1; });  // area is 1-origin.
         }
-        for (let x of columns) {
-            for (let y: number = 0; y < this.board.row; y++) {
-                if (this.getCardIdOnBoard(x, y) === -1) {
+        for (let y: number = 0; y < this.board.row; y++) {
+            for (let x of columns) {
+                let available: boolean = true;
+                for (let s: number = 0; s < facility.size; ++s) {
+                    if (this.getCardIdOnBoard(x + s, y) !== -1) {
+                        available = false;
+                        break;
+                    }
+                }
+                if (available) {
                     positions.push([x, y]);
                 }
             }

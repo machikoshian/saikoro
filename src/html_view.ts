@@ -318,7 +318,7 @@ export class HtmlView {
         let card_id: CardId = this.session.getCardIdOnBoard(x, y);
         let element: HTMLElement = document.getElementById("field_card_node");
 
-        if (card_id === -1) {
+        if (card_id === -1 || element.style.display === "") {
             element.style.display = "none";
             return;
         }
