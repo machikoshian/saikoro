@@ -406,14 +406,7 @@ export class Session {
 
     private getOverwriteCosts(x: number, y: number, size: number): number[] {
         let costs = [0, 0, 0, 0];
-        let prev_id: number = -1;
-        for (let i: number = 0; i < size; ++i) {
-            let card_id: CardId = this.board.getCardId(x + i, y);
-            if (card_id === -1 || card_id === prev_id) {
-                continue;
-            }
-            prev_id = card_id;
-
+        for (let card_id of this.getOverlappedFacilities(x, y, size)) {
             let owner_id: PlayerId = this.getOwnerId(card_id);
             if (owner_id === this.getCurrentPlayerId()) {
                 continue;
@@ -547,6 +540,21 @@ export class Session {
         return true;
     }
 
+    // TODO: move this function to Board?
+    public getOverlappedFacilities(x: number, y: number, size: number): CardId[] {
+        let card_ids: CardId[] = [];
+        let prev_id: CardId = -1;
+        for (let i: number = 0; i < size; ++i) {
+            let card_id: CardId = this.board.getCardId(x + i, y);
+            if (card_id === prev_id || card_id === -1) {
+                continue;
+            }
+            card_ids.push(card_id);
+            prev_id = card_id;
+        }
+        return card_ids;
+    }
+
     public buildFacility(player_id: PlayerId, x: number, y: number,
                          card_id: CardId): boolean {
         // Facility is a landmark?
@@ -589,10 +597,10 @@ export class Session {
         }
 
         let event: Event = new Event();
+        let overlapped: CardId[] = this.getOverlappedFacilities(x, y, facility.size);
 
-        for (let i: number = 0; i < facility.size; ++i) {
+        for (let card_id_on_board of overlapped) {
             // Facility on the board is overwritable?
-            let card_id_on_board: CardId = this.board.getCardId(x + i, y);
             if (!this.card_manager.canOverwrite(card_id_on_board)) {
                 return false;
             }
@@ -611,19 +619,12 @@ export class Session {
         }
 
         // Update the data.
-        for (let i: number = 0; i < facility.size; ++i) {
-            let card_id_on_board: CardId = this.board.removeCard(x + i, y);
-            if (card_id_on_board === -1) {
-                continue;
-            }
-
+        for (let card_id_on_board of overlapped) {
             // Delete the existing facility.
-            if (card_id_on_board >= 0) {
-                if (!this.card_manager.moveFieldToDiscard(card_id_on_board)) {
-                    // Something is wrong.
-                    console.warn(`moveFieldToDiscard(${card_id_on_board}) failed.`);
-                    return false;
-                }
+            if (!this.card_manager.moveFieldToDiscard(card_id_on_board)) {
+                // Something is wrong.
+                console.warn(`moveFieldToDiscard(${card_id_on_board}) failed.`);
+                return false;
             }
         }
 
