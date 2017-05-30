@@ -1,4 +1,5 @@
-import { Phase, Session, PlayerCards, Event, EventType } from "./session";
+import { Phase, Session, Event, EventType } from "./session";
+import { PlayerCards } from "./card_manager";
 import { Player, Board, PlayerId } from "./board";
 import { CardId, FacilityType, Facility, CharacterType, Character } from "./facility";
 import { Dice, DiceResult } from "./dice";
