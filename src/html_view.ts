@@ -250,9 +250,6 @@ export class HtmlView {
         let landmark_ids: CardId[] = session.getLandmarks();
         this.player_cards_list.push(landmark_ids);
 
-        // Update board.
-        this.drawBoard();
-
         // Update buttons.
         let current_player: Player = session.getCurrentPlayer();
         if (current_player.user_id === user_id) {
@@ -590,6 +587,7 @@ export class HtmlView {
             // All events have been drawn. Then, draw the current status.
             this.drawStatusMessage();
             this.drawPlayers();
+            this.drawBoard();  // TODO: The board is now called twice, fix it.
             return false;
         }
 
@@ -618,6 +616,10 @@ export class HtmlView {
             if (event.type === EventType.Character) {
                 this.effectCharacter(this.session.getCurrentPlayerId(), event.card_id);
                 continue;
+            }
+
+            if (event.type === EventType.Build) {
+                this.drawBoard();  // TODO: The board has other status.
             }
 
             const money_motion: EventType[] = [
