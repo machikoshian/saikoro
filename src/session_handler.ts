@@ -236,6 +236,7 @@ export class SessionHandler {
         });
     }
 
+    // TODO: num_players should be handled outside.
     public addNewPlayer(session: Session, user_id: string, name: string, num_players: number, is_auto: boolean): PlayerId {
         const player_id: PlayerId = session.addPlayer(user_id, name, 1200, 250, is_auto);
         const num_cards = 10;
