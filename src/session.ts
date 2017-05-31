@@ -619,6 +619,7 @@ export class Session {
         }
 
         // Update the data.
+        this.board.removeCards(x, y, facility.size);
         for (let card_id_on_board of overlapped) {
             // Delete the existing facility.
             if (!this.card_manager.moveFieldToDiscard(card_id_on_board)) {

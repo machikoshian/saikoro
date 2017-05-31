@@ -108,35 +108,41 @@ export class Board {
         return new Board(json.field, json.row, json.column);
     }
 
-    public removeCard(x: number, y: number): CardId {
-        if (this.field[x][y] === NO_FACILITY) {
-            return NO_FACILITY;
-        }
+    public removeCards(x: number, y: number, size: number): CardId[] {
+        let removed: CardId[] = [];
+        let xi: number = x;
 
         // Find the left most.
-        let i: number = x;
-        for (; i >= 0; --i) {
-            if (this.field[i][y] !== MULTIPLE) {
-                break;
+        if (this.field[x][y] === MULTIPLE) {
+            for (; xi >= 0; --xi) {
+                if (this.field[xi][y] !== MULTIPLE) {
+                    break;
+                }
             }
         }
 
-        // Delete the left most, which has the card id.
-        let card_id: CardId = this.field[i][y];
-        this.field[i][y] = NO_FACILITY;
+        for (; xi < x + size; xi++) {
+            // Delete the left most, which has the card id.
+            let card_id: CardId = this.field[xi][y];
+            this.field[xi][y] = NO_FACILITY;
+            if (card_id === MULTIPLE || card_id === NO_FACILITY) {
+                continue;
+            }
 
-        // Delete the rest of right parts (=== MULTIPLE).
-        i++;
-        for (; i < this.column; ++i) {
-            if (this.field[i][y] !== MULTIPLE) {
+            removed.push(card_id);
+        }
+
+        // Delete the rest of multiple parts.
+        for (; xi < this.column; ++xi) {
+            if (this.field[xi][y] !== MULTIPLE) {
                 break;
             }
-            this.field[i][y] = NO_FACILITY;
+            this.field[xi][y] = NO_FACILITY;
         }
-        return card_id;
+        return removed;
     }
 
-    public setCardId(x: number, y: number, card_id: CardId, size: number = 1): void {
+    public setCardId(x: number, y: number, card_id: CardId, size: number): void {
         this.field[x][y] = card_id;
         for (let i: number = 1; i < size; ++i) {
             this.field[x+i][y] = MULTIPLE;

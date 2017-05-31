@@ -14,6 +14,7 @@ export class HtmlView {
     private money_animation_timers = [null, null, null, null];
     private client: Client;
     private session: Session = null;
+    private prev_session: Session = null;
     private clicked_card_id: CardId = -1;
     private clicked_card_element: HTMLElement = null;
     private player_cards_list: CardId[][] = [];
@@ -22,6 +23,7 @@ export class HtmlView {
 
     constructor(client: Client) {
         this.client = client;
+        this.prev_session = new Session();
     }
 
     public initView(column: number = 12, row: number = 5):void {
@@ -136,7 +138,7 @@ export class HtmlView {
         this.clicked_card_element.style.borderColor = "#FFE082";
         this.clicked_card_id = clicked_card_id;
 
-        this.drawBoard();
+        this.drawBoard(this.session);
 
         if (phase === Phase.CharacterCard) {
             document.getElementById("char_card").style.backgroundColor = "#FFCA28";
@@ -169,7 +171,7 @@ export class HtmlView {
         this.clicked_card_element.style.borderColor = "#FFE082";
         this.clicked_card_id = clicked_card_id;
 
-        this.drawBoard();
+        this.drawBoard(this.session);
 
         let [x, y] = this.session.getPosition(this.clicked_card_id);
         document.getElementById(`click_${x}_${y}`).style.borderColor = COLOR_CLICKABLE;
@@ -394,17 +396,17 @@ export class HtmlView {
         return area;
     }
 
-    public drawBoard(): void {
-        const board: Board = this.session.getBoard();
+    public drawBoard(session: Session): void {  // session may take a different value.
+        const board: Board = session.getBoard();
         for (let y: number = 0; y < board.row; ++y) {
             for (let x: number = 0; x < board.column; ++x) {
-                this.drawField(x, y);
+                this.drawField(session, x, y);
             }
         }
     }
 
-    private drawField(x: number, y: number): void {
-        const board: Board = this.session.getBoard();
+    private drawField(session: Session, x: number, y: number): void {
+        const board: Board = session.getBoard();
         const facility_id: CardId = board.getRawCardId(x, y);
         let field: HTMLElement = document.getElementById(`field_${x}_${y}`);
 
@@ -424,8 +426,8 @@ export class HtmlView {
             return;
         }
 
-        let facility: Facility = this.session.getFacility(facility_id);
-        let owner_id: PlayerId = this.session.getOwnerId(facility_id);
+        let facility: Facility = session.getFacility(facility_id);
+        let owner_id: PlayerId = session.getOwnerId(facility_id);
         // (ownder_id === -1) means a prebuild landmark.
         let owner_color: string =
             (owner_id === -1) ? COLOR_LANDMARK : this.getPlayerColor(owner_id);
@@ -587,7 +589,8 @@ export class HtmlView {
             // All events have been drawn. Then, draw the current status.
             this.drawStatusMessage();
             this.drawPlayers();
-            this.drawBoard();  // TODO: The board is now called twice, fix it.
+            this.drawBoard(this.session);
+            this.prev_session = this.session;
             return false;
         }
 
@@ -619,7 +622,11 @@ export class HtmlView {
             }
 
             if (event.type === EventType.Build) {
-                this.drawBoard();  // TODO: The board has other status.
+                let [x, y]: [number, number] = this.session.getPosition(event.card_id);
+                let facility: Facility = this.session.getFacility(event.card_id);
+                this.prev_session.getBoard().removeCards(x, y, facility.size);
+                this.prev_session.getBoard().setCardId(x, y, event.card_id, facility.size);
+                this.drawBoard(this.prev_session);
             }
 
             const money_motion: EventType[] = [
