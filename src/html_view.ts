@@ -1,9 +1,11 @@
 import { Phase, Session, Event, EventType } from "./session";
 import { PlayerCards } from "./card_manager";
 import { Player, Board, PlayerId } from "./board";
-import { CardId, FacilityType, Facility, CharacterType, Character } from "./facility";
+import { CardId, FacilityType, Facility, CharacterType, Character,
+         CardData, FacilityDataId } from "./facility";
 import { Dice, DiceResult } from "./dice";
 import { Client, Request } from "./client";
+import { DeckMaker } from "./deck_maker" ;
 
 const COLOR_FIELD: string = "#EFF0D1";
 const COLOR_LANDMARK: string = "#B0BEC5";
@@ -21,6 +23,8 @@ export class HtmlView {
     private last_step: number = -1;
     private drawn_step: number = -1;
     private field_info_card_id: CardId = -1;
+    private deck_maker: DeckMaker = new DeckMaker();
+    private clicked_field: [number, number] = [0, 0];
 
     constructor(client: Client) {
         this.client = client;
@@ -37,7 +41,16 @@ export class HtmlView {
             "click", () => { this.onClickMatching(1); });
         document.getElementById("matching_button_2players").addEventListener(
             "click", () => { this.onClickMatching(2); });
-        document.getElementById("game").style.visibility = "hidden";
+
+        // Hide components for game.
+        document.getElementById("players").style.display = "none";
+        document.getElementById("message").style.display = "none";
+        document.getElementById("dice").style.display = "none";
+
+        document.getElementById("cards_1").style.display = "none";
+        document.getElementById("cards_2").style.display = "none";
+        document.getElementById("cards_3").style.display = "none";
+        document.getElementById("landmarks").style.display = "none";
 
         // Fields
         for (let y: number = 0; y < row; ++y) {
@@ -66,8 +79,9 @@ export class HtmlView {
         let card_size: number = 10;
         for (let p: number = 0; p < player_size; ++p) {
             for (let c: number = 0; c < card_size; ++c) {
-                document.getElementById(`card_${p}_${c}`).addEventListener(
-                    "click", () => { this.onClickCard(p, c); });
+                let element = document.getElementById(`card_${p}_${c}`);
+                element.addEventListener("click", () => { this.onClickCard(p, c); });
+                element.style.display = "none";
             }
         }
 
@@ -83,8 +97,39 @@ export class HtmlView {
         document.getElementById("field_card_node").style.display = "none";
     }
 
-    private onClickField(x, y): void {
+    private onClickDeckField(x: number, y: number): void {
+        let [px, py]: [number, number] = this.clicked_field;
+        document.getElementById(`click_${px}_${py}`).style.borderColor = "transparent";
+        this.clicked_field = [x, y];
+
+        if (px === x && py === y) {
+            this.deck_maker.removeFacility(x, y);
+            this.drawDeckBoard();
+            return;
+        }
+
+        document.getElementById(`click_${x}_${y}`).style.borderColor = COLOR_CLICKABLE;
+
+        let i: number = 0;
+        let data_ids: FacilityDataId[] = this.deck_maker.getAvailableFacilities(x);
+        for (; i < data_ids.length; ++i) {
+            let facility: Facility = new Facility(data_ids[i]);
+            this.drawFacilityCard(`card_0_${i}`, facility);
+            document.getElementById(`card_0_${i}`).style.display = "";
+        }
+        for (; i < 10; ++i) {
+            document.getElementById(`card_0_${i}`).style.display = "none";
+        }
+    }
+
+    private onClickField(x: number, y: number): void {
         console.log(`clicked: field_${x}_${y}`);
+        // Event on matching.
+        if (this.last_step === -1) {
+            this.onClickDeckField(x, y);
+            return;
+        }
+        // Event on game.
         if (this.clicked_card_id < 0) {
             this.drawFieldInfo(x, y);
             return;
@@ -114,6 +159,18 @@ export class HtmlView {
     }
 
     private onClickCard(player: number, card: number): void {
+        // Event on matching.
+        if (this.last_step === -1) {
+            let [x, y]: [number, number] = this.clicked_field;
+            let data_id: FacilityDataId = this.deck_maker.getAvailableFacilities(x)[card];
+            this.deck_maker.setFacility(x, y, data_id);
+            this.drawDeckBoard();
+            document.getElementById("deck").innerText =
+                JSON.stringify(this.deck_maker.getFacilityDataIds());
+            return;
+        }
+
+        // Event on game.
         let clicked_card_id: CardId = this.player_cards_list[player][card];
         let phase: Phase = this.session.getPhase();
         let is_char: boolean = this.session.isCharacter(clicked_card_id);
@@ -239,7 +296,16 @@ export class HtmlView {
 
         // Hide the matching view and show the board view.
         document.getElementById("matching").style.display = "none";
-        document.getElementById("game").style.visibility = "visible";
+
+        // Show components for game.
+        document.getElementById("players").style.display = "";
+        document.getElementById("message").style.display = "";
+        document.getElementById("dice").style.display = "";
+
+        document.getElementById("cards_1").style.display = "";
+        document.getElementById("cards_2").style.display = "";
+        document.getElementById("cards_3").style.display = "";
+        document.getElementById("landmarks").style.display = "";
 
         // Show event animations.
         this.drawEvents();
@@ -378,6 +444,11 @@ export class HtmlView {
 
         // Facility
         let facility: Facility = this.session.getFacility(card_id);
+        this.drawFacilityCard(element_id, facility);
+    }
+
+    public drawFacilityCard(element_id: string, facility: Facility): void {
+        // Facility
         let area: string = this.getFacilityAreaString(facility);
         document.getElementById(element_id).style.display = "table-cell";
         document.getElementById(element_id + "_name").innerText = `${area} ${facility.getName()}`;
@@ -404,14 +475,32 @@ export class HtmlView {
         const board: Board = session.getBoard();
         for (let y: number = 0; y < board.row; ++y) {
             for (let x: number = 0; x < board.column; ++x) {
-                this.drawField(session, x, y);
+                const facility_id: CardId = board.getRawCardId(x, y);
+                const owner_id: PlayerId = session.getOwnerId(facility_id);
+                let facility: Facility =
+                    (facility_id < 0) ? null : session.getFacility(facility_id);
+                this.drawField(x, y, facility_id, facility, owner_id);
             }
         }
     }
 
-    private drawField(session: Session, x: number, y: number): void {
-        const board: Board = session.getBoard();
-        const facility_id: CardId = board.getRawCardId(x, y);
+    public drawDeckBoard(): void {
+        const board: Board = this.deck_maker.board;
+        for (let y: number = 0; y < board.row; ++y) {
+            for (let x: number = 0; x < board.column; ++x) {
+                const facility_id: CardId = board.getRawCardId(x, y);
+                const owner_id: PlayerId = 0;
+                let facility: Facility =
+                    (facility_id < 0) ? null : this.deck_maker.getFacility(facility_id);
+                this.drawField(x, y, facility_id, facility, owner_id);
+            }
+        }
+        let [x, y]: [number, number] = this.clicked_field;
+        document.getElementById(`click_${x}_${y}`).style.borderColor = COLOR_CLICKABLE;
+    }
+
+    private drawField(x: number, y: number,
+                      facility_id: CardId, facility: Facility, owner_id: PlayerId): void {
         let field: HTMLElement = document.getElementById(`field_${x}_${y}`);
 
         document.getElementById(`click_${x}_${y}`).style.borderColor = "transparent";
@@ -430,8 +519,6 @@ export class HtmlView {
             return;
         }
 
-        let facility: Facility = session.getFacility(facility_id);
-        let owner_id: PlayerId = session.getOwnerId(facility_id);
         // (ownder_id === -1) means a prebuild landmark.
         let owner_color: string =
             (owner_id === -1) ? COLOR_LANDMARK : this.getPlayerColor(owner_id);
@@ -660,7 +747,14 @@ export class HtmlView {
                     if (money === 0) {
                         continue;
                     }
-                    this.drawMoneyMotion(money, pid, x, y);
+                    let delay: number = 0;
+                    if ([EventType.Red, EventType.Purple, EventType.Build].indexOf(event.type) !== -1 &&
+                        money > 0) {
+                        delay = 1000;
+                    }
+                    window.setTimeout(() => {
+                        this.drawMoneyMotion(money, pid, x, y);
+                    }, delay);
                 }
             }
         }
