@@ -1,11 +1,11 @@
-* ビルドイベントの描画
 * 使用済み matched データの削除。
-* 各イベントの同期
+* 給料のイベントのタイミング
 
+* 各イベントの同期
 * タイムアウトの実装
 * abstract View クラスの作成
 * Card owner の変更への対応
-* NO_PLAYER (= -1) の実装
+* NO_PLAYER (= -1) const value の実装
 * console.log 等の、開発モードとの挙動の切り替え
 * ユニットテストの追加
 * process handler chain / state hook の作成

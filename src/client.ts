@@ -21,8 +21,8 @@ export abstract class Client {
     public matching_id: number = 0;
     public mode: number = 0;
     public player_id: PlayerId = 0;
-    // TODO: user_id should be unique.
-    public user_id: string = String(Math.floor(Math.random() * 1000000));
+    // TODO: user_id should be unique. 0 - 9 is reserved for NPCs.
+    public user_id: string = String(Math.floor(Math.random() * 1000000) + 10);
     public step: number = 0;
     public callback: RequestCallback;
 

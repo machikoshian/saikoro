@@ -218,13 +218,17 @@ export class SessionHandler {
                 session = new Session();
             }
 
-            this.addNewPlayer(session, user_id, name, num_players + num_npc, false);
+            let player_id: PlayerId = this.addNewPlayer(session, user_id, name, false);
+            if (player_id === num_players - 1) {
+                // Add NPC.
+                const NPC_NAMES = ["ごましお", "グラ", "ヂータ", "エル", "茜"];
+                for (let i: number = 0; i < num_npc; ++i) {
+                    let npc_name: string = NPC_NAMES[Math.floor(Math.random() * NPC_NAMES.length)];
+                    this.addNewPlayer(session, `${i}`, npc_name + " (NPC)", true);
+                }
 
-            // Add NPC.
-            const NPC_NAMES = [ "ごましお (NPC)", "グラ (NPC)", "ヂータ (NPC)", "エル (NPC)"];
-            let npc_name: string = NPC_NAMES[Math.floor(Math.random() * NPC_NAMES.length)];
-            if (num_npc === 1) {  // TODO: support more than 1.
-                this.addNewPlayer(session, "0", npc_name, num_players + num_npc, true);
+                session.startGame();
+                this.doNext(session);
             }
 
             let session_string: string = JSON.stringify(session.toJSON());
@@ -236,8 +240,7 @@ export class SessionHandler {
         });
     }
 
-    // TODO: num_players should be handled outside.
-    public addNewPlayer(session: Session, user_id: string, name: string, num_players: number, is_auto: boolean): PlayerId {
+    public addNewPlayer(session: Session, user_id: string, name: string, is_auto: boolean): PlayerId {
         const player_id: PlayerId = session.addPlayer(user_id, name, 1200, 250, is_auto);
         const num_cards = 10;
         const max_id: number = 24;
@@ -251,11 +254,6 @@ export class SessionHandler {
         for (let i: number = 0; i < num_chars; ++i) {
             const card_id: CharacterDataId = Math.floor(Math.random() * max_char_id);
             session.addCharacter(player_id, card_id);
-        }
-
-        if (player_id === num_players - 1) {
-            session.startGame();
-            this.doNext(session);
         }
 
         return player_id;
