@@ -33,6 +33,7 @@ export enum EventType {
     Build,
     Character,
     Dice,
+    Salary,
     Quit,
 }
 
@@ -636,15 +637,16 @@ export class Session {
             return false;
         }
 
+        // Merge overwrite_costs and total_cost;
+        overwrite_costs[player_id] -= total_cost;
+
         this.events.push(event);
         event.step = this.step;
         event.type = EventType.Build;
         event.moneys = overwrite_costs;
-        event.moneys[player_id] -= total_cost;
         event.card_id = card_id;
 
         this.board.setCardId(x, y, card_id, facility.size);
-        player.addMoney(-total_cost);
         for (let i: number = 0; i < this.players.length; ++i) {
             this.players[i].addMoney(overwrite_costs[i]);
         }
@@ -701,7 +703,14 @@ export class Session {
     }
 
     public paySalary(): boolean {
-        this.getCurrentPlayer().paySalary();
+        let salary: number = this.getCurrentPlayer().paySalary();
+
+        let event: Event = new Event();
+        this.events.push(event);
+        event.step = this.step;
+        event.type = EventType.Salary;
+        event.moneys[this.current_player_id] += salary;
+
         this.done(Phase.PaySalary);
         return true;
     }

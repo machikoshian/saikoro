@@ -57,8 +57,9 @@ export class Player {
         return money;  // can be less than money.
     }
 
-    public paySalary(): void {
+    public paySalary(): number {
         this.money += this.salary;
+        return this.salary;
     }
 
     public isAuto(): boolean {

@@ -624,6 +624,17 @@ export class HtmlView {
                 continue;
             }
 
+            if (event.type === EventType.Salary) {
+                for (let pid = 0; pid < event.moneys.length; pid++) {
+                    let money: number = event.moneys[pid];
+                    if (money === 0) {
+                        continue;
+                    }
+                    // TODO: Use prev_session?
+                    this.effectPlayersMoney(pid, this.getDisplayedMoney(pid) + money);
+                }
+            }
+
             if (event.type === EventType.Build) {
                 let [x, y]: [number, number] = this.session.getPosition(event.card_id);
                 let facility: Facility = this.session.getFacility(event.card_id);

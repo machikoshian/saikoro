@@ -180,7 +180,7 @@ export class SessionHandler {
     public handleMatching(name: string, mode_str: string, user_id: string): Promise<MatchedData> {
         let mode: number = Number(mode_str);
         let num_players: number = 1;
-        let num_npc: number = 1;  // TODO: support more than 1.
+        let num_npc: number = 2;
         if (mode === 2) {
             num_players = 2;
             num_npc = 0;
