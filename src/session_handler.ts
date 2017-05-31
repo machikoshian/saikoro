@@ -1,7 +1,7 @@
 import { Dice } from "./dice";
 import { Session } from "./session";
 import { Board, PlayerId } from "./board";
-import { CardId, FacilityDataId, FacilityType, Facility, CharacterDataId } from "./facility";
+import { CardId, FacilityDataId, FacilityType, Facility, CharacterDataId, CardData } from "./facility";
 import { AutoPlay } from "./auto_play";
 
 export class KeyValue {
@@ -181,6 +181,8 @@ export class SessionHandler {
         let name: string = query.name;
         let mode: number = Number(query.mode);
         let user_id: string = query.user_id;
+
+
         let num_players: number = 1;
         let num_npc: number = 2;
         if (mode === 2) {
@@ -220,13 +222,14 @@ export class SessionHandler {
                 session = new Session();
             }
 
-            let player_id: PlayerId = this.addNewPlayer(session, user_id, name, false);
+            let deck: number[] = [0,0,0,0,0,10,10,10,10,10, 1000,1000,1000,1000,1000];
+            let player_id: PlayerId = this.addNewPlayer(session, user_id, name, deck, false);
             if (player_id === num_players - 1) {
                 // Add NPC.
                 const NPC_NAMES = ["ごましお", "グラ", "ヂータ", "エル", "茜"];
                 for (let i: number = 0; i < num_npc; ++i) {
                     let npc_name: string = NPC_NAMES[Math.floor(Math.random() * NPC_NAMES.length)];
-                    this.addNewPlayer(session, `${i}`, npc_name + " (NPC)", true);
+                    this.addNewPlayer(session, `${i}`, npc_name + " (NPC)", [], true);
                 }
 
                 session.startGame();
@@ -242,20 +245,33 @@ export class SessionHandler {
         });
     }
 
-    public addNewPlayer(session: Session, user_id: string, name: string, is_auto: boolean): PlayerId {
+    public addNewPlayer(session: Session, user_id: string, name: string,
+                        deck: number[], is_auto: boolean): PlayerId {
         const player_id: PlayerId = session.addPlayer(user_id, name, 1200, 250, is_auto);
-        const num_cards = 10;
-        const max_id: number = 24;
-        for (let i: number = 0; i < num_cards; ++i) {
-            const card_id: FacilityDataId = Math.floor(Math.random() * max_id);
-            session.addFacility(player_id, card_id);
+
+        let num_facilities: number = 0;
+        let num_chars: number = 0;
+        for (let data_id of deck) {
+            if (CardData.isFacility(data_id)) {
+                session.addFacility(player_id, data_id);
+                num_facilities++;
+                continue;
+            }
+            if (CardData.isCharacter(data_id)) {
+                if (num_chars <= 5) {
+                    session.addCharacter(player_id, data_id);
+                    num_chars++;
+                }
+                continue;
+            }
         }
 
-        const num_chars = 2;
-        const max_char_id = 2;
-        for (let i: number = 0; i < num_chars; ++i) {
-            const card_id: CharacterDataId = Math.floor(Math.random() * max_char_id);
-            session.addCharacter(player_id, card_id);
+        for (let i: number = num_facilities; i < 10; ++i) {
+            session.addFacility(player_id, CardData.getRandomFacilityDataId());
+        }
+
+        for (let i: number = num_chars; i < 2; ++i) {
+            session.addCharacter(player_id, CardData.getRandomCharacterDataId());
         }
 
         return player_id;
