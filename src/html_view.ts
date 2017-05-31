@@ -165,8 +165,6 @@ export class HtmlView {
             let data_id: FacilityDataId = this.deck_maker.getAvailableFacilities(x)[card];
             this.deck_maker.setFacility(x, y, data_id);
             this.drawDeckBoard();
-            document.getElementById("deck").innerText =
-                JSON.stringify(this.deck_maker.getFacilityDataIds());
             return;
         }
 
@@ -497,6 +495,8 @@ export class HtmlView {
         }
         let [x, y]: [number, number] = this.clicked_field;
         document.getElementById(`click_${x}_${y}`).style.borderColor = COLOR_CLICKABLE;
+        document.getElementById("deck").innerText =
+            JSON.stringify(this.deck_maker.getFacilityDataIds());
     }
 
     private drawField(x: number, y: number,
