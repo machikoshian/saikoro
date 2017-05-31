@@ -52,16 +52,17 @@ export class HttpRequestHandler extends RequestHandler {
         super();
     }
 
-    public sendRequest(json: any, callback: RequestCallback): void {
-        let params: string = Object.keys(json).map((key) => {
-            return encodeURIComponent(key) + "=" + encodeURIComponent(json[key]); }).join("&");
-        let url: string;
-        if (json.command === "matching") {
-            url = "/matching?" + params;
-        }
-        else {
-            url = "/command?" + params;
-        }
-        HttpRequest.Send(url, callback);
+    public matching(query: any, callback: RequestCallback): void {
+        let params: string = Object.keys(query).map((key) => {
+            return encodeURIComponent(key) + "=" + encodeURIComponent(query[key]);
+        }).join("&");
+        HttpRequest.Send("/matching?" + params, callback);
+    }
+
+    public sendRequest(query: any, callback: RequestCallback): void {
+        let params: string = Object.keys(query).map((key) => {
+            return encodeURIComponent(key) + "=" + encodeURIComponent(query[key]);
+        }).join("&");
+        HttpRequest.Send("/command?" + params, callback);
     }
 }

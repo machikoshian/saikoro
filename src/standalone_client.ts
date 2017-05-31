@@ -21,16 +21,14 @@ export class StandaloneUpdateListener extends UpdateListener {
 }
 
 export class StandaloneRequestHandler extends RequestHandler {
-    public sendRequest(query: any, callback: RequestCallback): void {
-        if (query.command === "matching") {
-            session_handler.handleMatching(query.name, query.mode, query.user_id).then(
-                    (matched: MatchedData) => {
-                callback(JSON.stringify({ matching_id: matched.matching_id,
-                                            session_id: matched.session_id }));
-            });
-            return;
-        }
+    public matching(query: any, callback: RequestCallback): void {
+        session_handler.handleMatching(query.name, query.mode, query.user_id)
+        .then((matched: MatchedData) => {
+            callback(JSON.stringify(matched));
+        });
+    }
 
+    public sendRequest(query: any, callback: RequestCallback): void {
         session_handler.handleCommand(query).then((data: KeyValue) => {
             callback(data.value);
         });

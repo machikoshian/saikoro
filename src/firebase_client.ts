@@ -47,27 +47,22 @@ export class FirebaseRequestHandler extends RequestHandler {
         super();
     }
 
-    public sendRequest(json: any, callback: RequestCallback): void {
-        let path: string;
-        if (json.command === "matching") {
-            path = "matching";
-            if (!json.user_id) {
+    public matching(query: any, callback: RequestCallback): void {
+        if (!query.user_id) {
+            return;
+        }
+        let ref_matched = firebase.database().ref("matched").child(query.user_id);
+        ref_matched.on("value", (snapshot) => {
+            let value = snapshot.val();
+            if (!value) {
                 return;
             }
-            let ref_matched = firebase.database().ref("matched").child(json.user_id);
-            ref_matched.on("value", (snapshot) => {
-                let value = snapshot.val();
-                if (!value) {
-                    return;
-                }
-                callback(JSON.stringify(value));
-            });
-        }
-        else {
-            path = "command";
-        }
+            callback(JSON.stringify(value));
+        });
+        firebase.database().ref("matching").push(query);
+    }
 
-        let ref = firebase.database().ref(path);
-        ref.push(json);
+    public sendRequest(json: any, callback: RequestCallback): void {
+        firebase.database().ref("command").push(json);
     }
 }

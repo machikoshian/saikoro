@@ -109,7 +109,7 @@ export class HtmlView {
         if (name.length === 0) {
             return;
         }
-        this.client.startMatching(name, mode);
+        this.client.matching(Request.matching(name, mode));
     }
 
     private onClickCard(player: number, card: number): void {

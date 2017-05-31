@@ -19,29 +19,6 @@ export class WebClient extends Client {
         this.view.initView();
     }
 
-    public startMatching(name: string, mode: number): void {
-        console.log("matching...");
-        if (name.length === 0) {
-            return;
-        }
-        let request = {
-            command: "matching",
-            name: name,
-            mode: mode,
-            user_id: this.user_id,
-        };
-        this.request_handler.sendRequest(request, this.callbackMatching.bind(this));
-    }
-
-    private callbackMatching(response: string): void {
-        const response_json = JSON.parse(response);
-        this.session_id = response_json.session_id;
-        this.matching_id = response_json.matching_id;
-
-        this.update_listener.checkUpdate(this);
-        this.update_listener.startCheckUpdate(this);
-    }
-
     // Do not directly call this method.
     // Use this.callback as a wrapper of this method.
     private callbackSession(response: string): void {

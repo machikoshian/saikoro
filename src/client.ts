@@ -10,7 +10,8 @@ export abstract class UpdateListener {
 }
 
 export abstract class RequestHandler {
-    abstract sendRequest(json: any, callback: RequestCallback): void;
+    abstract sendRequest(query: any, callback: RequestCallback): void;
+    abstract matching(query: any, callback: RequestCallback): void;
 }
 
 export abstract class Client {
@@ -32,6 +33,21 @@ export abstract class Client {
         this.request_handler = request_handler;
     }
 
+    public matching(query: any): void {
+        query.command = "matching";
+        query.user_id = this.user_id;
+        this.request_handler.matching(query, this.callbackMatching.bind(this));
+    }
+
+    private callbackMatching(response: string): void {
+        const response_json = JSON.parse(response);
+        this.session_id = response_json.session_id;
+        this.matching_id = response_json.matching_id;
+
+        this.update_listener.checkUpdate(this);
+        this.update_listener.startCheckUpdate(this);
+    }
+
     public sendRequest(request: any): void {
         request.session_id = this.session_id;
         request.player_id = this.player_id;
@@ -39,11 +55,18 @@ export abstract class Client {
     }
 
     abstract initBoard(): void;
-    abstract startMatching(name: string, mode: number): void;  // TODO: Use enum for mode.
 }
 
 // Move this class to a Saikoro specific file.
 export class Request {
+    static matching(name: string, mode: number): Object {
+        return {
+            command: "matching",
+            name: name,
+            mode: mode,
+        };
+    }
+
     static buildFacility(x: number, y: number, card_id: CardId): Object {
         return {
             command: "build",
