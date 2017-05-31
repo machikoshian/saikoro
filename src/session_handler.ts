@@ -177,8 +177,10 @@ export class SessionHandler {
     }
 
     // TODO: This is a quite hacky way for testing w/o considering any race conditions.
-    public handleMatching(name: string, mode_str: string, user_id: string): Promise<MatchedData> {
-        let mode: number = Number(mode_str);
+    public handleMatching(query: any): Promise<MatchedData> {
+        let name: string = query.name;
+        let mode: number = Number(query.mode);
+        let user_id: string = query.user_id;
         let num_players: number = 1;
         let num_npc: number = 2;
         if (mode === 2) {

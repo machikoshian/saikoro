@@ -22,9 +22,9 @@ export class StandaloneUpdateListener extends UpdateListener {
 
 export class StandaloneRequestHandler extends RequestHandler {
     public matching(query: any, callback: RequestCallback): void {
-        session_handler.handleMatching(query.name, query.mode, query.user_id)
-        .then((matched: MatchedData) => {
-            callback(JSON.stringify(matched));
+        session_handler.handleMatching(query).then((matched: MatchedData) => {
+            callback(JSON.stringify({ matching_id: matched.matching_id,
+                                       session_id: matched.session_id }));
         });
     }
 
