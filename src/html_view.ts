@@ -109,7 +109,8 @@ export class HtmlView {
         if (name.length === 0) {
             return;
         }
-        this.client.matching(Request.matching(name, mode));
+        let deck: string = (<HTMLInputElement>document.getElementById("deck")).value;
+        this.client.matching(Request.matching(name, mode, deck));
     }
 
     private onClickCard(player: number, card: number): void {

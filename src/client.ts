@@ -59,11 +59,12 @@ export abstract class Client {
 
 // Move this class to a Saikoro specific file.
 export class Request {
-    static matching(name: string, mode: number): Object {
+    static matching(name: string, mode: number, deck: string): Object {
         return {
             command: "matching",
             name: name,
             mode: mode,
+            deck: deck,
         };
     }
 

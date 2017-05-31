@@ -181,7 +181,13 @@ export class SessionHandler {
         let name: string = query.name;
         let mode: number = Number(query.mode);
         let user_id: string = query.user_id;
-
+        let deck: number[] = [];
+        try {
+            let user_deck = JSON.parse(query.deck);
+            deck = user_deck;
+        } catch(e) {
+            // Invalid deck format. Ignore it.
+        }
 
         let num_players: number = 1;
         let num_npc: number = 2;
@@ -222,7 +228,6 @@ export class SessionHandler {
                 session = new Session();
             }
 
-            let deck: number[] = [0,0,0,0,0,10,10,10,10,10, 1000,1000,1000,1000,1000];
             let player_id: PlayerId = this.addNewPlayer(session, user_id, name, deck, false);
             if (player_id === num_players - 1) {
                 // Add NPC.
