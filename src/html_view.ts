@@ -20,6 +20,7 @@ export class HtmlView {
     private player_cards_list: CardId[][] = [];
     private last_step: number = -1;
     private drawn_step: number = -1;
+    private field_info_card_id: CardId = -1;
 
     constructor(client: Client) {
         this.client = client;
@@ -320,10 +321,12 @@ export class HtmlView {
         let card_id: CardId = this.session.getCardIdOnBoard(x, y);
         let element: HTMLElement = document.getElementById("field_card_node");
 
-        if (card_id === -1 || element.style.display === "") {
+        if (card_id === -1 || card_id === this.field_info_card_id) {
             element.style.display = "none";
+            this.field_info_card_id = -1;
             return;
         }
+        this.field_info_card_id = card_id;
 
         this.drawCard("field_card", card_id);
         let position: string = (x < 6) ? "field_10_1" : "field_0_1";
