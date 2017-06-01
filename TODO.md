@@ -19,6 +19,7 @@
 * デッキ作成のサポート
 
 * cocos2d-js のチュートリアル
+* IE11 への対応 (polyfill for promise)
 
 # やらない?
 * websocket のサポート

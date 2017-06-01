@@ -1,4 +1,5 @@
 import { RequestCallback, Connection, Client } from "./client";
+import { StandaloneConnection } from "./standalone_connection";
 
 class HttpRequest {
     static Send(url: string, callback: RequestCallback) {
