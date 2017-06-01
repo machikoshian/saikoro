@@ -46,8 +46,10 @@ export class HtmlView {
 
         // Add click listeners.
         // Matching.
-        document.getElementById("matching_button").addEventListener(
+        document.getElementById("matching_button_offline").addEventListener(
             "click", () => { this.onClickMatching(GameMode.OffLine); });
+        document.getElementById("matching_button_online").addEventListener(
+            "click", () => { this.onClickMatching(GameMode.OnLineSingle); });
         document.getElementById("matching_button_2players").addEventListener(
             "click", () => { this.onClickMatching(GameMode.OnLine2Players); });
 
