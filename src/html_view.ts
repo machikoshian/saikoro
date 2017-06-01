@@ -10,6 +10,14 @@ import { DeckMaker } from "./deck_maker" ;
 const COLOR_FIELD: string = "#EFF0D1";
 const COLOR_LANDMARK: string = "#B0BEC5";
 const COLOR_CLICKABLE: string = "#FFCA28";
+const COLOR_HIGHTLIGHT_CARD: string = "#FFE082";
+const COLOR_CHARACTER: string = "#FFF9C4";
+const COLOR_PLAYERS: string[] = ["#909CC2", "#D9BDC5", "#90C290", "#9D8189"];
+const COLOR_GRAY: string = "#B0BEC5";
+const COLOR_BLUE: string = "#90CAF9";
+const COLOR_GREEN: string = "#A5D6A7";
+const COLOR_RED: string = "#EF9A9A";
+const COLOR_PURPLE: string = "#B39DDB";
 
 export class HtmlView {
     private event_drawer_timer = null;
@@ -192,13 +200,13 @@ export class HtmlView {
         console.log(`clicked: card_${player}_${card}`);
         this.resetCards();
         this.clicked_card_element = document.getElementById(`card_${player}_${card}`);
-        this.clicked_card_element.style.borderColor = "#FFE082";
+        this.clicked_card_element.style.borderColor = COLOR_HIGHTLIGHT_CARD;
         this.clicked_card_id = clicked_card_id;
 
         this.drawBoard(this.session);
 
         if (phase === Phase.CharacterCard) {
-            document.getElementById("char_card").style.backgroundColor = "#FFCA28";
+            document.getElementById("char_card").style.backgroundColor = COLOR_CLICKABLE;
         }
 
         if (phase === Phase.BuildFacility) {
@@ -225,7 +233,7 @@ export class HtmlView {
 
         this.resetCards();
         this.clicked_card_element = document.getElementById(`landmark_${card}`);
-        this.clicked_card_element.style.borderColor = "#FFE082";
+        this.clicked_card_element.style.borderColor = COLOR_HIGHTLIGHT_CARD;
         this.clicked_card_id = clicked_card_id;
 
         this.drawBoard(this.session);
@@ -235,31 +243,28 @@ export class HtmlView {
     }
 
     private getPlayerColor(player_id: PlayerId): string {
-        // TODO: Support landmark colors (set / built).
-        let colors = ["#909CC2", "#D9BDC5", "#90C290", "#9D8189"];
-
-        if (player_id === -1 || player_id > colors.length) {
-            return "#EFF0D1";
+        if (player_id === -1 || player_id > COLOR_PLAYERS.length) {
+            return COLOR_FIELD;
         }
-        return colors[player_id];
+        return COLOR_PLAYERS[player_id];
     }
 
     private getFacilityColor(facility: Facility): string {
         if (!facility) {
-            return "#EFF0D1";
+            return COLOR_FIELD;
         }
         let type: FacilityType = facility.type;
         switch(type) {
             case FacilityType.Gray:
-                return "#B0BEC5";
+                return COLOR_GRAY;
             case FacilityType.Blue:
-                return "#90CAF9";
+                return COLOR_BLUE;
             case FacilityType.Green:
-                return "#A5D6A7";
+                return COLOR_GREEN;
             case FacilityType.Red:
-                return "#EF9A9A";
+                return COLOR_RED;
             case FacilityType.Purple:
-                return "#B39DDB";
+                return COLOR_PURPLE;
         }
     }
 
@@ -330,7 +335,7 @@ export class HtmlView {
         let phase: Phase = session.getPhase();
         if (phase === Phase.CharacterCard) {
             document.getElementById("char_card").style.visibility = "visible";
-            document.getElementById("char_card").style.backgroundColor = "#EFF0D1";
+            document.getElementById("char_card").style.backgroundColor = COLOR_FIELD;
         }
         else {
             document.getElementById("char_card").style.visibility = "hidden";
@@ -418,7 +423,7 @@ export class HtmlView {
             document.getElementById(element_id + "_name").innerText = character.getName();
             document.getElementById(element_id + "_cost").innerText = "";
             document.getElementById(element_id + "_description").innerText = character.getDescription();
-            document.getElementById(element_id).style.backgroundColor = "#FFF9C4";
+            document.getElementById(element_id).style.backgroundColor = COLOR_CHARACTER;
             return;
         }
 
@@ -580,7 +585,7 @@ export class HtmlView {
         }
     }
 
-    public drawMessage(message: string, color: string = "#EFF0D1"): void {
+    public drawMessage(message: string, color: string = COLOR_FIELD): void {
         let element = document.getElementById("message");
         element.innerText = message;
         element.style.backgroundColor = color;
