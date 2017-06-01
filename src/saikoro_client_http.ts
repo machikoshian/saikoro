@@ -1,5 +1,5 @@
 import { Connection, Client } from "./client";
-import { HttpConnection } from "./http_client";
+import { HttpConnection } from "./http_connection";
 import { WebClient } from "./saikoro";
 
 let connection: Connection = new HttpConnection();
