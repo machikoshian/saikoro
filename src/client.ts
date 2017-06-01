@@ -1,5 +1,6 @@
 import { CardId } from "./facility";
 import { PlayerId } from "./board";
+import { GameMode } from "./protocol";
 
 export type RequestCallback = (response: string) => void;
 
@@ -59,7 +60,7 @@ export abstract class Client {
 
 // Move this class to a Saikoro specific file.
 export class Request {
-    static matching(name: string, mode: number, deck: string): Object {
+    static matching(name: string, mode: GameMode, deck: string): Object {
         return {
             command: "matching",
             name: name,

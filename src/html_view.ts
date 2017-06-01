@@ -5,7 +5,8 @@ import { CardId, FacilityType, Facility, CharacterType, Character,
          CardData, FacilityDataId } from "./facility";
 import { Dice, DiceResult } from "./dice";
 import { Client, Request } from "./client";
-import { DeckMaker } from "./deck_maker" ;
+import { DeckMaker } from "./deck_maker";
+import { GameMode } from "./protocol";
 
 const COLOR_FIELD: string = "#EFF0D1";
 const COLOR_LANDMARK: string = "#B0BEC5";
@@ -46,9 +47,9 @@ export class HtmlView {
         // Add click listeners.
         // Matching.
         document.getElementById("matching_button").addEventListener(
-            "click", () => { this.onClickMatching(1); });
+            "click", () => { this.onClickMatching(GameMode.OffLine); });
         document.getElementById("matching_button_2players").addEventListener(
-            "click", () => { this.onClickMatching(2); });
+            "click", () => { this.onClickMatching(GameMode.OnLine2Players); });
 
         // Hide components for game.
         document.getElementById("players").style.display = "none";
@@ -157,7 +158,7 @@ export class HtmlView {
         this.client.sendRequest(Request.endTurn());
     }
 
-    private onClickMatching(mode: number): void {
+    private onClickMatching(mode: GameMode): void {
         let name: string = (<HTMLInputElement>document.getElementById("matching_name")).value;
         if (name.length === 0) {
             return;

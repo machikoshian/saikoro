@@ -20,7 +20,7 @@ export class WebClient extends Client {
     }
 
     // Do not directly call this method.
-    // Use this.callback as a wrapper of this method.
+    // Use this.callback.bind(this) as a wrapper of this method.
     private callbackSession(response: string): void {
         if (!response) {
             console.log("Stop polling.");

@@ -3,6 +3,7 @@ import { Session } from "./session";
 import { Board, PlayerId } from "./board";
 import { CardId, FacilityDataId, FacilityType, Facility, CharacterDataId, CardData } from "./facility";
 import { AutoPlay } from "./auto_play";
+import { GameMode } from "./protocol";
 
 export class KeyValue {
     constructor(
@@ -179,7 +180,7 @@ export class SessionHandler {
     // TODO: This is a quite hacky way for testing w/o considering any race conditions.
     public handleMatching(query: any): Promise<MatchedData> {
         let name: string = query.name;
-        let mode: number = Number(query.mode);
+        let mode: GameMode = Number(query.mode);
         let user_id: string = query.user_id;
         let deck: number[] = [];
         try {
@@ -191,7 +192,7 @@ export class SessionHandler {
 
         let num_players: number = 1;
         let num_npc: number = 2;
-        if (mode === 2) {
+        if (mode === GameMode.OnLine2Players) {
             num_players = 2;
             num_npc = 0;
         }
