@@ -4,20 +4,19 @@ import { GameMode } from "./protocol";
 
 export type RequestCallback = (response: string) => void;
 
-export abstract class UpdateListener {
+export abstract class Connection {
+    // Receivers from server.
     abstract startCheckUpdate(client: Client): void;
     abstract stopCheckUpdate(): void;
     abstract checkUpdate(client: Client): void;
-}
 
-export abstract class RequestHandler {
+    // Senders from client.
     abstract sendRequest(query: any, callback: RequestCallback): void;
     abstract matching(query: any, callback: RequestCallback): void;
 }
 
 export abstract class Client {
-    public update_listener: UpdateListener;
-    public request_handler: RequestHandler;
+    public connection: Connection;
 
     public session_id: number = 0;
     public matching_id: number = 0;
@@ -28,16 +27,14 @@ export abstract class Client {
     public step: number = 0;
     public callback: RequestCallback;
 
-    constructor(update_listener: UpdateListener,
-                request_handler: RequestHandler) {
-        this.update_listener = update_listener;
-        this.request_handler = request_handler;
+    constructor(connection: Connection) {
+        this.connection = connection;
     }
 
     public matching(query: any): void {
         query.command = "matching";
         query.user_id = this.user_id;
-        this.request_handler.matching(query, this.callbackMatching.bind(this));
+        this.connection.matching(query, this.callbackMatching.bind(this));
     }
 
     private callbackMatching(response: string): void {
@@ -45,14 +42,14 @@ export abstract class Client {
         this.session_id = response_json.session_id;
         this.matching_id = response_json.matching_id;
 
-        this.update_listener.checkUpdate(this);
-        this.update_listener.startCheckUpdate(this);
+        this.connection.checkUpdate(this);
+        this.connection.startCheckUpdate(this);
     }
 
     public sendRequest(request: any): void {
         request.session_id = this.session_id;
         request.player_id = this.player_id;
-        this.request_handler.sendRequest(request, this.callback);
+        this.connection.sendRequest(request, this.callback);
     }
 
     abstract initBoard(): void;

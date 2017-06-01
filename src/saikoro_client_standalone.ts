@@ -1,9 +1,8 @@
-import { UpdateListener, RequestHandler, Client } from "./client";
-import { StandaloneUpdateListener, StandaloneRequestHandler } from "./standalone_client";
+import { Connection, Client } from "./client";
+import { StandaloneConnection } from "./standalone_client";
 import { WebClient } from "./saikoro";
 
-let update_listener: UpdateListener = new StandaloneUpdateListener();
-let request_handler: RequestHandler = new StandaloneRequestHandler();
+let connection: Connection = new StandaloneConnection();
 
-let client: Client = new WebClient(update_listener, request_handler);
+let client: Client = new WebClient(connection);
 document.addEventListener("DOMContentLoaded", () => { client.initBoard(); });

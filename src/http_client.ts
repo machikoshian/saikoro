@@ -1,4 +1,4 @@
-import { RequestCallback, RequestHandler, UpdateListener, Client } from "./client";
+import { RequestCallback, Connection, Client } from "./client";
 
 class HttpRequest {
     static Send(url: string, callback: RequestCallback) {
@@ -26,7 +26,7 @@ class HttpRequest {
     }
 }
 
-export class HttpUpdateListener extends UpdateListener {
+export class HttpConnection extends Connection {
     public check_update_timer: any = 0;  // Timer
 
     public startCheckUpdate(client: Client): void {
@@ -35,7 +35,7 @@ export class HttpUpdateListener extends UpdateListener {
     public stopCheckUpdate(): void {
         clearInterval(this.check_update_timer);
     }
-    public checkUpdate(client: Client): void {
+    public checkUpdate(client: Client): void {  // TODO: client argument can be callback?
         console.log(`checkUpdate(${client.step})`);
         let request = {
             command: "board",
@@ -43,13 +43,7 @@ export class HttpUpdateListener extends UpdateListener {
             player_id: client.player_id,
             step: client.step,
         };
-        client.request_handler.sendRequest(request, client.callback);
-    }
-}
-
-export class HttpRequestHandler extends RequestHandler {
-    constructor() {
-        super();
+        this.sendRequest(request, client.callback);
     }
 
     public matching(query: any, callback: RequestCallback): void {

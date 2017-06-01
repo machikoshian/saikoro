@@ -1,4 +1,4 @@
-import { RequestCallback, RequestHandler, UpdateListener, Client } from "./client";
+import { RequestCallback, Connection, Client } from "./client";
 
 let firebase = require("firebase/app");
 require("firebase/auth");
@@ -15,7 +15,7 @@ var config = {
 };
 firebase.initializeApp(config);
 
-export class FirebaseUpdateListener extends UpdateListener {
+export class FirebaseConnection extends Connection {
     private ref: any;
 
     constructor() {
@@ -39,12 +39,6 @@ export class FirebaseUpdateListener extends UpdateListener {
     }
     public checkUpdate(client: Client): void {
         // Do nothing.
-    }
-}
-
-export class FirebaseRequestHandler extends RequestHandler {
-    constructor() {
-        super();
     }
 
     public matching(query: any, callback: RequestCallback): void {

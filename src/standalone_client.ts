@@ -1,10 +1,10 @@
-import { RequestCallback, RequestHandler, UpdateListener, Client } from "./client";
+import { RequestCallback, Connection, Client } from "./client";
 import { KeyValue, Memcache, MemcacheMock, MatchedData, SessionHandler } from "./session_handler";
 
 const mc = new MemcacheMock();
 let session_handler: SessionHandler = new SessionHandler(mc);
 
-export class StandaloneUpdateListener extends UpdateListener {
+export class StandaloneConnection extends Connection {
     public startCheckUpdate(client: Client): void {}
     public stopCheckUpdate(): void {}
     public checkUpdate(client: Client): void {
@@ -18,9 +18,7 @@ export class StandaloneUpdateListener extends UpdateListener {
             client.callback(data.value);
         });
     }
-}
 
-export class StandaloneRequestHandler extends RequestHandler {
     public matching(query: any, callback: RequestCallback): void {
         session_handler.handleMatching(query).then((matched: MatchedData) => {
             callback(JSON.stringify({ matching_id: matched.matching_id,

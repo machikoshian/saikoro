@@ -1,4 +1,4 @@
-import { RequestCallback, RequestHandler, UpdateListener, Client } from "./client";
+import { RequestCallback, Connection, Client } from "./client";
 import { Phase, Session } from "./session";
 import { HtmlView } from "./html_view";
 
@@ -8,9 +8,8 @@ export class WebClient extends Client {
     private view: HtmlView;
     public callback: RequestCallback;
 
-    constructor(update_listener: UpdateListener,
-                request_handler: RequestHandler) {
-        super(update_listener, request_handler);
+    constructor(connection: Connection) {
+        super(connection);
         this.callback =  this.callbackSession.bind(this);
         this.view = new HtmlView(this);
     }
@@ -24,7 +23,7 @@ export class WebClient extends Client {
     private callbackSession(response: string): void {
         if (!response) {
             console.log("Stop polling.");
-            this.update_listener.stopCheckUpdate();
+            this.connection.stopCheckUpdate();
         }
 
         // If the response is "{}", the server does not have any update.
@@ -35,7 +34,7 @@ export class WebClient extends Client {
             this.no_update_count++;
             if (this.no_update_count > 100) {
                 console.log("No update for a while.");
-                this.update_listener.stopCheckUpdate();
+                this.connection.stopCheckUpdate();
             }
             return;
         }
@@ -44,7 +43,7 @@ export class WebClient extends Client {
         let session: Session = Session.fromJSON(JSON.parse(response));
 
         if (session.getPhase() === Phase.EndGame) {
-            this.update_listener.stopCheckUpdate();
+            this.connection.stopCheckUpdate();
         }
 
         this.player_id = session.getCurrentPlayerId();
