@@ -520,15 +520,25 @@ export class Session {
         }
 
         // Add card to the effect manager.
-        let char_data_id: CharacterDataId = this.card_manager.getCharacter(card_id).data_id;
-        this.effect_manager.addCard(char_data_id, this.round, this.turn);
-
-        // Apply the effect of the card.
+        let character: Character = this.card_manager.getCharacter(card_id);
         let event: Event = new Event();
         event.type = EventType.Character;
         event.card_id = card_id;
         event.step = this.step;
         this.events.push(event);
+
+        if (character.type === CharacterType.DrawCards) {
+            let i: number = 0;
+            for (; i < character.getPropertyValue(); ++i) {
+                if (this.getPlayerCards(player_id).dealToHand() === -1) {
+                    break;
+                }
+            }
+            event.moneys[player_id] = i;  // TODO: rename moneys to values.
+        }
+        else {
+            this.effect_manager.addCard(character.data_id, this.round, this.turn);
+        }
 
         // Move the card to discard.
         if (!this.card_manager.moveHandToDiscard(card_id)) {

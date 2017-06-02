@@ -1,6 +1,7 @@
 export enum CharacterType {
     None,
     DiceDelta,  // Add N to dice results.
+    DrawCards,  // Draw cards from talon.
     SalaryFactor,  // Multiply the salary.
 }
 
@@ -16,8 +17,9 @@ export class CharacterData {
 
 const CHARACTER_DATA_BASE: number = 1000;
 const CHARACTER_DATA: CharacterData[] = [
-    new CharacterData(1000, "大学生", CharacterType.DiceDelta, 1, {"delta": 3}),
+    new CharacterData(1000, "大学生",  CharacterType.DiceDelta, 1, {"delta": 3}),
     new CharacterData(1001, "幼稚園児", CharacterType.DiceDelta, 2, {"delta": -2}),
+    new CharacterData(1002, "執事",   CharacterType.DrawCards, 0, {"value": 2}),
 ];
 
 export type CharacterDataId = number;
@@ -227,6 +229,9 @@ export class Character {
                 let delta: number = this.property["delta"];
                 let delta_str: string = ((delta > 0) ? "+" : "") + delta;
                 return `サイコロの目を${delta_str}する。\n${this.round}ラウンド`;
+            case CharacterType.DrawCards:
+                let value: number = this.property["value"];
+                return `山札からカードを${value}枚引く`;
         }
         return "";
     }

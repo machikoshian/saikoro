@@ -7,6 +7,7 @@ export class PlayerCards {
     private hand: CardId[];     // 手札
     private field: CardId[];    // 使用中 (建設中)
     private discard: CardId[];  // 捨て札
+    readonly max_hand: number = 10;
 
     constructor(
         talon: CardId[] = [],
@@ -90,7 +91,7 @@ export class PlayerCards {
 
     // Move a random facility from Talon to Hand.
     public dealToHand(): CardId {
-        if (this.talon.length === 0) {
+        if (this.talon.length === 0 || this.hand.length === this.max_hand) {
             return -1;
         }
         let random_index: number = Math.floor(Math.random() * this.talon.length);
@@ -108,6 +109,9 @@ export class PlayerCards {
     }
 
     public moveTalonToHand(card_id: CardId): boolean {
+        if (this.hand.length === this.max_hand) {
+            return false;
+        }
         return this.moveCardId(card_id, this.talon, this.hand);
     }
 
