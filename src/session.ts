@@ -489,8 +489,8 @@ export class Session {
     }
 
     public setLandmark(): boolean {  // Reserve the area for landmark.
-        const facility_data_id: number = 24;
-        let landmark: Facility = new Facility(facility_data_id);
+        const landmark_data_id: number = 10000;
+        let landmark: Facility = new Facility(landmark_data_id);
         let landmark_id: CardId = this.card_manager.addLandmark(landmark);
 
         let positions: [number, number][] = shuffle(this.availablePosition(landmark_id));
