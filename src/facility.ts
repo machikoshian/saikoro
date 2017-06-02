@@ -71,8 +71,8 @@ let FACILITY_DATA: FacilityData[] = [
     new FacilityData(23, 1, [12], "🔨", 300, FacilityType.Purple, {"value": 2000}),
 
     // TODO: Manage landmarks in a different array.
-    new FacilityData(24, 2, [], "🏯", 1500, FacilityType.Gray, {}),
-    new FacilityData(25, 1, [], "🏰", 2000, FacilityType.Gray, {}),
+    new FacilityData(24, 2, [], "🏯", 2500, FacilityType.Gray, {}),
+    new FacilityData(25, 1, [], "🏰", 2500, FacilityType.Gray, {}),
 ];
 
 export class CardData {
