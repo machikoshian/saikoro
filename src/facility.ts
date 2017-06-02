@@ -46,7 +46,7 @@ export class FacilityData {
 let FACILITY_DATA: FacilityData[] = [
     new FacilityData(0,  1, [1],    "🌾", 100, FacilityType.Blue,   {"value": 300}),
     new FacilityData(1,  1, [2],    "🐮", 100, FacilityType.Blue,   {"value": 250}),
-    new FacilityData(2,  2, [3],    "🎳", 200, FacilityType.Purple, {"value": 300}),
+    new FacilityData(2,  2, [3],    "👾", 200, FacilityType.Purple, {"value": 300}),
     new FacilityData(3,  1, [4],    "🐝", 200, FacilityType.Blue,   {"value": 300}),
     new FacilityData(4,  1, [5],    "🍴", 200, FacilityType.Red,    {"value": 400}),
     new FacilityData(5,  1, [6],    "💆", 150, FacilityType.Green,  {"value": 450}),
