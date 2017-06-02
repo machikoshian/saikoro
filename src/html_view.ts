@@ -308,11 +308,6 @@ export class HtmlView {
         document.getElementById("message").style.display = "";
         document.getElementById("dice").style.display = "";
 
-        document.getElementById("cards_1").style.display = "";
-        document.getElementById("cards_2").style.display = "";
-        document.getElementById("cards_3").style.display = "";
-        document.getElementById("landmarks").style.display = "";
-
         // Show event animations.
         this.drawEvents();
 
@@ -360,11 +355,17 @@ export class HtmlView {
             document.getElementById("end_turn").style.visibility = "hidden";
         }
 
+        this.last_step = session.getStep();
+    }
+
+    public drawCards(session: Session): void {
+        let players: Player[] = session.getPlayers();
+
         // Update cards.
         for (let i: number = 0; i < players.length; ++i) {
             let player: Player = players[i];
-            if (player.user_id === user_id) {
-                document.getElementById(`cards_${i}`).style.display = "table-row";
+            if (player.user_id === this.client.user_id) {
+                document.getElementById(`cards_${i}`).style.display = "";
             }
             else {
                 document.getElementById(`cards_${i}`).style.display = "none";
@@ -382,12 +383,13 @@ export class HtmlView {
         }
 
         // Update landmarks.
+        document.getElementById("landmarks").style.display = "";
+        let landmark_ids: CardId[] = session.getLandmarks();
         for (let j: number = 0; j < 5; ++j) {
             this.drawCard(`landmark_${j}`, (j < landmark_ids.length) ? landmark_ids[j] : -1);
         }
 
         this.resetCards();  // Nice to check if built or not?
-        this.last_step = session.getStep();
     }
 
     public drawFieldInfo(x, y): void {
@@ -689,6 +691,7 @@ export class HtmlView {
             this.drawStatusMessage();
             this.drawPlayers();
             this.drawBoard(this.session);
+            this.drawCards(this.session);
             this.prev_session = this.session;
             return false;
         }
@@ -717,6 +720,15 @@ export class HtmlView {
             // Character card
             if (event.type === EventType.Character) {
                 this.effectCharacter(this.session.getCurrentPlayerId(), event.card_id);
+                if (this.session.getCharacter(event.card_id).type === CharacterType.DrawCards) {
+                    let timeout: number = 1000;
+                    for (let drawn of event.target_card_ids) {
+                        window.setTimeout(() => {
+                            this.effectDrawCard(event.player_id, drawn);
+                        }, timeout);
+                        timeout += 500;
+                    }
+                }
                 continue;
             }
 
@@ -788,6 +800,16 @@ export class HtmlView {
         let char_motion: HTMLElement = <HTMLElement>document.body.appendChild(new_node);
         char_motion.style.display = "";
         this.effectElementMotion(char_motion, `player_${player_id}_money`, "field_5_2");
+    }
+
+    private effectDrawCard(player_id: PlayerId, card_id: CardId): void {
+        this.drawCard("char_motion", card_id);
+
+        // Animation.
+        let new_node: Node = document.getElementById("char_motion_node").cloneNode(true);
+        let char_motion: HTMLElement = <HTMLElement>document.body.appendChild(new_node);
+        char_motion.style.display = "";
+        this.effectElementMotion(char_motion, `player_${player_id}_money`, `card_${player_id}_0`);
     }
 
     private effectMoneyMotion(elementFrom: string, elementTo: string, money: number): void {

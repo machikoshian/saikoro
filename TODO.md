@@ -1,6 +1,7 @@
 * 使用済み matched データの削除。
 * 給料のイベントのタイミング
 
+* event.player_id, target_card_ids を moneys の流用のかわりに使う。
 * 観戦モードの追加
 * 各イベントの同期
 * タイムアウトの実装

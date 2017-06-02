@@ -40,8 +40,10 @@ export enum EventType {
 export class Event {
     public step: number = 0;
     public type: EventType = EventType.None;
+    public player_id: PlayerId = -1;
     public moneys: number[] = [0, 0, 0, 0];
     public card_id: CardId = null;
+    public target_card_ids: CardId[] = [];
     public dice: DiceResult = null;
 
     public toJSON(): Object {
@@ -49,8 +51,10 @@ export class Event {
             class_name: "Event",
             step: this.step,
             type: this.type,
+            player_id: this.player_id,
             moneys: this.moneys,
             card_id: this.card_id,
+            target_card_ids: this.target_card_ids,
             dice: this.dice ? this.dice.toJSON() : null,
         }
     }
@@ -59,8 +63,10 @@ export class Event {
         let event = new Event();
         event.step = json.step;
         event.type = json.type;
+        event.player_id = json.player_id;
         event.moneys = json.moneys;
         event.card_id = json.card_id;
+        event.target_card_ids = json.target_card_ids;
         event.dice = json.dice ? DiceResult.fromJSON(json.dice) : null;
         return event;
     }
@@ -525,14 +531,17 @@ export class Session {
         event.type = EventType.Character;
         event.card_id = card_id;
         event.step = this.step;
+        event.player_id = player_id;
         this.events.push(event);
 
         if (character.type === CharacterType.DrawCards) {
             let i: number = 0;
             for (; i < character.getPropertyValue(); ++i) {
-                if (this.getPlayerCards(player_id).dealToHand() === -1) {
+                let drawn: CardId = this.getPlayerCards(player_id).dealToHand();
+                if (drawn === -1) {
                     break;
                 }
+                event.target_card_ids.push(drawn);
             }
             event.moneys[player_id] = i;  // TODO: rename moneys to values.
         }
