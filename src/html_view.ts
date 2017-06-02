@@ -404,7 +404,7 @@ export class HtmlView {
         this.field_info_card_id = card_id;
 
         this.drawCard("field_card", card_id);
-        let position: string = (x < 6) ? "field_10_1" : "field_0_1";
+        let position: string = (x < 6) ? "click_10_1" : "click_0_1";
         let pos_rect: ClientRect = document.getElementById(position).getBoundingClientRect();
 
         element.style.display = "";
