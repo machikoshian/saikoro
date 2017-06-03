@@ -7,7 +7,7 @@ import { Dice, DiceResult } from "./dice";
 import { Client, Request } from "./client";
 import { DeckMaker } from "./deck_maker";
 import { GameMode } from "./protocol";
-import { HtmlCardsView } from "./html_view_parts";
+import { HtmlCardsView, HtmlCardView } from "./html_view_parts";
 
 const COLOR_FIELD: string = "#EFF0D1";
 const COLOR_LANDMARK: string = "#B0BEC5";
@@ -65,6 +65,7 @@ export class HtmlView {
             cards_view.none();
             this.cards_views.push(cards_view);
         }
+        this.cards_views[0].show();
         document.getElementById("landmarks").style.display = "none";
 
         // Fields
@@ -129,8 +130,8 @@ export class HtmlView {
         let data_ids: FacilityDataId[] = this.deck_maker.getAvailableFacilities(x);
         for (; i < data_ids.length; ++i) {
             let facility: Facility = new Facility(data_ids[i]);
-            this.drawFacilityCard(`card_0_${i}`, facility);
-            document.getElementById(`card_0_${i}`).style.display = "";
+            let card_view: HtmlCardView = new HtmlCardView(`card_0_${i}`);
+            card_view.drawFacilityCard(facility);
         }
         for (; i < 10; ++i) {
             document.getElementById(`card_0_${i}`).style.display = "none";
@@ -452,31 +453,8 @@ export class HtmlView {
 
         // Facility
         let facility: Facility = this.session.getFacility(card_id);
-        this.drawFacilityCard(element_id, facility);
-    }
-
-    public drawFacilityCard(element_id: string, facility: Facility): void {
-        // Facility
-        let area: string = this.getFacilityAreaString(facility);
-        document.getElementById(element_id).style.display = "table-cell";
-        document.getElementById(element_id + "_name").innerText = `${area} ${facility.getName()}`;
-        document.getElementById(element_id + "_cost").innerText = String(facility.getCost());
-        document.getElementById(element_id + "_description").innerText = facility.getDescription();
-        document.getElementById(element_id).style.backgroundColor = this.getFacilityColor(facility);
-    }
-
-    private getFacilityAreaString(facility: Facility): string {
-        const area_name: string[] =
-            ["", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩", "⑪", "⑫", ""];
-
-        let area: string = facility.getArea().map((i) => {
-            if (facility.size === 2) {  // TODO: support more than 2, if necessary.
-                return `${area_name[i]}+${area_name[i + 1]}`;
-            }
-            return area_name[i];
-        }).join(",");
-
-        return area;
+        let card_view: HtmlCardView = new HtmlCardView(element_id);
+        card_view.drawFacilityCard(facility);
     }
 
     public drawBoard(session: Session): void {  // session may take a different value.
