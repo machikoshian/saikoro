@@ -184,23 +184,19 @@ export class HtmlView {
         let phase: Phase = this.session.getPhase();
         let is_char: boolean = this.session.isCharacter(clicked_card_id);
 
-        if (phase === Phase.CharacterCard) {
-            if (!is_char) {
-                return;
-            }
-        }
-
-        else if (phase === Phase.BuildFacility) {
-            if (is_char) {
-                return;
-            }
-        }
-
-        else {
+        let is_valid: boolean = ((phase === Phase.CharacterCard) && is_char ||
+                                 (phase === Phase.BuildFacility) && !is_char);
+        if (!is_valid) {
             return;
         }
 
         console.log(`clicked: card_${player}_${card}`);
+        if (clicked_card_id === this.clicked_card_id) {
+            this.resetCards();
+            this.drawBoard(this.session);  // TODO: draw click fields only.
+            return;
+        }
+
         this.resetCards();
         this.clicked_card_element = document.getElementById(`card_${player}_${card}`);
         this.clicked_card_element.style.borderColor = COLOR_HIGHTLIGHT_CARD;
@@ -748,7 +744,8 @@ export class HtmlView {
                 let facility: Facility = this.session.getFacility(event.card_id);
                 this.prev_session.getBoard().removeCards(x, y, facility.size);
                 this.prev_session.getBoard().setCardId(x, y, event.card_id, facility.size);
-                this.drawBoard(this.prev_session);
+                // Draw the board after money motion.
+                window.setTimeout(() => { this.drawBoard(this.prev_session); }, 1000);
             }
 
             const money_motion: EventType[] = [

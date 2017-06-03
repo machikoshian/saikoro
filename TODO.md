@@ -2,6 +2,7 @@
 * 給料のイベントのタイミング
 
 * event.player_id, target_card_ids を moneys の流用のかわりに使う。
+* html_view.ts のリファクタリング
 * 観戦モードの追加
 * 各イベントの同期
 * タイムアウトの実装
