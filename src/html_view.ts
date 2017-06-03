@@ -379,7 +379,7 @@ export class HtmlView {
         for (let i: number = 0; i < players.length; ++i) {
             let card_ids: CardId[] = session.getSortedHand(i);
             for (let j: number = 0; j < 10; ++j) {
-                this.drawCard(`card_${i}_${j}`, (j < card_ids.length) ? card_ids[j] : -1);
+                this.drawCard(new HtmlCardView(`card_${i}_${j}`), (j < card_ids.length) ? card_ids[j] : -1);
             }
         }
 
@@ -387,7 +387,7 @@ export class HtmlView {
         document.getElementById("landmarks").style.display = "";
         let landmark_ids: CardId[] = session.getLandmarks();
         for (let j: number = 0; j < 5; ++j) {
-            this.drawCard(`landmark_${j}`, (j < landmark_ids.length) ? landmark_ids[j] : -1);
+            this.drawCard(new HtmlCardView(`landmark_${j}`), (j < landmark_ids.length) ? landmark_ids[j] : -1);
         }
 
         this.resetCards();  // Nice to check if built or not?
@@ -404,7 +404,7 @@ export class HtmlView {
         }
         this.field_info_card_id = card_id;
 
-        this.drawCard("field_card", card_id);
+        this.drawCard(new HtmlCardView("field_card"), card_id);
         let position: string = (x < 6) ? "click_10_1" : "click_0_1";
         let pos_rect: ClientRect = document.getElementById(position).getBoundingClientRect();
 
@@ -415,14 +415,12 @@ export class HtmlView {
         element.style.left = pos_rect.left + "px";
     }
 
-    public drawCard(element_id: string, card_id: CardId): void {
+    public drawCard(card_view: HtmlCardView, card_id: CardId): void {
         // No card
         if (card_id === -1) {
-            document.getElementById(element_id).style.display = "none";
+            card_view.none();
             return;
         }
-
-        let card_view: HtmlCardView = new HtmlCardView(element_id);
 
         // Character
         if (this.session.isCharacter(card_id)) {
@@ -759,7 +757,7 @@ export class HtmlView {
     }
 
     private effectCharacter(player_id: PlayerId, card_id: CardId): void {
-        this.drawCard("char_motion", card_id);
+        this.drawCard(new HtmlCardView("char_motion"), card_id);
 
         // Animation.
         let new_node: Node = document.getElementById("char_motion_node").cloneNode(true);
@@ -769,7 +767,7 @@ export class HtmlView {
     }
 
     private effectDrawCard(player_id: PlayerId, card_id: CardId): void {
-        this.drawCard("char_motion", card_id);
+        this.drawCard(new HtmlCardView("char_motion"), card_id);
 
         // Animation.
         let new_node: Node = document.getElementById("char_motion_node").cloneNode(true);
