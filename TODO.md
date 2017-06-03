@@ -1,5 +1,6 @@
 * 使用済み matched データの削除。
 * 給料のイベントのタイミング
+* 建設時にカードとクリックエリアが消えない
 
 * event.player_id, target_card_ids を moneys の流用のかわりに使う。
 * html_view.ts のリファクタリング

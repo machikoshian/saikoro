@@ -7,6 +7,7 @@ import { Dice, DiceResult } from "./dice";
 import { Client, Request } from "./client";
 import { DeckMaker } from "./deck_maker";
 import { GameMode } from "./protocol";
+import { HtmlCardsView } from "./html_view_parts";
 
 const COLOR_FIELD: string = "#EFF0D1";
 const COLOR_LANDMARK: string = "#B0BEC5";
@@ -34,6 +35,7 @@ export class HtmlView {
     private field_info_card_id: CardId = -1;
     private deck_maker: DeckMaker = new DeckMaker();
     private clicked_field: [number, number] = [0, 0];
+    private cards_views: HtmlCardsView[] = [];
 
     constructor(client: Client) {
         this.client = client;
@@ -58,9 +60,11 @@ export class HtmlView {
         document.getElementById("message").style.display = "none";
         document.getElementById("dice").style.display = "none";
 
-        document.getElementById("cards_1").style.display = "none";
-        document.getElementById("cards_2").style.display = "none";
-        document.getElementById("cards_3").style.display = "none";
+        for (let pid = 0; pid < 4; ++pid) {
+            let cards_view: HtmlCardsView = new HtmlCardsView(pid);
+            cards_view.none();
+            this.cards_views.push(cards_view);
+        }
         document.getElementById("landmarks").style.display = "none";
 
         // Fields
@@ -361,14 +365,14 @@ export class HtmlView {
         for (let i: number = 0; i < players.length; ++i) {
             let player: Player = players[i];
             if (player.user_id === this.client.user_id) {
-                document.getElementById(`cards_${i}`).style.display = "";
+                this.cards_views[i].show();
             }
             else {
-                document.getElementById(`cards_${i}`).style.display = "none";
+                this.cards_views[i].none();
             }
         }
         for (let i: number = players.length; i < 4; ++i) {
-            document.getElementById(`cards_${i}`).style.display = "none";
+            this.cards_views[i].none();
         }
 
         for (let i: number = 0; i < players.length; ++i) {
