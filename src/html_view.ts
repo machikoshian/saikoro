@@ -7,7 +7,7 @@ import { Dice, DiceResult } from "./dice";
 import { Client, Request } from "./client";
 import { DeckMaker } from "./deck_maker";
 import { GameMode } from "./protocol";
-import { HtmlCardsView, HtmlCardView } from "./html_view_parts";
+import { HtmlViewObject, HtmlCardsView, HtmlCardView } from "./html_view_parts";
 
 const COLOR_FIELD: string = "#EFF0D1";
 const COLOR_LANDMARK: string = "#B0BEC5";
@@ -360,26 +360,17 @@ export class HtmlView {
     }
 
     public drawCards(session: Session): void {
-        let players: Player[] = session.getPlayers();
-
         // Update cards.
-        for (let i: number = 0; i < players.length; ++i) {
-            let player: Player = players[i];
-            if (player.user_id === this.client.user_id) {
-                this.cards_views[i].show();
-            }
-            else {
+        for (let i: number = 0; i < 4; ++i) {
+            if (this.client.player_id !== i) {
                 this.cards_views[i].none();
+                continue;
             }
-        }
-        for (let i: number = players.length; i < 4; ++i) {
-            this.cards_views[i].none();
-        }
 
-        for (let i: number = 0; i < players.length; ++i) {
+            this.cards_views[i].show();
             let card_ids: CardId[] = session.getSortedHand(i);
             for (let j: number = 0; j < 10; ++j) {
-                this.drawCard(new HtmlCardView(`card_${i}_${j}`), (j < card_ids.length) ? card_ids[j] : -1);
+                this.drawCard(this.cards_views[i].cards[j], (j < card_ids.length) ? card_ids[j] : -1);
             }
         }
 
@@ -395,10 +386,11 @@ export class HtmlView {
 
     public drawFieldInfo(x, y): void {
         let card_id: CardId = this.session.getCardIdOnBoard(x, y);
-        let element: HTMLElement = document.getElementById("field_card_node");
+        let field_card: HtmlViewObject =
+            new HtmlViewObject(document.getElementById("field_card_node"));
 
         if (card_id === -1 || card_id === this.field_info_card_id) {
-            element.style.display = "none";
+            field_card.none();
             this.field_info_card_id = -1;
             return;
         }
@@ -408,11 +400,8 @@ export class HtmlView {
         let position: string = (x < 6) ? "click_10_1" : "click_0_1";
         let pos_rect: ClientRect = document.getElementById(position).getBoundingClientRect();
 
-        element.style.display = "";
-        element.style.zIndex = "2";
-        element.style.position = "absolute";
-        element.style.top = pos_rect.top + "px";
-        element.style.left = pos_rect.left + "px";
+        field_card.move(pos_rect.top, pos_rect.left);
+        field_card.show();
     }
 
     public drawCard(card_view: HtmlCardView, card_id: CardId): void {

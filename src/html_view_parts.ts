@@ -47,7 +47,7 @@ export enum Visibility {
     None,
 }
 
-class HtmlViewObject {
+export class HtmlViewObject {
     constructor(readonly element: HTMLElement) {
     }
 
@@ -78,6 +78,14 @@ class HtmlViewObject {
 
     public none(): void {  // TODO: Rename it to a better one.
         this.setVisibility(Visibility.None);
+    }
+
+    public move(x: number, y: number): void {
+        // The parent element should be relative.
+        this.element.style.zIndex = "2";
+        this.element.style.position = "absolute";
+        this.element.style.top = x + "px";
+        this.element.style.left = y + "px";
     }
 }
 
