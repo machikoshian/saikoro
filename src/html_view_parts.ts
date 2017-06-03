@@ -1,5 +1,5 @@
 import { PlayerId } from "./board";
-import { CardId, Facility, FacilityType } from "./facility";
+import { CardId, Facility, FacilityType, Character } from "./facility";
 
 // TODO: Move it to a new file for util.
 const COLOR_FIELD: string = "#EFF0D1";
@@ -32,6 +32,14 @@ function getFacilityColor(facility: Facility): string {
             return COLOR_PURPLE;
     }
 }
+
+function getPlayerColor(player_id: PlayerId): string {
+    if (player_id === -1 || player_id > COLOR_PLAYERS.length) {
+        return COLOR_FIELD;
+    }
+    return COLOR_PLAYERS[player_id];
+}
+
 
 export enum Visibility {
     Visible,
@@ -123,6 +131,25 @@ export class HtmlCardView extends HtmlViewObject {
         this.element_description.innerText = facility.getDescription();
         this.element.style.backgroundColor = getFacilityColor(facility);
         this.show();
+    }
+
+    public drawCharacterCard(character: Character): void {
+        this.element_name.innerText = character.getName();
+        this.element_cost.innerText = "";
+        this.element_description.innerText = character.getDescription();
+        this.element.style.backgroundColor = COLOR_CHARACTER;
+        this.show();
+    }
+
+    public drawLandmarkCard(landmark: Facility, owner_id: PlayerId): void {
+        this.element_name.innerText = landmark.getName();
+        this.element_cost.innerText = String(landmark.getCost());
+        this.element_description.innerText = landmark.getDescription();
+        if (owner_id === -1) {
+            this.element.style.backgroundColor = getFacilityColor(landmark);
+        } else {
+            this.element.style.backgroundColor = getPlayerColor(owner_id);
+        }
     }
 
     private getFacilityAreaString(facility: Facility): string {

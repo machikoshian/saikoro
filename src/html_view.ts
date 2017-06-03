@@ -422,38 +422,25 @@ export class HtmlView {
             return;
         }
 
+        let card_view: HtmlCardView = new HtmlCardView(element_id);
+
         // Character
         if (this.session.isCharacter(card_id)) {
             let character: Character = this.session.getCharacter(card_id);
-            document.getElementById(element_id).style.display = "table-cell";
-            document.getElementById(element_id + "_name").innerText = character.getName();
-            document.getElementById(element_id + "_cost").innerText = "";
-            document.getElementById(element_id + "_description").innerText = character.getDescription();
-            document.getElementById(element_id).style.backgroundColor = COLOR_CHARACTER;
+            card_view.drawCharacterCard(character);
             return;
         }
 
         // Landmark
         if (this.session.isLandmark(card_id)) {
             let landmark: Facility = this.session.getFacility(card_id);
-            document.getElementById(element_id).style.display = "table-cell";
-            document.getElementById(element_id + "_name").innerText = landmark.getName();
-            document.getElementById(element_id + "_cost").innerText = String(landmark.getCost());
-            document.getElementById(element_id + "_description").innerText = landmark.getDescription();
             let owner_id: PlayerId = this.session.getOwnerId(card_id);
-            if (owner_id === -1) {
-                document.getElementById(element_id).style.backgroundColor =
-                    this.getFacilityColor(landmark);
-            } else {
-                document.getElementById(element_id).style.backgroundColor =
-                    this.getPlayerColor(owner_id);
-            }
+            card_view.drawLandmarkCard(landmark, owner_id);
             return;
         }
 
         // Facility
         let facility: Facility = this.session.getFacility(card_id);
-        let card_view: HtmlCardView = new HtmlCardView(element_id);
         card_view.drawFacilityCard(facility);
     }
 
