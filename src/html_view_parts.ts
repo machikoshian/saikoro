@@ -134,6 +134,35 @@ export class HtmlCardView extends HtmlViewObject {
         this.card_id = card_id;
     }
 
+    public draw(session: Session, card_id: CardId): void {
+        this.card_id = card_id;
+
+        // No card
+        if (card_id === -1) {
+            this.none();
+            return;
+        }
+
+        // Character
+        if (session.isCharacter(card_id)) {
+            let character: Character = session.getCharacter(card_id);
+            this.drawCharacterCard(character);
+            return;
+        }
+
+        // Landmark
+        if (session.isLandmark(card_id)) {
+            let landmark: Facility = session.getFacility(card_id);
+            let owner_id: PlayerId = session.getOwnerId(card_id);
+            this.drawLandmarkCard(landmark, owner_id);
+            return;
+        }
+
+        // Facility
+        let facility: Facility = session.getFacility(card_id);
+        this.drawFacilityCard(facility);
+    }
+
     public drawFacilityCard(facility: Facility): void {
         let area: string = this.getFacilityAreaString(facility);
         this.element_name.innerText = `${area} ${facility.getName()}`;
@@ -160,6 +189,7 @@ export class HtmlCardView extends HtmlViewObject {
         } else {
             this.element.style.backgroundColor = getPlayerColor(owner_id);
         }
+        this.show();
     }
 
     private getFacilityAreaString(facility: Facility): string {

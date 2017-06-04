@@ -21,6 +21,7 @@
 * Firebase.onDisconnect への対応
 * 施設データを JSON で管理
 * デッキ作成のサポート
+* html table から div への移行
 
 * cocos2d-js のチュートリアル
 * IE11 への対応 (polyfill for promise)

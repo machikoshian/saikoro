@@ -23,7 +23,6 @@ const COLOR_PURPLE: string = "#B39DDB";
 
 export class HtmlView {
     private event_drawer_timer = null;
-    private money_animation_timers = [null, null, null, null];
     private client: Client;
     private session: Session = null;
     private prev_session: Session = null;
@@ -37,6 +36,9 @@ export class HtmlView {
     private clicked_field: [number, number] = [0, 0];
     private cards_views: HtmlCardsView[] = [];
     private player_views: HtmlPlayerView[] = [];
+    private char_motion_view: HtmlCardView = null;
+    private field_card_node_view: HtmlViewObject = null;
+    private field_card_view: HtmlCardView = null;
 
     constructor(client: Client) {
         this.client = client;
@@ -76,6 +78,14 @@ export class HtmlView {
         }
         this.cards_views[0].show();
         document.getElementById("landmarks").style.display = "none";
+
+        // Character motion
+        this.char_motion_view = new HtmlCardView("char_motion");
+
+        // Field card
+        this.field_card_node_view = new HtmlViewObject(document.getElementById("field_card_node"));
+        this.field_card_node_view.none();
+        this.field_card_view = new HtmlCardView("field_card");
 
         // Fields
         for (let y: number = 0; y < row; ++y) {
@@ -119,7 +129,6 @@ export class HtmlView {
 
         document.getElementById("money_motion").style.display = "none";
         document.getElementById("char_motion_node").style.display = "none";
-        document.getElementById("field_card_node").style.display = "none";
     }
 
     private onClickDeckField(x: number, y: number): void {
@@ -395,48 +404,22 @@ export class HtmlView {
 
     public drawFieldInfo(x, y): void {
         let card_id: CardId = this.session.getCardIdOnBoard(x, y);
-        let field_card: HtmlViewObject =
-            new HtmlViewObject(document.getElementById("field_card_node"));
-
         if (card_id === -1 || card_id === this.field_info_card_id) {
-            field_card.none();
+            this.field_card_node_view.none();
             this.field_info_card_id = -1;
             return;
         }
         this.field_info_card_id = card_id;
 
-        this.drawCard(new HtmlCardView("field_card"), card_id);
+        this.field_card_view.draw(this.session, card_id);
         let position: string = (x < 6) ? "click_10_1" : "click_0_1";
         let pos_rect: ClientRect = document.getElementById(position).getBoundingClientRect();
 
-        field_card.showAt(pos_rect.top, pos_rect.left);
+        this.field_card_node_view.showAt(pos_rect.top, pos_rect.left);
     }
 
     public drawCard(card_view: HtmlCardView, card_id: CardId): void {
-        // No card
-        if (card_id === -1) {
-            card_view.none();
-            return;
-        }
-
-        // Character
-        if (this.session.isCharacter(card_id)) {
-            let character: Character = this.session.getCharacter(card_id);
-            card_view.drawCharacterCard(character);
-            return;
-        }
-
-        // Landmark
-        if (this.session.isLandmark(card_id)) {
-            let landmark: Facility = this.session.getFacility(card_id);
-            let owner_id: PlayerId = this.session.getOwnerId(card_id);
-            card_view.drawLandmarkCard(landmark, owner_id);
-            return;
-        }
-
-        // Facility
-        let facility: Facility = this.session.getFacility(card_id);
-        card_view.drawFacilityCard(facility);
+        card_view.draw(this.session, card_id);
     }
 
     public drawBoard(session: Session): void {  // session may take a different value.
@@ -507,7 +490,7 @@ export class HtmlView {
             this.player_views[i].draw(this.session);
         }
         for (let i: number = players.length; i < 4; ++i) {
-            document.getElementById(`player_${i}`).style.visibility = "hidden";
+            this.player_views[i].hide();
         }
     }
 
@@ -714,7 +697,7 @@ export class HtmlView {
     }
 
     private effectCharacter(player_id: PlayerId, card_id: CardId): void {
-        this.drawCard(new HtmlCardView("char_motion"), card_id);
+        this.char_motion_view.draw(this.session, card_id);
 
         // Animation.
         let new_node: Node = document.getElementById("char_motion_node").cloneNode(true);
@@ -724,7 +707,7 @@ export class HtmlView {
     }
 
     private effectDrawCard(player_id: PlayerId, card_id: CardId): void {
-        this.drawCard(new HtmlCardView("char_motion"), card_id);
+        this.char_motion_view.draw(this.session, card_id);
 
         // Animation.
         let new_node: Node = document.getElementById("char_motion_node").cloneNode(true);
