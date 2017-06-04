@@ -664,6 +664,7 @@ export class Session {
         event.type = EventType.Build;
         event.moneys = overwrite_costs;
         event.card_id = card_id;
+        event.player_id = player_id;
 
         this.board.setCardId(x, y, card_id, facility.size);
         for (let i: number = 0; i < this.players.length; ++i) {

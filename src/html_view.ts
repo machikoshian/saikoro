@@ -591,8 +591,12 @@ export class HtmlView {
                 let facility: Facility = this.session.getFacility(event.card_id);
                 this.prev_session.getBoard().removeCards(x, y, facility.size);
                 this.prev_session.getBoard().setCardId(x, y, event.card_id, facility.size);
+                this.prev_session.getPlayerCards(event.player_id).moveHandToField(event.card_id);
                 // Draw the board after money motion.
-                window.setTimeout(() => { this.drawBoard(this.prev_session); }, 1000);
+                window.setTimeout(() => {
+                    this.drawBoard(this.prev_session);
+                    this.drawCards(this.prev_session);
+                }, 1000);
             }
 
             const money_motion: EventType[] = [
