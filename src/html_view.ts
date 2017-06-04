@@ -7,8 +7,8 @@ import { Dice, DiceResult } from "./dice";
 import { Client, Request } from "./client";
 import { DeckMaker } from "./deck_maker";
 import { GameMode } from "./protocol";
-import { HtmlViewObject, HtmlCardsView, HtmlCardView, HtmlFloatingCardView,
-         HtmlPlayerView, HtmlMessageView, HtmlButtonsView } from "./html_view_parts";
+import { HtmlViewObject, HtmlCardsView, HtmlCardView, HtmlFloatingCardView, HtmlPlayerView,
+         HtmlMessageView, HtmlButtonsView,HtmlClickableFieldsView } from "./html_view_parts";
 
 const COLOR_FIELD: string = "#EFF0D1";
 const COLOR_LANDMARK: string = "#B0BEC5";
@@ -41,6 +41,7 @@ export class HtmlView {
     private money_motion_view: HtmlViewObject = null;
     private message_view: HtmlMessageView = null;
     private buttons_view: HtmlButtonsView = null;
+    private clicakable_fiels_view: HtmlClickableFieldsView = null;
 
     constructor(client: Client) {
         this.client = client;
@@ -105,10 +106,11 @@ export class HtmlView {
         this.field_card_view.none();
 
         // Fields
+        this.clicakable_fiels_view = new HtmlClickableFieldsView("click", row, column);
         for (let y: number = 0; y < row; ++y) {
             for (let x: number = 0; x < column; ++x) {
-                document.getElementById(`click_${x}_${y}`).addEventListener(
-                    "click", () => { this.onClickField(x, y); });
+                this.clicakable_fiels_view.fields[x][y].addClickListener(
+                    () => { this.onClickField(x, y); });
             }
         }
 
@@ -123,7 +125,7 @@ export class HtmlView {
 
     private onClickDeckField(x: number, y: number): void {
         let [px, py]: [number, number] = this.clicked_field;
-        document.getElementById(`click_${px}_${py}`).style.borderColor = "transparent";
+        this.clicakable_fiels_view.setClickable(this.clicked_field, false);
         this.clicked_field = [x, y];
 
         if (px === x && py === y) {
@@ -132,7 +134,7 @@ export class HtmlView {
             return;
         }
 
-        document.getElementById(`click_${x}_${y}`).style.borderColor = COLOR_CLICKABLE;
+        this.clicakable_fiels_view.setClickable(this.clicked_field, true);
 
         let i: number = 0;
         let data_ids: FacilityDataId[] = this.deck_maker.getAvailableFacilities(x);
@@ -222,12 +224,8 @@ export class HtmlView {
         }
 
         if (phase === Phase.BuildFacility) {
-            for (let area of this.session.getFacility(clicked_card_id).getArea()) {
-                let x: number = area - 1;
-                for (let y: number = 0; y < 5; y++) {
-                    document.getElementById(`click_${x}_${y}`).style.borderColor = COLOR_CLICKABLE;
-                }
-            }
+            this.clicakable_fiels_view.setClickableAreas(
+                this.session.getFacility(clicked_card_id).getArea());
         }
     }
 
@@ -249,8 +247,7 @@ export class HtmlView {
 
         this.drawBoard(this.session);
 
-        let [x, y] = this.session.getPosition(clicked_card_id);
-        document.getElementById(`click_${x}_${y}`).style.borderColor = COLOR_CLICKABLE;
+        this.clicakable_fiels_view.setClickable(this.session.getPosition(clicked_card_id), true);
     }
 
     private getPlayerColor(player_id: PlayerId): string {
@@ -392,8 +389,7 @@ export class HtmlView {
                 this.drawField(x, y, facility_id, facility, owner_id);
             }
         }
-        let [x, y]: [number, number] = this.clicked_field;
-        document.getElementById(`click_${x}_${y}`).style.borderColor = COLOR_CLICKABLE;
+        this.clicakable_fiels_view.setClickable(this.clicked_field, true);
         document.getElementById("deck").innerText =
             JSON.stringify(this.deck_maker.getFacilityDataIds());
     }
@@ -401,8 +397,8 @@ export class HtmlView {
     private drawField(x: number, y: number,
                       facility_id: CardId, facility: Facility, owner_id: PlayerId): void {
         let field: HTMLElement = document.getElementById(`field_${x}_${y}`);
+        this.clicakable_fiels_view.setClickable([x, y], false);
 
-        document.getElementById(`click_${x}_${y}`).style.borderColor = "transparent";
         (<HTMLTableCellElement>field).colSpan = 1;
         field.style.display = "";
 
@@ -557,6 +553,7 @@ export class HtmlView {
                         break;
                     }
                 }
+                this.clicakable_fiels_view.animateDiceResult(event.dice.result(), color);
                 this.message_view.drawMessage(message, color);
                 continue;
             }

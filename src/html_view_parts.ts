@@ -118,6 +118,7 @@ export class HtmlViewObject {
         this.element.style.left = rect_from.left + "px";
 
         this.element.style.transitionDuration = "1s";
+        this.element.style.transitionTimingFunction = "ease";
         this.element.style.transform = `translate(${diff_x}px, ${diff_y}px)`;
 
         window.setTimeout(() => { this.none(); }, 1500);
@@ -410,5 +411,78 @@ export class HtmlButtonsView extends HtmlViewObject {
             this.end_turn.show();
         }
         this.show();
+    }
+}
+
+export class HtmlClickableFieldView extends HtmlViewObject {
+    constructor(element_id: string) {
+        super(document.getElementById(element_id));
+    }
+
+    public reset(): void {
+        this.element.style.borderColor = "transparent";
+    }
+
+    public setClickable(is_clickable: boolean): void {
+        // TODO: Use class of "clickable".
+        this.element.style.borderColor = is_clickable ? COLOR_CLICKABLE : "transparent";
+    }
+
+    public setColor(color: string): void {
+        this.element.style.borderColor = color;
+    }
+}
+
+export class HtmlClickableFieldsView extends HtmlViewObject {
+    readonly row: number;
+    readonly column: number;
+    readonly fields: HtmlClickableFieldView[][] = [];
+
+    constructor(element_id: string, row: number, column: number) {
+        super(document.getElementById(element_id));
+        this.row = row;
+        this.column = column;
+
+        for (let x: number = 0; x < column; ++x) {
+            this.fields.push([]);
+            for (let y: number = 0; y < row; ++y) {
+                this.fields[x].push(new HtmlClickableFieldView(`${element_id}_${x}_${y}`));
+            }
+        }
+    }
+
+    public resetAll(): void {
+        for (let x: number = 0; x < this.column; ++x) {
+            for (let y: number = 0; y < this.row; ++y) {
+                this.fields[x][y].reset();
+            }
+        }
+    }
+
+    public setClickableAreas(areas: number[]): void {
+        for (let area of areas) {
+            let x: number = area - 1;
+            for (let y: number = 0; y < this.row; ++y) {
+                this.fields[x][y].setClickable(true);
+            }
+        }
+    }
+
+    public setClickable([x, y]: [number, number], is_clickable): void {
+        this.fields[x][y].setClickable(is_clickable);
+    }
+
+    public animateDiceResult(pip: number, color: string): void {
+        let x: number = pip - 1;
+        let delay: number = 0;
+        for (let i: number = 0; i < this.row; ++i) {
+            let y = this.row - 1 - i;
+            window.setTimeout(() => {
+                this.fields[x][y].setColor(color);
+                window.setTimeout(() => {
+                    this.fields[x][y].setColor("transparent"); }, 1500);
+            }, delay);
+            delay = delay + 10 * i;  // 0, 10, 30, 60, 100, ...
+        }
     }
 }
