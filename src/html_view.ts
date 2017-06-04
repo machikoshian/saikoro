@@ -7,7 +7,7 @@ import { Dice, DiceResult } from "./dice";
 import { Client, Request } from "./client";
 import { DeckMaker } from "./deck_maker";
 import { GameMode } from "./protocol";
-import { HtmlViewObject, HtmlCardsView, HtmlCardView } from "./html_view_parts";
+import { HtmlViewObject, HtmlCardsView, HtmlCardView, HtmlPlayerView } from "./html_view_parts";
 
 const COLOR_FIELD: string = "#EFF0D1";
 const COLOR_LANDMARK: string = "#B0BEC5";
@@ -36,6 +36,7 @@ export class HtmlView {
     private deck_maker: DeckMaker = new DeckMaker();
     private clicked_field: [number, number] = [0, 0];
     private cards_views: HtmlCardsView[] = [];
+    private player_views: HtmlPlayerView[] = [];
 
     constructor(client: Client) {
         this.client = client;
@@ -60,6 +61,14 @@ export class HtmlView {
         document.getElementById("message").style.display = "none";
         document.getElementById("dice").style.display = "none";
 
+        // HtmlPlayerView
+        for (let pid = 0; pid < 4; ++pid) {
+            let player_view: HtmlPlayerView = new HtmlPlayerView(pid);
+            player_view.none();
+            this.player_views.push(player_view);
+        }
+
+        // HtmlCardsView
         for (let pid = 0; pid < 4; ++pid) {
             let cards_view: HtmlCardsView = new HtmlCardsView(pid);
             cards_view.none();
@@ -400,8 +409,7 @@ export class HtmlView {
         let position: string = (x < 6) ? "click_10_1" : "click_0_1";
         let pos_rect: ClientRect = document.getElementById(position).getBoundingClientRect();
 
-        field_card.move(pos_rect.top, pos_rect.left);
-        field_card.show();
+        field_card.showAt(pos_rect.top, pos_rect.left);
     }
 
     public drawCard(card_view: HtmlCardView, card_id: CardId): void {
@@ -493,49 +501,10 @@ export class HtmlView {
         (<HTMLTableCellElement>field).colSpan = facility.size;
     }
 
-    public getDisplayedMoney(pid: PlayerId): number {
-        let money_element = document.getElementById(`player_${pid}_money`);
-        return Number(money_element.innerText);        
-    }
-
-    public setDisplayedMoney(pid: PlayerId, money: number): void {
-        let money_element = document.getElementById(`player_${pid}_money`);
-        money_element.innerText = String(money);
-    }
-
-    private effectPlayersMoney(pid: PlayerId, money: number): void {
-        if (this.money_animation_timers[pid]) {
-            clearInterval(this.money_animation_timers[pid]);
-        }
-        this.money_animation_timers[pid] = setInterval(() => {
-            let current_money = this.getDisplayedMoney(pid);
-            if (current_money === money) {
-                clearInterval(this.money_animation_timers[pid]);
-                this.money_animation_timers[pid] = null;
-                return;
-            }
-            else if (current_money > money) {
-                current_money -= Math.min(10, current_money - money);
-            }
-            else if (current_money < money) {
-                current_money += Math.min(10, money - current_money);
-            }
-            this.setDisplayedMoney(pid, current_money);
-        }, 5);
-    }
-
     private drawPlayers(): void {
         let players: Player[] = this.session.getPlayers();
         for (let i: number = 0; i < players.length; ++i) {
-            let player: Player = players[i];
-            document.getElementById(`player_${i}`).style.visibility = "visible";
-            document.getElementById(`player_${i}_name`).innerText = player.name;
-            document.getElementById(`player_${i}_salary`).innerHTML = `${player.salary}`;
-            let cards: PlayerCards = this.session.getPlayerCards(i);
-            document.getElementById(`player_${i}_talon`).innerHTML =
-                `${cards.getHandSize()}　／　📇 ${cards.getTalonSize()}`;
-
-            this.effectPlayersMoney(i, player.getMoney());
+            this.player_views[i].draw(this.session);
         }
         for (let i: number = players.length; i < 4; ++i) {
             document.getElementById(`player_${i}`).style.visibility = "hidden";
@@ -690,8 +659,7 @@ export class HtmlView {
                     if (money === 0) {
                         continue;
                     }
-                    // TODO: Use prev_session?
-                    this.effectPlayersMoney(pid, this.getDisplayedMoney(pid) + money);
+                    this.player_views[pid].addMoney(money);
                 }
             }
 
@@ -742,7 +710,7 @@ export class HtmlView {
         else if (money < 0) {
             this.effectMoneyMotion(`player_${player_id}_money`, `field_${x}_${y}`, money);
         }
-        this.effectPlayersMoney(player_id, this.getDisplayedMoney(player_id) + money);
+        this.player_views[player_id].addMoney(money);
     }
 
     private effectCharacter(player_id: PlayerId, card_id: CardId): void {

@@ -1,5 +1,7 @@
-import { PlayerId } from "./board";
+import { PlayerId, Player } from "./board";
 import { CardId, Facility, FacilityType, Character } from "./facility";
+import { Session } from "./session";
+import { PlayerCards } from "./card_manager";
 
 // TODO: Move it to a new file for util.
 const COLOR_FIELD: string = "#EFF0D1";
@@ -80,7 +82,7 @@ export class HtmlViewObject {
         this.setVisibility(Visibility.None);
     }
 
-    public move(x: number, y: number): void {
+    public showAt(x: number, y: number): void {
         // The parent element should be relative.
         this.element.style.zIndex = "2";
         this.element.style.position = "absolute";
@@ -172,5 +174,68 @@ export class HtmlCardView extends HtmlViewObject {
         }).join(",");
 
         return area;
+    }
+}
+
+export class HtmlPlayerView extends HtmlViewObject {
+    readonly player_id: PlayerId;
+    private element_name: HTMLElement;
+    private element_money: HTMLElement;
+    private element_salary: HTMLElement;
+    private element_talon: HTMLElement;
+    private money_animation_timer = null;
+    private money: number = 0;
+
+    constructor(player_id: PlayerId) {
+        super(document.getElementById(`player_${player_id}`));
+        this.player_id = player_id;
+        this.element_name = document.getElementById(this.element.id + "_name");
+        this.element_money = document.getElementById(this.element.id + "_money");
+        this.element_salary = document.getElementById(this.element.id + "_salary");
+        this.element_talon = document.getElementById(this.element.id + "_talon");
+    }
+
+    public draw(session: Session): void {
+        this.show();
+        let player: Player = session.getPlayer(this.player_id);
+        this.element_name.innerText = player.name;
+        this.element_salary.innerHTML = String(player.salary);
+        let cards: PlayerCards = session.getPlayerCards(this.player_id);
+        this.element_talon.innerHTML = `${cards.getHandSize()}　／　📇 ${cards.getTalonSize()}`;
+
+        this.setMoney(player.getMoney());
+    }
+
+    public setMoney(money: number): void {
+        this.money = money;
+        this.animateMoney(money);
+    }
+
+    public addMoney(delta: number): void {
+        this.money += delta;
+        this.animateMoney(this.money);
+    }
+
+    // TODO: move this logic to HtmlViewObject ?
+    private animateMoney(money: number): void {
+        if (this.money_animation_timer) {
+            clearInterval(this.money_animation_timer);
+        }
+        this.money_animation_timer = setInterval(() => {
+            let current_money = Number(this.element_money.innerText);
+            if (current_money === money) {
+                clearInterval(this.money_animation_timer);
+                this.money_animation_timer = null;
+                return;
+            }
+
+            if (current_money > money) {
+                current_money -= Math.min(10, current_money - money);
+            }
+            else {
+                current_money += Math.min(10, money - current_money);
+            }
+            this.element_money.innerText = String(current_money);
+        }, 5);
     }
 }
