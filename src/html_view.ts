@@ -35,9 +35,10 @@ export class HtmlView {
     private clicked_field: [number, number] = [0, 0];
     private cards_views: HtmlCardsView[] = [];
     private player_views: HtmlPlayerView[] = [];
-    private landmark_views: HtmlCardView[] = [];
+    private landmarks_view: HtmlCardsView = null;
     private field_card_view: HtmlFloatingCardView = null;
     private char_motion_view: HtmlFloatingCardView = null;
+    private money_motion_view: HtmlViewObject = null;
     private message_view: HtmlMessageView = null;
 
     constructor(client: Client) {
@@ -71,15 +72,24 @@ export class HtmlView {
         }
 
         // HtmlCardsView
+        let card_size: number = 10;
         for (let pid = 0; pid < 4; ++pid) {
-            let cards_view: HtmlCardsView = new HtmlCardsView(pid);
+            let cards_view: HtmlCardsView = new HtmlCardsView(`card_${pid}`, card_size);
             cards_view.none();
+            for (let c: number = 0; c < card_size; ++c) {
+                cards_view.cards[c].addClickListener(() => { this.onClickCard(pid, c); });
+            }
             this.cards_views.push(cards_view);
         }
         this.cards_views[0].show();
 
-        // Character motion
-        this.char_motion_view = new HtmlFloatingCardView("char_motion");
+        // Landmark cards
+        let landmark_size: number = 5;
+        this.landmarks_view = new HtmlCardsView("landmark", landmark_size);
+        this.landmarks_view.none();
+        for (let i: number = 0; i < landmark_size; ++i) {
+            this.landmarks_view.cards[i].addClickListener(() => { this.onClickLandmark(i); });
+        }
 
         // Field card
         this.field_card_view = new HtmlFloatingCardView("field_card");
@@ -107,29 +117,13 @@ export class HtmlView {
         document.getElementById("end_turn").addEventListener(
             "click", () => { this.onClickEndTurn(); });
 
-        // Cards
-        let player_size: number = 4;
-        let card_size: number = 10;
-        for (let p: number = 0; p < player_size; ++p) {
-            for (let c: number = 0; c < card_size; ++c) {
-                let element = document.getElementById(`card_${p}_${c}`);
-                element.addEventListener("click", () => { this.onClickCard(p, c); });
-                element.style.display = "none";
-            }
-        }
+        // Character motion
+        this.char_motion_view = new HtmlFloatingCardView("char_motion");
+        this.char_motion_view.none();
 
-        // Landmark cards
-        let landmark_size: number = 5;
-        document.getElementById("landmarks").style.display = "none";
-
-        for (let l: number = 0; l < landmark_size; ++l) {
-            this.landmark_views.push(new HtmlCardView(`landmark_${l}`));
-            document.getElementById(`landmark_${l}`).addEventListener(
-                "click", () => { this.onClickLandmark(l); });
-        }
-
-        document.getElementById("money_motion").style.display = "none";
-        document.getElementById("char_motion_node").style.display = "none";
+        // Money motion
+        this.money_motion_view = new HtmlViewObject(document.getElementById("money_motion"));
+        this.money_motion_view.none();
     }
 
     private onClickDeckField(x: number, y: number): void {
@@ -255,9 +249,8 @@ export class HtmlView {
         }
 
         this.resetCards();
-        this.clicked_card_view = this.landmark_views[card];
+        this.clicked_card_view = this.landmarks_view.cards[card];
         this.clicked_card_view.setHighlight(true);
-        this.clicked_card_view.setCardId(clicked_card_id);
 
         this.drawBoard(this.session);
 
@@ -386,21 +379,15 @@ export class HtmlView {
                 this.cards_views[i].none();
                 continue;
             }
-
-            this.cards_views[i].show();
             let card_ids: CardId[] = session.getSortedHand(i);
-            for (let j: number = 0; j < 10; ++j) {
-                this.cards_views[i].cards[j].draw(session,
-                                                  (j < card_ids.length) ? card_ids[j] : -1);
-            }
+            this.cards_views[i].draw(session, card_ids);
+            this.cards_views[i].show();
         }
 
         // Update landmarks.
-        document.getElementById("landmarks").style.display = "";
         let landmark_ids: CardId[] = session.getLandmarks();
-        for (let j: number = 0; j < 5; ++j) {
-            this.landmark_views[j].draw(session, (j < landmark_ids.length) ? landmark_ids[j] : -1);
-        }
+        this.landmarks_view.draw(session, landmark_ids);
+        this.landmarks_view.show();
 
         this.resetCards();  // Nice to check if built or not?
     }
@@ -714,12 +701,10 @@ export class HtmlView {
     }
 
     private effectMoneyMotion(element_from: string, element_to: string, money: number): void {
-        let new_node: Node = document.getElementById("money_motion").cloneNode(true);
-        let money_motion: HTMLElement = <HTMLElement>document.body.appendChild(new_node);
-        money_motion.innerHTML += String(money);
+        this.money_motion_view.element.innerHTML = `💸 ${money}`;
 
         // Animation.
-        let money_view = new HtmlViewObject(money_motion);
+        let money_view: HtmlViewObject = this.money_motion_view.clone();
         money_view.showAt(this.getPosition(element_from));
         money_view.animateMoveTo(this.getPosition(element_to));
         window.setTimeout(() => { money_view.remove(); }, 1500);

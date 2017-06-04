@@ -93,6 +93,10 @@ export class HtmlViewObject {
         document.body.removeChild(this.element);
     }
 
+    public addClickListener(callback: () => void) {
+        this.element.addEventListener("click", callback);
+    }
+
     public showAt([x, y]: [number, number]): void {
         // The parent element should be relative.
         this.element.style.zIndex = "2";
@@ -121,14 +125,21 @@ export class HtmlViewObject {
 }
 
 export class HtmlCardsView extends HtmlViewObject {
-    readonly MAX_CARDS: number = 10;
     readonly cards: HtmlCardView[] = [];
     private card_ids: CardId[] = [];
 
-    constructor(readonly player_id: PlayerId) {
-        super(document.getElementById(`cards_${player_id}`));
-        for (let i: number = 0; i < this.MAX_CARDS; ++i) {
-            this.cards.push(new HtmlCardView(`card_${player_id}_${i}`));
+    constructor(readonly element_id: string, readonly max_size: number) {
+        super(document.getElementById(element_id));
+        for (let i: number = 0; i < this.max_size; ++i) {
+            let card_view: HtmlCardView = new HtmlCardView(`${element_id}_${i}`);
+            this.cards.push(card_view);
+            card_view.none();
+        }
+    }
+
+    public draw(session: Session, card_ids: CardId[]): void {
+        for (let i: number = 0; i < this.max_size; ++i) {
+            this.cards[i].draw(session, (i < card_ids.length) ? card_ids[i] : -1);
         }
     }
 
@@ -139,7 +150,7 @@ export class HtmlCardsView extends HtmlViewObject {
         for (; i < card_ids.length; ++i) {
             this.cards[i].setCardId(card_ids[i]);
         }
-        for (; i < this.MAX_CARDS; ++i) {
+        for (; i < this.max_size; ++i) {
             this.cards[i].setCardId(-1);
         }
     }
