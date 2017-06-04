@@ -1,7 +1,8 @@
 import { PlayerId, Player } from "./board";
 import { CardId, Facility, FacilityType, Character } from "./facility";
-import { Session } from "./session";
+import { Phase, Event, EventType, Session } from "./session";
 import { PlayerCards } from "./card_manager";
+import { DiceResult } from "./dice";
 
 // TODO: Move it to a new file for util.
 const COLOR_FIELD: string = "#EFF0D1";
@@ -82,12 +83,40 @@ export class HtmlViewObject {
         this.setVisibility(Visibility.None);
     }
 
-    public showAt(x: number, y: number): void {
+    public clone(): HtmlViewObject {
+        let new_node: Node = this.element.cloneNode(true);
+        let new_element: HTMLElement = <HTMLElement>document.body.appendChild(new_node);
+        return new HtmlViewObject(new_element);
+    }
+
+    public remove(): void {
+        document.body.removeChild(this.element);
+    }
+
+    public showAt([x, y]: [number, number]): void {
         // The parent element should be relative.
         this.element.style.zIndex = "2";
         this.element.style.position = "absolute";
-        this.element.style.top = x + "px";
-        this.element.style.left = y + "px";
+        this.element.style.left = x + "px";
+        this.element.style.top = y + "px";
+        this.show();
+    }
+
+    public animateMoveTo([x, y]: [number, number]): void {
+        let rect_from = this.element.getBoundingClientRect();
+        let diff_x: number = x - rect_from.left;
+        let diff_y: number = y - rect_from.top;
+
+        this.element.style.visibility = "visible";
+        this.element.style.zIndex = "2";
+        this.element.style.position = "absolute";
+        this.element.style.top = rect_from.top + "px";
+        this.element.style.left = rect_from.left + "px";
+
+        this.element.style.transitionDuration = "1s";
+        this.element.style.transform = `translate(${diff_x}px, ${diff_y}px)`;
+
+        window.setTimeout(() => { this.none(); }, 1500);
     }
 }
 
@@ -240,7 +269,7 @@ export class HtmlFloatingCardView extends HtmlViewObject {
             return;
         }
         this.card_view.draw(session, card_id);
-        this.show();
+        // HtmlFloatingCardView.draw does not change its visibility.
     }
 }
 
@@ -304,5 +333,16 @@ export class HtmlPlayerView extends HtmlViewObject {
             }
             this.element_money.innerText = String(current_money);
         }, 5);
+    }
+}
+
+export class HtmlMessageView extends HtmlViewObject {
+    constructor(element_id: string) {
+        super(document.getElementById(element_id));
+    }
+
+    public drawMessage(message: string, color: string = COLOR_FIELD): void {
+        this.element.innerText = `🎲 ${message} 🎲`;
+        this.element.style.backgroundColor = color;
     }
 }

@@ -8,7 +8,7 @@ import { Client, Request } from "./client";
 import { DeckMaker } from "./deck_maker";
 import { GameMode } from "./protocol";
 import { HtmlViewObject, HtmlCardsView, HtmlCardView, HtmlFloatingCardView,
-         HtmlPlayerView } from "./html_view_parts";
+         HtmlPlayerView, HtmlMessageView } from "./html_view_parts";
 
 const COLOR_FIELD: string = "#EFF0D1";
 const COLOR_LANDMARK: string = "#B0BEC5";
@@ -35,9 +35,10 @@ export class HtmlView {
     private clicked_field: [number, number] = [0, 0];
     private cards_views: HtmlCardsView[] = [];
     private player_views: HtmlPlayerView[] = [];
-    private char_motion_view: HtmlCardView = null;
     private landmark_views: HtmlCardView[] = [];
     private field_card_view: HtmlFloatingCardView = null;
+    private char_motion_view: HtmlFloatingCardView = null;
+    private message_view: HtmlMessageView = null;
 
     constructor(client: Client) {
         this.client = client;
@@ -45,9 +46,6 @@ export class HtmlView {
     }
 
     public initView(column: number = 12, row: number = 5):void {
-        // Message
-        this.drawMessage("");
-
         // Add click listeners.
         // Matching.
         document.getElementById("matching_button_offline").addEventListener(
@@ -59,8 +57,11 @@ export class HtmlView {
 
         // Hide components for game.
         document.getElementById("players").style.display = "none";
-        document.getElementById("message").style.display = "none";
         document.getElementById("dice").style.display = "none";
+
+        // Message view.
+        this.message_view = new HtmlMessageView("message");
+        this.message_view.none();
 
         // HtmlPlayerView
         for (let pid = 0; pid < 4; ++pid) {
@@ -78,7 +79,7 @@ export class HtmlView {
         this.cards_views[0].show();
 
         // Character motion
-        this.char_motion_view = new HtmlCardView("char_motion");
+        this.char_motion_view = new HtmlFloatingCardView("char_motion");
 
         // Field card
         this.field_card_view = new HtmlFloatingCardView("field_card");
@@ -323,8 +324,10 @@ export class HtmlView {
 
         // Show components for game.
         document.getElementById("players").style.display = "";
-        document.getElementById("message").style.display = "";
         document.getElementById("dice").style.display = "";
+
+        // Message view.
+        this.message_view.show();
 
         // Show event animations.
         this.drawEvents();
@@ -412,10 +415,7 @@ export class HtmlView {
 
         this.field_card_view.setCardId(card_id);
         this.field_card_view.draw(this.session);
-        let position: string = (x < 6) ? "click_10_1" : "click_0_1";
-        let pos_rect: ClientRect = document.getElementById(position).getBoundingClientRect();
-
-        this.field_card_view.showAt(pos_rect.top, pos_rect.left);
+        this.field_card_view.showAt(this.getPosition((x < 6) ? "click_10_1" : "click_0_1"));
     }
 
     public drawBoard(session: Session): void {  // session may take a different value.
@@ -490,12 +490,6 @@ export class HtmlView {
         }
     }
 
-    public drawMessage(message: string, color: string = COLOR_FIELD): void {
-        let element = document.getElementById("message");
-        element.innerText = message;
-        element.style.backgroundColor = color;
-    }
-
     public drawStatusMessage(): boolean {  // TODO: rename it.
         let session = this.session;
 
@@ -509,25 +503,25 @@ export class HtmlView {
         let message: string = "";
         let color: string = this.getPlayerColor(player_id);
         if (phase === Phase.StartGame) {
-            message = "🎲 マッチング中です 🎲";
-            this.drawMessage(message, color);
+            message = "マッチング中です";
+            this.message_view.drawMessage(message, color);
             return true;
         }
         if (phase === Phase.CharacterCard) {
             let delta: string = this.getDiceDeltaMessage(session.getDiceDelta());
-            message = `🎲 ${name} のキャラカードまたはサイコロ${delta}です 🎲`;
-            this.drawMessage(message, color);
+            message = `${name} のキャラカードまたはサイコロ${delta}です`;
+            this.message_view.drawMessage(message, color);
             return true;
         }
         if (phase === Phase.DiceRoll) {
             let delta: string = this.getDiceDeltaMessage(session.getDiceDelta());
-            message = `🎲 ${name} のサイコロ${delta}です 🎲`;
-            this.drawMessage(message, color);
+            message = `${name} のサイコロ${delta}です`;
+            this.message_view.drawMessage(message, color);
             return true;
         }
         if (phase === Phase.BuildFacility) {
-            message = `🎲 ${name} の建設です 🎲`;
-            this.drawMessage(message, color);
+            message = `${name} の建設です`;
+            this.message_view.drawMessage(message, color);
             return true;
         }
         if (phase === Phase.EndGame) {
@@ -538,8 +532,8 @@ export class HtmlView {
                     quited = true;
                     for (let i = 0; i < event.moneys.length; ++i) {
                         if (event.moneys[i] !== 0) {
-                            message = `🎲 ${players[i].name} が切断しました 🎲`;
-                            this.drawMessage(message, this.getPlayerColor(i));
+                            message = `${players[i].name} が切断しました`;
+                            this.message_view.drawMessage(message, this.getPlayerColor(i));
                         }
                     }
                     break;
@@ -547,8 +541,8 @@ export class HtmlView {
             }
             if (!quited) {
                 let winner: string = session.getPlayer(session.getWinner()).name;
-                message = `🎲 ${name} の勝ちです 🎲`;
-                this.drawMessage(message, this.getPlayerColor(session.getWinner()));
+                message = `${name} の勝ちです`;
+                this.message_view.drawMessage(message, this.getPlayerColor(session.getWinner()));
             }
             return true;
         }
@@ -613,7 +607,7 @@ export class HtmlView {
                         break;
                     }
                 }
-                this.drawMessage(message, color);
+                this.message_view.drawMessage(message, color);
                 continue;
             }
 
@@ -692,54 +686,42 @@ export class HtmlView {
         this.player_views[player_id].addMoney(money);
     }
 
+    private getPosition(element_id: string): [number, number] {
+        let rect: ClientRect = document.getElementById(element_id).getBoundingClientRect();
+        return [rect.left, rect.top];
+    }
+
     private effectCharacter(player_id: PlayerId, card_id: CardId): void {
-        this.char_motion_view.draw(this.session, card_id);
+        this.char_motion_view.setCardId(card_id);
+        this.char_motion_view.draw(this.session);
 
         // Animation.
-        let new_node: Node = document.getElementById("char_motion_node").cloneNode(true);
-        let char_motion: HTMLElement = <HTMLElement>document.body.appendChild(new_node);
-        char_motion.style.display = "";
-        this.effectElementMotion(char_motion, `player_${player_id}_money`, "field_5_2");
+        let new_view: HtmlViewObject = this.char_motion_view.clone();
+        new_view.showAt(this.getPosition(`player_${player_id}_money`));
+        new_view.animateMoveTo(this.getPosition("field_5_2"));
+        window.setTimeout(() => { new_view.remove(); }, 1500);
     }
 
     private effectDrawCard(player_id: PlayerId, card_id: CardId): void {
-        this.char_motion_view.draw(this.session, card_id);
+        this.char_motion_view.setCardId(card_id);
+        this.char_motion_view.draw(this.session);
 
         // Animation.
-        let new_node: Node = document.getElementById("char_motion_node").cloneNode(true);
-        let char_motion: HTMLElement = <HTMLElement>document.body.appendChild(new_node);
-        char_motion.style.display = "";
-        this.effectElementMotion(char_motion, `player_${player_id}_money`, `card_${player_id}_0`);
+        let new_view: HtmlViewObject = this.char_motion_view.clone();
+        new_view.showAt(this.getPosition(`player_${player_id}_money`));
+        new_view.animateMoveTo(this.getPosition(`card_${player_id}_0`));
+        window.setTimeout(() => { new_view.remove(); }, 1500);
     }
 
-    private effectMoneyMotion(elementFrom: string, elementTo: string, money: number): void {
-        // Animation.
+    private effectMoneyMotion(element_from: string, element_to: string, money: number): void {
         let new_node: Node = document.getElementById("money_motion").cloneNode(true);
         let money_motion: HTMLElement = <HTMLElement>document.body.appendChild(new_node);
-        money_motion.style.display = "";
         money_motion.innerHTML += String(money);
-        this.effectElementMotion(money_motion, elementFrom, elementTo);
-    }
 
-    private effectElementMotion(element: HTMLElement, elementFrom: string, elementTo: string): void {
-        let element_from: HTMLElement = document.getElementById(elementFrom);
-        let rect_from = element_from.getBoundingClientRect();
-        let element_to: HTMLElement = document.getElementById(elementTo);
-        let rect_to = element_to.getBoundingClientRect();
-        let diff_x: number = rect_to.left - rect_from.left;
-        let diff_y: number = rect_to.top - rect_from.top;
-
-        element.style.visibility = "visible";
-        element.style.zIndex = "2";
-        element.style.position = "absolute";
-        element.style.top = rect_from.top + "px";
-        element.style.left = rect_from.left + "px";
-
-        element.style.transitionDuration = "1s";
-        element.style.transform = `translate(${diff_x}px, ${diff_y}px)`;
-
-        window.setTimeout(() => {
-            document.body.removeChild(element);
-        }, 1500);
+        // Animation.
+        let money_view = new HtmlViewObject(money_motion);
+        money_view.showAt(this.getPosition(element_from));
+        money_view.animateMoveTo(this.getPosition(element_to));
+        window.setTimeout(() => { money_view.remove(); }, 1500);
     }
 }
