@@ -333,15 +333,20 @@ export class HtmlView {
     }
 
     public drawCards(session: Session): void {
+        let players: Player[] = session.getPlayers();
+
         // Update cards.
-        for (let i: number = 0; i < 4; ++i) {
-            if (this.client.player_id !== i) {
+        for (let i: number = 0; i < players.length; ++i) {
+            if (session.getPlayer(i).user_id !== this.client.user_id) {
                 this.cards_views[i].none();
                 continue;
             }
             let card_ids: CardId[] = session.getSortedHand(i);
             this.cards_views[i].draw(session, card_ids);
             this.cards_views[i].show();
+        }
+        for (let i: number = players.length; i < 4; ++i) {
+            this.cards_views[i].none();
         }
 
         // Update landmarks.
