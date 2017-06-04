@@ -27,8 +27,7 @@ export class HtmlView {
     private client: Client;
     private session: Session = null;
     private prev_session: Session = null;
-    private clicked_card_id: CardId = -1;
-    private clicked_card_element: HTMLElement = null;
+    private clicked_card_view: HtmlCardView = null;
     private player_cards_list: CardId[][] = [];
     private last_step: number = -1;
     private drawn_step: number = -1;
@@ -162,11 +161,12 @@ export class HtmlView {
             return;
         }
         // Event on game.
-        if (this.clicked_card_id < 0) {
+        if (this.clicked_card_view == null) {
             this.drawFieldInfo(x, y);
             return;
         }
-        this.client.sendRequest(Request.buildFacility(x, y, this.clicked_card_id));
+        let card_id: CardId = this.clicked_card_view.getCardId();
+        this.client.sendRequest(Request.buildFacility(x, y, card_id));
     }
 
     private onClickDice(dice_num: number, aim: number): void {
@@ -174,7 +174,7 @@ export class HtmlView {
     }
 
     private onClickCharacter(): void {
-        this.client.sendRequest(Request.characterCard(this.clicked_card_id));
+        this.client.sendRequest(Request.characterCard(this.clicked_card_view.getCardId()));
     }
 
     private onClickEndTurn(): void {
@@ -212,16 +212,15 @@ export class HtmlView {
         }
 
         console.log(`clicked: card_${player}_${card}`);
-        if (clicked_card_id === this.clicked_card_id) {
+        if (this.clicked_card_view && clicked_card_id === this.clicked_card_view.getCardId()) {
             this.resetCards();
             this.drawBoard(this.session);  // TODO: draw click fields only.
             return;
         }
 
         this.resetCards();
-        this.clicked_card_element = document.getElementById(`card_${player}_${card}`);
-        this.clicked_card_element.style.borderColor = COLOR_HIGHTLIGHT_CARD;
-        this.clicked_card_id = clicked_card_id;
+        this.clicked_card_view = this.cards_views[player].cards[card];
+        this.clicked_card_view.setHighlight(true);
 
         this.drawBoard(this.session);
 
@@ -230,7 +229,7 @@ export class HtmlView {
         }
 
         if (phase === Phase.BuildFacility) {
-            for (let area of this.session.getFacility(this.clicked_card_id).getArea()) {
+            for (let area of this.session.getFacility(clicked_card_id).getArea()) {
                 let x: number = area - 1;
                 for (let y: number = 0; y < 5; y++) {
                     document.getElementById(`click_${x}_${y}`).style.borderColor = COLOR_CLICKABLE;
@@ -252,13 +251,13 @@ export class HtmlView {
         }
 
         this.resetCards();
-        this.clicked_card_element = document.getElementById(`landmark_${card}`);
-        this.clicked_card_element.style.borderColor = COLOR_HIGHTLIGHT_CARD;
-        this.clicked_card_id = clicked_card_id;
+        this.clicked_card_view = new HtmlCardView(`landmark_${card}`);
+        this.clicked_card_view.setHighlight(true);
+        this.clicked_card_view.setCardId(clicked_card_id);
 
         this.drawBoard(this.session);
 
-        let [x, y] = this.session.getPosition(this.clicked_card_id);
+        let [x, y] = this.session.getPosition(clicked_card_id);
         document.getElementById(`click_${x}_${y}`).style.borderColor = COLOR_CLICKABLE;
     }
 
@@ -307,11 +306,10 @@ export class HtmlView {
     }
 
     private resetCards(): void {
-        if (this.clicked_card_element) {
-            this.clicked_card_element.style.borderColor = "#EEEEEE";
-            this.clicked_card_element = null;
+        if (this.clicked_card_view) {
+            this.clicked_card_view.setHighlight(false);
+            this.clicked_card_view = null;
         }
-        this.clicked_card_id = -1;
     }
 
     public updateView(session: Session, user_id: string): void {
@@ -386,7 +384,8 @@ export class HtmlView {
             this.cards_views[i].show();
             let card_ids: CardId[] = session.getSortedHand(i);
             for (let j: number = 0; j < 10; ++j) {
-                this.drawCard(this.cards_views[i].cards[j], (j < card_ids.length) ? card_ids[j] : -1);
+                this.cards_views[i].cards[j].draw(session,
+                                                  (j < card_ids.length) ? card_ids[j] : -1);
             }
         }
 
@@ -394,7 +393,8 @@ export class HtmlView {
         document.getElementById("landmarks").style.display = "";
         let landmark_ids: CardId[] = session.getLandmarks();
         for (let j: number = 0; j < 5; ++j) {
-            this.drawCard(new HtmlCardView(`landmark_${j}`), (j < landmark_ids.length) ? landmark_ids[j] : -1);
+            let landmark_view = new HtmlCardView(`landmark_${j}`);
+            landmark_view.draw(session, (j < landmark_ids.length) ? landmark_ids[j] : -1);
         }
 
         this.resetCards();  // Nice to check if built or not?
@@ -402,22 +402,18 @@ export class HtmlView {
 
     public drawFieldInfo(x, y): void {
         let card_id: CardId = this.session.getCardIdOnBoard(x, y);
-        if (card_id === -1 || card_id === this.field_card_view.card_id) {
+        if (card_id === -1 || card_id === this.field_card_view.getCardId()) {
             this.field_card_view.none();
-            this.field_card_view.card_id = -1;
+            this.field_card_view.setCardId(-1);
             return;
         }
 
-        this.field_card_view.card_id = card_id;
+        this.field_card_view.setCardId(card_id);
         this.field_card_view.draw(this.session);
         let position: string = (x < 6) ? "click_10_1" : "click_0_1";
         let pos_rect: ClientRect = document.getElementById(position).getBoundingClientRect();
 
         this.field_card_view.showAt(pos_rect.top, pos_rect.left);
-    }
-
-    public drawCard(card_view: HtmlCardView, card_id: CardId): void {
-        card_view.draw(this.session, card_id);
     }
 
     public drawBoard(session: Session): void {  // session may take a different value.

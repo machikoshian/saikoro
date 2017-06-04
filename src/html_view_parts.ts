@@ -129,9 +129,12 @@ export class HtmlCardView extends HtmlViewObject {
         this.element_description = document.getElementById(element_id + "_description");
     }
 
-    // TODO: Not necessary?
     public setCardId(card_id: CardId): void {
         this.card_id = card_id;
+    }
+
+    public getCardId(): CardId {
+        return this.card_id;
     }
 
     public draw(session: Session, card_id: CardId): void {
@@ -192,6 +195,10 @@ export class HtmlCardView extends HtmlViewObject {
         this.show();
     }
 
+    public setHighlight(is_highlight: boolean): void {
+        this.element.style.borderColor = is_highlight ? COLOR_HIGHTLIGHT_CARD : "#EEEEEE";
+    }
+
     private getFacilityAreaString(facility: Facility): string {
         const area_name: string[] =
             ["", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩", "⑪", "⑫", ""];
@@ -207,21 +214,32 @@ export class HtmlCardView extends HtmlViewObject {
     }
 }
 
+// HtmlFloatingCardView represents a parent <table> tag of HtmlCardView
+// which represents a <td> tag. It is nice to use <div> instead and merge them.
+// TODO: merge this class to HtmlCardView.
 export class HtmlFloatingCardView extends HtmlViewObject {
     private card_view: HtmlCardView = null;
-    public card_id: CardId = -1;
 
     constructor(element_id: string) {
         super(document.getElementById(element_id + "_node"));
         this.card_view = new HtmlCardView(element_id);
     }
 
+    public setCardId(card_id: CardId): void {
+        this.card_view.setCardId(card_id);
+    }
+
+    public getCardId(): CardId {
+        return this.card_view.getCardId();
+    }
+
     public draw(session: Session): void {
-        if (this.card_id === -1) {
+        let card_id: CardId = this.card_view.getCardId();
+        if (card_id === -1) {
             this.none();
             return;
         }
-        this.card_view.draw(session, this.card_id);
+        this.card_view.draw(session, card_id);
         this.show();
     }
 }
