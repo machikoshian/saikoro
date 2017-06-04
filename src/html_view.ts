@@ -7,7 +7,8 @@ import { Dice, DiceResult } from "./dice";
 import { Client, Request } from "./client";
 import { DeckMaker } from "./deck_maker";
 import { GameMode } from "./protocol";
-import { HtmlViewObject, HtmlCardsView, HtmlCardView, HtmlPlayerView } from "./html_view_parts";
+import { HtmlViewObject, HtmlCardsView, HtmlCardView, HtmlFloatingCardView,
+         HtmlPlayerView } from "./html_view_parts";
 
 const COLOR_FIELD: string = "#EFF0D1";
 const COLOR_LANDMARK: string = "#B0BEC5";
@@ -31,14 +32,12 @@ export class HtmlView {
     private player_cards_list: CardId[][] = [];
     private last_step: number = -1;
     private drawn_step: number = -1;
-    private field_info_card_id: CardId = -1;
     private deck_maker: DeckMaker = new DeckMaker();
     private clicked_field: [number, number] = [0, 0];
     private cards_views: HtmlCardsView[] = [];
     private player_views: HtmlPlayerView[] = [];
     private char_motion_view: HtmlCardView = null;
-    private field_card_node_view: HtmlViewObject = null;
-    private field_card_view: HtmlCardView = null;
+    private field_card_view: HtmlFloatingCardView = null;
 
     constructor(client: Client) {
         this.client = client;
@@ -83,9 +82,8 @@ export class HtmlView {
         this.char_motion_view = new HtmlCardView("char_motion");
 
         // Field card
-        this.field_card_node_view = new HtmlViewObject(document.getElementById("field_card_node"));
-        this.field_card_node_view.none();
-        this.field_card_view = new HtmlCardView("field_card");
+        this.field_card_view = new HtmlFloatingCardView("field_card");
+        this.field_card_view.none();
 
         // Fields
         for (let y: number = 0; y < row; ++y) {
@@ -404,18 +402,18 @@ export class HtmlView {
 
     public drawFieldInfo(x, y): void {
         let card_id: CardId = this.session.getCardIdOnBoard(x, y);
-        if (card_id === -1 || card_id === this.field_info_card_id) {
-            this.field_card_node_view.none();
-            this.field_info_card_id = -1;
+        if (card_id === -1 || card_id === this.field_card_view.card_id) {
+            this.field_card_view.none();
+            this.field_card_view.card_id = -1;
             return;
         }
-        this.field_info_card_id = card_id;
 
-        this.field_card_view.draw(this.session, card_id);
+        this.field_card_view.card_id = card_id;
+        this.field_card_view.draw(this.session);
         let position: string = (x < 6) ? "click_10_1" : "click_0_1";
         let pos_rect: ClientRect = document.getElementById(position).getBoundingClientRect();
 
-        this.field_card_node_view.showAt(pos_rect.top, pos_rect.left);
+        this.field_card_view.showAt(pos_rect.top, pos_rect.left);
     }
 
     public drawCard(card_view: HtmlCardView, card_id: CardId): void {

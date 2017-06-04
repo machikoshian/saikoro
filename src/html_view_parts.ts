@@ -60,7 +60,7 @@ export class HtmlViewObject {
             return;
         }
         if (visibility === Visibility.Invisible) {
-            this.element.style.visibility = "invisible";
+            this.element.style.visibility = "hidden";
             this.element.style.display = "";
             return;
         }
@@ -204,6 +204,25 @@ export class HtmlCardView extends HtmlViewObject {
         }).join(",");
 
         return area;
+    }
+}
+
+export class HtmlFloatingCardView extends HtmlViewObject {
+    private card_view: HtmlCardView = null;
+    public card_id: CardId = -1;
+
+    constructor(element_id: string) {
+        super(document.getElementById(element_id + "_node"));
+        this.card_view = new HtmlCardView(element_id);
+    }
+
+    public draw(session: Session): void {
+        if (this.card_id === -1) {
+            this.none();
+            return;
+        }
+        this.card_view.draw(session, this.card_id);
+        this.show();
     }
 }
 
