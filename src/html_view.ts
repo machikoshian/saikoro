@@ -36,6 +36,7 @@ export class HtmlView {
     private cards_views: HtmlCardsView[] = [];
     private player_views: HtmlPlayerView[] = [];
     private char_motion_view: HtmlCardView = null;
+    private landmark_views: HtmlCardView[] = [];
     private field_card_view: HtmlFloatingCardView = null;
 
     constructor(client: Client) {
@@ -75,7 +76,6 @@ export class HtmlView {
             this.cards_views.push(cards_view);
         }
         this.cards_views[0].show();
-        document.getElementById("landmarks").style.display = "none";
 
         // Character motion
         this.char_motion_view = new HtmlCardView("char_motion");
@@ -119,7 +119,10 @@ export class HtmlView {
 
         // Landmark cards
         let landmark_size: number = 5;
+        document.getElementById("landmarks").style.display = "none";
+
         for (let l: number = 0; l < landmark_size; ++l) {
+            this.landmark_views.push(new HtmlCardView(`landmark_${l}`));
             document.getElementById(`landmark_${l}`).addEventListener(
                 "click", () => { this.onClickLandmark(l); });
         }
@@ -251,7 +254,7 @@ export class HtmlView {
         }
 
         this.resetCards();
-        this.clicked_card_view = new HtmlCardView(`landmark_${card}`);
+        this.clicked_card_view = this.landmark_views[card];
         this.clicked_card_view.setHighlight(true);
         this.clicked_card_view.setCardId(clicked_card_id);
 
@@ -393,8 +396,7 @@ export class HtmlView {
         document.getElementById("landmarks").style.display = "";
         let landmark_ids: CardId[] = session.getLandmarks();
         for (let j: number = 0; j < 5; ++j) {
-            let landmark_view = new HtmlCardView(`landmark_${j}`);
-            landmark_view.draw(session, (j < landmark_ids.length) ? landmark_ids[j] : -1);
+            this.landmark_views[j].draw(session, (j < landmark_ids.length) ? landmark_ids[j] : -1);
         }
 
         this.resetCards();  // Nice to check if built or not?
