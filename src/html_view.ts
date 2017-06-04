@@ -593,7 +593,7 @@ export class HtmlView {
                 let facility: Facility = this.session.getFacility(event.card_id);
                 this.prev_session.getBoard().removeCards(x, y, facility.size);
                 this.prev_session.getBoard().setCardId(x, y, event.card_id, facility.size);
-                if (!this.prev_session.isLandmark(event.card_id)) {
+                if (this.prev_session.isFacility(event.card_id)) {
                     this.prev_session.getPlayerCards(event.player_id).moveHandToField(event.card_id);
                 }
                 // Draw the board after money motion.

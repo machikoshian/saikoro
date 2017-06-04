@@ -788,6 +788,9 @@ export class Session {
     public getFacility(card_id: CardId): Facility {
         return this.card_manager.getFacility(card_id);
     }
+    public isFacility(card_id: CardId): boolean {
+        return this.card_manager.isFacility(card_id);
+    }
     public getCardIdOnBoard(x: number, y: number): CardId {
         return this.board.getCardId(x, y);
     }

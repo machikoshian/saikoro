@@ -288,6 +288,10 @@ export class CardManager {
         return this.facilities[card_id];
     }
 
+    public isFacility(card_id: CardId): boolean {
+        return ((this.facilities[card_id] != undefined) && !this.isLandmark(card_id));
+    }
+
     public getOwner(card_id: CardId): PlayerId {
         if (card_id < 0) {
             return -1;
