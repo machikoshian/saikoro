@@ -357,3 +357,58 @@ export class HtmlMessageView extends HtmlViewObject {
         this.element.style.backgroundColor = color;
     }
 }
+
+export class HtmlButtonView extends HtmlViewObject {
+    constructor(element_id: string) {
+        super(document.getElementById(element_id));
+    }
+
+    public setClickable(is_clickable: boolean): void {
+        // TODO: Use class of "clickable".
+        this.element.style.backgroundColor = is_clickable ? COLOR_CLICKABLE : COLOR_FIELD;
+    }
+}
+
+export class HtmlButtonsView extends HtmlViewObject {
+    readonly dice1: HtmlButtonView;
+    readonly dice2: HtmlButtonView;
+    readonly char_card: HtmlButtonView;
+    readonly end_turn: HtmlButtonView;
+
+    constructor(element_id: string) {
+        super(document.getElementById(element_id));
+
+        this.dice1 = new HtmlButtonView(element_id + "_dice1");
+        this.dice2 = new HtmlButtonView(element_id + "_dice2");
+        this.char_card = new HtmlButtonView(element_id + "_char_card");
+        this.end_turn = new HtmlButtonView(element_id + "_end_turn");
+    }
+
+    public draw(session: Session, user_id: string): void {
+        if (session.getCurrentPlayer().user_id !== user_id) {
+            this.none();
+            return;
+        }
+
+        this.dice1.hide();
+        this.dice2.hide();
+        this.char_card.hide();
+        this.end_turn.hide();
+
+        let phase: Phase = session.getPhase();
+        if (phase === Phase.CharacterCard || phase === Phase.DiceRoll) {
+            this.dice1.show();
+            this.dice2.show();
+        }
+
+        if (phase === Phase.CharacterCard) {
+            this.char_card.show();
+            this.char_card.setClickable(false);
+        }
+
+        if (phase === Phase.BuildFacility) {
+            this.end_turn.show();
+        }
+        this.show();
+    }
+}

@@ -8,7 +8,7 @@ import { Client, Request } from "./client";
 import { DeckMaker } from "./deck_maker";
 import { GameMode } from "./protocol";
 import { HtmlViewObject, HtmlCardsView, HtmlCardView, HtmlFloatingCardView,
-         HtmlPlayerView, HtmlMessageView } from "./html_view_parts";
+         HtmlPlayerView, HtmlMessageView, HtmlButtonsView } from "./html_view_parts";
 
 const COLOR_FIELD: string = "#EFF0D1";
 const COLOR_LANDMARK: string = "#B0BEC5";
@@ -40,6 +40,7 @@ export class HtmlView {
     private char_motion_view: HtmlFloatingCardView = null;
     private money_motion_view: HtmlViewObject = null;
     private message_view: HtmlMessageView = null;
+    private buttons_view: HtmlButtonsView = null;
 
     constructor(client: Client) {
         this.client = client;
@@ -58,7 +59,15 @@ export class HtmlView {
 
         // Hide components for game.
         document.getElementById("players").style.display = "none";
-        document.getElementById("dice").style.display = "none";
+
+        // buttons.
+        this.buttons_view = new HtmlButtonsView("buttons");
+        this.buttons_view.none();
+
+        this.buttons_view.dice1.addClickListener(() => { this.onClickDice(1, 0); });
+        this.buttons_view.dice2.addClickListener(() => { this.onClickDice(2, 0); });
+        this.buttons_view.char_card.addClickListener(() => { this.onClickCharacter(); });
+        this.buttons_view.end_turn.addClickListener(() => { this.onClickEndTurn(); });
 
         // Message view.
         this.message_view = new HtmlMessageView("message");
@@ -102,20 +111,6 @@ export class HtmlView {
                     "click", () => { this.onClickField(x, y); });
             }
         }
-
-        // Dices
-        document.getElementById("dice_1").addEventListener(
-            "click", () => { this.onClickDice(1, 0); });
-        document.getElementById("dice_2").addEventListener(
-            "click", () => { this.onClickDice(2, 0); });
-
-        // Character
-        document.getElementById("char_card").addEventListener(
-            "click", () => { this.onClickCharacter(); });
-
-        // End turn
-        document.getElementById("end_turn").addEventListener(
-            "click", () => { this.onClickEndTurn(); });
 
         // Character motion
         this.char_motion_view = new HtmlFloatingCardView("char_motion");
@@ -223,7 +218,7 @@ export class HtmlView {
         this.drawBoard(this.session);
 
         if (phase === Phase.CharacterCard) {
-            document.getElementById("char_card").style.backgroundColor = COLOR_CLICKABLE;
+            this.buttons_view.char_card.setClickable(true);
         }
 
         if (phase === Phase.BuildFacility) {
@@ -317,7 +312,6 @@ export class HtmlView {
 
         // Show components for game.
         document.getElementById("players").style.display = "";
-        document.getElementById("dice").style.display = "";
 
         // Message view.
         this.message_view.show();
@@ -336,38 +330,7 @@ export class HtmlView {
         this.player_cards_list.push(landmark_ids);
 
         // Update buttons.
-        let current_player: Player = session.getCurrentPlayer();
-        if (current_player.user_id === user_id) {
-            document.getElementById("dice").style.display = "";
-        }
-        else {
-            document.getElementById("dice").style.display = "none";
-        }
-
-        let phase: Phase = session.getPhase();
-        if (phase === Phase.CharacterCard) {
-            document.getElementById("char_card").style.visibility = "visible";
-            document.getElementById("char_card").style.backgroundColor = COLOR_FIELD;
-        }
-        else {
-            document.getElementById("char_card").style.visibility = "hidden";
-        }
-
-        if (phase === Phase.CharacterCard || phase === Phase.DiceRoll) {
-            document.getElementById("dice_1").style.visibility = "visible";
-            document.getElementById("dice_2").style.visibility = "visible";
-        }
-        else {
-            document.getElementById("dice_1").style.visibility = "hidden";
-            document.getElementById("dice_2").style.visibility = "hidden";
-        }
-
-        if (phase === Phase.BuildFacility) {
-            document.getElementById("end_turn").style.visibility = "visible";
-        }
-        else {
-            document.getElementById("end_turn").style.visibility = "hidden";
-        }
+        this.buttons_view.draw(session, user_id);
 
         this.last_step = session.getStep();
     }
