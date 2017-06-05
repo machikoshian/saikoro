@@ -42,6 +42,7 @@ export class HtmlView {
     private message_view: HtmlMessageView = null;
     private buttons_view: HtmlButtonsView = null;
     private clicakable_fiels_view: HtmlClickableFieldsView = null;
+    private initialized: boolean = false;
 
     constructor(client: Client) {
         this.client = client;
@@ -304,14 +305,18 @@ export class HtmlView {
     public updateView(session: Session, user_id: string): void {
         this.session = session;
 
-        // Hide the matching view and show the board view.
-        document.getElementById("matching").style.display = "none";
+        if (!this.initialized) {  // TODO: Handle this in a different function.
+            // Hide the matching view and show the board view.
+            document.getElementById("matching").style.display = "none";
 
-        // Show components for game.
-        document.getElementById("players").style.display = "";
+            // Show components for game.
+            document.getElementById("players").style.display = "";
 
-        // Message view.
-        this.message_view.show();
+            // Message view.
+            this.message_view.show();
+            this.drawSession(this.session);
+            this.initialized = true;
+        }
 
         // Show event animations.
         this.drawEvents();
@@ -493,6 +498,13 @@ export class HtmlView {
         return false;
     }
 
+    private drawSession(session: Session): void {
+        this.drawStatusMessage();
+        this.drawPlayers();
+        this.drawBoard(session);
+        this.drawCards(session);
+    }
+
     public drawEvents(): void {
         const interval: number = 2000;  // msec.
         if (this.event_drawer_timer) {
@@ -526,10 +538,7 @@ export class HtmlView {
 
         if (step === -1) {
             // All events have been drawn. Then, draw the current status.
-            this.drawStatusMessage();
-            this.drawPlayers();
-            this.drawBoard(this.session);
-            this.drawCards(this.session);
+            this.drawSession(this.session);
             this.prev_session = this.session;
             return false;
         }
@@ -540,20 +549,29 @@ export class HtmlView {
                 break;
             }
 
-            // Draw cards
-            //
-            // TODO: Uncomment after enable to show the board on start.
-            //
-            // if (event.type === EventType.Draw) {
-            //     let timeout: number = 1000;
-            //     for (let drawn of event.target_card_ids) {
-            //         window.setTimeout(() => {
-            //             this.effectDrawCard(event.player_id, drawn);
-            //         }, timeout);
-            //         timeout += 500;
-            //     }
-            //     continue;
-            // }
+            // Draw cards 
+            if (event.type === EventType.Draw) {  // TODO: Change the event type to StartTurn?
+                let current_player: Player = this.session.getPlayer(event.player_id);
+                let name: string =  current_player.name;
+                let delta: string = this.getDiceDeltaMessage(this.session.getDiceDelta());
+                let message = `${name} のキャラカードまたはサイコロ${delta}です`;
+                let color: string = this.getPlayerColor(event.player_id);
+                this.message_view.drawMessage(message, color);
+
+                // Do not show other's draw event.
+                if (this.session.getPlayer(event.player_id).user_id !== this.client.user_id) {
+                    continue;
+                }
+
+                let timeout: number = 1000;
+                for (let drawn of event.target_card_ids) {
+                    window.setTimeout(() => {
+                        this.effectDrawCard(event.player_id, drawn);
+                    }, timeout);
+                    timeout += 500;
+                }
+                continue;
+            }
 
             // Dice
             if (event.type === EventType.Dice) {

@@ -276,12 +276,18 @@ export class Session {
     public startTurn(): boolean {
         this.effect_manager.expire(this.round, this.turn);
         let card_ids = this.drawCards(this.current_player_id, 1);
-        let event: Event = new Event();
-        this.events.push(event);
-        event.type = EventType.Draw;
-        event.step = this.step;
-        event.player_id = this.current_player_id;
-        event.target_card_ids = card_ids;
+
+        // This is a hack to avoid drawing an event before game start.
+        // TODO: Stop this hack.
+        let is_first: boolean = (this.round === 0 && this.turn === 0);
+        if (!is_first) {
+            let event: Event = new Event();
+            this.events.push(event);
+            event.type = EventType.Draw;
+            event.step = this.step;
+            event.player_id = this.current_player_id;
+            event.target_card_ids = card_ids;
+        }
         this.done(Phase.StartTurn);
         return true;
     }
