@@ -540,6 +540,21 @@ export class HtmlView {
                 break;
             }
 
+            // Draw cards
+            //
+            // TODO: Uncomment after enable to show the board on start.
+            //
+            // if (event.type === EventType.Draw) {
+            //     let timeout: number = 1000;
+            //     for (let drawn of event.target_card_ids) {
+            //         window.setTimeout(() => {
+            //             this.effectDrawCard(event.player_id, drawn);
+            //         }, timeout);
+            //         timeout += 500;
+            //     }
+            //     continue;
+            // }
+
             // Dice
             if (event.type === EventType.Dice) {
                 let message: string = this.getDiceResultMessage(event.dice, event.player_id);

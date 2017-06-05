@@ -34,6 +34,7 @@ export enum EventType {
     Character,
     Dice,
     Salary,
+    Draw,
     Quit,
 }
 
@@ -274,7 +275,13 @@ export class Session {
 
     public startTurn(): boolean {
         this.effect_manager.expire(this.round, this.turn);
-        this.getPlayerCards(this.current_player_id).dealToHand();
+        let card_ids = this.drawCards(this.current_player_id, 1);
+        let event: Event = new Event();
+        this.events.push(event);
+        event.type = EventType.Draw;
+        event.step = this.step;
+        event.player_id = this.current_player_id;
+        event.target_card_ids = card_ids;
         this.done(Phase.StartTurn);
         return true;
     }
@@ -487,6 +494,18 @@ export class Session {
         return true;
     }
 
+    private drawCards(player_id: PlayerId, num_cards: number): CardId[] {
+        let card_ids: CardId[] = [];
+        for (let i: number = 0; i < num_cards; ++i) {
+            let drawn: CardId = this.getPlayerCards(player_id).dealToHand();
+            if (drawn === -1) {
+                break;
+            }
+            card_ids.push(drawn);
+        }
+        return card_ids;
+    }
+
     public useCharacter(player_id: PlayerId, card_id: CardId): boolean {
         if (!this.isValid(player_id, Phase.CharacterCard)) {
             return false;
@@ -512,17 +531,10 @@ export class Session {
         this.events.push(event);
 
         if (character.type === CharacterType.DrawCards) {
-            let i: number = 0;
-            for (; i < character.getPropertyValue(); ++i) {
-                let drawn: CardId = this.getPlayerCards(player_id).dealToHand();
-                if (drawn === -1) {
-                    break;
-                }
-                event.target_card_ids.push(drawn);
-            }
-            event.moneys[player_id] = i;  // TODO: rename moneys to values.
+            event.target_card_ids = this.drawCards(player_id, character.getPropertyValue());
+            event.player_id = player_id;
         }
-        else {
+        else {  // === CharacterType.DiceDelta
             this.effect_manager.addCard(character.data_id, this.round, this.turn);
         }
 
