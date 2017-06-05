@@ -154,103 +154,80 @@ export class Session {
             return;
         }
         this.step++;
-        if (phase === Phase.StartGame) {
-            this.phase = Phase.StartTurn;
-            return;
-        }
-
-        if (phase === Phase.StartTurn) {
-            this.phase = Phase.CharacterCard;
-            return;
-        }
-
-        if (phase === Phase.CharacterCard) {
-            this.phase = Phase.DiceRoll;
-            return;
-        }
-
-        if (phase === Phase.DiceRoll) {
-            this.phase = Phase.FacilityAction;
-            return;
-        }
-
-        if (phase === Phase.FacilityAction) {
-            this.phase = Phase.PaySalary;
-            return;
-        }
-
-        if (phase === Phase.PaySalary) {
-            this.phase = Phase.BuildFacility;
-            return;
-        }
-
-        if (phase === Phase.BuildFacility) {
-            // Check EndGame
-            let landmarks: CardId[] = this.card_manager.getLandmarks();
-            let num_landmarks: number = 0;
-            for (let landmark of landmarks) {
-                if (this.card_manager.getOwner(landmark) === this.current_player_id) {
-                    num_landmarks++;
-                }
-            }
-            // TODO: support multiple landmarks.
-            if (num_landmarks > 0) {
-                this.winner = this.current_player_id;
-                this.phase = Phase.EndGame;
+        switch(phase) {
+            case Phase.StartGame:
+                this.phase = Phase.StartTurn;
                 return;
-            }
-            this.phase = Phase.EndTurn;
-            return;
-        }
 
-        if (phase === Phase.EndTurn) {
-            this.phase = Phase.StartTurn;
-            return;
-        }
+            case Phase.StartTurn:
+                this.phase = Phase.CharacterCard;
+                return;
 
-        if (phase === Phase.EndGame) {
-            // Do nothing.
-            return;
+            case Phase.CharacterCard:
+                this.phase = Phase.DiceRoll;
+                return;
+
+            case Phase.DiceRoll:
+                this.phase = Phase.FacilityAction;
+                return;
+
+            case Phase.FacilityAction:
+                this.phase = Phase.PaySalary;
+                return;
+
+            case Phase.PaySalary:
+                this.phase = Phase.BuildFacility;
+                return;
+
+            case Phase.BuildFacility:
+                // Check EndGame
+                let landmarks: CardId[] = this.card_manager.getLandmarks();
+                let num_landmarks: number = 0;
+                for (let landmark of landmarks) {
+                    if (this.card_manager.getOwner(landmark) === this.current_player_id) {
+                        num_landmarks++;
+                    }
+                }
+                // TODO: support multiple landmarks.
+                if (num_landmarks > 0) {
+                    this.winner = this.current_player_id;
+                    this.phase = Phase.EndGame;
+                    return;
+                }
+                this.phase = Phase.EndTurn;
+                return;
+
+            case Phase.EndTurn:
+                this.phase = Phase.StartTurn;
+                return;
+
+            case Phase.EndGame:
+                // Do nothing.
+                return;
         }
     }
 
     public doNext(): boolean {
-        if (this.phase === Phase.StartGame) {
-            return this.startGame();
+        switch(this.phase) {
+            case Phase.StartGame:
+                return this.startGame();
+             case Phase.StartTurn:
+                return this.startTurn();
+            case Phase.CharacterCard:
+                return false;  // Need interactions.
+            case Phase.DiceRoll:
+                return false;  // Need interactions.
+            case Phase.FacilityAction:
+                return this.facilityAction();
+            case Phase.PaySalary:
+                return this.paySalary();
+            case Phase.BuildFacility:
+                return false;  // Need interactions.
+            case Phase.EndTurn:
+                return this.endTurn();
+            case Phase.EndGame:
+                return this.endGame();
         }
-
-        if (this.phase === Phase.StartTurn) {
-            return this.startTurn();
-        }
-
-        if (this.phase === Phase.CharacterCard) {
-            return false;  // Need interactions.
-        }
-
-        if (this.phase === Phase.DiceRoll) {
-            return false;  // Need interactions.
-        }
-
-        if (this.phase === Phase.FacilityAction) {
-            return this.facilityAction();
-        }
-
-        if (this.phase === Phase.PaySalary) {
-            return this.paySalary();
-        }
-
-        if (this.phase === Phase.BuildFacility) {
-            return false;  // Need interactions.
-        }
-
-        if (this.phase === Phase.EndTurn) {
-            return this.endTurn();
-        }
-
-        if (this.phase === Phase.EndGame) {
-            return this.endGame();
-        }
-
         return false;
     }
 
