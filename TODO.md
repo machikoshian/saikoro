@@ -3,7 +3,7 @@
 * 建設時にカードとクリックエリアが消えない
 * 選択がなくてもキャラカードボタンが押せるタイミングがある。
 
-* event.player_id, target_card_ids を moneys の流用のかわりに使う。
+* event.target_card_ids を event.buildFacility でも使う。
 * html_view.ts のリファクタリング
 * 観戦モードの追加
 * 紫施設に、相手を選ぶタイプを追加

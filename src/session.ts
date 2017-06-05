@@ -313,7 +313,7 @@ export class Session {
         event.type = EventType.Dice;
         event.dice = this.dice_result;
         event.step = this.step;
-        event.moneys[player_id] = 1;
+        event.player_id = player_id;
         this.done(Phase.DiceRoll);
         return true;
     }
@@ -761,7 +761,7 @@ export class Session {
         this.events.push(event);
         event.step = this.step;
         event.type = EventType.Quit;
-        event.moneys[player_id] = -1;
+        event.player_id = player_id;
 
         // TODO: Do not end the game. Swith to AI.
         this.phase = Phase.EndGame;

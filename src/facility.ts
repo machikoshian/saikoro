@@ -105,7 +105,7 @@ export class CardData {
                 (data_id < CHARACTER_DATA_BASE + CHARACTER_DATA.length));
     }
     static getRandomCharacterDataId(): FacilityDataId {
-        return Math.floor(Math.random() * 2) + CHARACTER_DATA_BASE;
+        return Math.floor(Math.random() * CHARACTER_DATA.length) + CHARACTER_DATA_BASE;
     }
 }
 

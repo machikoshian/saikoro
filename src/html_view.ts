@@ -477,24 +477,17 @@ export class HtmlView {
         }
         if (phase === Phase.EndGame) {
             let events: Event[] = this.session.getEvents();
-            let quited: boolean = false;
             for (let event of events) {
                 if (event.type === EventType.Quit) {
-                    quited = true;
-                    for (let i = 0; i < event.moneys.length; ++i) {
-                        if (event.moneys[i] !== 0) {
-                            message = `${players[i].name} が切断しました`;
-                            this.message_view.drawMessage(message, this.getPlayerColor(i));
-                        }
-                    }
-                    break;
+                    message = `${players[event.player_id].name} が切断しました`;
+                    this.message_view.drawMessage(message, this.getPlayerColor(event.player_id));
+                    return true;
                 }
             }
-            if (!quited) {
-                let winner: string = session.getPlayer(session.getWinner()).name;
-                message = `${name} の勝ちです`;
-                this.message_view.drawMessage(message, this.getPlayerColor(session.getWinner()));
-            }
+
+            let winner: string = session.getPlayer(session.getWinner()).name;
+            message = `${name} の勝ちです`;
+            this.message_view.drawMessage(message, this.getPlayerColor(session.getWinner()));
             return true;
         }
         return false;
@@ -549,15 +542,8 @@ export class HtmlView {
 
             // Dice
             if (event.type === EventType.Dice) {
-                let message: string = "";
-                let color: string = this.getPlayerColor(-1);
-                for (let pid = 0; pid < event.moneys.length; ++pid) {
-                    if (event.moneys[pid] !== 0) {
-                        message = this.getDiceResultMessage(event.dice, pid);
-                        color = this.getPlayerColor(pid);
-                        break;
-                    }
-                }
+                let message: string = this.getDiceResultMessage(event.dice, event.player_id);
+                let color: string = this.getPlayerColor(event.player_id);
                 this.clicakable_fiels_view.animateDiceResult(event.dice.result(), color);
                 this.message_view.drawMessage(message, color);
                 continue;
