@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=660,height=880,initial-scale=1" />
     <title>Saikoro</title>
     <style type="text/css">
     .none { display: none; }
@@ -76,145 +77,144 @@
     <script type="text/javascript" src="saikoro_client.js"></script>
   </head>
   <body>
-  <div id="matching">
-    名前: <input id="matching_name" type="text" name="name" value="コロまる"><br />
-    <input id="matching_button_offline" type="button" value="一人プレイ (オフライン)">
-    <small>- Internet Explorer では動きません。</small><br />
-    <br />
-    <input id="matching_button_online" type="button" value="一人プレイ (ネット通信)"><br />
-    <br />
-    <input id="matching_button_2players" type="button" value="二人プレイ（実験中）">
-    <small>- 同時にプレイできる人が必要です。</small><br />
-    <br />
-    ふっかつのじゅもん<br />
-    <textarea id="deck" name="deck" size="50" value=""></textarea><br />
-    <hr />
-    デッキ作成
-  </div>
-  <div id="game">
-    <table id="players">
-      <tr>
-        <td><table id="player_0" class="player">
-          <tr><td>😺</td><td id="player_0_name">こしあん</td></tr>
-          <tr><td>👛</td><td id="player_0_money">1000</td></tr>
-          <tr><td>💰</td><td id="player_0_salary">200</td></tr>
-          <tr><td>🃏</td><td id="player_0_talon">10</td></tr>
-        </table></td>
-        <td><table id="player_1" class="player">
-          <tr><td>😺</td><td id="player_1_name">つぶあん</td></tr>
-          <tr><td>👛</td><td id="player_1_money">1000</td></tr>
-          <tr><td>💰</td><td id="player_1_salary">200</td></tr>
-          <tr><td>🃏</td><td id="player_1_talon">10</td></tr>
-        </table></td>
-        <td><table id="player_2" class="player">
-          <tr><td>😺</td><td id="player_2_name">だいふく</td></tr>
-          <tr><td>👛</td><td id="player_2_money">1000</td></tr>
-          <tr><td>💰</td><td id="player_2_salary">200</td></tr>
-          <tr><td>🃏</td><td id="player_2_talon">10</td></tr>
-        </table></td>
-        <td><table id="player_3" class="player">
-          <tr><td>😺</td><td id="player_3_name">どらやき</td></tr>
-          <tr><td>👛</td><td id="player_3_money">1000</td></tr>
-          <tr><td>💰</td><td id="player_3_salary">200</td></tr>
-          <tr><td>🃏</td><td id="player_3_talon">10</td></tr>
-        </table></td>
-      </tr>
-    </table>
-    <div id="message">
-      🎲 こしあんのターンです 🎲
+    <div id="matching">
+      名前: <input id="matching_name" type="text" name="name" value="コロまる"><br />
+      <input id="matching_button_offline" type="button" value="一人プレイ (オフライン)">
+      <small>- Internet Explorer では動きません。</small><br />
+      <br />
+      <input id="matching_button_online" type="button" value="一人プレイ (ネット通信)"><br />
+      <br />
+      <input id="matching_button_2players" type="button" value="二人プレイ（実験中）">
+      <small>- 同時にプレイできる人が必要です。</small><br />
+      <br />
+      ふっかつのじゅもん<br />
+      <textarea id="deck" name="deck" size="50" value=""></textarea><br />
+      <hr />
+      デッキ作成
     </div>
-    <div id="board">
-      <table class="field"><tbody>
-        <tr><td id="field_0_0"></td><td id="field_1_0"></td><td id="field_2_0"></td><td id="field_3_0"></td><td id="field_4_0"></td><td id="field_5_0"></td><td id="field_6_0"></td><td id="field_7_0"></td><td id="field_8_0"></td><td id="field_9_0"></td><td id="field_10_0"></td><td id="field_11_0"></td></tr>
-        <tr><td id="field_0_1"></td><td id="field_1_1"></td><td id="field_2_1"></td><td id="field_3_1"></td><td id="field_4_1"></td><td id="field_5_1"></td><td id="field_6_1"></td><td id="field_7_1"></td><td id="field_8_1"></td><td id="field_9_1"></td><td id="field_10_1"></td><td id="field_11_1"></td></tr>
-        <tr><td id="field_0_2"></td><td id="field_1_2"></td><td id="field_2_2"></td><td id="field_3_2"></td><td id="field_4_2"></td><td id="field_5_2"></td><td id="field_6_2"></td><td id="field_7_2"></td><td id="field_8_2"></td><td id="field_9_2"></td><td id="field_10_2"></td><td id="field_11_2"></td></tr>
-        <tr><td id="field_0_3"></td><td id="field_1_3"></td><td id="field_2_3"></td><td id="field_3_3"></td><td id="field_4_3"></td><td id="field_5_3"></td><td id="field_6_3"></td><td id="field_7_3"></td><td id="field_8_3"></td><td id="field_9_3"></td><td id="field_10_3"></td><td id="field_11_3"></td></tr>
-        <tr><td id="field_0_4"></td><td id="field_1_4"></td><td id="field_2_4"></td><td id="field_3_4"></td><td id="field_4_4"></td><td id="field_5_4"></td><td id="field_6_4"></td><td id="field_7_4"></td><td id="field_8_4"></td><td id="field_9_4"></td><td id="field_10_4"></td><td id="field_11_4"></td></tr>
-        <tr><th id="col_0">1</th><th id="col_1">2</th><th id="col_2">3</th><th id="col_3">4</th><th id="col_4">5</th><th id="col_5">6</th><th id="col_6">7</th><th id="col_7">8</th><th id="col_8">9</th><th id="col_9">10</th><th id="col_10">11</th><th id="col_11">12</th></tr>
-      </tbody></table>
-      <table class="click"><tbody>
-        <tr><td id="click_0_0"></td><td id="click_1_0"></td><td id="click_2_0"></td><td id="click_3_0"></td><td id="click_4_0"></td><td id="click_5_0"></td><td id="click_6_0"></td><td id="click_7_0"></td><td id="click_8_0"></td><td id="click_9_0"></td><td id="click_10_0"></td><td id="click_11_0"></td></tr>
-        <tr><td id="click_0_1"></td><td id="click_1_1"></td><td id="click_2_1"></td><td id="click_3_1"></td><td id="click_4_1"></td><td id="click_5_1"></td><td id="click_6_1"></td><td id="click_7_1"></td><td id="click_8_1"></td><td id="click_9_1"></td><td id="click_10_1"></td><td id="click_11_1"></td></tr>
-        <tr><td id="click_0_2"></td><td id="click_1_2"></td><td id="click_2_2"></td><td id="click_3_2"></td><td id="click_4_2"></td><td id="click_5_2"></td><td id="click_6_2"></td><td id="click_7_2"></td><td id="click_8_2"></td><td id="click_9_2"></td><td id="click_10_2"></td><td id="click_11_2"></td></tr>
-        <tr><td id="click_0_3"></td><td id="click_1_3"></td><td id="click_2_3"></td><td id="click_3_3"></td><td id="click_4_3"></td><td id="click_5_3"></td><td id="click_6_3"></td><td id="click_7_3"></td><td id="click_8_3"></td><td id="click_9_3"></td><td id="click_10_3"></td><td id="click_11_3"></td></tr>
-        <tr><td id="click_0_4"></td><td id="click_1_4"></td><td id="click_2_4"></td><td id="click_3_4"></td><td id="click_4_4"></td><td id="click_5_4"></td><td id="click_6_4"></td><td id="click_7_4"></td><td id="click_8_4"></td><td id="click_9_4"></td><td id="click_10_4"></td><td id="click_11_4"></td></tr>
-        <tr><th id="click_0"></th><th id="click_1"></th><th id="click_2"></th><th id="click_3"></th><th id="click_4"></th><th id="click_5"></th><th id="click_6"></th><th id="click_7"></th><th id="click_8"></th><th id="click_9"></th><th id="click_10"></th><th id="click_11"></th></tr>
-      </tbody></table>
+    <div id="game">
+      <table id="players">
+        <tr>
+          <td><table id="player_0" class="player">
+            <tr><td>😺</td><td id="player_0_name">こしあん</td></tr>
+            <tr><td>👛</td><td id="player_0_money">1000</td></tr>
+            <tr><td>💰</td><td id="player_0_salary">200</td></tr>
+            <tr><td>🃏</td><td id="player_0_talon">10</td></tr>
+          </table></td>
+          <td><table id="player_1" class="player">
+            <tr><td>😺</td><td id="player_1_name">つぶあん</td></tr>
+            <tr><td>👛</td><td id="player_1_money">1000</td></tr>
+            <tr><td>💰</td><td id="player_1_salary">200</td></tr>
+            <tr><td>🃏</td><td id="player_1_talon">10</td></tr>
+          </table></td>
+          <td><table id="player_2" class="player">
+            <tr><td>😺</td><td id="player_2_name">だいふく</td></tr>
+            <tr><td>👛</td><td id="player_2_money">1000</td></tr>
+            <tr><td>💰</td><td id="player_2_salary">200</td></tr>
+            <tr><td>🃏</td><td id="player_2_talon">10</td></tr>
+          </table></td>
+          <td><table id="player_3" class="player">
+            <tr><td>😺</td><td id="player_3_name">どらやき</td></tr>
+            <tr><td>👛</td><td id="player_3_money">1000</td></tr>
+            <tr><td>💰</td><td id="player_3_salary">200</td></tr>
+            <tr><td>🃏</td><td id="player_3_talon">10</td></tr>
+          </table></td>
+        </tr>
+      </table>
+      <div id="message">
+        🎲 こしあんのターンです 🎲
+      </div>
+      <div id="board">
+        <table class="field"><tbody>
+          <tr><td id="field_0_0"></td><td id="field_1_0"></td><td id="field_2_0"></td><td id="field_3_0"></td><td id="field_4_0"></td><td id="field_5_0"></td><td id="field_6_0"></td><td id="field_7_0"></td><td id="field_8_0"></td><td id="field_9_0"></td><td id="field_10_0"></td><td id="field_11_0"></td></tr>
+          <tr><td id="field_0_1"></td><td id="field_1_1"></td><td id="field_2_1"></td><td id="field_3_1"></td><td id="field_4_1"></td><td id="field_5_1"></td><td id="field_6_1"></td><td id="field_7_1"></td><td id="field_8_1"></td><td id="field_9_1"></td><td id="field_10_1"></td><td id="field_11_1"></td></tr>
+          <tr><td id="field_0_2"></td><td id="field_1_2"></td><td id="field_2_2"></td><td id="field_3_2"></td><td id="field_4_2"></td><td id="field_5_2"></td><td id="field_6_2"></td><td id="field_7_2"></td><td id="field_8_2"></td><td id="field_9_2"></td><td id="field_10_2"></td><td id="field_11_2"></td></tr>
+          <tr><td id="field_0_3"></td><td id="field_1_3"></td><td id="field_2_3"></td><td id="field_3_3"></td><td id="field_4_3"></td><td id="field_5_3"></td><td id="field_6_3"></td><td id="field_7_3"></td><td id="field_8_3"></td><td id="field_9_3"></td><td id="field_10_3"></td><td id="field_11_3"></td></tr>
+          <tr><td id="field_0_4"></td><td id="field_1_4"></td><td id="field_2_4"></td><td id="field_3_4"></td><td id="field_4_4"></td><td id="field_5_4"></td><td id="field_6_4"></td><td id="field_7_4"></td><td id="field_8_4"></td><td id="field_9_4"></td><td id="field_10_4"></td><td id="field_11_4"></td></tr>
+          <tr><th id="col_0">1</th><th id="col_1">2</th><th id="col_2">3</th><th id="col_3">4</th><th id="col_4">5</th><th id="col_5">6</th><th id="col_6">7</th><th id="col_7">8</th><th id="col_8">9</th><th id="col_9">10</th><th id="col_10">11</th><th id="col_11">12</th></tr>
+        </tbody></table>
+        <table class="click"><tbody>
+          <tr><td id="click_0_0"></td><td id="click_1_0"></td><td id="click_2_0"></td><td id="click_3_0"></td><td id="click_4_0"></td><td id="click_5_0"></td><td id="click_6_0"></td><td id="click_7_0"></td><td id="click_8_0"></td><td id="click_9_0"></td><td id="click_10_0"></td><td id="click_11_0"></td></tr>
+          <tr><td id="click_0_1"></td><td id="click_1_1"></td><td id="click_2_1"></td><td id="click_3_1"></td><td id="click_4_1"></td><td id="click_5_1"></td><td id="click_6_1"></td><td id="click_7_1"></td><td id="click_8_1"></td><td id="click_9_1"></td><td id="click_10_1"></td><td id="click_11_1"></td></tr>
+          <tr><td id="click_0_2"></td><td id="click_1_2"></td><td id="click_2_2"></td><td id="click_3_2"></td><td id="click_4_2"></td><td id="click_5_2"></td><td id="click_6_2"></td><td id="click_7_2"></td><td id="click_8_2"></td><td id="click_9_2"></td><td id="click_10_2"></td><td id="click_11_2"></td></tr>
+          <tr><td id="click_0_3"></td><td id="click_1_3"></td><td id="click_2_3"></td><td id="click_3_3"></td><td id="click_4_3"></td><td id="click_5_3"></td><td id="click_6_3"></td><td id="click_7_3"></td><td id="click_8_3"></td><td id="click_9_3"></td><td id="click_10_3"></td><td id="click_11_3"></td></tr>
+          <tr><td id="click_0_4"></td><td id="click_1_4"></td><td id="click_2_4"></td><td id="click_3_4"></td><td id="click_4_4"></td><td id="click_5_4"></td><td id="click_6_4"></td><td id="click_7_4"></td><td id="click_8_4"></td><td id="click_9_4"></td><td id="click_10_4"></td><td id="click_11_4"></td></tr>
+          <tr><th id="click_0"></th><th id="click_1"></th><th id="click_2"></th><th id="click_3"></th><th id="click_4"></th><th id="click_5"></th><th id="click_6"></th><th id="click_7"></th><th id="click_8"></th><th id="click_9"></th><th id="click_10"></th><th id="click_11"></th></tr>
+        </tbody></table>
+      </div>
+      <div id="buttons">
+        <table><tr>
+          <td id="buttons_dice1" class="dice_button">🎲</td>
+          <td id="buttons_dice2" class="dice_button">🎲🎲</td>
+          <td>　</td>
+          <td id="buttons_char_card">キャラ<br />カード</td>
+          <td id="buttons_end_turn">ターン<br />終了</td>
+        </tr></table>
+      </div>
+      <div id="cards">
+        <span id="card_0">
+          <table id="card_0_0" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="card_0_1" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="card_0_2" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="card_0_3" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="card_0_4" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="card_0_5" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="card_0_6" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="card_0_7" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="card_0_8" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="card_0_9" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+        </span>
+        <span id="card_1">
+          <table id="card_1_0" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="card_1_1" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="card_1_2" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="card_1_3" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="card_1_4" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="card_1_5" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="card_1_6" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="card_1_7" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="card_1_8" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="card_1_9" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+        </span>
+        <span id="card_2">
+          <table id="card_2_0" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="card_2_1" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="card_2_2" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="card_2_3" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="card_2_4" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="card_2_5" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="card_2_6" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="card_2_7" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="card_2_8" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="card_2_9" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+        </span>
+        <span id="card_3">
+          <table id="card_3_0" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="card_3_1" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="card_3_2" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="card_3_3" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="card_3_4" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="card_3_5" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="card_3_6" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="card_3_7" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="card_3_8" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="card_3_9" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+        </span>
+        <span id="landmark">
+          <table id="landmark_0" class="card"><tr><td class="card_name">🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="landmark_1" class="card"><tr><td class="card_name">🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="landmark_2" class="card"><tr><td class="card_name">🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="landmark_3" class="card"><tr><td class="card_name">🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+          <table id="landmark_4" class="card"><tr><td class="card_name">🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+        </span>
+      </div>
     </div>
-    <div id="buttons">
-    <table><tr>
-      <td id="buttons_dice1" class="dice_button">🎲</td>
-      <td id="buttons_dice2" class="dice_button">🎲🎲</td>
-      <td>　</td>
-      <td id="buttons_char_card">キャラ<br />カード</td>
-      <td id="buttons_end_turn">ターン<br />終了</td>
-    </tr></table>
+    <div class="none">
+      <div id="money_motion">
+        💸
+      </div>
+      <table id="char_motion" class="card"><tr><td class="card_name">🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
+      <table id="field_card" class="card"><tr><td class="card_name">🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
     </div>
-    <div id="cards">
-    <div id="card_0">
-      <table id="card_0_0" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="card_0_1" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="card_0_2" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="card_0_3" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="card_0_4" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="card_0_5" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="card_0_6" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="card_0_7" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="card_0_8" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="card_0_9" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-    </div>
-    <div id="card_1">
-      <table id="card_1_0" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="card_1_1" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="card_1_2" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="card_1_3" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="card_1_4" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="card_1_5" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="card_1_6" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="card_1_7" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="card_1_8" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="card_1_9" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-    </div>
-    <div id="card_2">
-      <table id="card_2_0" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="card_2_1" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="card_2_2" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="card_2_3" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="card_2_4" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="card_2_5" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="card_2_6" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="card_2_7" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="card_2_8" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="card_2_9" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-    </div>
-    <div id="card_3">
-      <table id="card_3_0" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="card_3_1" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="card_3_2" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="card_3_3" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="card_3_4" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="card_3_5" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="card_3_6" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="card_3_7" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="card_3_8" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="card_3_9" class="card"><tr><td class="card_name">① 🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-    </div>
-    <div id="landmark">
-      <table id="landmark_0" class="card"><tr><td class="card_name">🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="landmark_1" class="card"><tr><td class="card_name">🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="landmark_2" class="card"><tr><td class="card_name">🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="landmark_3" class="card"><tr><td class="card_name">🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-      <table id="landmark_4" class="card"><tr><td class="card_name">🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-    </div>
-    </table>
-    </div>
-  </div>
-  <div class="none">
-    <div id="money_motion">
-      💸
-    </div>
-    <table id="char_motion" class="card"><tr><td class="card_name">🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-    <table id="field_card" class="card"><tr><td class="card_name">🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
-  </div>
   </body>
 </html>
