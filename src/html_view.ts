@@ -32,9 +32,8 @@ export class HtmlView {
     private client: Client;
     private session: Session = null;
     private prev_session: Session = null;
+    private prev_step: number = -1;
     private clicked_card_view: HtmlCardView = null;
-    private last_step: number = -1;
-    private drawn_step: number = -1;
     private deck_maker: DeckMaker = new DeckMaker();
     private clicked_field: [number, number] = [0, 0];
     private cards_views: HtmlCardsView[] = [];
@@ -46,7 +45,7 @@ export class HtmlView {
     private message_view: HtmlMessageView = null;
     private buttons_view: HtmlButtonsView = null;
     private clicakable_fiels_view: HtmlClickableFieldsView = null;
-    private initialized: boolean = false;
+    private scene: Scene = Scene.Matching;
 
     constructor(client: Client) {
         this.client = client;
@@ -156,11 +155,12 @@ export class HtmlView {
     private onClickField(x: number, y: number): void {
         console.log(`clicked: field_${x}_${y}`);
         // Event on matching.
-        if (this.last_step === -1) {
+        if (this.scene === Scene.Matching) {
             this.onClickDeckField(x, y);
             return;
         }
-        // Event on game.
+
+        // Event on game (this.scene === Scene.Game).
         if (this.clicked_card_view == null) {
             this.drawFieldInfo(x, y);
             return;
@@ -192,7 +192,7 @@ export class HtmlView {
 
     private onClickCard(player: number, card: number): void {
         // Event on matching.
-        if (this.last_step === -1) {
+        if (this.scene === Scene.Matching) {
             let [x, y]: [number, number] = this.clicked_field;
             let data_id: FacilityDataId = this.deck_maker.getAvailableFacilities(x)[card];
             this.deck_maker.setFacility(x, y, data_id);
@@ -200,7 +200,7 @@ export class HtmlView {
             return;
         }
 
-        // Event on game.
+        // Event on game (this.scene === Scene.Game).
         let clicked_card_id: CardId = this.cards_views[player].cards[card].getCardId();
         let phase: Phase = this.session.getPhase();
         let is_char: boolean = this.session.isCharacter(clicked_card_id);
@@ -307,6 +307,7 @@ export class HtmlView {
     }
 
     private switchScene(scene: Scene): void {
+        this.scene = scene;
         if (scene === Scene.Game) {
             // Hide the matching view and show the board view.
             document.getElementById("matching").style.display = "none";
@@ -324,9 +325,8 @@ export class HtmlView {
     public updateView(session: Session, user_id: string): void {
         this.session = session;
 
-        if (!this.initialized) {  // TODO: Handle this in a different function.
+        if (this.scene === Scene.Matching) {  // TODO: Handle this in a different function.
             this.switchScene(Scene.Game);
-            this.initialized = true;
         }
 
         // Show event animations.
@@ -334,8 +334,6 @@ export class HtmlView {
 
         // Update buttons.
         this.buttons_view.draw(session, user_id);
-
-        this.last_step = session.getStep();
     }
 
     public drawCards(session: Session): void {
@@ -504,6 +502,7 @@ export class HtmlView {
         this.drawPlayers();
         this.drawBoard(session);
         this.drawCards(session);
+        this.prev_session = this.session;
     }
 
     public drawEvents(): void {
@@ -531,7 +530,7 @@ export class HtmlView {
         let i: number = 0;
         for (; i < events.length; ++i) {
             // Skip passed events.
-            if (events[i].step > this.drawn_step) {
+            if (events[i].step > this.prev_step) {
                 step = events[i].step;
                 break;
             }
@@ -540,7 +539,6 @@ export class HtmlView {
         if (step === -1) {
             // All events have been drawn. Then, draw the current status.
             this.drawSession(this.session);
-            this.prev_session = this.session;
             return false;
         }
 
@@ -650,7 +648,7 @@ export class HtmlView {
                 }
             }
         }
-        this.drawn_step = step;
+        this.prev_step = step;
         return true;
     }
 
