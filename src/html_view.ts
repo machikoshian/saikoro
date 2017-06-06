@@ -7,7 +7,7 @@ import { Dice, DiceResult } from "./dice";
 import { Client, Request } from "./client";
 import { DeckMaker } from "./deck_maker";
 import { GameMode } from "./protocol";
-import { HtmlViewObject, HtmlCardsView, HtmlCardView, HtmlFloatingCardView, HtmlPlayerView,
+import { HtmlViewObject, HtmlCardsView, HtmlCardView, HtmlPlayerView,
          HtmlMessageView, HtmlButtonsView,HtmlClickableFieldsView } from "./html_view_parts";
 
 const COLOR_FIELD: string = "#EFF0D1";
@@ -39,8 +39,8 @@ export class HtmlView {
     private cards_views: HtmlCardsView[] = [];
     private player_views: HtmlPlayerView[] = [];
     private landmarks_view: HtmlCardsView = null;
-    private field_card_view: HtmlFloatingCardView = null;
-    private char_motion_view: HtmlFloatingCardView = null;
+    private field_card_view: HtmlCardView = null;
+    private char_motion_view: HtmlCardView = null;
     private money_motion_view: HtmlViewObject = null;
     private message_view: HtmlMessageView = null;
     private buttons_view: HtmlButtonsView = null;
@@ -106,7 +106,7 @@ export class HtmlView {
         }
 
         // Field card
-        this.field_card_view = new HtmlFloatingCardView("field_card");
+        this.field_card_view = new HtmlCardView("field_card");
         this.field_card_view.none();
 
         // Fields
@@ -119,7 +119,7 @@ export class HtmlView {
         }
 
         // Character motion
-        this.char_motion_view = new HtmlFloatingCardView("char_motion");
+        this.char_motion_view = new HtmlCardView("char_motion");
         this.char_motion_view.none();
 
         // Money motion
@@ -174,6 +174,9 @@ export class HtmlView {
     }
 
     private onClickCharacter(): void {
+        if (this.clicked_card_view == null) {
+            return;
+        }
         this.client.sendRequest(Request.characterCard(this.clicked_card_view.getCardId()));
     }
 
@@ -369,8 +372,7 @@ export class HtmlView {
             return;
         }
 
-        this.field_card_view.setCardId(card_id);
-        this.field_card_view.draw(this.session);
+        this.field_card_view.draw(this.session, card_id);
         this.field_card_view.showAt(this.getPosition((x < 6) ? "click_10_1" : "click_0_1"));
     }
 
@@ -668,8 +670,7 @@ export class HtmlView {
     }
 
     private effectCharacter(player_id: PlayerId, card_id: CardId): void {
-        this.char_motion_view.setCardId(card_id);
-        this.char_motion_view.draw(this.session);
+        this.char_motion_view.draw(this.session, card_id);
 
         // Animation.
         let new_view: HtmlViewObject = this.char_motion_view.clone();
@@ -679,8 +680,7 @@ export class HtmlView {
     }
 
     private effectDrawCard(player_id: PlayerId, card_id: CardId): void {
-        this.char_motion_view.setCardId(card_id);
-        this.char_motion_view.draw(this.session);
+        this.char_motion_view.draw(this.session, card_id);
 
         // Animation.
         let new_view: HtmlViewObject = this.char_motion_view.clone();

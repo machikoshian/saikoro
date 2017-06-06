@@ -255,36 +255,6 @@ export class HtmlCardView extends HtmlViewObject {
     }
 }
 
-// HtmlFloatingCardView represents a parent <table> tag of HtmlCardView
-// which represents a <td> tag. It is nice to use <div> instead and merge them.
-// TODO: merge this class to HtmlCardView.
-export class HtmlFloatingCardView extends HtmlViewObject {
-    private card_view: HtmlCardView = null;
-
-    constructor(element_id: string) {
-        super(document.getElementById(element_id + "_node"));
-        this.card_view = new HtmlCardView(element_id);
-    }
-
-    public setCardId(card_id: CardId): void {
-        this.card_view.setCardId(card_id);
-    }
-
-    public getCardId(): CardId {
-        return this.card_view.getCardId();
-    }
-
-    public draw(session: Session): void {
-        let card_id: CardId = this.card_view.getCardId();
-        if (card_id === -1) {
-            this.none();
-            return;
-        }
-        this.card_view.draw(session, card_id);
-        // HtmlFloatingCardView.draw does not change its visibility.
-    }
-}
-
 export class HtmlPlayerView extends HtmlViewObject {
     readonly player_id: PlayerId;
     private element_name: HTMLElement;

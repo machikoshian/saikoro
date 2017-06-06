@@ -4,6 +4,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>Saikoro</title>
     <style type="text/css">
+    .none { display: none; }
     body { width: 660px; }
     #board { position: relative; }
     #board table {
@@ -60,12 +61,6 @@
     /* Motion elements should have width and height. */
     #money_motion {
       width: 40px; height: 40px;
-    }
-    #char_motion_node {
-      width: 90px; height: 120px;
-    }
-    #char_motion {
-      background-color: #FFF9C4;
     }
     table.card {
       display: inline-block;
@@ -214,14 +209,12 @@
     </table>
     </div>
   </div>
-  <div id="money_motion">
-    💸
-  </div>
-  <div id="char_motion_node">
+  <div class="none">
+    <div id="money_motion">
+      💸
+    </div>
     <table id="char_motion" class="card"><tr><td id="char_motion_name">名前</td></tr><tr><td id="char_motion_cost"></td></tr><tr><td id="char_motion_description" class="description">説明</td></tr></table>
-  </div>
-  <div id="field_card_node">
-    <table id="field_card" class="card"><table><tr><td id="field_card_name">① 🏬</td></tr><tr><td id="field_card_cost">250</td></tr><tr><td id="field_card_description" class="description">説明</td></tr></table>
+    <table id="field_card" class="card"><tr><td id="field_card_name">① 🏬</td></tr><tr><td id="field_card_cost">250</td></tr><tr><td id="field_card_description" class="description">説明</td></tr></table>
   </div>
   </body>
 </html>
