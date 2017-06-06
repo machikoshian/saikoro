@@ -22,13 +22,17 @@ const COLOR_GREEN: string = "#A5D6A7";
 const COLOR_RED: string = "#EF9A9A";
 const COLOR_PURPLE: string = "#B39DDB";
 
+enum Scene {
+    Matching,
+    Game,
+}
+
 export class HtmlView {
     private event_drawer_timer = null;
     private client: Client;
     private session: Session = null;
     private prev_session: Session = null;
     private clicked_card_view: HtmlCardView = null;
-    private player_cards_list: CardId[][] = [];
     private last_step: number = -1;
     private drawn_step: number = -1;
     private deck_maker: DeckMaker = new DeckMaker();
@@ -197,7 +201,7 @@ export class HtmlView {
         }
 
         // Event on game.
-        let clicked_card_id: CardId = this.player_cards_list[player][card];
+        let clicked_card_id: CardId = this.cards_views[player].cards[card].getCardId();
         let phase: Phase = this.session.getPhase();
         let is_char: boolean = this.session.isCharacter(clicked_card_id);
 
@@ -302,10 +306,8 @@ export class HtmlView {
         }
     }
 
-    public updateView(session: Session, user_id: string): void {
-        this.session = session;
-
-        if (!this.initialized) {  // TODO: Handle this in a different function.
+    private switchScene(scene: Scene): void {
+        if (scene === Scene.Game) {
             // Hide the matching view and show the board view.
             document.getElementById("matching").style.display = "none";
 
@@ -315,21 +317,20 @@ export class HtmlView {
             // Message view.
             this.message_view.show();
             this.drawSession(this.session);
+            return;
+        }
+    }
+
+    public updateView(session: Session, user_id: string): void {
+        this.session = session;
+
+        if (!this.initialized) {  // TODO: Handle this in a different function.
+            this.switchScene(Scene.Game);
             this.initialized = true;
         }
 
         // Show event animations.
         this.drawEvents();
-
-        // Update cards list.
-        this.player_cards_list = [];
-        let players: Player[] = session.getPlayers();
-        for (let i: number = 0; i < players.length; ++i) {
-            let card_ids: CardId[] = session.getSortedHand(i);
-            this.player_cards_list.push(card_ids);
-        }
-        let landmark_ids: CardId[] = session.getLandmarks();
-        this.player_cards_list.push(landmark_ids);
 
         // Update buttons.
         this.buttons_view.draw(session, user_id);
