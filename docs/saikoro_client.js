@@ -2422,6 +2422,7 @@ class HtmlView {
             this.field_card_view.setCardId(-1);
             return;
         }
+        console.log("drawFieldInfo");
         this.field_card_view.draw(this.session, card_id);
         this.field_card_view.showAt(this.getPosition((x < 6) ? "click_10_1" : "click_0_1"));
     }
