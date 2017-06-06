@@ -564,13 +564,7 @@ export class HtmlView {
                     continue;
                 }
 
-                let timeout: number = 1000;
-                for (let drawn of event.target_card_ids) {
-                    window.setTimeout(() => {
-                        this.effectDrawCard(event.player_id, drawn);
-                    }, timeout);
-                    timeout += 500;
-                }
+                this.effectCardDeals(event.player_id, event.target_card_ids);
                 continue;
             }
 
@@ -587,13 +581,7 @@ export class HtmlView {
             if (event.type === EventType.Character) {
                 this.effectCharacter(this.session.getCurrentPlayerId(), event.card_id);
                 if (this.session.getCharacter(event.card_id).type === CharacterType.DrawCards) {
-                    let timeout: number = 1000;
-                    for (let drawn of event.target_card_ids) {
-                        window.setTimeout(() => {
-                            this.effectDrawCard(event.player_id, drawn);
-                        }, timeout);
-                        timeout += 500;
-                    }
+                    this.effectCardDeals(event.player_id, event.target_card_ids);
                 }
                 continue;
             }
@@ -679,7 +667,7 @@ export class HtmlView {
         window.setTimeout(() => { new_view.remove(); }, 1500);
     }
 
-    private effectDrawCard(player_id: PlayerId, card_id: CardId): void {
+    private effectCardDeal(player_id: PlayerId, card_id: CardId): void {
         this.char_motion_view.draw(this.session, card_id);
 
         // Animation.
@@ -687,6 +675,16 @@ export class HtmlView {
         new_view.showAt(this.getPosition(`player_${player_id}_money`));
         new_view.animateMoveTo(this.getPosition(`card_${player_id}_0`));
         window.setTimeout(() => { new_view.remove(); }, 1500);
+    }
+
+    private effectCardDeals(player_id: PlayerId, card_ids: CardId[]): void {
+        let timeout: number = 1000;
+        for (let card_id of card_ids) {
+            window.setTimeout(() => {
+                this.effectCardDeal(player_id, card_id);
+            }, timeout);
+            timeout += 500;
+        }
     }
 
     private effectMoneyMotion(element_from: string, element_to: string, money: number): void {
