@@ -3,6 +3,7 @@
 * 建設時にカードとクリックエリアが消えない
 * 選択がなくてもキャラカードボタンが押せるタイミングがある。
 
+* MatchedData から session をはずす。
 * event.target_card_ids を event.buildFacility でも使う。
 * html_view.ts のリファクタリング
 * 観戦モードの追加

@@ -1,5 +1,5 @@
 import { FirebaseMemcache, FirebaseServer } from "./firebase_server";
-import { KeyValue, Memcache, MatchedData, SessionHandler } from "./session_handler";
+import { KeyValue, Memcache, SessionHandler } from "./session_handler";
 
 const functions = require('firebase-functions');
 const mc = new FirebaseMemcache();

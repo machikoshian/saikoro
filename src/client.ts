@@ -16,8 +16,8 @@ export abstract class Connection {
 }
 
 export abstract class Client {
+    // TODO: These variables should not be modified by others.
     public connection: Connection;
-
     public session_id: number = 0;
     public matching_id: number = 0;
     public mode: number = 0;
@@ -40,6 +40,7 @@ export abstract class Client {
     private callbackMatching(response: string): void {
         const response_json = JSON.parse(response);
         this.session_id = response_json.session_id;
+        this.player_id = response_json.player_id;
         this.matching_id = response_json.matching_id;
 
         this.connection.checkUpdate(this);

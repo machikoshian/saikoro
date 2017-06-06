@@ -46,8 +46,6 @@ export class WebClient extends Client {
             this.connection.stopCheckUpdate();
         }
 
-        this.player_id = session.getCurrentPlayerId();
-
         let step: number = session.getStep();
         console.log(step);
         if (step === this.step) {
@@ -56,6 +54,6 @@ export class WebClient extends Client {
         }
         this.step = step;
 
-        this.view.updateView(session, this.user_id);
+        this.view.updateView(session, this.player_id);
     }
 }

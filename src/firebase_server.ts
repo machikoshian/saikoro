@@ -68,7 +68,8 @@ export class FirebaseServer {
             return Promise.all([
                 this.ref_session.child(`session_${matched.session_id}`).set(matched.session_string),
                 this.ref_matched.child(user_id).set({ matching_id: matched.matching_id,
-                                                        session_id: matched.session_id }),
+                                                        player_id: matched.player_id,
+                                                       session_id: matched.session_id }),
                 // Delete handled event.
                 this.ref_matching.child(data.key).set(null)
             ]);

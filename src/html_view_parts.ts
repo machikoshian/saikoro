@@ -355,8 +355,8 @@ export class HtmlButtonsView extends HtmlViewObject {
         this.end_turn = new HtmlButtonView(element_id + "_end_turn");
     }
 
-    public draw(session: Session, user_id: string): void {
-        if (session.getCurrentPlayer().user_id !== user_id) {
+    public draw(session: Session, player_id: PlayerId): void {
+        if (session.getCurrentPlayerId() !== player_id) {
             this.none();
             return;
         }

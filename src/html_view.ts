@@ -325,7 +325,7 @@ export class HtmlView {
         }
     }
 
-    public updateView(session: Session, user_id: string): void {
+    public updateView(session: Session, player_id: PlayerId): void {
         this.session = session;
 
         if (this.scene === Scene.Matching) {  // TODO: Handle this in a different function.
@@ -336,7 +336,7 @@ export class HtmlView {
         this.drawEvents();
 
         // Update buttons.
-        this.buttons_view.draw(session, user_id);
+        this.buttons_view.draw(session, player_id);
     }
 
     public drawCards(session: Session): void {
@@ -344,7 +344,7 @@ export class HtmlView {
 
         // Update cards.
         for (let i: number = 0; i < players.length; ++i) {
-            if (session.getPlayer(i).user_id !== this.client.user_id) {
+            if (this.client.player_id !== i) {
                 this.cards_views[i].none();
                 continue;
             }
@@ -560,7 +560,7 @@ export class HtmlView {
                 this.message_view.drawMessage(message, color);
 
                 // Do not show other's draw event.
-                if (this.session.getPlayer(event.player_id).user_id !== this.client.user_id) {
+                if (event.player_id !== this.client.player_id) {
                     continue;
                 }
 
@@ -678,6 +678,9 @@ export class HtmlView {
     }
 
     private effectCardDeals(player_id: PlayerId, card_ids: CardId[]): void {
+        if (this.client.player_id !== player_id) {
+            return;
+        }
         let timeout: number = 1000;
         for (let card_id of card_ids) {
             window.setTimeout(() => {

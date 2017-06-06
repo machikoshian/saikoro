@@ -51,6 +51,7 @@ export class MatchedData {
     constructor(
         public matching_id: string = "",
         public session_id: string = "",
+        public player_id: number = -1,
         public session_string: string = "") {}
 }
 
@@ -230,6 +231,7 @@ export class SessionHandler {
             }
 
             let player_id: PlayerId = this.addNewPlayer(session, user_id, name, deck, false);
+            matched_data.player_id = player_id;
             if (player_id === num_players - 1) {
                 // Add NPC.
                 const NPC_NAMES = ["ごましお", "グラ", "ヂータ", "エル", "茜"];

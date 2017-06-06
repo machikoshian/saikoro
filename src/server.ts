@@ -118,7 +118,8 @@ class HttpServer {
         if (pathname === "/matching") {
             this.session_handler.handleMatching(query).then((matched: MatchedData) => {
                 response.end(JSON.stringify({ matching_id: matched.matching_id,
-                                              session_id: matched.session_id }));
+                                                player_id: matched.player_id,
+                                               session_id: matched.session_id }));
                 console.log(matched.session_string);
             });
             return;
