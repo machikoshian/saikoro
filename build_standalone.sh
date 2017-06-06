@@ -3,7 +3,7 @@
 # Client side (web browser)
 echo "Building standalone client"
 webpack --config webpack.config.standalone.js || exit
-cp ./src/saikoro.html ./out/standalone/
+cp ./src/saikoro.html ./docs/index.html
 
-echo "open ./out/standalone/saikoro.html"
-open ./out/standalone/saikoro.html
+echo "open ./docs/index.html"
+open ./docs/index.html
