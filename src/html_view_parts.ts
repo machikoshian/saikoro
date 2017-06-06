@@ -165,9 +165,9 @@ export class HtmlCardView extends HtmlViewObject {
 
     constructor(readonly element_id: string) {
         super(document.getElementById(element_id));
-        this.element_name = document.getElementById(element_id + "_name");
-        this.element_cost = document.getElementById(element_id + "_cost");
-        this.element_description = document.getElementById(element_id + "_description");
+        this.element_name = <HTMLElement>this.element.getElementsByClassName("card_name")[0];
+        this.element_cost = <HTMLElement>this.element.getElementsByClassName("card_cost")[0];
+        this.element_description = <HTMLElement>this.element.getElementsByClassName("card_description")[0];
     }
 
     public setCardId(card_id: CardId): void {
