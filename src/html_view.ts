@@ -169,8 +169,22 @@ export class HtmlView {
         this.client.sendRequest(Request.buildFacility(x, y, card_id));
     }
 
+    private isRequestReady(): boolean {
+        // TODO: Create a function in Session.
+        return (this.session.getStep() === this.prev_session.getStep() &&
+                this.client.player_id === this.session.getCurrentPlayerId());
+    }
+
     private onClickDice(dice_num: number, aim: number): void {
+        if (!this.isRequestReady()) {
+            return;
+        }
+
         this.client.sendRequest(Request.rollDice(dice_num, aim));
+        let dice_view: HtmlViewObject =
+            (dice_num === 1) ? this.buttons_view.dice1 : this.buttons_view.dice2;
+        dice_view.hide();
+        this.effectClonedObjectMove(dice_view, dice_view.getPosition(), this.getPosition("field_5_2"));
     }
 
     private onClickCharacter(): void {
