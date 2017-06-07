@@ -46,6 +46,7 @@ export class Event {
     public card_id: CardId = null;
     public target_card_ids: CardId[] = [];
     public dice: DiceResult = null;
+    public valid: boolean = false;
 
     public toJSON(): Object {
         return {
@@ -57,6 +58,7 @@ export class Event {
             card_id: this.card_id,
             target_card_ids: this.target_card_ids,
             dice: this.dice ? this.dice.toJSON() : null,
+            valid: this.valid,
         }
     }
 
@@ -69,6 +71,7 @@ export class Event {
         event.card_id = json.card_id;
         event.target_card_ids = json.target_card_ids;
         event.dice = json.dice ? DiceResult.fromJSON(json.dice) : null;
+        event.valid = json.valid;
         return event;
     }
 }
@@ -577,65 +580,17 @@ export class Session {
             return this.buildLandmark(player_id, card_id);
         }
 
-        // State is valid?
-        if (!this.isValid(player_id, Phase.BuildFacility)) {
+        let event: Event = this.getEventBuildFacility(player_id, x, y, card_id);
+        if (event == null || !event.valid) {
             return false;
         }
+        this.events.push(event);
 
-        // Is pass?  (valid action, but not build a facility).
-        if (x === -1 && y === -1 && card_id === -1) {
-            this.done(Phase.BuildFacility);
-            return true;
-        }
-
-        // Facility is valid?
-        let facility: Facility = this.card_manager.getFacility(card_id);
-        if (!facility) {
-            return false;
-        }
-
-        // Facility is in owner's hand?
-        if (!this.card_manager.isInHand(player_id, card_id)) {
-            return false;
-        }
-
-        // Facility's owner is valid?
-        let facility_owner: PlayerId = this.getOwnerId(card_id);
-        if (facility_owner !== player_id) {
-            return false;
-        }
-
-        // Facility's area is valid?
-        let area: number = x + 1;
-        if (!this.card_manager.isInArea(area, card_id)) {
-            return false;
-        }
-
-        let event: Event = new Event();
-        let overlapped: CardId[] = this.getOverlappedFacilities(x, y, facility.size);
-
-        for (let card_id_on_board of overlapped) {
-            // Facility on the board is overwritable?
-            if (!this.card_manager.canOverwrite(card_id_on_board)) {
-                return false;
-            }
-        }
-
-        // Money is valid?
-        let overwrite_costs: number[] = this.getOverwriteCosts(x, y, facility.size);
-        let total_cost: number = facility.cost;
-        for (let i: number = 0; i < overwrite_costs.length; ++i) {
-            total_cost += overwrite_costs[i];
-        }
-
-        let player: Player = this.players[player_id];
-        if (total_cost > player.getMoney()) {
-            return false;
-        }
+        let facility: Facility = this.getFacility(card_id);
 
         // Update the data.
         this.board.removeCards(x, y, facility.size);
-        for (let card_id_on_board of overlapped) {
+        for (let card_id_on_board of event.target_card_ids) {
             // Delete the existing facility.
             if (!this.card_manager.moveFieldToDiscard(card_id_on_board)) {
                 // Something is wrong.
@@ -651,70 +606,143 @@ export class Session {
             return false;
         }
 
-        // Merge overwrite_costs and total_cost;
-        overwrite_costs[player_id] -= total_cost;
-
-        this.events.push(event);
-        event.step = this.step;
-        event.type = EventType.Build;
-        event.moneys = overwrite_costs;
-        event.card_id = card_id;
-        event.player_id = player_id;
-
         this.board.setCardId(x, y, card_id, facility.size);
         for (let i: number = 0; i < this.players.length; ++i) {
-            this.players[i].addMoney(overwrite_costs[i]);
+            this.players[i].addMoney(event.moneys[i]);
         }
 
         this.done(Phase.BuildFacility);
         return true;
     }
 
-    public buildLandmark(player_id: PlayerId, card_id: CardId): boolean {
-        // State is valid?
-        if (!this.isValid(player_id, Phase.BuildFacility)) {
-            return false;
+    public getEventBuildFacility(player_id: PlayerId, x: number, y: number,
+                         card_id: CardId): Event {
+        // Facility is a landmark?
+        if (this.card_manager.isLandmark(card_id)) {
+            return this.getEventBuildLandmark(player_id, card_id);
         }
 
-        // Is a landmark?
-        if (!this.card_manager.isLandmark(card_id)) {
-            return false;
+        // State is valid?
+        if (!this.isValid(player_id, Phase.BuildFacility)) {
+            return null;
+        }
+
+        // Is pass?  (valid action, but not build a facility).
+        if (x === -1 && y === -1 && card_id === -1) {
+            this.done(Phase.BuildFacility);
+            return null;
         }
 
         // Facility is valid?
         let facility: Facility = this.card_manager.getFacility(card_id);
         if (!facility) {
+            return null;
+        }
+
+        // Facility is in owner's hand?
+        if (!this.card_manager.isInHand(player_id, card_id)) {
+            return null;
+        }
+
+        // Facility's owner is valid?
+        let facility_owner: PlayerId = this.getOwnerId(card_id);
+        if (facility_owner !== player_id) {
+            return null;
+        }
+
+        // Facility's area is valid?
+        let area: number = x + 1;
+        if (!this.card_manager.isInArea(area, card_id)) {
+            return null;
+        }
+
+        let overlapped: CardId[] = this.getOverlappedFacilities(x, y, facility.size);
+        for (let card_id_on_board of overlapped) {
+            // Facility on the board is overwritable?
+            if (!this.card_manager.canOverwrite(card_id_on_board)) {
+                return null;
+            }
+        }
+
+        let event: Event = new Event();
+
+        // Money is valid?
+        let overwrite_costs: number[] = this.getOverwriteCosts(x, y, facility.size);
+        let total_cost: number = facility.cost;
+        for (let i: number = 0; i < overwrite_costs.length; ++i) {
+            total_cost += overwrite_costs[i];
+        }
+        if (total_cost <= this.getPlayer(player_id).getMoney()) {
+            event.valid = true;
+        }
+
+        // Merge overwrite_costs and total_cost;
+        overwrite_costs[player_id] -= total_cost;
+
+        event.step = this.step;
+        event.type = EventType.Build;
+        event.moneys = overwrite_costs;
+        event.card_id = card_id;
+        event.player_id = player_id;
+        event.target_card_ids = overlapped;
+
+        return event;
+    }
+
+    public buildLandmark(player_id: PlayerId, card_id: CardId): boolean {
+        let event: Event = this.getEventBuildLandmark(player_id, card_id);
+        if (event == null || !event.valid) {
             return false;
+        }
+        this.events.push(event);
+
+        // Update the data.
+        this.getPlayer(player_id).addMoney(event.moneys[player_id]);
+        this.card_manager.buildLandmark(player_id, card_id);
+
+        this.done(Phase.BuildFacility);
+        return true;
+    }
+
+    public getEventBuildLandmark(player_id: PlayerId, card_id: CardId): Event {
+        // State is valid?
+        if (!this.isValid(player_id, Phase.BuildFacility)) {
+            return null;
+        }
+
+        // Is a landmark?
+        if (!this.card_manager.isLandmark(card_id)) {
+            return null;
+        }
+
+        // Facility is valid?
+        let facility: Facility = this.card_manager.getFacility(card_id);
+        if (!facility) {
+            return null;
         }
 
         // Isn't already built?
         let facility_owner: PlayerId = this.getOwnerId(card_id);
         if (facility_owner !== -1) {
             // Already built.
-            return false;
+            return null;
         }
-
-        // Money is valid?
-        let player: Player = this.players[player_id];
-        let cost: number = facility.getCost();
-        let balance: number = player.getMoney() - cost;
-        if (balance < 0) {
-            return false;
-        }
-
-        // Update the data.
-        player.setMoney(balance);
-        this.card_manager.buildLandmark(player_id, card_id);
 
         let event: Event = new Event();
-        this.events.push(event);
+
+        // Money is valid?
+        let cost: number = facility.getCost();
+        if (cost <= this.getPlayer(player_id).getMoney()) {
+            event.valid = true;
+        }
+
+        event.player_id = player_id;
         event.step = this.step;
         event.type = EventType.Build;
         event.moneys[player_id] -= cost;
         event.card_id = card_id;
 
-        this.done(Phase.BuildFacility);
-        return true;
+        return event;
     }
 
     public paySalary(): boolean {
