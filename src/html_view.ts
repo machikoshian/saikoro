@@ -172,8 +172,7 @@ export class HtmlView {
         }
         this.client.sendRequest(Request.buildFacility(x, y, card_id));
         this.effectClonedObjectMove(this.clicked_card_view,
-                                    this.clicked_card_view.getPosition(),
-                                    this.getPosition(`field_${x}_${y}`));
+                                    this.clicked_card_view.element_id, `field_${x}_${y}`);
         this.drawEventsLater();
     }
 
@@ -192,7 +191,7 @@ export class HtmlView {
         let dice_view: HtmlViewObject =
             (dice_num === 1) ? this.buttons_view.dice1 : this.buttons_view.dice2;
         dice_view.hide();
-        this.effectClonedObjectMove(dice_view, dice_view.getPosition(), this.getPosition("field_5_2"));
+        this.effectClonedObjectMove(dice_view, dice_view.element.id, "field_5_2");
         this.drawEventsLater();
     }
 
@@ -728,38 +727,32 @@ export class HtmlView {
         return [rect.left, rect.top];
     }
 
-    private effectCharacter(player_id: PlayerId, card_id: CardId): void {
+    private effectCharacter(pid: PlayerId, card_id: CardId): void {
         let effect_view: HtmlViewObject = null;
-        if (this.client.player_id === player_id) {
-            let card_view: HtmlCardView = this.cards_views[player_id].getCardView(card_id);
+        if (this.client.player_id === pid) {
+            let card_view: HtmlCardView = this.cards_views[pid].getCardView(card_id);
             if (card_view == null) {
                 return;  // Something is wrong.
             }
             card_view.hide();
-            this.effectClonedObjectMove(card_view,
-                                        card_view.getPosition(), this.getPosition("field_5_2"));
+            this.effectClonedObjectMove(card_view, card_view.element_id, "field_5_2");
         }
         else {
             this.char_motion_view.draw(this.session, card_id);
-            this.effectClonedObjectMove(this.char_motion_view,
-                                        this.getPosition(`player_${player_id}_money`),
-                                        this.getPosition("field_5_2"));
+            this.effectClonedObjectMove(this.char_motion_view, `player_${pid}_money`, "field_5_2");
         }
     }
 
-    private effectClonedObjectMove(node: HtmlViewObject,
-                                   pos_from: [number, number], pos_to: [number, number]): void {
+    private effectClonedObjectMove(node: HtmlViewObject, id1: string, id2: string): void {
         let new_view: HtmlViewObject = node.clone();
-        new_view.showAt(pos_from);
-        new_view.animateMoveTo(pos_to);
+        new_view.showAt(new_view.getPositionAlignedWithElementId(id1));
+        new_view.animateMoveToElementId(id2);
         window.setTimeout(() => { new_view.remove(); }, 1500);
     }
 
-    private effectCardDeal(player_id: PlayerId, card_id: CardId): void {
+    private effectCardDeal(pid: PlayerId, card_id: CardId): void {
         this.char_motion_view.draw(this.session, card_id);
-        this.effectClonedObjectMove(this.char_motion_view,
-                                    this.getPosition(`player_${player_id}_money`),
-                                    this.getPosition(`card_${player_id}_0`));
+        this.effectClonedObjectMove(this.char_motion_view, `player_${pid}_money`, `card_${pid}_0`);
     }
 
     private effectCardDeals(player_id: PlayerId, card_ids: CardId[]): void {
@@ -777,8 +770,6 @@ export class HtmlView {
 
     private effectMoneyMotion(element_from: string, element_to: string, money: number): void {
         this.money_motion_view.element.innerHTML = `💸 ${money}`;
-        this.effectClonedObjectMove(this.money_motion_view,
-                                    this.getPosition(element_from),
-                                    this.getPosition(element_to));
+        this.effectClonedObjectMove(this.money_motion_view, element_from, element_to);
     }
 }

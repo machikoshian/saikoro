@@ -111,6 +111,22 @@ export class HtmlViewObject {
         this.show();
     }
 
+    public getPositionAligned(dst: ClientRect): [number, number] {
+        const src: ClientRect = this.element.getBoundingClientRect();
+        const x: number = dst.left + (dst.width  - src.width)  / 2;
+        const y: number = dst.top  + (dst.height - src.height) / 2;
+        return [x, y];
+    }
+
+    public getPositionAlignedWithElementId(element_id): [number, number] {
+        const rect: ClientRect = document.getElementById(element_id).getBoundingClientRect();
+        return this.getPositionAligned(rect);
+    }
+
+    public animateMoveToElementId(element_id: string): void {
+        this.animateMoveTo(this.getPositionAlignedWithElementId(element_id));
+    }
+
     public animateMoveTo([x, y]: [number, number]): void {
         let rect_from = this.element.getBoundingClientRect();
         let diff_x: number = x - rect_from.left;
