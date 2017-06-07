@@ -166,7 +166,15 @@ export class HtmlView {
             return;
         }
         let card_id: CardId = this.clicked_card_view.getCardId();
+        let event: Event = this.session.getEventBuildFacility(this.client.player_id, x, y, card_id);
+        if (event == null || !event.valid) {
+            return;
+        }
         this.client.sendRequest(Request.buildFacility(x, y, card_id));
+        this.effectClonedObjectMove(this.clicked_card_view,
+                                    this.clicked_card_view.getPosition(),
+                                    this.getPosition(`field_${x}_${y}`));
+        this.drawEventsLater();
     }
 
     private isRequestReady(): boolean {
