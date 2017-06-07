@@ -586,6 +586,12 @@ export class Session {
         }
         this.events.push(event);
 
+        // End turn, no build.
+        if (event.card_id === -1) {
+            this.done(Phase.BuildFacility);
+            return true;
+        }
+
         let facility: Facility = this.getFacility(card_id);
 
         // Update the data.
@@ -616,7 +622,7 @@ export class Session {
     }
 
     public getEventBuildFacility(player_id: PlayerId, x: number, y: number,
-                         card_id: CardId): Event {
+                                 card_id: CardId): Event {
         // Facility is a landmark?
         if (this.card_manager.isLandmark(card_id)) {
             return this.getEventBuildLandmark(player_id, card_id);
@@ -627,10 +633,16 @@ export class Session {
             return null;
         }
 
+        let event: Event = new Event();
+        event.step = this.step;
+        event.type = EventType.Build;
+        event.player_id = player_id;
+
         // Is pass?  (valid action, but not build a facility).
         if (x === -1 && y === -1 && card_id === -1) {
-            this.done(Phase.BuildFacility);
-            return null;
+            event.card_id = -1;
+            event.valid = true;
+            return event;
         }
 
         // Facility is valid?
@@ -664,8 +676,6 @@ export class Session {
             }
         }
 
-        let event: Event = new Event();
-
         // Money is valid?
         let overwrite_costs: number[] = this.getOverwriteCosts(x, y, facility.size);
         let total_cost: number = facility.cost;
@@ -679,11 +689,8 @@ export class Session {
         // Merge overwrite_costs and total_cost;
         overwrite_costs[player_id] -= total_cost;
 
-        event.step = this.step;
-        event.type = EventType.Build;
         event.moneys = overwrite_costs;
         event.card_id = card_id;
-        event.player_id = player_id;
         event.target_card_ids = overlapped;
 
         return event;

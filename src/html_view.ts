@@ -191,7 +191,7 @@ export class HtmlView {
         let dice_view: HtmlViewObject =
             (dice_num === 1) ? this.buttons_view.dice1 : this.buttons_view.dice2;
         dice_view.hide();
-        this.effectClonedObjectMove(dice_view, dice_view.element.id, "field_5_2");
+        this.effectClonedObjectMove(dice_view, dice_view.element.id, "board");
         this.drawEventsLater();
     }
 
@@ -669,6 +669,14 @@ export class HtmlView {
         }
 
         if (event.type === EventType.Build) {
+            if (event.card_id === -1) {  // Pass.
+                let name: string = this.session.getPlayer(event.player_id).name;
+                let message = `${name} は何も建設しませんでした。`;
+                let color: string = this.getPlayerColor(event.player_id);
+                this.message_view.drawMessage(message, color);
+                return true;
+            }
+
             let [x, y]: [number, number] = this.session.getPosition(event.card_id);
             let facility: Facility = this.session.getFacility(event.card_id);
             this.prev_session.getBoard().removeCards(x, y, facility.size);
@@ -714,10 +722,10 @@ export class HtmlView {
 
     private drawMoneyMotion(money: number, player_id: PlayerId, x: number, y: number): void {
         if (money > 0) {
-            this.effectMoneyMotion(`field_${x}_${y}`, `player_${player_id}_money`, money);
+            this.effectMoneyMotion(`field_${x}_${y}`, `player_${player_id}`, money);
         }
         else if (money < 0) {
-            this.effectMoneyMotion(`player_${player_id}_money`, `field_${x}_${y}`, money);
+            this.effectMoneyMotion(`player_${player_id}`, `field_${x}_${y}`, money);
         }
         this.player_views[player_id].addMoney(money);
     }
@@ -735,11 +743,11 @@ export class HtmlView {
                 return;  // Something is wrong.
             }
             card_view.hide();
-            this.effectClonedObjectMove(card_view, card_view.element_id, "field_5_2");
+            this.effectClonedObjectMove(card_view, card_view.element_id, "board");
         }
         else {
             this.char_motion_view.draw(this.session, card_id);
-            this.effectClonedObjectMove(this.char_motion_view, `player_${pid}_money`, "field_5_2");
+            this.effectClonedObjectMove(this.char_motion_view, `player_${pid}`, "board");
         }
     }
 
@@ -752,7 +760,7 @@ export class HtmlView {
 
     private effectCardDeal(pid: PlayerId, card_id: CardId): void {
         this.char_motion_view.draw(this.session, card_id);
-        this.effectClonedObjectMove(this.char_motion_view, `player_${pid}_money`, `card_${pid}_0`);
+        this.effectClonedObjectMove(this.char_motion_view, `player_${pid}`, `card_${pid}_0`);
     }
 
     private effectCardDeals(player_id: PlayerId, card_ids: CardId[]): void {
