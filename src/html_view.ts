@@ -177,7 +177,9 @@ export class HtmlView {
         if (this.clicked_card_view == null) {
             return;
         }
-        this.client.sendRequest(Request.characterCard(this.clicked_card_view.getCardId()));
+        const card_id: CardId = this.clicked_card_view.getCardId();
+        this.client.sendRequest(Request.characterCard(card_id));
+        this.effectCharacter(this.client.player_id, card_id);
     }
 
     private onClickEndTurn(): void {
@@ -579,7 +581,10 @@ export class HtmlView {
 
             // Character card
             if (event.type === EventType.Character) {
-                this.effectCharacter(this.session.getCurrentPlayerId(), event.card_id);
+                // Own card's effect was already done.
+                if (event.player_id !== this.client.player_id) {
+                    this.effectCharacter(event.player_id, event.card_id);
+                }
                 if (this.session.getCharacter(event.card_id).type === CharacterType.DrawCards) {
                     this.effectCardDeals(event.player_id, event.target_card_ids);
                 }
