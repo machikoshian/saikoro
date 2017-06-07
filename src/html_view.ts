@@ -185,6 +185,7 @@ export class HtmlView {
             (dice_num === 1) ? this.buttons_view.dice1 : this.buttons_view.dice2;
         dice_view.hide();
         this.effectClonedObjectMove(dice_view, dice_view.getPosition(), this.getPosition("field_5_2"));
+        this.drawEventsLater();
     }
 
     private onClickCharacter(): void {
@@ -194,6 +195,7 @@ export class HtmlView {
         const card_id: CardId = this.clicked_card_view.getCardId();
         this.client.sendRequest(Request.characterCard(card_id));
         this.effectCharacter(this.client.player_id, card_id);
+        this.drawEventsLater();
     }
 
     private onClickEndTurn(): void {
@@ -523,17 +525,23 @@ export class HtmlView {
         this.prev_session = this.session;
     }
 
-    public drawEvents(): void {
+    private drawEventsLater(): void {
+        this.drawEvents(false);
+    }
+
+    public drawEvents(soon: boolean = true): void {
         const interval: number = 2000;  // msec.
         if (this.event_drawer_timer) {
             // If setInterval is ongoing, use that one. No additional action.
         }
         else {
-            // Show the first message soon.
-            this.drawEvent();
+            if (soon) {
+                // Show the first message soon.
+                this.drawEventsByStep();
+            }
             // After 2 sec, continuously call showMessageFromQueue every 2 sec.
             this.event_drawer_timer = setInterval(() => {
-                if (!this.drawEvent()) {
+                if (!this.drawEventsByStep()) {
                     // If the queue is empty, clear the timer.
                    clearInterval(this.event_drawer_timer);
                    this.event_drawer_timer = null;
@@ -542,7 +550,7 @@ export class HtmlView {
         }
     }
 
-    private drawEvent(): boolean {
+    private drawEventsByStep(): boolean {
         let events: Event[] = this.session.getEvents();
         let step: number = -1;
         let i: number = 0;
@@ -555,109 +563,131 @@ export class HtmlView {
         }
 
         if (step === -1) {
-            // All events have been drawn. Then, draw the current status.
             this.drawSession(this.session);
             return false;
         }
 
+        let handled: boolean = false;
         for (; i < events.length; ++i) {
             let event: Event = events[i];
             if (event.step !== step) {
-                break;
+                if (handled) {
+                    break;
+                }
+                // The previous step does not have handled events. Go to the next step.
+                step = event.step;
             }
 
-            // Draw cards 
-            if (event.type === EventType.Draw) {  // TODO: Change the event type to StartTurn?
-                let current_player: Player = this.session.getPlayer(event.player_id);
-                let name: string =  current_player.name;
-                let delta: string = this.getDiceDeltaMessage(this.session.getDiceDelta());
-                let message = `${name} のキャラカードまたはサイコロ${delta}です`;
-                let color: string = this.getPlayerColor(event.player_id);
-                this.message_view.drawMessage(message, color);
-
-                // Do not show other's draw event.
-                if (event.player_id !== this.client.player_id) {
-                    continue;
-                }
-
-                this.effectCardDeals(event.player_id, event.target_card_ids);
-                continue;
-            }
-
-            // Dice
-            if (event.type === EventType.Dice) {
-                let message: string = this.getDiceResultMessage(event.dice, event.player_id);
-                let color: string = this.getPlayerColor(event.player_id);
-                this.clicakable_fiels_view.animateDiceResult(event.dice.result(), color);
-                this.message_view.drawMessage(message, color);
-                continue;
-            }
-
-            // Character card
-            if (event.type === EventType.Character) {
-                // Own card's effect was already done.
-                if (event.player_id !== this.client.player_id) {
-                    this.effectCharacter(event.player_id, event.card_id);
-                }
-                if (this.session.getCharacter(event.card_id).type === CharacterType.DrawCards) {
-                    this.effectCardDeals(event.player_id, event.target_card_ids);
-                }
-                continue;
-            }
-
-            if (event.type === EventType.Salary) {
-                for (let pid = 0; pid < event.moneys.length; pid++) {
-                    let money: number = event.moneys[pid];
-                    if (money === 0) {
-                        continue;
-                    }
-                    this.player_views[pid].addMoney(money);
-                }
-            }
-
-            if (event.type === EventType.Build) {
-                let [x, y]: [number, number] = this.session.getPosition(event.card_id);
-                let facility: Facility = this.session.getFacility(event.card_id);
-                this.prev_session.getBoard().removeCards(x, y, facility.size);
-                this.prev_session.getBoard().setCardId(x, y, event.card_id, facility.size);
-                if (this.prev_session.isFacility(event.card_id)) {
-                    this.prev_session.getPlayerCards(event.player_id).moveHandToField(event.card_id);
-                }
-                // Draw the board after money motion.
-                window.setTimeout(() => {
-                    this.drawBoard(this.prev_session);
-                    this.drawCards(this.prev_session);
-                }, 1000);
-            }
-
-            const money_motion: EventType[] = [
-                EventType.Blue,
-                EventType.Green,
-                EventType.Red,
-                EventType.Purple,
-                EventType.Build,
-            ];
-            if (money_motion.indexOf(event.type) !== -1) {
-                // Money motion
-                let [x, y]: [number, number] = this.session.getPosition(event.card_id);
-
-                for (let pid = 0; pid < event.moneys.length; pid++) {
-                    let money: number = event.moneys[pid];
-                    if (money === 0) {
-                        continue;
-                    }
-                    let delay: number = 0;
-                    if ([EventType.Red, EventType.Purple, EventType.Build].indexOf(event.type) !== -1 &&
-                        money > 0) {
-                        delay = 1000;
-                    }
-                    window.setTimeout(() => {
-                        this.drawMoneyMotion(money, pid, x, y);
-                    }, delay);
-                }
+            if (this.drawEvent(event)) {
+                handled = true;
             }
         }
         this.prev_step = step;
+
+        if (handled) {
+            return true;
+        }
+        // All events have been drawn. Then, draw the current status.
+        this.drawSession(this.session);
+        return false;
+    }
+
+    private drawEvent(event: Event): boolean {
+        // Draw cards
+        if (event.type === EventType.Draw) {  // TODO: Change the event type to StartTurn?
+            let current_player: Player = this.session.getPlayer(event.player_id);
+            let name: string =  current_player.name;
+            let delta: string = this.getDiceDeltaMessage(this.session.getDiceDelta());
+            let message = `${name} のキャラカードまたはサイコロ${delta}です`;
+            let color: string = this.getPlayerColor(event.player_id);
+            this.message_view.drawMessage(message, color);
+
+            if (event.player_id === this.client.player_id) {
+                this.effectCardDeals(event.player_id, event.target_card_ids);
+            }
+            return true;
+        }
+
+        // Dice
+        if (event.type === EventType.Dice) {
+            let message: string = this.getDiceResultMessage(event.dice, event.player_id);
+            let color: string = this.getPlayerColor(event.player_id);
+            this.clicakable_fiels_view.animateDiceResult(event.dice.result(), color);
+            this.message_view.drawMessage(message, color);
+            return true;
+        }
+
+        // Character card
+        if (event.type === EventType.Character) {
+            let handled: boolean = false;
+            // Own card's effect was already done.
+            if (event.player_id !== this.client.player_id) {
+                this.effectCharacter(event.player_id, event.card_id);
+                handled = true;
+            }
+            if (this.session.getCharacter(event.card_id).type === CharacterType.DrawCards) {
+                this.effectCardDeals(event.player_id, event.target_card_ids);
+                handled = true;
+            }
+            return handled;
+        }
+
+        if (event.type === EventType.Salary) {
+            for (let pid = 0; pid < event.moneys.length; pid++) {
+                let money: number = event.moneys[pid];
+                if (money === 0) {
+                    continue;
+                }
+                this.player_views[pid].addMoney(money);
+                let name: string = this.session.getPlayer(pid).name;
+                let message = `${name} に給料 ${money} が入りました`;
+                let color: string = this.getPlayerColor(pid);
+                this.message_view.drawMessage(message, color);
+            }
+            return true;
+        }
+
+        if (event.type === EventType.Build) {
+            let [x, y]: [number, number] = this.session.getPosition(event.card_id);
+            let facility: Facility = this.session.getFacility(event.card_id);
+            this.prev_session.getBoard().removeCards(x, y, facility.size);
+            this.prev_session.getBoard().setCardId(x, y, event.card_id, facility.size);
+            if (this.prev_session.isFacility(event.card_id)) {
+                this.prev_session.getPlayerCards(event.player_id).moveHandToField(event.card_id);
+            }
+            // Draw the board after money motion.
+            window.setTimeout(() => {
+                this.drawBoard(this.prev_session);
+                this.drawCards(this.prev_session);
+            }, 1000);
+        }
+
+        const money_motion: EventType[] = [
+            EventType.Blue,
+            EventType.Green,
+            EventType.Red,
+            EventType.Purple,
+            EventType.Build,
+        ];
+        if (money_motion.indexOf(event.type) !== -1) {
+            // Money motion
+            let [x, y]: [number, number] = this.session.getPosition(event.card_id);
+
+            for (let pid = 0; pid < event.moneys.length; pid++) {
+                let money: number = event.moneys[pid];
+                if (money === 0) {
+                    continue;
+                }
+                let delay: number = 0;
+                if ([EventType.Red, EventType.Purple, EventType.Build].indexOf(event.type) !== -1 &&
+                    money > 0) {
+                    delay = 1000;
+                }
+                window.setTimeout(() => {
+                    this.drawMoneyMotion(money, pid, x, y);
+                }, delay);
+            }
+        }
         return true;
     }
 
