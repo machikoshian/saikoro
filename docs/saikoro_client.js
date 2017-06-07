@@ -349,6 +349,7 @@ class Event {
         this.card_id = null;
         this.target_card_ids = [];
         this.dice = null;
+        this.valid = false;
     }
     toJSON() {
         return {
@@ -360,6 +361,7 @@ class Event {
             card_id: this.card_id,
             target_card_ids: this.target_card_ids,
             dice: this.dice ? this.dice.toJSON() : null,
+            valid: this.valid,
         };
     }
     static fromJSON(json) {
@@ -371,6 +373,7 @@ class Event {
         event.card_id = json.card_id;
         event.target_card_ids = json.target_card_ids;
         event.dice = json.dice ? __WEBPACK_IMPORTED_MODULE_0__dice__["a" /* DiceResult */].fromJSON(json.dice) : null;
+        event.valid = json.valid;
         return event;
     }
 }
@@ -811,55 +814,15 @@ class Session {
         if (this.card_manager.isLandmark(card_id)) {
             return this.buildLandmark(player_id, card_id);
         }
-        // State is valid?
-        if (!this.isValid(player_id, Phase.BuildFacility)) {
+        let event = this.getEventBuildFacility(player_id, x, y, card_id);
+        if (event == null || !event.valid) {
             return false;
         }
-        // Is pass?  (valid action, but not build a facility).
-        if (x === -1 && y === -1 && card_id === -1) {
-            this.done(Phase.BuildFacility);
-            return true;
-        }
-        // Facility is valid?
-        let facility = this.card_manager.getFacility(card_id);
-        if (!facility) {
-            return false;
-        }
-        // Facility is in owner's hand?
-        if (!this.card_manager.isInHand(player_id, card_id)) {
-            return false;
-        }
-        // Facility's owner is valid?
-        let facility_owner = this.getOwnerId(card_id);
-        if (facility_owner !== player_id) {
-            return false;
-        }
-        // Facility's area is valid?
-        let area = x + 1;
-        if (!this.card_manager.isInArea(area, card_id)) {
-            return false;
-        }
-        let event = new Event();
-        let overlapped = this.getOverlappedFacilities(x, y, facility.size);
-        for (let card_id_on_board of overlapped) {
-            // Facility on the board is overwritable?
-            if (!this.card_manager.canOverwrite(card_id_on_board)) {
-                return false;
-            }
-        }
-        // Money is valid?
-        let overwrite_costs = this.getOverwriteCosts(x, y, facility.size);
-        let total_cost = facility.cost;
-        for (let i = 0; i < overwrite_costs.length; ++i) {
-            total_cost += overwrite_costs[i];
-        }
-        let player = this.players[player_id];
-        if (total_cost > player.getMoney()) {
-            return false;
-        }
+        this.events.push(event);
+        let facility = this.getFacility(card_id);
         // Update the data.
         this.board.removeCards(x, y, facility.size);
-        for (let card_id_on_board of overlapped) {
+        for (let card_id_on_board of event.target_card_ids) {
             // Delete the existing facility.
             if (!this.card_manager.moveFieldToDiscard(card_id_on_board)) {
                 // Something is wrong.
@@ -873,59 +836,117 @@ class Session {
             console.warn(`moveHandToField(${card_id}) failed.`);
             return false;
         }
+        this.board.setCardId(x, y, card_id, facility.size);
+        for (let i = 0; i < this.players.length; ++i) {
+            this.players[i].addMoney(event.moneys[i]);
+        }
+        this.done(Phase.BuildFacility);
+        return true;
+    }
+    getEventBuildFacility(player_id, x, y, card_id) {
+        // Facility is a landmark?
+        if (this.card_manager.isLandmark(card_id)) {
+            return this.getEventBuildLandmark(player_id, card_id);
+        }
+        // State is valid?
+        if (!this.isValid(player_id, Phase.BuildFacility)) {
+            return null;
+        }
+        // Is pass?  (valid action, but not build a facility).
+        if (x === -1 && y === -1 && card_id === -1) {
+            this.done(Phase.BuildFacility);
+            return null;
+        }
+        // Facility is valid?
+        let facility = this.card_manager.getFacility(card_id);
+        if (!facility) {
+            return null;
+        }
+        // Facility is in owner's hand?
+        if (!this.card_manager.isInHand(player_id, card_id)) {
+            return null;
+        }
+        // Facility's owner is valid?
+        let facility_owner = this.getOwnerId(card_id);
+        if (facility_owner !== player_id) {
+            return null;
+        }
+        // Facility's area is valid?
+        let area = x + 1;
+        if (!this.card_manager.isInArea(area, card_id)) {
+            return null;
+        }
+        let overlapped = this.getOverlappedFacilities(x, y, facility.size);
+        for (let card_id_on_board of overlapped) {
+            // Facility on the board is overwritable?
+            if (!this.card_manager.canOverwrite(card_id_on_board)) {
+                return null;
+            }
+        }
+        let event = new Event();
+        // Money is valid?
+        let overwrite_costs = this.getOverwriteCosts(x, y, facility.size);
+        let total_cost = facility.cost;
+        for (let i = 0; i < overwrite_costs.length; ++i) {
+            total_cost += overwrite_costs[i];
+        }
+        if (total_cost <= this.getPlayer(player_id).getMoney()) {
+            event.valid = true;
+        }
         // Merge overwrite_costs and total_cost;
         overwrite_costs[player_id] -= total_cost;
-        this.events.push(event);
         event.step = this.step;
         event.type = EventType.Build;
         event.moneys = overwrite_costs;
         event.card_id = card_id;
         event.player_id = player_id;
-        this.board.setCardId(x, y, card_id, facility.size);
-        for (let i = 0; i < this.players.length; ++i) {
-            this.players[i].addMoney(overwrite_costs[i]);
+        event.target_card_ids = overlapped;
+        return event;
+    }
+    buildLandmark(player_id, card_id) {
+        let event = this.getEventBuildLandmark(player_id, card_id);
+        if (event == null || !event.valid) {
+            return false;
         }
+        this.events.push(event);
+        // Update the data.
+        this.getPlayer(player_id).addMoney(event.moneys[player_id]);
+        this.card_manager.buildLandmark(player_id, card_id);
         this.done(Phase.BuildFacility);
         return true;
     }
-    buildLandmark(player_id, card_id) {
+    getEventBuildLandmark(player_id, card_id) {
         // State is valid?
         if (!this.isValid(player_id, Phase.BuildFacility)) {
-            return false;
+            return null;
         }
         // Is a landmark?
         if (!this.card_manager.isLandmark(card_id)) {
-            return false;
+            return null;
         }
         // Facility is valid?
         let facility = this.card_manager.getFacility(card_id);
         if (!facility) {
-            return false;
+            return null;
         }
         // Isn't already built?
         let facility_owner = this.getOwnerId(card_id);
         if (facility_owner !== -1) {
             // Already built.
-            return false;
+            return null;
         }
-        // Money is valid?
-        let player = this.players[player_id];
-        let cost = facility.getCost();
-        let balance = player.getMoney() - cost;
-        if (balance < 0) {
-            return false;
-        }
-        // Update the data.
-        player.setMoney(balance);
-        this.card_manager.buildLandmark(player_id, card_id);
         let event = new Event();
-        this.events.push(event);
+        // Money is valid?
+        let cost = facility.getCost();
+        if (cost <= this.getPlayer(player_id).getMoney()) {
+            event.valid = true;
+        }
+        event.player_id = player_id;
         event.step = this.step;
         event.type = EventType.Build;
         event.moneys[player_id] -= cost;
         event.card_id = card_id;
-        this.done(Phase.BuildFacility);
-        return true;
+        return event;
     }
     paySalary() {
         let salary = this.getCurrentPlayer().paySalary();
@@ -1407,6 +1428,10 @@ class WebClient extends __WEBPACK_IMPORTED_MODULE_0__client__["a" /* Client */] 
 const mc = new __WEBPACK_IMPORTED_MODULE_1__session_handler__["a" /* MemcacheMock */]();
 let session_handler = new __WEBPACK_IMPORTED_MODULE_1__session_handler__["b" /* SessionHandler */](mc);
 class StandaloneConnection extends __WEBPACK_IMPORTED_MODULE_0__client__["c" /* Connection */] {
+    constructor(delay = 0) {
+        super();
+        this.delay = delay;
+    }
     startCheckUpdate(client) { }
     stopCheckUpdate() { }
     checkUpdate(client) {
@@ -1417,19 +1442,25 @@ class StandaloneConnection extends __WEBPACK_IMPORTED_MODULE_0__client__["c" /* 
             step: client.step,
         };
         session_handler.handleCommand(query).then((data) => {
-            client.callback(data.value);
+            setTimeout(() => {
+                client.callback(data.value);
+            }, this.delay);
         });
     }
     matching(query, callback) {
         session_handler.handleMatching(query).then((matched) => {
-            callback(JSON.stringify({ matching_id: matched.matching_id,
-                player_id: matched.player_id,
-                session_id: matched.session_id }));
+            setTimeout(() => {
+                callback(JSON.stringify({ matching_id: matched.matching_id,
+                    player_id: matched.player_id,
+                    session_id: matched.session_id }));
+            }, this.delay);
         });
     }
     sendRequest(query, callback) {
         session_handler.handleCommand(query).then((data) => {
-            callback(data.value);
+            setTimeout(() => {
+                callback(data.value);
+            }, this.delay);
         });
     }
 }
@@ -2256,14 +2287,29 @@ class HtmlView {
         let card_id = this.clicked_card_view.getCardId();
         this.client.sendRequest(__WEBPACK_IMPORTED_MODULE_2__client__["b" /* Request */].buildFacility(x, y, card_id));
     }
+    isRequestReady() {
+        // TODO: Create a function in Session.
+        return (this.session.getStep() === this.prev_session.getStep() &&
+            this.client.player_id === this.session.getCurrentPlayerId());
+    }
     onClickDice(dice_num, aim) {
+        if (!this.isRequestReady()) {
+            return;
+        }
         this.client.sendRequest(__WEBPACK_IMPORTED_MODULE_2__client__["b" /* Request */].rollDice(dice_num, aim));
+        let dice_view = (dice_num === 1) ? this.buttons_view.dice1 : this.buttons_view.dice2;
+        dice_view.hide();
+        this.effectClonedObjectMove(dice_view, dice_view.getPosition(), this.getPosition("field_5_2"));
+        this.drawEventsLater();
     }
     onClickCharacter() {
         if (this.clicked_card_view == null) {
             return;
         }
-        this.client.sendRequest(__WEBPACK_IMPORTED_MODULE_2__client__["b" /* Request */].characterCard(this.clicked_card_view.getCardId()));
+        const card_id = this.clicked_card_view.getCardId();
+        this.client.sendRequest(__WEBPACK_IMPORTED_MODULE_2__client__["b" /* Request */].characterCard(card_id));
+        this.effectCharacter(this.client.player_id, card_id);
+        this.drawEventsLater();
     }
     onClickEndTurn() {
         this.client.sendRequest(__WEBPACK_IMPORTED_MODULE_2__client__["b" /* Request */].endTurn());
@@ -2422,7 +2468,6 @@ class HtmlView {
             this.field_card_view.setCardId(-1);
             return;
         }
-        console.log("drawFieldInfo");
         this.field_card_view.draw(this.session, card_id);
         this.field_card_view.showAt(this.getPosition((x < 6) ? "click_10_1" : "click_0_1"));
     }
@@ -2538,17 +2583,22 @@ class HtmlView {
         this.drawCards(session);
         this.prev_session = this.session;
     }
-    drawEvents() {
+    drawEventsLater() {
+        this.drawEvents(false);
+    }
+    drawEvents(soon = true) {
         const interval = 2000; // msec.
         if (this.event_drawer_timer) {
             // If setInterval is ongoing, use that one. No additional action.
         }
         else {
-            // Show the first message soon.
-            this.drawEvent();
+            if (soon) {
+                // Show the first message soon.
+                this.drawEventsByStep();
+            }
             // After 2 sec, continuously call showMessageFromQueue every 2 sec.
             this.event_drawer_timer = setInterval(() => {
-                if (!this.drawEvent()) {
+                if (!this.drawEventsByStep()) {
                     // If the queue is empty, clear the timer.
                     clearInterval(this.event_drawer_timer);
                     this.event_drawer_timer = null;
@@ -2556,7 +2606,7 @@ class HtmlView {
             }, interval);
         }
     }
-    drawEvent() {
+    drawEventsByStep() {
         let events = this.session.getEvents();
         let step = -1;
         let i = 0;
@@ -2568,96 +2618,120 @@ class HtmlView {
             }
         }
         if (step === -1) {
-            // All events have been drawn. Then, draw the current status.
             this.drawSession(this.session);
             return false;
         }
+        let handled = false;
         for (; i < events.length; ++i) {
             let event = events[i];
             if (event.step !== step) {
-                break;
-            }
-            // Draw cards 
-            if (event.type === __WEBPACK_IMPORTED_MODULE_0__session__["c" /* EventType */].Draw) {
-                let current_player = this.session.getPlayer(event.player_id);
-                let name = current_player.name;
-                let delta = this.getDiceDeltaMessage(this.session.getDiceDelta());
-                let message = `${name} のキャラカードまたはサイコロ${delta}です`;
-                let color = this.getPlayerColor(event.player_id);
-                this.message_view.drawMessage(message, color);
-                // Do not show other's draw event.
-                if (event.player_id !== this.client.player_id) {
-                    continue;
+                if (handled) {
+                    break;
                 }
-                this.effectCardDeals(event.player_id, event.target_card_ids);
-                continue;
+                // The previous step does not have handled events. Go to the next step.
+                step = event.step;
             }
-            // Dice
-            if (event.type === __WEBPACK_IMPORTED_MODULE_0__session__["c" /* EventType */].Dice) {
-                let message = this.getDiceResultMessage(event.dice, event.player_id);
-                let color = this.getPlayerColor(event.player_id);
-                this.clicakable_fiels_view.animateDiceResult(event.dice.result(), color);
-                this.message_view.drawMessage(message, color);
-                continue;
-            }
-            // Character card
-            if (event.type === __WEBPACK_IMPORTED_MODULE_0__session__["c" /* EventType */].Character) {
-                this.effectCharacter(this.session.getCurrentPlayerId(), event.card_id);
-                if (this.session.getCharacter(event.card_id).type === __WEBPACK_IMPORTED_MODULE_1__facility__["c" /* CharacterType */].DrawCards) {
-                    this.effectCardDeals(event.player_id, event.target_card_ids);
-                }
-                continue;
-            }
-            if (event.type === __WEBPACK_IMPORTED_MODULE_0__session__["c" /* EventType */].Salary) {
-                for (let pid = 0; pid < event.moneys.length; pid++) {
-                    let money = event.moneys[pid];
-                    if (money === 0) {
-                        continue;
-                    }
-                    this.player_views[pid].addMoney(money);
-                }
-            }
-            if (event.type === __WEBPACK_IMPORTED_MODULE_0__session__["c" /* EventType */].Build) {
-                let [x, y] = this.session.getPosition(event.card_id);
-                let facility = this.session.getFacility(event.card_id);
-                this.prev_session.getBoard().removeCards(x, y, facility.size);
-                this.prev_session.getBoard().setCardId(x, y, event.card_id, facility.size);
-                if (this.prev_session.isFacility(event.card_id)) {
-                    this.prev_session.getPlayerCards(event.player_id).moveHandToField(event.card_id);
-                }
-                // Draw the board after money motion.
-                window.setTimeout(() => {
-                    this.drawBoard(this.prev_session);
-                    this.drawCards(this.prev_session);
-                }, 1000);
-            }
-            const money_motion = [
-                __WEBPACK_IMPORTED_MODULE_0__session__["c" /* EventType */].Blue,
-                __WEBPACK_IMPORTED_MODULE_0__session__["c" /* EventType */].Green,
-                __WEBPACK_IMPORTED_MODULE_0__session__["c" /* EventType */].Red,
-                __WEBPACK_IMPORTED_MODULE_0__session__["c" /* EventType */].Purple,
-                __WEBPACK_IMPORTED_MODULE_0__session__["c" /* EventType */].Build,
-            ];
-            if (money_motion.indexOf(event.type) !== -1) {
-                // Money motion
-                let [x, y] = this.session.getPosition(event.card_id);
-                for (let pid = 0; pid < event.moneys.length; pid++) {
-                    let money = event.moneys[pid];
-                    if (money === 0) {
-                        continue;
-                    }
-                    let delay = 0;
-                    if ([__WEBPACK_IMPORTED_MODULE_0__session__["c" /* EventType */].Red, __WEBPACK_IMPORTED_MODULE_0__session__["c" /* EventType */].Purple, __WEBPACK_IMPORTED_MODULE_0__session__["c" /* EventType */].Build].indexOf(event.type) !== -1 &&
-                        money > 0) {
-                        delay = 1000;
-                    }
-                    window.setTimeout(() => {
-                        this.drawMoneyMotion(money, pid, x, y);
-                    }, delay);
-                }
+            if (this.drawEvent(event)) {
+                handled = true;
             }
         }
         this.prev_step = step;
+        if (handled) {
+            return true;
+        }
+        // All events have been drawn. Then, draw the current status.
+        this.drawSession(this.session);
+        return false;
+    }
+    drawEvent(event) {
+        // Draw cards
+        if (event.type === __WEBPACK_IMPORTED_MODULE_0__session__["c" /* EventType */].Draw) {
+            let current_player = this.session.getPlayer(event.player_id);
+            let name = current_player.name;
+            let delta = this.getDiceDeltaMessage(this.session.getDiceDelta());
+            let message = `${name} のキャラカードまたはサイコロ${delta}です`;
+            let color = this.getPlayerColor(event.player_id);
+            this.message_view.drawMessage(message, color);
+            if (event.player_id === this.client.player_id) {
+                this.effectCardDeals(event.player_id, event.target_card_ids);
+            }
+            return true;
+        }
+        // Dice
+        if (event.type === __WEBPACK_IMPORTED_MODULE_0__session__["c" /* EventType */].Dice) {
+            let message = this.getDiceResultMessage(event.dice, event.player_id);
+            let color = this.getPlayerColor(event.player_id);
+            this.clicakable_fiels_view.animateDiceResult(event.dice.result(), color);
+            this.message_view.drawMessage(message, color);
+            return true;
+        }
+        // Character card
+        if (event.type === __WEBPACK_IMPORTED_MODULE_0__session__["c" /* EventType */].Character) {
+            let handled = false;
+            // Own card's effect was already done.
+            if (event.player_id !== this.client.player_id) {
+                this.effectCharacter(event.player_id, event.card_id);
+                handled = true;
+            }
+            if (this.session.getCharacter(event.card_id).type === __WEBPACK_IMPORTED_MODULE_1__facility__["c" /* CharacterType */].DrawCards) {
+                this.effectCardDeals(event.player_id, event.target_card_ids);
+                handled = true;
+            }
+            return handled;
+        }
+        if (event.type === __WEBPACK_IMPORTED_MODULE_0__session__["c" /* EventType */].Salary) {
+            for (let pid = 0; pid < event.moneys.length; pid++) {
+                let money = event.moneys[pid];
+                if (money === 0) {
+                    continue;
+                }
+                this.player_views[pid].addMoney(money);
+                let name = this.session.getPlayer(pid).name;
+                let message = `${name} に給料 ${money} が入りました`;
+                let color = this.getPlayerColor(pid);
+                this.message_view.drawMessage(message, color);
+            }
+            return true;
+        }
+        if (event.type === __WEBPACK_IMPORTED_MODULE_0__session__["c" /* EventType */].Build) {
+            let [x, y] = this.session.getPosition(event.card_id);
+            let facility = this.session.getFacility(event.card_id);
+            this.prev_session.getBoard().removeCards(x, y, facility.size);
+            this.prev_session.getBoard().setCardId(x, y, event.card_id, facility.size);
+            if (this.prev_session.isFacility(event.card_id)) {
+                this.prev_session.getPlayerCards(event.player_id).moveHandToField(event.card_id);
+            }
+            // Draw the board after money motion.
+            window.setTimeout(() => {
+                this.drawBoard(this.prev_session);
+                this.drawCards(this.prev_session);
+            }, 1000);
+        }
+        const money_motion = [
+            __WEBPACK_IMPORTED_MODULE_0__session__["c" /* EventType */].Blue,
+            __WEBPACK_IMPORTED_MODULE_0__session__["c" /* EventType */].Green,
+            __WEBPACK_IMPORTED_MODULE_0__session__["c" /* EventType */].Red,
+            __WEBPACK_IMPORTED_MODULE_0__session__["c" /* EventType */].Purple,
+            __WEBPACK_IMPORTED_MODULE_0__session__["c" /* EventType */].Build,
+        ];
+        if (money_motion.indexOf(event.type) !== -1) {
+            // Money motion
+            let [x, y] = this.session.getPosition(event.card_id);
+            for (let pid = 0; pid < event.moneys.length; pid++) {
+                let money = event.moneys[pid];
+                if (money === 0) {
+                    continue;
+                }
+                let delay = 0;
+                if ([__WEBPACK_IMPORTED_MODULE_0__session__["c" /* EventType */].Red, __WEBPACK_IMPORTED_MODULE_0__session__["c" /* EventType */].Purple, __WEBPACK_IMPORTED_MODULE_0__session__["c" /* EventType */].Build].indexOf(event.type) !== -1 &&
+                    money > 0) {
+                    delay = 1000;
+                }
+                window.setTimeout(() => {
+                    this.drawMoneyMotion(money, pid, x, y);
+                }, delay);
+            }
+        }
         return true;
     }
     drawMoneyMotion(money, player_id, x, y) {
@@ -2674,20 +2748,29 @@ class HtmlView {
         return [rect.left, rect.top];
     }
     effectCharacter(player_id, card_id) {
-        this.char_motion_view.draw(this.session, card_id);
-        // Animation.
-        let new_view = this.char_motion_view.clone();
-        new_view.showAt(this.getPosition(`player_${player_id}_money`));
-        new_view.animateMoveTo(this.getPosition("field_5_2"));
+        let effect_view = null;
+        if (this.client.player_id === player_id) {
+            let card_view = this.cards_views[player_id].getCardView(card_id);
+            if (card_view == null) {
+                return; // Something is wrong.
+            }
+            card_view.hide();
+            this.effectClonedObjectMove(card_view, card_view.getPosition(), this.getPosition("field_5_2"));
+        }
+        else {
+            this.char_motion_view.draw(this.session, card_id);
+            this.effectClonedObjectMove(this.char_motion_view, this.getPosition(`player_${player_id}_money`), this.getPosition("field_5_2"));
+        }
+    }
+    effectClonedObjectMove(node, pos_from, pos_to) {
+        let new_view = node.clone();
+        new_view.showAt(pos_from);
+        new_view.animateMoveTo(pos_to);
         window.setTimeout(() => { new_view.remove(); }, 1500);
     }
     effectCardDeal(player_id, card_id) {
         this.char_motion_view.draw(this.session, card_id);
-        // Animation.
-        let new_view = this.char_motion_view.clone();
-        new_view.showAt(this.getPosition(`player_${player_id}_money`));
-        new_view.animateMoveTo(this.getPosition(`card_${player_id}_0`));
-        window.setTimeout(() => { new_view.remove(); }, 1500);
+        this.effectClonedObjectMove(this.char_motion_view, this.getPosition(`player_${player_id}_money`), this.getPosition(`card_${player_id}_0`));
     }
     effectCardDeals(player_id, card_ids) {
         if (this.client.player_id !== player_id) {
@@ -2703,11 +2786,7 @@ class HtmlView {
     }
     effectMoneyMotion(element_from, element_to, money) {
         this.money_motion_view.element.innerHTML = `💸 ${money}`;
-        // Animation.
-        let money_view = this.money_motion_view.clone();
-        money_view.showAt(this.getPosition(element_from));
-        money_view.animateMoveTo(this.getPosition(element_to));
-        window.setTimeout(() => { money_view.remove(); }, 1500);
+        this.effectClonedObjectMove(this.money_motion_view, this.getPosition(element_from), this.getPosition(element_to));
     }
 }
 /* harmony export (immutable) */ __webpack_exports__["a"] = HtmlView;
@@ -2803,6 +2882,10 @@ class HtmlViewObject {
     remove() {
         document.body.removeChild(this.element);
     }
+    getPosition() {
+        let rect = this.element.getBoundingClientRect();
+        return [rect.left, rect.top];
+    }
     addClickListener(callback) {
         this.element.addEventListener("click", callback);
     }
@@ -2848,6 +2931,14 @@ class HtmlCardsView extends HtmlViewObject {
         for (let i = 0; i < this.max_size; ++i) {
             this.cards[i].draw(session, (i < card_ids.length) ? card_ids[i] : -1);
         }
+    }
+    getCardView(card_id) {
+        for (let card of this.cards) {
+            if (card.getCardId() === card_id) {
+                return card;
+            }
+        }
+        return null;
     }
     // TODO: Not necessary?
     setCardIds(card_ids) {
@@ -3130,7 +3221,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__saikoro__ = __webpack_require__(6);
 
 
-let connection = new __WEBPACK_IMPORTED_MODULE_0__standalone_connection__["a" /* StandaloneConnection */]();
+const delay = 0; // msec
+let connection = new __WEBPACK_IMPORTED_MODULE_0__standalone_connection__["a" /* StandaloneConnection */](delay);
 let client = new __WEBPACK_IMPORTED_MODULE_1__saikoro__["a" /* WebClient */](connection);
 document.addEventListener("DOMContentLoaded", () => { client.initBoard(); });
 
