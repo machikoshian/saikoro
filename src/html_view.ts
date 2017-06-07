@@ -658,13 +658,23 @@ export class HtmlView {
     }
 
     private effectCharacter(player_id: PlayerId, card_id: CardId): void {
-        this.char_motion_view.draw(this.session, card_id);
-
-        // Animation.
-        let new_view: HtmlViewObject = this.char_motion_view.clone();
-        new_view.showAt(this.getPosition(`player_${player_id}_money`));
-        new_view.animateMoveTo(this.getPosition("field_5_2"));
-        window.setTimeout(() => { new_view.remove(); }, 1500);
+        let effect_view: HtmlViewObject = null;
+        if (this.client.player_id === player_id) {
+            let card_view: HtmlCardView = this.cards_views[player_id].getCardView(card_id);
+            if (card_view == null) {
+                return;  // Something is wrong.
+            }
+            card_view.hide();
+            effect_view = card_view.clone();
+            effect_view.showAt(card_view.getPosition());
+        }
+        else {
+            this.char_motion_view.draw(this.session, card_id);
+            effect_view = this.char_motion_view.clone();
+            effect_view.showAt(this.getPosition(`player_${player_id}_money`));
+        }
+        effect_view.animateMoveTo(this.getPosition("field_5_2"));
+        window.setTimeout(() => { effect_view.remove(); }, 1500);
     }
 
     private effectCardDeal(player_id: PlayerId, card_id: CardId): void {

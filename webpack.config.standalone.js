@@ -1,7 +1,7 @@
 module.exports = {
     entry: "./src/saikoro_client_standalone.ts",
     output: {
-        filename: "./docs/saikoro_client.js"
+        filename: "./out/standalone/saikoro_client.js"
     },
     devtool: "source-map",
     resolve: {

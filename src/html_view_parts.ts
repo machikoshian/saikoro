@@ -93,6 +93,11 @@ export class HtmlViewObject {
         document.body.removeChild(this.element);
     }
 
+    public getPosition(): [number, number] {
+        let rect: ClientRect = this.element.getBoundingClientRect();
+        return [rect.left, rect.top];
+    }
+
     public addClickListener(callback: () => void) {
         this.element.addEventListener("click", callback);
     }
@@ -142,6 +147,15 @@ export class HtmlCardsView extends HtmlViewObject {
         for (let i: number = 0; i < this.max_size; ++i) {
             this.cards[i].draw(session, (i < card_ids.length) ? card_ids[i] : -1);
         }
+    }
+
+    public getCardView(card_id: CardId): HtmlCardView {
+        for (let card of this.cards) {
+            if (card.getCardId() === card_id) {
+                return card;
+            }
+        }
+        return null;
     }
 
     // TODO: Not necessary?
