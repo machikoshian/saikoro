@@ -250,8 +250,16 @@ export class HtmlView {
         }
 
         if (phase === Phase.BuildFacility) {
-            this.clicakable_fiels_view.setClickableAreas(
-                this.session.getFacility(clicked_card_id).getArea());
+            for (let area of this.session.getFacility(clicked_card_id).getArea()) {
+                let x: number = area - 1;
+                for (let y: number = 0; y < 5; ++y) {  // TODO: y can be other than 5.
+                    let event: Event =
+                        this.session.getEventBuildFacility(player, x, y, clicked_card_id);
+                    if (event && event.valid) {
+                        this.clicakable_fiels_view.setClickable([x, y], true);
+                    }
+                }
+            }
         }
     }
 
@@ -263,6 +271,12 @@ export class HtmlView {
         console.log(`clicked: landmark_${card}`);
 
         let clicked_card_id: CardId = this.session.getLandmarks()[card];
+        if (this.clicked_card_view && clicked_card_id === this.clicked_card_view.getCardId()) {
+            this.resetCards();
+            this.drawBoard(this.session);  // TODO: draw click fields only.
+            return;
+        }
+
         if (this.session.getOwnerId(clicked_card_id) !== -1) {
             return;
         }
