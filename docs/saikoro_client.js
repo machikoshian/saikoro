@@ -819,6 +819,11 @@ class Session {
             return false;
         }
         this.events.push(event);
+        // End turn, no build.
+        if (event.card_id === -1) {
+            this.done(Phase.BuildFacility);
+            return true;
+        }
         let facility = this.getFacility(card_id);
         // Update the data.
         this.board.removeCards(x, y, facility.size);
@@ -852,10 +857,15 @@ class Session {
         if (!this.isValid(player_id, Phase.BuildFacility)) {
             return null;
         }
+        let event = new Event();
+        event.step = this.step;
+        event.type = EventType.Build;
+        event.player_id = player_id;
         // Is pass?  (valid action, but not build a facility).
         if (x === -1 && y === -1 && card_id === -1) {
-            this.done(Phase.BuildFacility);
-            return null;
+            event.card_id = -1;
+            event.valid = true;
+            return event;
         }
         // Facility is valid?
         let facility = this.card_manager.getFacility(card_id);
@@ -883,7 +893,6 @@ class Session {
                 return null;
             }
         }
-        let event = new Event();
         // Money is valid?
         let overwrite_costs = this.getOverwriteCosts(x, y, facility.size);
         let total_cost = facility.cost;
@@ -895,11 +904,8 @@ class Session {
         }
         // Merge overwrite_costs and total_cost;
         overwrite_costs[player_id] -= total_cost;
-        event.step = this.step;
-        event.type = EventType.Build;
         event.moneys = overwrite_costs;
         event.card_id = card_id;
-        event.player_id = player_id;
         event.target_card_ids = overlapped;
         return event;
     }
@@ -2285,7 +2291,13 @@ class HtmlView {
             return;
         }
         let card_id = this.clicked_card_view.getCardId();
+        let event = this.session.getEventBuildFacility(this.client.player_id, x, y, card_id);
+        if (event == null || !event.valid) {
+            return;
+        }
         this.client.sendRequest(__WEBPACK_IMPORTED_MODULE_2__client__["b" /* Request */].buildFacility(x, y, card_id));
+        this.effectClonedObjectMove(this.clicked_card_view, this.clicked_card_view.element_id, `field_${x}_${y}`);
+        this.drawEventsLater();
     }
     isRequestReady() {
         // TODO: Create a function in Session.
@@ -2299,7 +2311,7 @@ class HtmlView {
         this.client.sendRequest(__WEBPACK_IMPORTED_MODULE_2__client__["b" /* Request */].rollDice(dice_num, aim));
         let dice_view = (dice_num === 1) ? this.buttons_view.dice1 : this.buttons_view.dice2;
         dice_view.hide();
-        this.effectClonedObjectMove(dice_view, dice_view.getPosition(), this.getPosition("field_5_2"));
+        this.effectClonedObjectMove(dice_view, dice_view.element.id, "board");
         this.drawEventsLater();
     }
     onClickCharacter() {
@@ -2354,7 +2366,15 @@ class HtmlView {
             this.buttons_view.char_card.setClickable(true);
         }
         if (phase === __WEBPACK_IMPORTED_MODULE_0__session__["b" /* Phase */].BuildFacility) {
-            this.clicakable_fiels_view.setClickableAreas(this.session.getFacility(clicked_card_id).getArea());
+            for (let area of this.session.getFacility(clicked_card_id).getArea()) {
+                let x = area - 1;
+                for (let y = 0; y < 5; ++y) {
+                    let event = this.session.getEventBuildFacility(player, x, y, clicked_card_id);
+                    if (event && event.valid) {
+                        this.clicakable_fiels_view.setClickable([x, y], true);
+                    }
+                }
+            }
         }
     }
     onClickLandmark(card) {
@@ -2363,6 +2383,11 @@ class HtmlView {
         }
         console.log(`clicked: landmark_${card}`);
         let clicked_card_id = this.session.getLandmarks()[card];
+        if (this.clicked_card_view && clicked_card_id === this.clicked_card_view.getCardId()) {
+            this.resetCards();
+            this.drawBoard(this.session); // TODO: draw click fields only.
+            return;
+        }
         if (this.session.getOwnerId(clicked_card_id) !== -1) {
             return;
         }
@@ -2694,6 +2719,13 @@ class HtmlView {
             return true;
         }
         if (event.type === __WEBPACK_IMPORTED_MODULE_0__session__["c" /* EventType */].Build) {
+            if (event.card_id === -1) {
+                let name = this.session.getPlayer(event.player_id).name;
+                let message = `${name} は何も建設しませんでした。`;
+                let color = this.getPlayerColor(event.player_id);
+                this.message_view.drawMessage(message, color);
+                return true;
+            }
             let [x, y] = this.session.getPosition(event.card_id);
             let facility = this.session.getFacility(event.card_id);
             this.prev_session.getBoard().removeCards(x, y, facility.size);
@@ -2736,10 +2768,10 @@ class HtmlView {
     }
     drawMoneyMotion(money, player_id, x, y) {
         if (money > 0) {
-            this.effectMoneyMotion(`field_${x}_${y}`, `player_${player_id}_money`, money);
+            this.effectMoneyMotion(`field_${x}_${y}`, `player_${player_id}`, money);
         }
         else if (money < 0) {
-            this.effectMoneyMotion(`player_${player_id}_money`, `field_${x}_${y}`, money);
+            this.effectMoneyMotion(`player_${player_id}`, `field_${x}_${y}`, money);
         }
         this.player_views[player_id].addMoney(money);
     }
@@ -2747,30 +2779,30 @@ class HtmlView {
         let rect = document.getElementById(element_id).getBoundingClientRect();
         return [rect.left, rect.top];
     }
-    effectCharacter(player_id, card_id) {
+    effectCharacter(pid, card_id) {
         let effect_view = null;
-        if (this.client.player_id === player_id) {
-            let card_view = this.cards_views[player_id].getCardView(card_id);
+        if (this.client.player_id === pid) {
+            let card_view = this.cards_views[pid].getCardView(card_id);
             if (card_view == null) {
                 return; // Something is wrong.
             }
             card_view.hide();
-            this.effectClonedObjectMove(card_view, card_view.getPosition(), this.getPosition("field_5_2"));
+            this.effectClonedObjectMove(card_view, card_view.element_id, "board");
         }
         else {
             this.char_motion_view.draw(this.session, card_id);
-            this.effectClonedObjectMove(this.char_motion_view, this.getPosition(`player_${player_id}_money`), this.getPosition("field_5_2"));
+            this.effectClonedObjectMove(this.char_motion_view, `player_${pid}`, "board");
         }
     }
-    effectClonedObjectMove(node, pos_from, pos_to) {
+    effectClonedObjectMove(node, id1, id2) {
         let new_view = node.clone();
-        new_view.showAt(pos_from);
-        new_view.animateMoveTo(pos_to);
+        new_view.showAt(new_view.getPositionAlignedWithElementId(id1));
+        new_view.animateMoveToElementId(id2);
         window.setTimeout(() => { new_view.remove(); }, 1500);
     }
-    effectCardDeal(player_id, card_id) {
+    effectCardDeal(pid, card_id) {
         this.char_motion_view.draw(this.session, card_id);
-        this.effectClonedObjectMove(this.char_motion_view, this.getPosition(`player_${player_id}_money`), this.getPosition(`card_${player_id}_0`));
+        this.effectClonedObjectMove(this.char_motion_view, `player_${pid}`, `card_${pid}_0`);
     }
     effectCardDeals(player_id, card_ids) {
         if (this.client.player_id !== player_id) {
@@ -2786,7 +2818,7 @@ class HtmlView {
     }
     effectMoneyMotion(element_from, element_to, money) {
         this.money_motion_view.element.innerHTML = `💸 ${money}`;
-        this.effectClonedObjectMove(this.money_motion_view, this.getPosition(element_from), this.getPosition(element_to));
+        this.effectClonedObjectMove(this.money_motion_view, element_from, element_to);
     }
 }
 /* harmony export (immutable) */ __webpack_exports__["a"] = HtmlView;
@@ -2896,6 +2928,19 @@ class HtmlViewObject {
         this.element.style.left = x + "px";
         this.element.style.top = y + "px";
         this.show();
+    }
+    getPositionAligned(dst) {
+        const src = this.element.getBoundingClientRect();
+        const x = dst.left + (dst.width - src.width) / 2;
+        const y = dst.top + (dst.height - src.height) / 2;
+        return [x, y];
+    }
+    getPositionAlignedWithElementId(element_id) {
+        const rect = document.getElementById(element_id).getBoundingClientRect();
+        return this.getPositionAligned(rect);
+    }
+    animateMoveToElementId(element_id) {
+        this.animateMoveTo(this.getPositionAlignedWithElementId(element_id));
     }
     animateMoveTo([x, y]) {
         let rect_from = this.element.getBoundingClientRect();
