@@ -5,6 +5,7 @@ export class DeckMaker {
     private deck: FacilityDataId[] = [];
     private cards: { [key: number]: FacilityDataId }  = {};  // key is CardId.
     readonly board: Board = new Board();
+    readonly chars: CardId[] = [-1, -1, -1, -1, -1];
     private availables: FacilityDataId[][];
 
     constructor() {

@@ -2,13 +2,14 @@ import { Phase, Session, Event, EventType } from "./session";
 import { PlayerCards } from "./card_manager";
 import { Player, Board, PlayerId } from "./board";
 import { CardId, FacilityType, Facility, CharacterType, Character,
-         CardData, FacilityDataId } from "./facility";
+         CardData, FacilityDataId, CharacterDataId } from "./facility";
 import { Dice, DiceResult } from "./dice";
 import { Client, Request } from "./client";
 import { DeckMaker } from "./deck_maker";
 import { GameMode } from "./protocol";
 import { HtmlViewObject, HtmlCardsView, HtmlCardView, HtmlPlayerView,
-         HtmlMessageView, HtmlButtonsView,HtmlClickableFieldsView } from "./html_view_parts";
+         HtmlMessageView, HtmlButtonsView,HtmlClickableFieldsView,
+         HtmlDeckCharView, } from "./html_view_parts";
 
 const COLOR_FIELD: string = "#EFF0D1";
 const COLOR_LANDMARK: string = "#B0BEC5";
@@ -35,7 +36,9 @@ export class HtmlView {
     private prev_step: number = -1;
     private clicked_card_view: HtmlCardView = null;
     private deck_maker: DeckMaker = new DeckMaker();
+    private deck_char_view: HtmlDeckCharView = null;
     private clicked_field: [number, number] = [0, 0];
+    private clicked_char: number = 0;
     private cards_views: HtmlCardsView[] = [];
     private player_views: HtmlPlayerView[] = [];
     private landmarks_view: HtmlCardsView = null;
@@ -62,13 +65,8 @@ export class HtmlView {
         document.getElementById("matching_button_2players").addEventListener(
             "click", () => { this.onClickMatching(GameMode.OnLine2Players); });
 
-        // Hide components for game.
-        document.getElementById("players").style.display = "none";
-
         // buttons.
         this.buttons_view = new HtmlButtonsView("buttons");
-        this.buttons_view.none();
-
         this.buttons_view.dice1.addClickListener(() => { this.onClickDice(1, 0); });
         this.buttons_view.dice2.addClickListener(() => { this.onClickDice(2, 0); });
         this.buttons_view.char_card.addClickListener(() => { this.onClickCharacter(); });
@@ -76,38 +74,38 @@ export class HtmlView {
 
         // Message view.
         this.message_view = new HtmlMessageView("message");
-        this.message_view.none();
 
         // HtmlPlayerView
         for (let pid = 0; pid < 4; ++pid) {
             let player_view: HtmlPlayerView = new HtmlPlayerView(pid);
-            player_view.none();
             this.player_views.push(player_view);
+        }
+
+        // HtmlDeckCharView
+        this.deck_char_view = new HtmlDeckCharView("deck_char");
+        this.deck_char_view.callback = (x) => {
+            this.onClickDeckChars(x);
         }
 
         // HtmlCardsView
         let card_size: number = 10;
         for (let pid = 0; pid < 4; ++pid) {
             let cards_view: HtmlCardsView = new HtmlCardsView(`card_${pid}`, card_size);
-            cards_view.none();
             for (let c: number = 0; c < card_size; ++c) {
                 cards_view.cards[c].addClickListener(() => { this.onClickCard(pid, c); });
             }
             this.cards_views.push(cards_view);
         }
-        this.cards_views[0].show();
 
         // Landmark cards
         let landmark_size: number = 5;
         this.landmarks_view = new HtmlCardsView("landmark", landmark_size);
-        this.landmarks_view.none();
         for (let i: number = 0; i < landmark_size; ++i) {
             this.landmarks_view.cards[i].addClickListener(() => { this.onClickLandmark(i); });
         }
 
         // Field card
         this.field_card_view = new HtmlCardView("field_card");
-        this.field_card_view.none();
 
         // Fields
         this.clicakable_fiels_view = new HtmlClickableFieldsView("click", row, column);
@@ -120,11 +118,73 @@ export class HtmlView {
 
         // Character motion
         this.char_motion_view = new HtmlCardView("char_motion");
-        this.char_motion_view.none();
 
         // Money motion
         this.money_motion_view = new HtmlViewObject(document.getElementById("money_motion"));
-        this.money_motion_view.none();
+
+        this.switchScene(Scene.Matching);
+    }
+
+    private switchScene(scene: Scene): void {
+        this.scene = scene;
+        if (scene === Scene.Matching) {
+            // Hide components for game.
+            document.getElementById("players").style.display = "none";
+            for (let player_view of this.player_views) {
+                player_view.none();
+            }
+
+            this.message_view.none();
+            this.buttons_view.none();
+
+            for (let cards_view of this.cards_views) {
+                cards_view.none();
+            }
+            this.cards_views[0].show();
+
+            this.landmarks_view.none();
+            this.field_card_view.none();
+        }
+
+        if (scene === Scene.Game) {
+            // Hide the matching view and show the board view.
+            document.getElementById("matching").style.display = "none";
+            this.deck_char_view.none();
+
+            // Show components for game.
+            document.getElementById("players").style.display = "";
+
+            // Message view.
+            this.message_view.show();
+            if (this.session != null) {
+                this.drawSession(this.session);
+            }
+            return;
+        }
+    }
+
+    private onClickDeckChars(x: number): void {
+        let px: number = this.clicked_char;
+        this.deck_char_view.setHighlight(px, false);
+        this.clicked_char = x;
+
+        if (px === x) {
+//            this.deck_maker.removeCharacter(x);
+//            this.drawDeckChars();
+            return;
+        }
+
+        this.deck_char_view.setHighlight(x, true);
+
+        let i: number = 0;
+        let data_ids: CharacterDataId[] = CardData.getAvailableCharacters();
+        for (; i < data_ids.length; ++i) {
+            let character: Character = new Character(data_ids[i]);
+            this.cards_views[0].cards[i].drawCharacterCard(character);
+        }
+        for (; i < 5; ++i) {
+            this.cards_views[0].cards[i].none();
+        }
     }
 
     private onClickDeckField(x: number, y: number): void {
@@ -347,24 +407,6 @@ export class HtmlView {
         if (this.clicked_card_view) {
             this.clicked_card_view.setHighlight(false);
             this.clicked_card_view = null;
-        }
-    }
-
-    private switchScene(scene: Scene): void {
-        this.scene = scene;
-        if (scene === Scene.Game) {
-            // Hide the matching view and show the board view.
-            document.getElementById("matching").style.display = "none";
-
-            // Show components for game.
-            document.getElementById("players").style.display = "";
-
-            // Message view.
-            this.message_view.show();
-            if (this.session != null) {
-                this.drawSession(this.session);
-            }
-            return;
         }
     }
 

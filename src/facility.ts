@@ -104,8 +104,16 @@ export class CardData {
         return ((CHARACTER_DATA_BASE <= data_id) &&
                 (data_id < CHARACTER_DATA_BASE + CHARACTER_DATA.length));
     }
-    static getRandomCharacterDataId(): FacilityDataId {
+    static getRandomCharacterDataId(): CharacterDataId {
         return Math.floor(Math.random() * CHARACTER_DATA.length) + CHARACTER_DATA_BASE;
+    }
+
+    static getAvailableCharacters(): CharacterDataId[] {
+        let data_ids: CharacterDataId[] = [];
+        for (let i: number = 0; i < CHARACTER_DATA.length; ++i) {
+            data_ids.push(CHARACTER_DATA_BASE + i);
+        }
+        return data_ids;
     }
 }
 

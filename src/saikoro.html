@@ -7,6 +7,13 @@
     <style type="text/css">
     .none { display: none; }
     body { width: 660px; }
+
+    table.player { width: 160px; }
+    #player_0 { background-color: #909CC2; border-radius: 5px; }
+    #player_1 { background-color: #D9BDC5; border-radius: 5px; }
+    #player_2 { background-color: #90C290; border-radius: 5px; }
+    #player_3 { background-color: #9D8189; border-radius: 5px; }
+
     #board { position: relative; }
     #board table {
       border-style: solid; border-width: 1px;
@@ -32,11 +39,11 @@
       background-color: #EEEEEE; text-align: center;
       border-style: none; border-radius: 5px; border-width: 1px;
     }
-    table.player { width: 160px; }
-    #player_0 { background-color: #909CC2; border-radius: 5px; }
-    #player_1 { background-color: #D9BDC5; border-radius: 5px; }
-    #player_2 { background-color: #90C290; border-radius: 5px; }
-    #player_3 { background-color: #9D8189; border-radius: 5px; }
+    span.deck_char {
+      width: 50px; height: 50px; background-color: #EFF0D1;
+      border: solid 3px #EEEEEE;
+      display: inline-block;
+    }
 
     #buttons { width: 435px; padding-left: 225px; }
     td.dice_button {
@@ -136,6 +143,9 @@
           <tr><td id="click_0_4"></td><td id="click_1_4"></td><td id="click_2_4"></td><td id="click_3_4"></td><td id="click_4_4"></td><td id="click_5_4"></td><td id="click_6_4"></td><td id="click_7_4"></td><td id="click_8_4"></td><td id="click_9_4"></td><td id="click_10_4"></td><td id="click_11_4"></td></tr>
           <tr><th id="click_0"></th><th id="click_1"></th><th id="click_2"></th><th id="click_3"></th><th id="click_4"></th><th id="click_5"></th><th id="click_6"></th><th id="click_7"></th><th id="click_8"></th><th id="click_9"></th><th id="click_10"></th><th id="click_11"></th></tr>
         </tbody></table>
+      </div>
+      <div id="deck_char">
+        <span id="deck_char_0" class="deck_char"></span><span id="deck_char_1" class="deck_char"></span><span id="deck_char_2" class="deck_char"></span><span id="deck_char_3" class="deck_char"></span><span id="deck_char_4" class="deck_char"></span>
       </div>
       <div id="buttons">
         <table><tr>

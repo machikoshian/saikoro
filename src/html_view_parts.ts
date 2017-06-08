@@ -359,6 +359,33 @@ export class HtmlMessageView extends HtmlViewObject {
     }
 }
 
+export class HtmlDeckCharView extends HtmlViewObject {
+    public callback: (i: number) => void;
+    readonly fields: HtmlClickableFieldView[];
+
+    constructor(element_id: string) {
+        super(document.getElementById(element_id));
+        this.fields = [];
+        for (let i: number = 0; i < 5; ++i) {
+            let field: HtmlClickableFieldView = new HtmlClickableFieldView(`${element_id}_${i}`);
+            this.fields.push(field);
+            field.addClickListener(() => { this.onClick(i); });
+        }
+    }
+
+    private onClick(i: number): void {
+        this.callback(i);
+    }
+
+    public setHighlight(i: number, highlight: boolean): void {
+        this.fields[i].setClickable(highlight);
+    }
+
+    public drawCharacter(i: number, character: Character): void {
+        this.fields[i].element.innerText = character.name;
+    }
+}
+
 export class HtmlButtonView extends HtmlViewObject {
     constructor(element_id: string) {
         super(document.getElementById(element_id));
