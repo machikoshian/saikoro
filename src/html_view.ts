@@ -361,7 +361,9 @@ export class HtmlView {
 
             // Message view.
             this.message_view.show();
-            this.drawSession(this.session);
+            if (this.session != null) {
+                this.drawSession(this.session);
+            }
             return;
         }
     }
@@ -375,9 +377,6 @@ export class HtmlView {
 
         // Show event animations.
         this.drawEvents();
-
-        // Update buttons.
-        this.buttons_view.draw(session, player_id);
     }
 
     public drawCards(session: Session): void {
@@ -488,9 +487,13 @@ export class HtmlView {
         }
     }
 
-    public drawStatusMessage(): boolean {  // TODO: rename it.
-        let session = this.session;
+    // TODO: move this function to other place/class.
+    private hasCharacterCard(session: Session, player_id: PlayerId): boolean {
+        let cards: CardId[] = session.getSortedHand(player_id);
+        return session.isCharacter(cards[cards.length - 1]);
+    }
 
+    public drawStatusMessage(session: Session): boolean {  // TODO: rename it.
         let players: Player[] = session.getPlayers();
         let player_id: PlayerId = session.getCurrentPlayerId();
 
@@ -523,7 +526,7 @@ export class HtmlView {
             return true;
         }
         if (phase === Phase.EndGame) {
-            let events: Event[] = this.session.getEvents();
+            let events: Event[] = session.getEvents();
             for (let event of events) {
                 if (event.type === EventType.Quit) {
                     message = `${players[event.player_id].name} が切断しました`;
@@ -541,14 +544,22 @@ export class HtmlView {
     }
 
     private drawSession(session: Session): void {
-        this.drawStatusMessage();
+        this.drawStatusMessage(session);
         this.drawPlayers();
         this.drawBoard(session);
         this.drawCards(session);
-        this.prev_session = this.session;
+
+        // Update buttons.
+        this.buttons_view.draw(session, this.client.player_id);
+
+        this.prev_session = session;
     }
 
     private drawEventsLater(): void {
+        // TODO: This is a hack to abuse this function is always called after sendRequest.
+        // Nice to rename this function.
+        this.buttons_view.hide();
+
         this.drawEvents(false);
     }
 

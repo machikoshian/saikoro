@@ -56,7 +56,7 @@ export class HtmlViewObject {
 
     public setVisibility(visibility: Visibility): void {       
         if (visibility === Visibility.Visible) {
-            this.element.style.visibility = "visible";
+            this.element.style.visibility = "inherit";
             this.element.style.display = "";
             return;
         }
