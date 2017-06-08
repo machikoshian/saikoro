@@ -216,6 +216,8 @@ export class HtmlView {
         }
         let deck: string = (<HTMLInputElement>document.getElementById("deck")).value;
         this.client.matching(Request.matching(name, mode, deck));
+        this.message_view.drawMessage("通信中です", this.getPlayerColor(this.client.player_id));
+        this.switchScene(Scene.Game);
     }
 
     private onClickCard(player: number, card: number): void {
