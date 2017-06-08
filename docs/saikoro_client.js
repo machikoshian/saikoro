@@ -179,6 +179,13 @@ class CardData {
     static getRandomCharacterDataId() {
         return Math.floor(Math.random() * CHARACTER_DATA.length) + CHARACTER_DATA_BASE;
     }
+    static getAvailableCharacters() {
+        let data_ids = [];
+        for (let i = 0; i < CHARACTER_DATA.length; ++i) {
+            data_ids.push(CHARACTER_DATA_BASE + i);
+        }
+        return data_ids;
+    }
 }
 /* harmony export (immutable) */ __webpack_exports__["e"] = CardData;
 
@@ -2028,9 +2035,9 @@ class EffectManager {
 
 class DeckMaker {
     constructor() {
-        this.deck = [];
         this.cards = {}; // key is CardId.
         this.board = new __WEBPACK_IMPORTED_MODULE_1__board__["a" /* Board */]();
+        this.chars = [-1, -1, -1, -1, -1];
         this.availables = [];
         for (let x = 0; x < this.board.column; ++x) {
             this.availables[x] = __WEBPACK_IMPORTED_MODULE_0__facility__["e" /* CardData */].getAvailableFacilities(x + 1);
@@ -2070,8 +2077,30 @@ class DeckMaker {
             delete this.cards[removed];
         });
     }
-    getFacilityDataIds() {
-        return Object.keys(this.cards).map((key) => { return this.cards[key]; });
+    getDeck() {
+        let deck = [];
+        for (let key of Object.keys(this.cards)) {
+            deck.push(this.cards[key]);
+        }
+        for (let data_id of this.chars) {
+            if (data_id !== -1) {
+                deck.push(data_id);
+            }
+        }
+        return deck;
+    }
+    setCharacter(x, data_id) {
+        this.chars[x] = data_id;
+    }
+    getCharacter(x) {
+        let data_id = this.chars[x];
+        if (data_id === -1) {
+            return null;
+        }
+        return new __WEBPACK_IMPORTED_MODULE_0__facility__["d" /* Character */](data_id);
+    }
+    removeCharacter(x) {
+        this.chars[x] = -1;
     }
 }
 /* harmony export (immutable) */ __webpack_exports__["a"] = DeckMaker;
@@ -2184,6 +2213,7 @@ class HtmlView {
         this.prev_step = -1;
         this.clicked_card_view = null;
         this.deck_maker = new __WEBPACK_IMPORTED_MODULE_3__deck_maker__["a" /* DeckMaker */]();
+        this.deck_char_view = null;
         this.clicked_field = [0, 0];
         this.cards_views = [];
         this.player_views = [];
@@ -2204,78 +2234,123 @@ class HtmlView {
         document.getElementById("matching_button_offline").addEventListener("click", () => { this.onClickMatching(__WEBPACK_IMPORTED_MODULE_4__protocol__["a" /* GameMode */].OffLine); });
         document.getElementById("matching_button_online").addEventListener("click", () => { this.onClickMatching(__WEBPACK_IMPORTED_MODULE_4__protocol__["a" /* GameMode */].OnLineSingle); });
         document.getElementById("matching_button_2players").addEventListener("click", () => { this.onClickMatching(__WEBPACK_IMPORTED_MODULE_4__protocol__["a" /* GameMode */].OnLine2Players); });
-        // Hide components for game.
-        document.getElementById("players").style.display = "none";
         // buttons.
         this.buttons_view = new __WEBPACK_IMPORTED_MODULE_5__html_view_parts__["a" /* HtmlButtonsView */]("buttons");
-        this.buttons_view.none();
         this.buttons_view.dice1.addClickListener(() => { this.onClickDice(1, 0); });
         this.buttons_view.dice2.addClickListener(() => { this.onClickDice(2, 0); });
         this.buttons_view.char_card.addClickListener(() => { this.onClickCharacter(); });
         this.buttons_view.end_turn.addClickListener(() => { this.onClickEndTurn(); });
         // Message view.
         this.message_view = new __WEBPACK_IMPORTED_MODULE_5__html_view_parts__["b" /* HtmlMessageView */]("message");
-        this.message_view.none();
         // HtmlPlayerView
         for (let pid = 0; pid < 4; ++pid) {
             let player_view = new __WEBPACK_IMPORTED_MODULE_5__html_view_parts__["c" /* HtmlPlayerView */](pid);
-            player_view.none();
             this.player_views.push(player_view);
         }
+        // HtmlDeckCharView
+        this.deck_char_view = new __WEBPACK_IMPORTED_MODULE_5__html_view_parts__["d" /* HtmlDeckCharView */]("deck_char");
+        this.deck_char_view.callback = (x) => {
+            this.onClickDeckField(x, -1);
+        };
         // HtmlCardsView
         let card_size = 10;
         for (let pid = 0; pid < 4; ++pid) {
-            let cards_view = new __WEBPACK_IMPORTED_MODULE_5__html_view_parts__["d" /* HtmlCardsView */](`card_${pid}`, card_size);
-            cards_view.none();
+            let cards_view = new __WEBPACK_IMPORTED_MODULE_5__html_view_parts__["e" /* HtmlCardsView */](`card_${pid}`, card_size);
             for (let c = 0; c < card_size; ++c) {
                 cards_view.cards[c].addClickListener(() => { this.onClickCard(pid, c); });
             }
             this.cards_views.push(cards_view);
         }
-        this.cards_views[0].show();
         // Landmark cards
         let landmark_size = 5;
-        this.landmarks_view = new __WEBPACK_IMPORTED_MODULE_5__html_view_parts__["d" /* HtmlCardsView */]("landmark", landmark_size);
-        this.landmarks_view.none();
+        this.landmarks_view = new __WEBPACK_IMPORTED_MODULE_5__html_view_parts__["e" /* HtmlCardsView */]("landmark", landmark_size);
         for (let i = 0; i < landmark_size; ++i) {
             this.landmarks_view.cards[i].addClickListener(() => { this.onClickLandmark(i); });
         }
         // Field card
-        this.field_card_view = new __WEBPACK_IMPORTED_MODULE_5__html_view_parts__["e" /* HtmlCardView */]("field_card");
-        this.field_card_view.none();
+        this.field_card_view = new __WEBPACK_IMPORTED_MODULE_5__html_view_parts__["f" /* HtmlCardView */]("field_card");
         // Fields
-        this.clicakable_fiels_view = new __WEBPACK_IMPORTED_MODULE_5__html_view_parts__["f" /* HtmlClickableFieldsView */]("click", row, column);
+        this.clicakable_fiels_view = new __WEBPACK_IMPORTED_MODULE_5__html_view_parts__["g" /* HtmlClickableFieldsView */]("click", row, column);
         for (let y = 0; y < row; ++y) {
             for (let x = 0; x < column; ++x) {
                 this.clicakable_fiels_view.fields[x][y].addClickListener(() => { this.onClickField(x, y); });
             }
         }
         // Character motion
-        this.char_motion_view = new __WEBPACK_IMPORTED_MODULE_5__html_view_parts__["e" /* HtmlCardView */]("char_motion");
-        this.char_motion_view.none();
+        this.char_motion_view = new __WEBPACK_IMPORTED_MODULE_5__html_view_parts__["f" /* HtmlCardView */]("char_motion");
         // Money motion
-        this.money_motion_view = new __WEBPACK_IMPORTED_MODULE_5__html_view_parts__["g" /* HtmlViewObject */](document.getElementById("money_motion"));
-        this.money_motion_view.none();
+        this.money_motion_view = new __WEBPACK_IMPORTED_MODULE_5__html_view_parts__["h" /* HtmlViewObject */](document.getElementById("money_motion"));
+        this.switchScene(Scene.Matching);
+    }
+    switchScene(scene) {
+        this.scene = scene;
+        if (scene === Scene.Matching) {
+            // Hide components for game.
+            document.getElementById("players").style.display = "none";
+            for (let player_view of this.player_views) {
+                player_view.none();
+            }
+            this.message_view.none();
+            this.buttons_view.none();
+            for (let cards_view of this.cards_views) {
+                cards_view.none();
+            }
+            this.cards_views[0].show();
+            this.landmarks_view.none();
+            this.field_card_view.none();
+        }
+        if (scene === Scene.Game) {
+            // Hide the matching view and show the board view.
+            document.getElementById("matching").style.display = "none";
+            this.deck_char_view.none();
+            // Show components for game.
+            document.getElementById("players").style.display = "";
+            // Message view.
+            this.message_view.show();
+            if (this.session != null) {
+                this.drawSession(this.session);
+            }
+            return;
+        }
     }
     onClickDeckField(x, y) {
         let [px, py] = this.clicked_field;
-        this.clicakable_fiels_view.setClickable(this.clicked_field, false);
+        if (py === -1) {
+            this.deck_char_view.setHighlight(px, false);
+        }
+        else {
+            this.clicakable_fiels_view.setClickable(this.clicked_field, false);
+        }
         this.clicked_field = [x, y];
         if (px === x && py === y) {
-            this.deck_maker.removeFacility(x, y);
+            if (py === -1) {
+                this.deck_maker.removeCharacter(x);
+            }
+            else {
+                this.deck_maker.removeFacility(x, y);
+            }
             this.drawDeckBoard();
             return;
         }
-        this.clicakable_fiels_view.setClickable(this.clicked_field, true);
         let i = 0;
-        let data_ids = this.deck_maker.getAvailableFacilities(x);
-        for (; i < data_ids.length; ++i) {
-            let facility = new __WEBPACK_IMPORTED_MODULE_1__facility__["b" /* Facility */](data_ids[i]);
-            let card_view = new __WEBPACK_IMPORTED_MODULE_5__html_view_parts__["e" /* HtmlCardView */](`card_0_${i}`);
-            card_view.drawFacilityCard(facility);
+        if (y === -1) {
+            this.deck_char_view.setHighlight(x, true);
+            let data_ids = __WEBPACK_IMPORTED_MODULE_1__facility__["e" /* CardData */].getAvailableCharacters();
+            for (; i < data_ids.length; ++i) {
+                let character = new __WEBPACK_IMPORTED_MODULE_1__facility__["d" /* Character */](data_ids[i]);
+                this.cards_views[0].cards[i].drawCharacterCard(character);
+            }
+        }
+        else {
+            this.clicakable_fiels_view.setClickable(this.clicked_field, true);
+            let data_ids = this.deck_maker.getAvailableFacilities(x);
+            for (; i < data_ids.length; ++i) {
+                let facility = new __WEBPACK_IMPORTED_MODULE_1__facility__["b" /* Facility */](data_ids[i]);
+                this.cards_views[0].cards[i].drawFacilityCard(facility);
+            }
         }
         for (; i < 10; ++i) {
-            document.getElementById(`card_0_${i}`).style.display = "none";
+            this.cards_views[0].cards[i].none();
         }
     }
     onClickField(x, y) {
@@ -2333,13 +2408,22 @@ class HtmlView {
         }
         let deck = document.getElementById("deck").value;
         this.client.matching(__WEBPACK_IMPORTED_MODULE_2__client__["b" /* Request */].matching(name, mode, deck));
+        this.message_view.drawMessage("通信中です", this.getPlayerColor(this.client.player_id));
+        this.switchScene(Scene.Game);
     }
     onClickCard(player, card) {
         // Event on matching.
         if (this.scene === Scene.Matching) {
             let [x, y] = this.clicked_field;
-            let data_id = this.deck_maker.getAvailableFacilities(x)[card];
-            this.deck_maker.setFacility(x, y, data_id);
+            if (y === -1) {
+                // Char
+                let data_id = __WEBPACK_IMPORTED_MODULE_1__facility__["e" /* CardData */].getAvailableCharacters()[card];
+                this.deck_maker.setCharacter(x, data_id);
+            }
+            else {
+                let data_id = this.deck_maker.getAvailableFacilities(x)[card];
+                this.deck_maker.setFacility(x, y, data_id);
+            }
             this.drawDeckBoard();
             return;
         }
@@ -2442,19 +2526,6 @@ class HtmlView {
             this.clicked_card_view = null;
         }
     }
-    switchScene(scene) {
-        this.scene = scene;
-        if (scene === Scene.Game) {
-            // Hide the matching view and show the board view.
-            document.getElementById("matching").style.display = "none";
-            // Show components for game.
-            document.getElementById("players").style.display = "";
-            // Message view.
-            this.message_view.show();
-            this.drawSession(this.session);
-            return;
-        }
-    }
     updateView(session, player_id) {
         this.session = session;
         if (this.scene === Scene.Matching) {
@@ -2462,8 +2533,6 @@ class HtmlView {
         }
         // Show event animations.
         this.drawEvents();
-        // Update buttons.
-        this.buttons_view.draw(session, player_id);
     }
     drawCards(session) {
         let players = session.getPlayers();
@@ -2517,9 +2586,15 @@ class HtmlView {
                 this.drawField(x, y, facility_id, facility, owner_id);
             }
         }
-        this.clicakable_fiels_view.setClickable(this.clicked_field, true);
+        for (let x = 0; x < 5; ++x) {
+            this.deck_char_view.drawCharacter(x, this.deck_maker.getCharacter(x));
+        }
+        let [x, y] = this.clicked_field;
+        if (y !== -1) {
+            this.clicakable_fiels_view.setClickable(this.clicked_field, true);
+        }
         document.getElementById("deck").innerText =
-            JSON.stringify(this.deck_maker.getFacilityDataIds());
+            JSON.stringify(this.deck_maker.getDeck());
     }
     drawField(x, y, facility_id, facility, owner_id) {
         let field = document.getElementById(`field_${x}_${y}`);
@@ -2553,8 +2628,12 @@ class HtmlView {
             this.player_views[i].hide();
         }
     }
-    drawStatusMessage() {
-        let session = this.session;
+    // TODO: move this function to other place/class.
+    hasCharacterCard(session, player_id) {
+        let cards = session.getSortedHand(player_id);
+        return session.isCharacter(cards[cards.length - 1]);
+    }
+    drawStatusMessage(session) {
         let players = session.getPlayers();
         let player_id = session.getCurrentPlayerId();
         // Update message.
@@ -2586,7 +2665,7 @@ class HtmlView {
             return true;
         }
         if (phase === __WEBPACK_IMPORTED_MODULE_0__session__["b" /* Phase */].EndGame) {
-            let events = this.session.getEvents();
+            let events = session.getEvents();
             for (let event of events) {
                 if (event.type === __WEBPACK_IMPORTED_MODULE_0__session__["c" /* EventType */].Quit) {
                     message = `${players[event.player_id].name} が切断しました`;
@@ -2602,13 +2681,18 @@ class HtmlView {
         return false;
     }
     drawSession(session) {
-        this.drawStatusMessage();
+        this.drawStatusMessage(session);
         this.drawPlayers();
         this.drawBoard(session);
         this.drawCards(session);
-        this.prev_session = this.session;
+        // Update buttons.
+        this.buttons_view.draw(session, this.client.player_id);
+        this.prev_session = session;
     }
     drawEventsLater() {
+        // TODO: This is a hack to abuse this function is always called after sendRequest.
+        // Nice to rename this function.
+        this.buttons_view.hide();
         this.drawEvents(false);
     }
     drawEvents(soon = true) {
@@ -2883,7 +2967,7 @@ class HtmlViewObject {
     }
     setVisibility(visibility) {
         if (visibility === Visibility.Visible) {
-            this.element.style.visibility = "visible";
+            this.element.style.visibility = "inherit";
             this.element.style.display = "";
             return;
         }
@@ -2957,7 +3041,7 @@ class HtmlViewObject {
         window.setTimeout(() => { this.none(); }, 1500);
     }
 }
-/* harmony export (immutable) */ __webpack_exports__["g"] = HtmlViewObject;
+/* harmony export (immutable) */ __webpack_exports__["h"] = HtmlViewObject;
 
 class HtmlCardsView extends HtmlViewObject {
     constructor(element_id, max_size) {
@@ -2997,7 +3081,7 @@ class HtmlCardsView extends HtmlViewObject {
         }
     }
 }
-/* harmony export (immutable) */ __webpack_exports__["d"] = HtmlCardsView;
+/* harmony export (immutable) */ __webpack_exports__["e"] = HtmlCardsView;
 
 class HtmlCardView extends HtmlViewObject {
     constructor(element_id) {
@@ -3079,7 +3163,7 @@ class HtmlCardView extends HtmlViewObject {
         return area;
     }
 }
-/* harmony export (immutable) */ __webpack_exports__["e"] = HtmlCardView;
+/* harmony export (immutable) */ __webpack_exports__["f"] = HtmlCardView;
 
 class HtmlPlayerView extends HtmlViewObject {
     constructor(player_id) {
@@ -3143,6 +3227,32 @@ class HtmlMessageView extends HtmlViewObject {
     }
 }
 /* harmony export (immutable) */ __webpack_exports__["b"] = HtmlMessageView;
+
+class HtmlDeckCharView extends HtmlViewObject {
+    constructor(element_id) {
+        super(document.getElementById(element_id));
+        this.fields = [];
+        for (let i = 0; i < 5; ++i) {
+            let field = new HtmlClickableFieldView(`${element_id}_${i}`);
+            this.fields.push(field);
+            field.addClickListener(() => { this.onClick(i); });
+        }
+    }
+    onClick(i) {
+        this.callback(i);
+    }
+    setHighlight(i, highlight) {
+        this.fields[i].setClickable(highlight);
+    }
+    drawCharacter(i, character) {
+        let value = "";
+        if (character != null) {
+            value = character.name;
+        }
+        this.fields[i].element.innerText = value;
+    }
+}
+/* harmony export (immutable) */ __webpack_exports__["d"] = HtmlDeckCharView;
 
 class HtmlButtonView extends HtmlViewObject {
     constructor(element_id) {
@@ -3252,7 +3362,7 @@ class HtmlClickableFieldsView extends HtmlViewObject {
         }
     }
 }
-/* harmony export (immutable) */ __webpack_exports__["f"] = HtmlClickableFieldsView;
+/* harmony export (immutable) */ __webpack_exports__["g"] = HtmlClickableFieldsView;
 
 
 
