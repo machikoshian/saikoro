@@ -382,7 +382,11 @@ export class HtmlDeckCharView extends HtmlViewObject {
     }
 
     public drawCharacter(i: number, character: Character): void {
-        this.fields[i].element.innerText = character.name;
+        let value: string = "";
+        if (character != null) {
+            value = character.name;
+        }
+        this.fields[i].element.innerText = value;
     }
 }
 

@@ -38,7 +38,6 @@ export class HtmlView {
     private deck_maker: DeckMaker = new DeckMaker();
     private deck_char_view: HtmlDeckCharView = null;
     private clicked_field: [number, number] = [0, 0];
-    private clicked_char: number = 0;
     private cards_views: HtmlCardsView[] = [];
     private player_views: HtmlPlayerView[] = [];
     private landmarks_view: HtmlCardsView = null;
@@ -84,7 +83,7 @@ export class HtmlView {
         // HtmlDeckCharView
         this.deck_char_view = new HtmlDeckCharView("deck_char");
         this.deck_char_view.callback = (x) => {
-            this.onClickDeckChars(x);
+            this.onClickDeckField(x, -1);
         }
 
         // HtmlCardsView
@@ -163,52 +162,47 @@ export class HtmlView {
         }
     }
 
-    private onClickDeckChars(x: number): void {
-        let px: number = this.clicked_char;
-        this.deck_char_view.setHighlight(px, false);
-        this.clicked_char = x;
-
-        if (px === x) {
-//            this.deck_maker.removeCharacter(x);
-//            this.drawDeckChars();
-            return;
-        }
-
-        this.deck_char_view.setHighlight(x, true);
-
-        let i: number = 0;
-        let data_ids: CharacterDataId[] = CardData.getAvailableCharacters();
-        for (; i < data_ids.length; ++i) {
-            let character: Character = new Character(data_ids[i]);
-            this.cards_views[0].cards[i].drawCharacterCard(character);
-        }
-        for (; i < 5; ++i) {
-            this.cards_views[0].cards[i].none();
-        }
-    }
-
     private onClickDeckField(x: number, y: number): void {
         let [px, py]: [number, number] = this.clicked_field;
-        this.clicakable_fiels_view.setClickable(this.clicked_field, false);
+        if (py === -1) {
+            this.deck_char_view.setHighlight(px, false);
+        }
+        else {
+            this.clicakable_fiels_view.setClickable(this.clicked_field, false);
+        }
         this.clicked_field = [x, y];
 
         if (px === x && py === y) {
-            this.deck_maker.removeFacility(x, y);
+            if (py === -1) {
+                this.deck_maker.removeCharacter(x);
+            }
+            else {
+                this.deck_maker.removeFacility(x, y);
+            }
             this.drawDeckBoard();
             return;
         }
 
-        this.clicakable_fiels_view.setClickable(this.clicked_field, true);
-
         let i: number = 0;
-        let data_ids: FacilityDataId[] = this.deck_maker.getAvailableFacilities(x);
-        for (; i < data_ids.length; ++i) {
-            let facility: Facility = new Facility(data_ids[i]);
-            let card_view: HtmlCardView = new HtmlCardView(`card_0_${i}`);
-            card_view.drawFacilityCard(facility);
+        if (y === -1) {
+            this.deck_char_view.setHighlight(x, true);
+            let data_ids: CharacterDataId[] = CardData.getAvailableCharacters();
+            for (; i < data_ids.length; ++i) {
+                let character: Character = new Character(data_ids[i]);
+                this.cards_views[0].cards[i].drawCharacterCard(character);
+            }
         }
+        else {
+            this.clicakable_fiels_view.setClickable(this.clicked_field, true);
+            let data_ids: FacilityDataId[] = this.deck_maker.getAvailableFacilities(x);
+            for (; i < data_ids.length; ++i) {
+                let facility: Facility = new Facility(data_ids[i]);
+                this.cards_views[0].cards[i].drawFacilityCard(facility);
+            }
+        }
+
         for (; i < 10; ++i) {
-            document.getElementById(`card_0_${i}`).style.display = "none";
+            this.cards_views[0].cards[i].none();
         }
     }
 
@@ -284,8 +278,15 @@ export class HtmlView {
         // Event on matching.
         if (this.scene === Scene.Matching) {
             let [x, y]: [number, number] = this.clicked_field;
-            let data_id: FacilityDataId = this.deck_maker.getAvailableFacilities(x)[card];
-            this.deck_maker.setFacility(x, y, data_id);
+            if (y === -1) {
+                // Char
+                let data_id: CharacterDataId = CardData.getAvailableCharacters()[card];
+                this.deck_maker.setCharacter(x, data_id);
+            }
+            else {
+                let data_id: FacilityDataId = this.deck_maker.getAvailableFacilities(x)[card];
+                this.deck_maker.setFacility(x, y, data_id);
+            }
             this.drawDeckBoard();
             return;
         }
@@ -482,9 +483,16 @@ export class HtmlView {
                 this.drawField(x, y, facility_id, facility, owner_id);
             }
         }
-        this.clicakable_fiels_view.setClickable(this.clicked_field, true);
+        for (let x: number = 0; x < 5; ++x) {
+            this.deck_char_view.drawCharacter(x, this.deck_maker.getCharacter(x));
+        }
+
+        let [x, y]: [number, number] = this.clicked_field;
+        if (y !== -1) {
+            this.clicakable_fiels_view.setClickable(this.clicked_field, true);
+        }
         document.getElementById("deck").innerText =
-            JSON.stringify(this.deck_maker.getFacilityDataIds());
+            JSON.stringify(this.deck_maker.getDeck());
     }
 
     private drawField(x: number, y: number,

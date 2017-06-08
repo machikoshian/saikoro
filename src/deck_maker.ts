@@ -1,11 +1,10 @@
-import { CardData, CardId, Facility, FacilityDataId } from "./facility";
+import { CardData, CardId, Facility, FacilityDataId, Character, CharacterDataId } from "./facility";
 import { Board } from "./board";
 
 export class DeckMaker {
-    private deck: FacilityDataId[] = [];
     private cards: { [key: number]: FacilityDataId }  = {};  // key is CardId.
     readonly board: Board = new Board();
-    readonly chars: CardId[] = [-1, -1, -1, -1, -1];
+    readonly chars: CharacterDataId[] = [-1, -1, -1, -1, -1];
     private availables: FacilityDataId[][];
 
     constructor() {
@@ -55,7 +54,32 @@ export class DeckMaker {
         });
     }
 
-    public getFacilityDataIds(): FacilityDataId[] {
-        return Object.keys(this.cards).map((key) => { return this.cards[key]; });
+    public getDeck(): FacilityDataId[] {
+        let deck: FacilityDataId[] = [];
+        for (let key of Object.keys(this.cards)) {
+            deck.push(this.cards[key]);
+        }
+        for (let data_id of this.chars) {
+            if (data_id !== -1) {
+                deck.push(data_id);
+            }
+        }
+        return deck;
+    }
+
+    public setCharacter(x: number, data_id: CharacterDataId): void {
+        this.chars[x] = data_id;
+    }
+
+    public getCharacter(x: number): Character {
+        let data_id: CharacterDataId = this.chars[x];
+        if (data_id === -1) {
+            return null;
+        }
+        return new Character(data_id);
+    }
+
+    public removeCharacter(x): void {
+        this.chars[x] = -1;
     }
 }
