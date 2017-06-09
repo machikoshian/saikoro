@@ -20,11 +20,11 @@
       border-radius: 7px;
     }
     .field {
-      background-color: #4CAF50;
+      background-color: #FFE082;
     }
     #board .field td {
-      width: 50px; height: 40px; background-color: #DCEDC8; text-align: center;
-      border-bottom: solid 10px #DCEDC8;
+      width: 50px; height: 40px; background-color: #FFF8E1; text-align: center;
+      border-bottom: solid 10px #FFF8E1;
     }
     #board .click {
       position: absolute; top: 0px; left: 0px;
@@ -44,17 +44,16 @@
       border-style: none; border-radius: 5px; border-width: 1px;
     }
     #deck_char {
-      font-size: 20px; width: 280px;
+      font-size: 20px; width: 260px;
       margin-top: 10px;
-      padding: 10px;
+      padding: 4px;
       color: #666666;
-      background-color: #EFF0D1;
-      border-radius: 7px; background-color: #FFCA28;
+      border-radius: 7px; background-color: #FFE082;
     }
     span.deck_char {
-      width: 50px; height: 50px; background-color: #FFF9C4;
+      width: 50px; height: 50px; background-color: #FFF8E1;
       vertical-align: top;
-      border: solid 3px #FFA000;
+      border: solid 1px #FFE082;
       display: inline-block;
     }
 
@@ -88,14 +87,17 @@
     .card_description {
       font-size: 12px; height: 70px;
     }
+    #matching_name {
+      font-size: 20px;
+    }
     .menu_button {
       font-size: 20px;
       color: #666666;
       display: inline-block;
       width: 300px;
       height: 60px;
-      background-color: #EFF0D1;
-      border-radius: 10px; background-color: #FFCA28;
+      border-radius:7px;
+      background-color: #FFCA28;
     }
     </style>
     <script type="text/javascript" src="saikoro_client.js"></script>
@@ -103,12 +105,13 @@
   <body>
     <div id="matching">
       名前: <input id="matching_name" type="text" name="name" value="コロまる"><br />
-      <input id="matching_button_offline" class="menu_button" type="button" value="一人プレイ (オフライン)">
+      <br />
+      <input id="matching_button_offline" class="menu_button" type="button" value="一人プレイ (オフライン)"><br />
       <small>- Internet Explorer では動きません。</small><br />
       <br />
       <input id="matching_button_online" class="menu_button" type="button" value="一人プレイ (ネット通信)"><br />
       <br />
-      <input id="matching_button_2players" class="menu_button" type="button" value="二人プレイ（実験中）">
+      <input id="matching_button_2players" class="menu_button" type="button" value="二人プレイ（実験中）"><br />
       <small>- 同時にプレイできる人が必要です。</small><br />
       <br />
       ふっかつのじゅもん<br />

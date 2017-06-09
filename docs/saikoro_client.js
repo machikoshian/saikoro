@@ -2189,7 +2189,7 @@ class Dice {
 
 
 
-const COLOR_FIELD = "#EFF0D1";
+const COLOR_FIELD = "#FFF8E1";
 const COLOR_LANDMARK = "#B0BEC5";
 const COLOR_CLICKABLE = "#FFCA28";
 const COLOR_HIGHTLIGHT_CARD = "#FFE082";
@@ -2920,7 +2920,7 @@ class HtmlView {
 
 
 // TODO: Move it to a new file for util.
-const COLOR_FIELD = "#EFF0D1";
+const COLOR_FIELD = "#FFE082";
 const COLOR_LANDMARK = "#B0BEC5";
 const COLOR_CLICKABLE = "#FFCA28";
 const COLOR_INACTIVE = "#EEEEEE";
