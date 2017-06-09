@@ -42,7 +42,7 @@ export class HtmlView {
     private player_views: HtmlPlayerView[] = [];
     private landmarks_view: HtmlCardsView = null;
     private field_card_view: HtmlCardView = null;
-    private char_motion_view: HtmlCardView = null;
+    private card_widget_view: HtmlCardView = null;
     private money_motion_view: HtmlViewObject = null;
     private message_view: HtmlMessageView = null;
     private buttons_view: HtmlButtonsView = null;
@@ -116,7 +116,7 @@ export class HtmlView {
         }
 
         // Character motion
-        this.char_motion_view = new HtmlCardView("char_motion");
+        this.card_widget_view = new HtmlCardView("card_widget");
 
         // Money motion
         this.money_motion_view = new HtmlViewObject(document.getElementById("money_motion"));
@@ -809,8 +809,8 @@ export class HtmlView {
             this.effectClonedObjectMove(card_view, card_view.element_id, "board");
         }
         else {
-            this.char_motion_view.draw(this.session, card_id);
-            this.effectClonedObjectMove(this.char_motion_view, `player_${pid}`, "board");
+            this.card_widget_view.draw(this.session, card_id);
+            this.effectClonedObjectMove(this.card_widget_view, `player_${pid}`, "board");
         }
     }
 
@@ -822,8 +822,8 @@ export class HtmlView {
     }
 
     private effectCardDeal(pid: PlayerId, card_id: CardId): void {
-        this.char_motion_view.draw(this.session, card_id);
-        this.effectClonedObjectMove(this.char_motion_view, `player_${pid}`, `card_${pid}_0`);
+        this.card_widget_view.draw(this.session, card_id);
+        this.effectClonedObjectMove(this.card_widget_view, `player_${pid}`, `card_${pid}_0`);
     }
 
     private effectCardDeals(player_id: PlayerId, card_ids: CardId[]): void {
