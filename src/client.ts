@@ -20,7 +20,7 @@ export abstract class Client {
     public connection: Connection;
     public session_id: number = 0;
     public matching_id: number = 0;
-    public mode: number = 0;
+    public mode: GameMode = 0;
     public player_id: PlayerId = 0;
     // TODO: user_id should be unique. 0 - 9 is reserved for NPCs.
     public user_id: string = String(Math.floor(Math.random() * 1000000) + 10);
@@ -31,9 +31,18 @@ export abstract class Client {
         this.connection = connection;
     }
 
+    public reset(): void {
+        this.session_id = 0;
+        this.matching_id = 0;
+        this.mode = 0;
+        this.player_id = 0;
+        this.step = 0;
+    }
+
     public matching(query: any): void {
         query.command = "matching";
         query.user_id = this.user_id;
+        this.mode = query["mode"];
         this.connection.matching(query, this.callbackMatching.bind(this));
     }
 

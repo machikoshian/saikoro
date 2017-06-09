@@ -24,6 +24,7 @@ const COLOR_RED: string = "#EF9A9A";
 const COLOR_PURPLE: string = "#B39DDB";
 
 enum Scene {
+    None,
     Matching,
     Deck,
     Game,
@@ -42,6 +43,7 @@ export class HtmlView {
     private cards_views: HtmlCardsView[] = [];
     private player_views: HtmlPlayerView[] = [];
     private back_button_view: HtmlViewObject = null;
+    private reset_button_view: HtmlViewObject = null;
     private board_view: HtmlViewObject = null;
     private landmarks_view: HtmlCardsView = null;
     private field_card_view: HtmlCardView = null;
@@ -50,11 +52,17 @@ export class HtmlView {
     private message_view: HtmlMessageView = null;
     private buttons_view: HtmlButtonsView = null;
     private clicakable_fiels_view: HtmlClickableFieldsView = null;
-    private scene: Scene = Scene.Matching;
+    private scene: Scene = Scene.None;
 
     constructor(client: Client) {
         this.client = client;
+        this.reset();
+    }
+
+    private reset():void {
+        this.client.reset();
         this.prev_session = new Session();
+        this.prev_step = -1;
     }
 
     public initView(column: number = 12, row: number = 5):void {
@@ -72,6 +80,9 @@ export class HtmlView {
         // buttons.
         this.back_button_view = new HtmlViewObject(document.getElementById("back"));
         this.back_button_view.addClickListener(() => { this.switchScene(Scene.Matching); });
+
+        this.reset_button_view = new HtmlViewObject(document.getElementById("reset"));
+        this.reset_button_view.addClickListener(() => { this.switchScene(Scene.Matching); });
 
         this.buttons_view = new HtmlButtonsView("buttons");
         this.buttons_view.dice1.addClickListener(() => { this.onClickDice(1, 0); });
@@ -136,6 +147,10 @@ export class HtmlView {
     }
 
     private switchScene(scene: Scene): void {
+        if (this.scene === scene) {
+            return;
+        }
+
         this.scene = scene;
 
         // Hide all
@@ -150,6 +165,8 @@ export class HtmlView {
         this.deck_char_view.none();
 
         this.buttons_view.none();
+        this.landmarks_view.none();
+        this.reset_button_view.none();
 
         for (let cards_view of this.cards_views) {
             cards_view.none();
@@ -179,6 +196,11 @@ export class HtmlView {
             this.board_view.show();
             if (this.session != null) {
                 this.drawSession(this.session);
+            }
+            this.landmarks_view.show();
+            if (this.client.mode === GameMode.OffLine ||
+                this.client.mode === GameMode.OnLineSingle) {
+                this.reset_button_view.show();
             }
             return;
         }
@@ -294,6 +316,10 @@ export class HtmlView {
             return;
         }
         let deck: string = (<HTMLInputElement>document.getElementById("deck")).value;
+
+        // TODO: Move this initializations to other place.
+        this.reset();
+
         this.client.matching(Request.matching(name, mode, deck));
         this.message_view.drawMessage("通信中です", this.getPlayerColor(this.client.player_id));
         this.switchScene(Scene.Game);
@@ -441,10 +467,6 @@ export class HtmlView {
 
     public updateView(session: Session, player_id: PlayerId): void {
         this.session = session;
-
-        if (this.scene === Scene.Matching) {  // TODO: Handle this in a different function.
-            this.switchScene(Scene.Game);
-        }
 
         // Show event animations.
         this.drawEvents();
@@ -616,6 +638,7 @@ export class HtmlView {
             let winner: string = session.getPlayer(session.getWinner()).name;
             message = `${name} の勝ちです`;
             this.message_view.drawMessage(message, this.getPlayerColor(session.getWinner()));
+            this.reset_button_view.show();
             return true;
         }
         return false;

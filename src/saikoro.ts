@@ -14,6 +14,11 @@ export class WebClient extends Client {
         this.view = new HtmlView(this);
     }
 
+    public reset(): void {
+        super.reset();
+        this.no_update_count = 0;
+    }
+
     public initBoard(): void {
         this.view.initView();
     }

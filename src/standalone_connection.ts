@@ -31,7 +31,7 @@ export class StandaloneConnection extends Connection {
             setTimeout(() => {
                 callback(JSON.stringify({ matching_id: matched.matching_id,
                                             player_id: matched.player_id,
-                                            session_id: matched.session_id }));
+                                           session_id: matched.session_id }));
             }, this.delay);
         });
     }
