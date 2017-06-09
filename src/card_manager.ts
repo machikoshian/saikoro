@@ -1,6 +1,6 @@
 import { Player, Board, PlayerId } from "./board";
-import { CardId, FacilityDataId, FacilityType, Facility,
-         Character, CharacterData, CharacterDataId, CharacterType } from "./facility";
+import { CardId, CardDataId, FacilityType, Facility,
+         Character, CharacterData, CharacterType } from "./facility";
 
 export class PlayerCards {
     private talon: CardId[];    // 山札
@@ -202,7 +202,7 @@ export class CardManager {
         );
     }
 
-    public addFacility(player_id: PlayerId, facility_data_id: FacilityDataId): boolean {
+    public addFacility(player_id: PlayerId, facility_data_id: CardDataId): boolean {
         let player_cards: PlayerCards = this.player_cards_list[player_id];
         if (player_cards == null) {
             return false;
@@ -218,7 +218,7 @@ export class CardManager {
         return true;
     }
 
-    public addCharacter(player_id: PlayerId, character_data_id: CharacterDataId): boolean {
+    public addCharacter(player_id: PlayerId, character_data_id: CardDataId): boolean {
         let player_cards: PlayerCards = this.player_cards_list[player_id];
         if (player_cards == null) {
             return false;
@@ -443,12 +443,12 @@ export class CardManager {
 }
 
 export class CardEffect {
-    readonly data_id: CharacterDataId;
+    readonly data_id: CardDataId;
     readonly character: Character;  // TODO: Nice to merge it to CardManager?
     readonly round: number;
     readonly turn: number;
 
-    constructor(data_id: CharacterDataId, round: number, turn: number) {
+    constructor(data_id: CardDataId, round: number, turn: number) {
         this.data_id = data_id;
         this.character = new Character(data_id);
         this.round = round;
@@ -489,7 +489,7 @@ export class EffectManager {
         return new EffectManager(cards);
     }
 
-    public addCard(data_id: CharacterDataId, round: number, turn: number): void {
+    public addCard(data_id: CardDataId, round: number, turn: number): void {
         this.cards.push(new CardEffect(data_id, round, turn));
     }
 

@@ -2,7 +2,7 @@ import { Phase, Session, Event, EventType } from "./session";
 import { PlayerCards } from "./card_manager";
 import { Player, Board, PlayerId } from "./board";
 import { CardId, FacilityType, Facility, CharacterType, Character,
-         CardData, FacilityDataId, CharacterDataId } from "./facility";
+         CardData, CardDataId } from "./facility";
 import { Dice, DiceResult } from "./dice";
 import { Client, Request } from "./client";
 import { DeckMaker } from "./deck_maker";
@@ -186,7 +186,7 @@ export class HtmlView {
         let i: number = 0;
         if (y === -1) {
             this.deck_char_view.setHighlight(x, true);
-            let data_ids: CharacterDataId[] = CardData.getAvailableCharacters();
+            let data_ids: CardDataId[] = CardData.getAvailableCharacters();
             for (; i < data_ids.length; ++i) {
                 let character: Character = new Character(data_ids[i]);
                 this.cards_views[0].cards[i].drawCharacterCard(character);
@@ -194,7 +194,7 @@ export class HtmlView {
         }
         else {
             this.clicakable_fiels_view.setClickable(this.clicked_field, true);
-            let data_ids: FacilityDataId[] = this.deck_maker.getAvailableFacilities(x);
+            let data_ids: CardDataId[] = this.deck_maker.getAvailableFacilities(x);
             for (; i < data_ids.length; ++i) {
                 let facility: Facility = new Facility(data_ids[i]);
                 this.cards_views[0].cards[i].drawFacilityCard(facility);
@@ -280,11 +280,11 @@ export class HtmlView {
             let [x, y]: [number, number] = this.clicked_field;
             if (y === -1) {
                 // Char
-                let data_id: CharacterDataId = CardData.getAvailableCharacters()[card];
+                let data_id: CardDataId = CardData.getAvailableCharacters()[card];
                 this.deck_maker.setCharacter(x, data_id);
             }
             else {
-                let data_id: FacilityDataId = this.deck_maker.getAvailableFacilities(x)[card];
+                let data_id: CardDataId = this.deck_maker.getAvailableFacilities(x)[card];
                 this.deck_maker.setFacility(x, y, data_id);
             }
             this.drawDeckBoard();

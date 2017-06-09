@@ -22,7 +22,7 @@ const CHARACTER_DATA: CharacterData[] = [
     new CharacterData(1002, "執事",   CharacterType.DrawCards, 0, {"value": 2}),
 ];
 
-export type CharacterDataId = number;
+export type CardDataId = number;
 
 export enum FacilityType {
     Gray,
@@ -82,12 +82,12 @@ export class CardData {
     static isFacility(data_id: number): boolean {
         return (0 <= data_id) && (data_id < FACILITY_DATA.length);
     }
-    static getRandomFacilityDataId(): FacilityDataId {
+    static getRandomFacilityDataId(): CardDataId {
         return Math.floor(Math.random() * FACILITY_DATA.length);
     }
 
-    static getAvailableFacilities(pip: number): FacilityDataId[] {
-        let facilities: FacilityDataId[] = [];
+    static getAvailableFacilities(pip: number): CardDataId[] {
+        let facilities: CardDataId[] = [];
         for (let i: number = 0; i < FACILITY_DATA.length; ++i) {
             let facility: FacilityData = FACILITY_DATA[i];
             for (let s: number = 0; s < facility.size; ++s) {
@@ -104,12 +104,12 @@ export class CardData {
         return ((CHARACTER_DATA_BASE <= data_id) &&
                 (data_id < CHARACTER_DATA_BASE + CHARACTER_DATA.length));
     }
-    static getRandomCharacterDataId(): CharacterDataId {
+    static getRandomCharacterDataId(): CardDataId {
         return Math.floor(Math.random() * CHARACTER_DATA.length) + CHARACTER_DATA_BASE;
     }
 
-    static getAvailableCharacters(): CharacterDataId[] {
-        let data_ids: CharacterDataId[] = [];
+    static getAvailableCharacters(): CardDataId[] {
+        let data_ids: CardDataId[] = [];
         for (let i: number = 0; i < CHARACTER_DATA.length; ++i) {
             data_ids.push(CHARACTER_DATA_BASE + i);
         }
@@ -117,11 +117,10 @@ export class CardData {
     }
 }
 
-export type FacilityDataId = number;
 export type CardId = number;
 
 export class Facility {
-    readonly data_id: FacilityDataId;
+    readonly data_id: CardDataId;
     readonly name: string;
     readonly size: number;
     readonly area: number[];
@@ -129,7 +128,7 @@ export class Facility {
     readonly type: FacilityType;
     readonly property: {};
 
-    constructor(data_id: FacilityDataId) {
+    constructor(data_id: CardDataId) {
         let data: FacilityData;
         if (data_id >= LANDMARK_DATA_BASE) {
             data = LANDMARK_DATA[data_id - LANDMARK_DATA_BASE];
@@ -194,13 +193,13 @@ export class Facility {
 }
 
 export class Character {
-    readonly data_id: CharacterDataId;
+    readonly data_id: CardDataId;
     readonly name: string;
     readonly type: CharacterType;
     readonly round: number;
     readonly property: {};
 
-    constructor(data_id: CharacterDataId) {
+    constructor(data_id: CardDataId) {
         let data: CharacterData = CHARACTER_DATA[data_id - CHARACTER_DATA_BASE];
         this.data_id = data_id;
         this.name = data.name;

@@ -1,7 +1,7 @@
 import { Dice, DiceResult } from "./dice";
 import { Player, Board, PlayerId } from "./board";
-import { CardId, FacilityDataId, FacilityType, Facility,
-         Character, CharacterData, CharacterDataId, CharacterType } from "./facility";
+import { CardId, CardDataId, FacilityType, Facility,
+         Character, CharacterData, CharacterType } from "./facility";
 import { shuffle } from "./utils";
 import { CardManager, EffectManager, PlayerCards } from "./card_manager";
 
@@ -246,11 +246,11 @@ export class Session {
         return player_id;
     }
 
-    public addFacility(player_id: PlayerId, facility_data_id: FacilityDataId): boolean {
+    public addFacility(player_id: PlayerId, facility_data_id: CardDataId): boolean {
         return this.card_manager.addFacility(player_id, facility_data_id);
     }
 
-    public addCharacter(player_id: PlayerId, character_data_id: CharacterDataId): boolean {
+    public addCharacter(player_id: PlayerId, character_data_id: CardDataId): boolean {
         return this.card_manager.addCharacter(player_id, character_data_id);
     }
 

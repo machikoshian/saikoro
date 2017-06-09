@@ -1,7 +1,7 @@
 import { Dice } from "./dice";
 import { Session } from "./session";
 import { Board, PlayerId } from "./board";
-import { CardId, FacilityDataId, FacilityType, Facility, CharacterDataId, CardData } from "./facility";
+import { CardId, CardDataId, FacilityType, Facility, CardData } from "./facility";
 import { AutoPlay } from "./auto_play";
 import { GameMode } from "./protocol";
 

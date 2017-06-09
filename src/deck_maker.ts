@@ -1,11 +1,11 @@
-import { CardData, CardId, Facility, FacilityDataId, Character, CharacterDataId } from "./facility";
+import { CardData, CardId, Facility, CardDataId, Character } from "./facility";
 import { Board } from "./board";
 
 export class DeckMaker {
-    private cards: { [key: number]: FacilityDataId }  = {};  // key is CardId.
+    private cards: { [key: number]: CardDataId }  = {};  // key is CardId.
     readonly board: Board = new Board();
-    readonly chars: CharacterDataId[] = [-1, -1, -1, -1, -1];
-    private availables: FacilityDataId[][];
+    readonly chars: CardDataId[] = [-1, -1, -1, -1, -1];
+    private availables: CardDataId[][];
 
     constructor() {
         this.availables = [];
@@ -14,11 +14,11 @@ export class DeckMaker {
         }
     }
 
-    public getAvailableFacilities(x: number): FacilityDataId[] {
+    public getAvailableFacilities(x: number): CardDataId[] {
         return this.availables[x];
     }
 
-    public setFacility(x: number, y: number, data_id: FacilityDataId): boolean {
+    public setFacility(x: number, y: number, data_id: CardDataId): boolean {
         let facility: Facility = new Facility(data_id);  // TODO: Can refer FACILITY_DATA instead?
 
         // Check the facility's area.
@@ -54,8 +54,8 @@ export class DeckMaker {
         });
     }
 
-    public getDeck(): FacilityDataId[] {
-        let deck: FacilityDataId[] = [];
+    public getDeck(): CardDataId[] {
+        let deck: CardDataId[] = [];
         for (let key of Object.keys(this.cards)) {
             deck.push(this.cards[key]);
         }
@@ -67,12 +67,12 @@ export class DeckMaker {
         return deck;
     }
 
-    public setCharacter(x: number, data_id: CharacterDataId): void {
+    public setCharacter(x: number, data_id: CardDataId): void {
         this.chars[x] = data_id;
     }
 
     public getCharacter(x: number): Character {
-        let data_id: CharacterDataId = this.chars[x];
+        let data_id: CardDataId = this.chars[x];
         if (data_id === -1) {
             return null;
         }
