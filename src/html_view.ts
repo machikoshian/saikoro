@@ -25,6 +25,7 @@ const COLOR_PURPLE: string = "#B39DDB";
 
 enum Scene {
     Matching,
+    Deck,
     Game,
 }
 
@@ -126,30 +127,36 @@ export class HtmlView {
 
     private switchScene(scene: Scene): void {
         this.scene = scene;
+
+        // Hide all
+        document.getElementById("matching").style.display = "none";
+        document.getElementById("players").style.display = "none";
+        for (let player_view of this.player_views) {
+            player_view.none();
+        }
+        this.message_view.none();
+
+        this.deck_char_view.none();
+
+        this.buttons_view.none();
+
+        for (let cards_view of this.cards_views) {
+            cards_view.none();
+        }
+        this.field_card_view.none();
+
         if (scene === Scene.Matching) {
-            // Hide components for game.
-            document.getElementById("players").style.display = "none";
-            for (let player_view of this.player_views) {
-                player_view.none();
-            }
-
-            this.message_view.none();
-            this.buttons_view.none();
-
-            for (let cards_view of this.cards_views) {
-                cards_view.none();
-            }
+            document.getElementById("matching").style.display = "";
             this.cards_views[0].show();
+            return;
+        }
 
-            this.landmarks_view.none();
-            this.field_card_view.none();
+        if (scene === Scene.Deck) {
+            this.cards_views[0].show();
+            return;
         }
 
         if (scene === Scene.Game) {
-            // Hide the matching view and show the board view.
-            document.getElementById("matching").style.display = "none";
-            this.deck_char_view.none();
-
             // Show components for game.
             document.getElementById("players").style.display = "";
 
