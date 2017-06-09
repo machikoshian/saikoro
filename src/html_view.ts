@@ -11,7 +11,7 @@ import { HtmlViewObject, HtmlCardsView, HtmlCardView, HtmlPlayerView,
          HtmlMessageView, HtmlButtonsView,HtmlClickableFieldsView,
          HtmlDeckCharView, } from "./html_view_parts";
 
-const COLOR_FIELD: string = "#EFF0D1";
+const COLOR_FIELD: string = "#FFF8E1";
 const COLOR_LANDMARK: string = "#B0BEC5";
 const COLOR_CLICKABLE: string = "#FFCA28";
 const COLOR_HIGHTLIGHT_CARD: string = "#FFE082";
