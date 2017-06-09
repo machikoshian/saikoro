@@ -41,6 +41,8 @@ export class HtmlView {
     private clicked_field: [number, number] = [0, 0];
     private cards_views: HtmlCardsView[] = [];
     private player_views: HtmlPlayerView[] = [];
+    private back_button_view: HtmlViewObject = null;
+    private board_view: HtmlViewObject = null;
     private landmarks_view: HtmlCardsView = null;
     private field_card_view: HtmlCardView = null;
     private card_widget_view: HtmlCardView = null;
@@ -58,6 +60,8 @@ export class HtmlView {
     public initView(column: number = 12, row: number = 5):void {
         // Add click listeners.
         // Matching.
+        document.getElementById("matching_button_deck").addEventListener(
+            "click", () => { this.switchScene(Scene.Deck); });
         document.getElementById("matching_button_offline").addEventListener(
             "click", () => { this.onClickMatching(GameMode.OffLine); });
         document.getElementById("matching_button_online").addEventListener(
@@ -66,6 +70,9 @@ export class HtmlView {
             "click", () => { this.onClickMatching(GameMode.OnLine2Players); });
 
         // buttons.
+        this.back_button_view = new HtmlViewObject(document.getElementById("back"));
+        this.back_button_view.addClickListener(() => { this.switchScene(Scene.Matching); });
+
         this.buttons_view = new HtmlButtonsView("buttons");
         this.buttons_view.dice1.addClickListener(() => { this.onClickDice(1, 0); });
         this.buttons_view.dice2.addClickListener(() => { this.onClickDice(2, 0); });
@@ -80,6 +87,9 @@ export class HtmlView {
             let player_view: HtmlPlayerView = new HtmlPlayerView(pid);
             this.player_views.push(player_view);
         }
+
+        // Board
+        this.board_view = new HtmlViewObject(document.getElementById("board"));
 
         // HtmlDeckCharView
         this.deck_char_view = new HtmlDeckCharView("deck_char");
@@ -130,12 +140,13 @@ export class HtmlView {
 
         // Hide all
         document.getElementById("matching").style.display = "none";
+        this.back_button_view.none();
         document.getElementById("players").style.display = "none";
         for (let player_view of this.player_views) {
             player_view.none();
         }
         this.message_view.none();
-
+        this.board_view.none();
         this.deck_char_view.none();
 
         this.buttons_view.none();
@@ -147,12 +158,15 @@ export class HtmlView {
 
         if (scene === Scene.Matching) {
             document.getElementById("matching").style.display = "";
-            this.cards_views[0].show();
             return;
         }
 
         if (scene === Scene.Deck) {
+            this.back_button_view.show();
             this.cards_views[0].show();
+            this.board_view.show();
+            this.cards_views[0].show();
+            this.deck_char_view.show();
             return;
         }
 
@@ -162,6 +176,7 @@ export class HtmlView {
 
             // Message view.
             this.message_view.show();
+            this.board_view.show();
             if (this.session != null) {
                 this.drawSession(this.session);
             }
@@ -215,8 +230,11 @@ export class HtmlView {
 
     private onClickField(x: number, y: number): void {
         console.log(`clicked: field_${x}_${y}`);
-        // Event on matching.
         if (this.scene === Scene.Matching) {
+            return;
+        }
+
+        if (this.scene === Scene.Deck) {
             this.onClickDeckField(x, y);
             return;
         }
@@ -284,6 +302,9 @@ export class HtmlView {
     private onClickCard(player: number, card: number): void {
         // Event on matching.
         if (this.scene === Scene.Matching) {
+            return;
+        }
+        if (this.scene === Scene.Deck) {
             let [x, y]: [number, number] = this.clicked_field;
             if (y === -1) {
                 // Char

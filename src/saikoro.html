@@ -43,15 +43,22 @@
       background-color: #EEEEEE; text-align: center;
       border-style: none; border-radius: 5px; border-width: 1px;
     }
-    #deck_char {
-      font-size: 20px; width: 260px;
+    .ui_box {
+      font-size: 20px;
       margin-top: 10px;
       padding: 4px;
       color: #666666;
       border-radius: 7px; background-color: #FFE082;
+      display: inline-block;
+    }
+    #deck_char {
+      width: 260px;
+      margin-bottom: 10px;
     }
     span.deck_char {
       width: 50px; height: 50px; background-color: #FFF8E1;
+      font-size: 17px;
+      text-align: center;
       vertical-align: top;
       border: solid 1px #FFE082;
       display: inline-block;
@@ -92,32 +99,92 @@
     }
     .menu_button {
       font-size: 20px;
+      margin: 5px;
+      padding: 10px;
+      padding-left: 30px;
+      vertical-align: middle;
       color: #666666;
       display: inline-block;
-      width: 300px;
+      width: 250px;
       height: 60px;
       border-radius:7px;
       background-color: #FFCA28;
+      background-color: #FF9800;
+      background-color: #FF9E80;
+    }
+    #matching {
+      margin: 70px;
+    }
+    #matching .ui_box {
+      margin: 5px;
+      padding: 10px;
+      width: 270px;
+    }
+    .ui_button {
+      font-size: 20px;
+      margin: 5px;
+      padding: 10px;
+      color: #666666;
+      display: inline-block;
+      border-radius:7px;
+      background-color: #FFCA28;
+      text-align: center;
+    }
+    #matching_button_deck {
+      width: 100px;
+    }
+    .menu_button small {
+      font-size: 10px;
+    }
+    .title {
+      color: white;
+      font-weight: bold;
+      font-size: 50px;
+      text-shadow: 2px 2px 1px #444,
+      -2px 2px 1px #444,
+      2px -2px 1px #444,
+      -2px -2px 1px #444;
     }
     </style>
     <script type="text/javascript" src="saikoro_client.js"></script>
   </head>
   <body>
     <div id="matching">
-      名前: <input id="matching_name" type="text" name="name" value="コロまる"><br />
+      <div class="title">
+        <font color="#EF5350">さ</font>いころ！
+      </div>
+
+      <div class="ui_box">
+        名前<br />
+        <input id="matching_name" type="text" name="name" value="コロまる">
+      </div>
+      <div id="matching_button_deck" class="ui_button">
+        デッキ<br />作成
+      </div>
       <br />
-      <input id="matching_button_offline" class="menu_button" type="button" value="一人プレイ (オフライン)"><br />
-      <small>- Internet Explorer では動きません。</small><br />
+      <hr>
       <br />
-      <input id="matching_button_online" class="menu_button" type="button" value="一人プレイ (ネット通信)"><br />
+      <div id="matching_button_offline" class="menu_button">
+        一人プレイ (オフライン) <br />
+        <small>Internet Explorer では動きません。</small><br />
+      </div>
       <br />
-      <input id="matching_button_2players" class="menu_button" type="button" value="二人プレイ（実験中）"><br />
-      <small>- 同時にプレイできる人が必要です。</small><br />
+      <div id="matching_button_online" class="menu_button">
+        一人プレイ (ネット通信) <br />
+        <small>オフライン版と機能は同じです。</small><br />
+      </div>
       <br />
-      ふっかつのじゅもん<br />
+      <div id="matching_button_2players" class="menu_button">
+        二人プレイ（実験中）<br />
+        <small>同時にプレイできる人が必要です。</small>
+      </div>
+      <br />
+      <br />
+      でっきのじゅもん<br />
       <textarea id="deck" name="deck" size="50" value=""></textarea><br />
-      <hr />
-      デッキ作成
+    </div>
+    <div id="back" class="ui_button">
+      ← 戻る
     </div>
     <div id="game">
       <table id="players">
@@ -169,7 +236,7 @@
           <tr><th id="click_0"></th><th id="click_1"></th><th id="click_2"></th><th id="click_3"></th><th id="click_4"></th><th id="click_5"></th><th id="click_6"></th><th id="click_7"></th><th id="click_8"></th><th id="click_9"></th><th id="click_10"></th><th id="click_11"></th></tr>
         </tbody></table>
       </div>
-      <div id="deck_char">
+      <div id="deck_char" class="ui_box">
         キャラカード<br />
         <span id="deck_char_0" class="deck_char"></span><span id="deck_char_1" class="deck_char"></span><span id="deck_char_2" class="deck_char"></span><span id="deck_char_3" class="deck_char"></span><span id="deck_char_4" class="deck_char"></span>
       </div>
