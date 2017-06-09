@@ -5,7 +5,7 @@ import { PlayerCards } from "./card_manager";
 import { DiceResult } from "./dice";
 
 // TODO: Move it to a new file for util.
-const COLOR_FIELD: string = "#EFF0D1";
+const COLOR_FIELD: string = "#FFE082";
 const COLOR_LANDMARK: string = "#B0BEC5";
 const COLOR_CLICKABLE: string = "#FFCA28";
 const COLOR_INACTIVE: string = "#EEEEEE";
@@ -379,7 +379,7 @@ export class HtmlDeckCharView extends HtmlViewObject {
     }
 
     public setHighlight(i: number, highlight: boolean): void {
-        this.fields[i].setColor(highlight ? COLOR_CLICKABLE : COLOR_INACTIVE);
+        this.fields[i].setColor(highlight ? COLOR_CLICKABLE : "#FFA000");
     }
 
     public drawCharacter(i: number, character: Character): void {
