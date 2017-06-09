@@ -379,7 +379,7 @@ export class HtmlDeckCharView extends HtmlViewObject {
     }
 
     public setHighlight(i: number, highlight: boolean): void {
-        this.fields[i].setColor(highlight ? COLOR_CLICKABLE : COLOR_INACTIVE);
+        this.fields[i].setColor(highlight ? COLOR_CLICKABLE : "#FFA000");
     }
 
     public drawCharacter(i: number, character: Character): void {
