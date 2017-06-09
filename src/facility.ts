@@ -180,13 +180,13 @@ export class Facility {
             case FacilityType.Gray:
                 return "ランドマーク";
             case FacilityType.Blue:
-                return `${this.property["value"]}コイン稼ぐ。\n誰のターンでも。`;
+                return `${this.property["value"]}コイン稼ぐ\n誰のターンでも`;
             case FacilityType.Green:
-                return `${this.property["value"]}コイン稼ぐ。\n自分のターンのみ。`;
+                return `${this.property["value"]}コイン稼ぐ\n自分のターンのみ`;
             case FacilityType.Red:
-                return `${this.property["value"]}コイン奪う。\n自分以外のターンのみ。`;
+                return `${this.property["value"]}コイン奪う\n自分以外のターンのみ`;
             case FacilityType.Purple:
-                return `${this.property["value"]}コイン奪う。\n自分のターンのみ。`;
+                return `${this.property["value"]}コイン奪う\n自分のターンのみ`;
         }
         return "";
     }
@@ -236,7 +236,7 @@ export class Character {
             case CharacterType.DiceDelta:
                 let delta: number = this.property["delta"];
                 let delta_str: string = ((delta > 0) ? "+" : "") + delta;
-                return `サイコロの目を${delta_str}する。\n${this.round}ラウンド`;
+                return `サイコロの目を${delta_str}する\n${this.round}ラウンド`;
             case CharacterType.DrawCards:
                 let value: number = this.property["value"];
                 return `山札からカードを${value}枚引く`;

@@ -3,6 +3,8 @@
 * 建設時にカードとクリックエリアが消えない。
 * 選択がなくてもキャラカードボタンが押せるタイミングがある。
 * 自分のイベントは通信の前に演出する。
+* 全画面化
+* リセットボタン
 
 * MatchedData から session をはずす。
 * event.target_card_ids を event.buildFacility でも使う。
@@ -24,7 +26,6 @@
 * 赤の評価順をプレーヤーから左回りに変更。
 * Firebase.onDisconnect への対応
 * 施設データを JSON で管理
-* デッキ作成のサポート
 * html table から div への移行
 
 * cocos2d-js のチュートリアル
