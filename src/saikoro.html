@@ -76,18 +76,27 @@
     .card_description {
       font-size: 12px; height: 70px;
     }
+    .menu_button {
+      font-size: 20px;
+      color: #666666;
+      display: inline-block;
+      width: 300px;
+      height: 60px;
+      background-color: #EFF0D1;
+      border-radius: 10px; background-color: #FFCA28;
+    }
     </style>
     <script type="text/javascript" src="saikoro_client.js"></script>
   </head>
   <body>
     <div id="matching">
       名前: <input id="matching_name" type="text" name="name" value="コロまる"><br />
-      <input id="matching_button_offline" type="button" value="一人プレイ (オフライン)">
+      <input id="matching_button_offline" class="menu_button" type="button" value="一人プレイ (オフライン)">
       <small>- Internet Explorer では動きません。</small><br />
       <br />
-      <input id="matching_button_online" type="button" value="一人プレイ (ネット通信)"><br />
+      <input id="matching_button_online" class="menu_button" type="button" value="一人プレイ (ネット通信)"><br />
       <br />
-      <input id="matching_button_2players" type="button" value="二人プレイ（実験中）">
+      <input id="matching_button_2players" class="menu_button" type="button" value="二人プレイ（実験中）">
       <small>- 同時にプレイできる人が必要です。</small><br />
       <br />
       ふっかつのじゅもん<br />
