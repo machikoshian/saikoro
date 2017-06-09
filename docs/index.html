@@ -3,6 +3,9 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="width=670" />
+    <!-- webapp modes -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Saikoro</title>
     <style type="text/css">
     .none { display: none; }
@@ -89,6 +92,7 @@
       width: 98px; height: 140px;
       background-color: #90CAF9;
       border: solid 3px #EEEEEE;
+      border-radius: 3px;
       margin: 0px;
     }
     .card_description {
@@ -120,6 +124,10 @@
       margin: 5px;
       padding: 10px;
       width: 270px;
+    }
+    #matching hr {
+      margin-left: 5px;
+      width: 420px;
     }
     .ui_button {
       font-size: 20px;
@@ -309,6 +317,9 @@
           <table id="landmark_4" class="card"><tr><td class="card_name">🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
         </span>
       </div>
+    </div>
+    <div id="reset" class="ui_button">
+      ← リセット
     </div>
     <table id="field_card" class="card"><tr><td class="card_name">🏬</td></tr><tr><td class="card_cost">250</td></tr><tr><td class="card_description">説明</td></tr></table>
     <div class="none">

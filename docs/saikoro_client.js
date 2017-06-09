@@ -1103,9 +1103,17 @@ class Client {
         this.step = 0;
         this.connection = connection;
     }
+    reset() {
+        this.session_id = 0;
+        this.matching_id = 0;
+        this.mode = 0;
+        this.player_id = 0;
+        this.step = 0;
+    }
     matching(query) {
         query.command = "matching";
         query.user_id = this.user_id;
+        this.mode = query["mode"];
         this.connection.matching(query, this.callbackMatching.bind(this));
     }
     callbackMatching(response) {
@@ -1386,6 +1394,10 @@ class WebClient extends __WEBPACK_IMPORTED_MODULE_0__client__["a" /* Client */] 
         this.no_update_count = 0;
         this.callback = this.callbackSession.bind(this);
         this.view = new __WEBPACK_IMPORTED_MODULE_2__html_view__["a" /* HtmlView */](this);
+    }
+    reset() {
+        super.reset();
+        this.no_update_count = 0;
     }
     initBoard() {
         this.view.initView();
@@ -2202,9 +2214,10 @@ const COLOR_RED = "#EF9A9A";
 const COLOR_PURPLE = "#B39DDB";
 var Scene;
 (function (Scene) {
-    Scene[Scene["Matching"] = 0] = "Matching";
-    Scene[Scene["Deck"] = 1] = "Deck";
-    Scene[Scene["Game"] = 2] = "Game";
+    Scene[Scene["None"] = 0] = "None";
+    Scene[Scene["Matching"] = 1] = "Matching";
+    Scene[Scene["Deck"] = 2] = "Deck";
+    Scene[Scene["Game"] = 3] = "Game";
 })(Scene || (Scene = {}));
 class HtmlView {
     constructor(client) {
@@ -2219,6 +2232,7 @@ class HtmlView {
         this.cards_views = [];
         this.player_views = [];
         this.back_button_view = null;
+        this.reset_button_view = null;
         this.board_view = null;
         this.landmarks_view = null;
         this.field_card_view = null;
@@ -2227,11 +2241,17 @@ class HtmlView {
         this.message_view = null;
         this.buttons_view = null;
         this.clicakable_fiels_view = null;
-        this.scene = Scene.Matching;
+        this.scene = Scene.None;
         this.client = client;
+        this.reset();
+    }
+    reset() {
+        this.client.reset();
         this.prev_session = new __WEBPACK_IMPORTED_MODULE_0__session__["a" /* Session */]();
+        this.prev_step = -1;
     }
     initView(column = 12, row = 5) {
+        document.documentElement.webkitRequestFullScreen();
         // Add click listeners.
         // Matching.
         document.getElementById("matching_button_deck").addEventListener("click", () => { this.switchScene(Scene.Deck); });
@@ -2241,6 +2261,8 @@ class HtmlView {
         // buttons.
         this.back_button_view = new __WEBPACK_IMPORTED_MODULE_5__html_view_parts__["a" /* HtmlViewObject */](document.getElementById("back"));
         this.back_button_view.addClickListener(() => { this.switchScene(Scene.Matching); });
+        this.reset_button_view = new __WEBPACK_IMPORTED_MODULE_5__html_view_parts__["a" /* HtmlViewObject */](document.getElementById("reset"));
+        this.reset_button_view.addClickListener(() => { this.switchScene(Scene.Matching); });
         this.buttons_view = new __WEBPACK_IMPORTED_MODULE_5__html_view_parts__["b" /* HtmlButtonsView */]("buttons");
         this.buttons_view.dice1.addClickListener(() => { this.onClickDice(1, 0); });
         this.buttons_view.dice2.addClickListener(() => { this.onClickDice(2, 0); });
@@ -2291,6 +2313,9 @@ class HtmlView {
         this.switchScene(Scene.Matching);
     }
     switchScene(scene) {
+        if (this.scene === scene) {
+            return;
+        }
         this.scene = scene;
         // Hide all
         document.getElementById("matching").style.display = "none";
@@ -2303,6 +2328,8 @@ class HtmlView {
         this.board_view.none();
         this.deck_char_view.none();
         this.buttons_view.none();
+        this.landmarks_view.none();
+        this.reset_button_view.none();
         for (let cards_view of this.cards_views) {
             cards_view.none();
         }
@@ -2327,6 +2354,11 @@ class HtmlView {
             this.board_view.show();
             if (this.session != null) {
                 this.drawSession(this.session);
+            }
+            this.landmarks_view.show();
+            if (this.client.mode === __WEBPACK_IMPORTED_MODULE_4__protocol__["a" /* GameMode */].OffLine ||
+                this.client.mode === __WEBPACK_IMPORTED_MODULE_4__protocol__["a" /* GameMode */].OnLineSingle) {
+                this.reset_button_view.show();
             }
             return;
         }
@@ -2422,11 +2454,16 @@ class HtmlView {
         this.client.sendRequest(__WEBPACK_IMPORTED_MODULE_2__client__["b" /* Request */].endTurn());
     }
     onClickMatching(mode) {
+        //document.documentElement.requestFullscreen();
+        document.body.webkitRequestFullScreen();
+        //　requestFullscreen();
         let name = document.getElementById("matching_name").value;
         if (name.length === 0) {
             return;
         }
         let deck = document.getElementById("deck").value;
+        // TODO: Move this initializations to other place.
+        this.reset();
         this.client.matching(__WEBPACK_IMPORTED_MODULE_2__client__["b" /* Request */].matching(name, mode, deck));
         this.message_view.drawMessage("通信中です", this.getPlayerColor(this.client.player_id));
         this.switchScene(Scene.Game);
@@ -2551,9 +2588,6 @@ class HtmlView {
     }
     updateView(session, player_id) {
         this.session = session;
-        if (this.scene === Scene.Matching) {
-            this.switchScene(Scene.Game);
-        }
         // Show event animations.
         this.drawEvents();
     }
@@ -2699,6 +2733,7 @@ class HtmlView {
             let winner = session.getPlayer(session.getWinner()).name;
             message = `${name} の勝ちです`;
             this.message_view.drawMessage(message, this.getPlayerColor(session.getWinner()));
+            this.reset_button_view.show();
             return true;
         }
         return false;
