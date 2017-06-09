@@ -2251,7 +2251,6 @@ class HtmlView {
         this.prev_step = -1;
     }
     initView(column = 12, row = 5) {
-        document.documentElement.webkitRequestFullScreen();
         // Add click listeners.
         // Matching.
         document.getElementById("matching_button_deck").addEventListener("click", () => { this.switchScene(Scene.Deck); });
@@ -2454,9 +2453,9 @@ class HtmlView {
         this.client.sendRequest(__WEBPACK_IMPORTED_MODULE_2__client__["b" /* Request */].endTurn());
     }
     onClickMatching(mode) {
-        //document.documentElement.requestFullscreen();
-        document.body.webkitRequestFullScreen();
-        //　requestFullscreen();
+        if (document.body.webkitRequestFullScreen) {
+            document.body.webkitRequestFullScreen();
+        }
         let name = document.getElementById("matching_name").value;
         if (name.length === 0) {
             return;
