@@ -2923,6 +2923,7 @@ class HtmlView {
 const COLOR_FIELD = "#EFF0D1";
 const COLOR_LANDMARK = "#B0BEC5";
 const COLOR_CLICKABLE = "#FFCA28";
+const COLOR_INACTIVE = "#EEEEEE";
 const COLOR_HIGHTLIGHT_CARD = "#FFE082";
 const COLOR_CHARACTER = "#FFF9C4";
 const COLOR_PLAYERS = ["#909CC2", "#D9BDC5", "#90C290", "#9D8189"];
@@ -3242,7 +3243,7 @@ class HtmlDeckCharView extends HtmlViewObject {
         this.callback(i);
     }
     setHighlight(i, highlight) {
-        this.fields[i].setClickable(highlight);
+        this.fields[i].setColor(highlight ? COLOR_CLICKABLE : "#FFA000");
     }
     drawCharacter(i, character) {
         let value = "";
