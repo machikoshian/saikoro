@@ -8,6 +8,7 @@ import { DiceResult } from "./dice";
 const COLOR_FIELD: string = "#EFF0D1";
 const COLOR_LANDMARK: string = "#B0BEC5";
 const COLOR_CLICKABLE: string = "#FFCA28";
+const COLOR_INACTIVE: string = "#EEEEEE";
 const COLOR_HIGHTLIGHT_CARD: string = "#FFE082";
 const COLOR_CHARACTER: string = "#FFF9C4";
 const COLOR_PLAYERS: string[] = ["#909CC2", "#D9BDC5", "#90C290", "#9D8189"];
@@ -378,7 +379,7 @@ export class HtmlDeckCharView extends HtmlViewObject {
     }
 
     public setHighlight(i: number, highlight: boolean): void {
-        this.fields[i].setClickable(highlight);
+        this.fields[i].setColor(highlight ? COLOR_CLICKABLE : COLOR_INACTIVE);
     }
 
     public drawCharacter(i: number, character: Character): void {
