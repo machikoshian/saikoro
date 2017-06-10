@@ -11,5 +11,7 @@ echo "Building server"
 tsc --outDir ./out/server --module commonjs --target es6 --sourceMap src/server.ts || exit
 cp ./serviceAccountKey.json ./out/server
 
-echo "open http://localhost:3156/saikoro.html"
-DEBUG=1 node out/server/server.js
+if [ "$1" != "build" ] {
+    echo "open http://localhost:3156/saikoro.html"
+    DEBUG=1 node out/server/server.js
+}
