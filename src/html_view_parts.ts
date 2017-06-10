@@ -364,7 +364,7 @@ export class HtmlBoardView extends HtmlViewObject {
     readonly clickable_fields: HtmlClickableFieldsView;
     public callback: (x: number, y: number) => void;
 
-    constructor(element_id: string, column: number, row: number) {
+    constructor(element_id: string, row: number, column: number) {
         super(document.getElementById(element_id));
 
         this.clickable_fields = new HtmlClickableFieldsView("click", row, column);

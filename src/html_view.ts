@@ -70,7 +70,7 @@ export class HtmlView {
         }
     }
 
-    public initView(column: number = 12, row: number = 5): void {
+    public initView(row: number = 5, column: number = 12): void {
         // Add click listeners.
         // Matching.
         document.getElementById("matching_button_deck").addEventListener(
@@ -108,7 +108,7 @@ export class HtmlView {
         }
 
         // Board
-        this.board_view = new HtmlBoardView("board", column, row);
+        this.board_view = new HtmlBoardView("board", row, column);
         this.board_view.callback = (x, y) => {
             this.onClickField(x, y);
         }
