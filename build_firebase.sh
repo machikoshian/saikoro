@@ -4,6 +4,7 @@
 echo "Building firebase client"
 webpack --config webpack.config.firebase.js || exit
 cp ./src/saikoro.html ./public/index.html
+cp ./src/icon.png ./public/icon.png
 
 # Firebase functions (Node.js)
 echo "Building firebase functions"

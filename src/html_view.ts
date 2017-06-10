@@ -311,10 +311,6 @@ export class HtmlView {
     }
 
     private onClickMatching(mode: GameMode): void {
-        if (document.body.webkitRequestFullScreen) {
-            document.body.webkitRequestFullScreen();
-        }
-
         let name: string = (<HTMLInputElement>document.getElementById("matching_name")).value;
         if (name.length === 0) {
             return;

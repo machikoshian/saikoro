@@ -4,6 +4,7 @@
 echo "Building http client"
 webpack --config webpack.config.http.js || exit
 cp ./src/saikoro.html ./out/client/
+cp ./src/icon.png ./out/client/icon.png
 
 # Server side (Node.js)
 echo "Building server"
