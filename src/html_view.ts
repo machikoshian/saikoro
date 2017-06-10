@@ -39,7 +39,7 @@ export class HtmlView {
     private clicked_card_view: HtmlCardView = null;
     private deck_maker: DeckMaker = new DeckMaker();
     private deck_char_view: HtmlDeckCharView = null;
-    private clicked_field: [number, number] = [0, 0];
+    private clicked_field: [number, number] = [-1, -1];
     private cards_views: HtmlCardsView[] = [];
     private player_views: HtmlPlayerView[] = [];
     private back_button_view: HtmlViewObject = null;
@@ -51,7 +51,7 @@ export class HtmlView {
     private money_motion_view: HtmlViewObject = null;
     private message_view: HtmlMessageView = null;
     private buttons_view: HtmlButtonsView = null;
-    private clicakable_fiels_view: HtmlClickableFieldsView = null;
+    private clickable_fields_view: HtmlClickableFieldsView = null;
     private scene: Scene = Scene.None;
 
     constructor(client: Client) {
@@ -59,13 +59,19 @@ export class HtmlView {
         this.reset();
     }
 
-    private reset():void {
+    private reset(): void {
         this.client.reset();
         this.prev_session = new Session();
         this.prev_step = -1;
+        this.clicked_field = [-1, -1];
+
+        if (this.event_drawer_timer) {
+            clearInterval(this.event_drawer_timer);
+            this.event_drawer_timer = null;
+        }
     }
 
-    public initView(column: number = 12, row: number = 5):void {
+    public initView(column: number = 12, row: number = 5): void {
         // Add click listeners.
         // Matching.
         document.getElementById("matching_button_deck").addEventListener(
@@ -82,7 +88,10 @@ export class HtmlView {
         this.back_button_view.addClickListener(() => { this.switchScene(Scene.Matching); });
 
         this.reset_button_view = new HtmlViewObject(document.getElementById("reset"));
-        this.reset_button_view.addClickListener(() => { this.switchScene(Scene.Matching); });
+        this.reset_button_view.addClickListener(() => {
+            this.reset();
+            this.switchScene(Scene.Matching);
+        });
 
         this.buttons_view = new HtmlButtonsView("buttons");
         this.buttons_view.dice1.addClickListener(() => { this.onClickDice(1, 0); });
@@ -129,10 +138,10 @@ export class HtmlView {
         this.field_card_view = new HtmlCardView("field_card");
 
         // Fields
-        this.clicakable_fiels_view = new HtmlClickableFieldsView("click", row, column);
+        this.clickable_fields_view = new HtmlClickableFieldsView("click", row, column);
         for (let y: number = 0; y < row; ++y) {
             for (let x: number = 0; x < column; ++x) {
-                this.clicakable_fiels_view.fields[x][y].addClickListener(
+                this.clickable_fields_view.fields[x][y].addClickListener(
                     () => { this.onClickField(x, y); });
             }
         }
@@ -182,8 +191,12 @@ export class HtmlView {
             this.back_button_view.show();
             this.cards_views[0].show();
             this.board_view.show();
-            this.cards_views[0].show();
             this.deck_char_view.show();
+
+            this.drawDeckBoard();
+            for (let card_view of this.cards_views[0].cards) {
+                card_view.none();
+            }
             return;
         }
 
@@ -194,6 +207,7 @@ export class HtmlView {
             // Message view.
             this.message_view.show();
             this.board_view.show();
+            this.clickable_fields_view.resetAll();
             if (this.session != null) {
                 this.drawSession(this.session);
             }
@@ -208,11 +222,14 @@ export class HtmlView {
 
     private onClickDeckField(x: number, y: number): void {
         let [px, py]: [number, number] = this.clicked_field;
-        if (py === -1) {
+        if (px === -1) {
+            // this.clicked_filed was not used. Do nothing.
+        }
+        else if (py === -1) {
             this.deck_char_view.setHighlight(px, false);
         }
         else {
-            this.clicakable_fiels_view.setClickable(this.clicked_field, false);
+            this.clickable_fields_view.setClickable(this.clicked_field, false);
         }
         this.clicked_field = [x, y];
 
@@ -237,7 +254,7 @@ export class HtmlView {
             }
         }
         else {
-            this.clicakable_fiels_view.setClickable(this.clicked_field, true);
+            this.clickable_fields_view.setClickable(this.clicked_field, true);
             let data_ids: CardDataId[] = this.deck_maker.getAvailableFacilities(x);
             for (; i < data_ids.length; ++i) {
                 let facility: Facility = new Facility(data_ids[i]);
@@ -317,9 +334,6 @@ export class HtmlView {
         }
         let deck: string = (<HTMLInputElement>document.getElementById("deck")).value;
 
-        // TODO: Move this initializations to other place.
-        this.reset();
-
         this.client.matching(Request.matching(name, mode, deck));
         this.message_view.drawMessage("通信中です", this.getPlayerColor(this.client.player_id));
         this.switchScene(Scene.Game);
@@ -332,7 +346,10 @@ export class HtmlView {
         }
         if (this.scene === Scene.Deck) {
             let [x, y]: [number, number] = this.clicked_field;
-            if (y === -1) {
+            if (x === -1) {
+                // this.clicked_field was not used. Do nothing.
+            }
+            else if (y === -1) {
                 // Char
                 let data_id: CardDataId = CardData.getAvailableCharacters()[card];
                 this.deck_maker.setCharacter(x, data_id);
@@ -380,7 +397,7 @@ export class HtmlView {
                     let event: Event =
                         this.session.getEventBuildFacility(player, x, y, clicked_card_id);
                     if (event && event.valid) {
-                        this.clicakable_fiels_view.setClickable([x, y], true);
+                        this.clickable_fields_view.setClickable([x, y], true);
                     }
                 }
             }
@@ -411,7 +428,7 @@ export class HtmlView {
 
         this.drawBoard(this.session);
 
-        this.clicakable_fiels_view.setClickable(this.session.getPosition(clicked_card_id), true);
+        this.clickable_fields_view.setClickable(this.session.getPosition(clicked_card_id), true);
     }
 
     private getPlayerColor(player_id: PlayerId): string {
@@ -539,7 +556,7 @@ export class HtmlView {
 
         let [x, y]: [number, number] = this.clicked_field;
         if (y !== -1) {
-            this.clicakable_fiels_view.setClickable(this.clicked_field, true);
+            this.clickable_fields_view.setClickable(this.clicked_field, true);
         }
         document.getElementById("deck").innerText =
             JSON.stringify(this.deck_maker.getDeck());
@@ -548,7 +565,7 @@ export class HtmlView {
     private drawField(x: number, y: number,
                       facility_id: CardId, facility: Facility, owner_id: PlayerId): void {
         let field: HTMLElement = document.getElementById(`field_${x}_${y}`);
-        this.clicakable_fiels_view.setClickable([x, y], false);
+        this.clickable_fields_view.setClickable([x, y], false);
 
         (<HTMLTableCellElement>field).colSpan = 1;
         field.style.display = "";
@@ -678,8 +695,8 @@ export class HtmlView {
             this.event_drawer_timer = setInterval(() => {
                 if (!this.drawEventsByStep()) {
                     // If the queue is empty, clear the timer.
-                   clearInterval(this.event_drawer_timer);
-                   this.event_drawer_timer = null;
+                    clearInterval(this.event_drawer_timer);
+                    this.event_drawer_timer = null;
                 }
             }, interval);
         }
@@ -747,7 +764,7 @@ export class HtmlView {
         if (event.type === EventType.Dice) {
             let message: string = this.getDiceResultMessage(event.dice, event.player_id);
             let color: string = this.getPlayerColor(event.player_id);
-            this.clicakable_fiels_view.animateDiceResult(event.dice.result(), color);
+            this.clickable_fields_view.animateDiceResult(event.dice.result(), color);
             this.message_view.drawMessage(message, color);
             return true;
         }
