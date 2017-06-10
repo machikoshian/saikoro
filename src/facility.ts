@@ -52,7 +52,7 @@ const FACILITY_DATA: FacilityData[] = [
     new FacilityData(4,  1, [5],    "🍴", 200, FacilityType.Red,    {"value": 400}),
     new FacilityData(5,  1, [6],    "💆", 150, FacilityType.Green,  {"value": 450}),
     new FacilityData(6,  1, [7],    "👕", 200, FacilityType.Green,  {"value": 400}),
-    new FacilityData(7,  1, [8],    "🐔", 250, FacilityType.Red,    {"value": 250}),
+    new FacilityData(7,  1, [8],    "🐔", 250, FacilityType.Red,    {"value": 200, "all": true}),
     new FacilityData(8,  1, [8,9],  "🌻", 200, FacilityType.Blue,   {"value": 400}),
     new FacilityData(9,  1, [10],   "🍣", 100, FacilityType.Red,    {"value": 400}),
     new FacilityData(10, 2, [10],   "🗻", 300, FacilityType.Blue,   {"value": 500}),
@@ -70,6 +70,8 @@ const FACILITY_DATA: FacilityData[] = [
     new FacilityData(21, 1, [10], "🍎", 100, FacilityType.Blue,   {"value": 350}),
     new FacilityData(22, 1, [11], "👓", 100, FacilityType.Green,  {"value": 1000}),
     new FacilityData(23, 1, [12], "🔨", 300, FacilityType.Purple, {"value": 2000}),
+
+    new FacilityData(24, 2, [8], "🍻", 300, FacilityType.Red, {"value": 100, "all": true}),
 ];
 
 const LANDMARK_DATA_BASE: number = 10000;
@@ -183,7 +185,12 @@ export class Facility {
             case FacilityType.Green:
                 return `${this.property["value"]}コイン稼ぐ\n自分のターンのみ`;
             case FacilityType.Red:
-                return `${this.property["value"]}コイン奪う\n自分以外のターンのみ`;
+                if (this.property["all"]) {
+                    return `${this.property["value"]}コインを全員から奪う\n自分以外のターンのみ`;
+                }
+                else {
+                    return `${this.property["value"]}コイン奪う\n自分以外のターンのみ`;
+                }
             case FacilityType.Purple:
                 return `${this.property["value"]}コイン奪う\n自分のターンのみ`;
         }
