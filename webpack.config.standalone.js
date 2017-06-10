@@ -13,7 +13,7 @@ module.exports = {
                 test   : /\.ts$/,
                 loader : "ts-loader",
                 options: {
-                    configFileName: "tsconfig-es6.json"
+                    configFileName: "tsconfig.json"
                 }
             }
         ]

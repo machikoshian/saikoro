@@ -1,8 +1,11 @@
 {
   "compilerOptions": {
-    "sourceMap": true
-  },
-  "files": [
-    "saikoro.ts"
-  ]
+    "sourceMap": true,
+    "target": "es5",
+    "lib": [
+      "dom",
+      "es5",
+      "es2015.promise"
+    ]
+  }
 }
