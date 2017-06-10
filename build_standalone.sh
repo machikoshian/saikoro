@@ -5,7 +5,7 @@ CLIENT_DIR=./out/standalone
 # Client side (web browser)
 echo "Building standalone client"
 webpack --config webpack.config.standalone.js || exit
-cp ./src/saikoro.html $CLIENT_DIR/index.html
+./src/replace_keywords.sh ./src/saikoro.html > $CLIENT_DIR/index.html
 cp ./src/saikoro.css $CLIENT_DIR/
 cp ./src/icon.png $CLIENT_DIR/
 

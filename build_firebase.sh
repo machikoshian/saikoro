@@ -6,7 +6,7 @@ SERVER_DIR=./functions
 # Firebase hosting
 echo "Building firebase client"
 webpack --config webpack.config.firebase.js || exit
-cp ./src/saikoro.html $CLIENT_DIR/index.html
+./src/replace_keywords.sh ./src/saikoro.html > $CLIENT_DIR/index.html
 cp ./src/saikoro.css $CLIENT_DIR/
 cp ./src/icon.png $CLIENT_DIR/
 
