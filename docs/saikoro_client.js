@@ -129,7 +129,7 @@ var FACILITY_DATA = [
     new FacilityData(4, 1, [5], "🍴", 200, FacilityType.Red, { "value": 400 }),
     new FacilityData(5, 1, [6], "💆", 150, FacilityType.Green, { "value": 450 }),
     new FacilityData(6, 1, [7], "👕", 200, FacilityType.Green, { "value": 400 }),
-    new FacilityData(7, 1, [8], "🐔", 250, FacilityType.Red, { "value": 250 }),
+    new FacilityData(7, 1, [8], "🐔", 250, FacilityType.Red, { "value": 200, "all": true }),
     new FacilityData(8, 1, [8, 9], "🌻", 200, FacilityType.Blue, { "value": 400 }),
     new FacilityData(9, 1, [10], "🍣", 100, FacilityType.Red, { "value": 400 }),
     new FacilityData(10, 2, [10], "🗻", 300, FacilityType.Blue, { "value": 500 }),
@@ -146,6 +146,7 @@ var FACILITY_DATA = [
     new FacilityData(21, 1, [10], "🍎", 100, FacilityType.Blue, { "value": 350 }),
     new FacilityData(22, 1, [11], "👓", 100, FacilityType.Green, { "value": 1000 }),
     new FacilityData(23, 1, [12], "🔨", 300, FacilityType.Purple, { "value": 2000 }),
+    new FacilityData(24, 2, [8], "🍻", 300, FacilityType.Red, { "value": 100, "all": true }),
 ];
 var LANDMARK_DATA_BASE = 10000;
 var LANDMARK_DATA = [
@@ -244,7 +245,12 @@ var Facility = (function () {
             case FacilityType.Green:
                 return this.property["value"] + "\u30B3\u30A4\u30F3\u7A3C\u3050\n\u81EA\u5206\u306E\u30BF\u30FC\u30F3\u306E\u307F";
             case FacilityType.Red:
-                return this.property["value"] + "\u30B3\u30A4\u30F3\u596A\u3046\n\u81EA\u5206\u4EE5\u5916\u306E\u30BF\u30FC\u30F3\u306E\u307F";
+                if (this.property["all"]) {
+                    return this.property["value"] + "\u30B3\u30A4\u30F3\u3092\u5168\u54E1\u304B\u3089\u596A\u3046\n\u81EA\u5206\u4EE5\u5916\u306E\u30BF\u30FC\u30F3\u306E\u307F";
+                }
+                else {
+                    return this.property["value"] + "\u30B3\u30A4\u30F3\u596A\u3046\n\u81EA\u5206\u4EE5\u5916\u306E\u30BF\u30FC\u30F3\u306E\u307F";
+                }
             case FacilityType.Purple:
                 return this.property["value"] + "\u30B3\u30A4\u30F3\u596A\u3046\n\u81EA\u5206\u306E\u30BF\u30FC\u30F3\u306E\u307F";
         }
@@ -644,10 +650,22 @@ var Session = (function () {
         else if (facility.getType() === facility_1.FacilityType.Red) {
             if (player_id !== owner_id) {
                 var value = facility.getPropertyValue();
-                var amount = this.moveMoney(player_id, owner_id, value);
                 event.type = EventType.Red;
-                event.moneys[player_id] -= amount;
-                event.moneys[owner_id] += amount;
+                if (facility.property["all"]) {
+                    for (var pid = 0; pid < this.players.length; ++pid) {
+                        if (pid === owner_id) {
+                            continue;
+                        }
+                        var amount = this.moveMoney(pid, owner_id, value);
+                        event.moneys[pid] -= amount;
+                        event.moneys[owner_id] += amount;
+                    }
+                }
+                else {
+                    var amount = this.moveMoney(player_id, owner_id, value);
+                    event.moneys[player_id] -= amount;
+                    event.moneys[owner_id] += amount;
+                }
             }
         }
         else if (facility.getType() === facility_1.FacilityType.Purple) {
@@ -2607,6 +2625,7 @@ var HtmlView = (function () {
     };
     HtmlView.prototype.onClickEndTurn = function () {
         this.client.sendRequest(client_1.Request.endTurn());
+        this.drawEventsLater();
     };
     HtmlView.prototype.onClickMatching = function (mode) {
         var name = document.getElementById("matching_name").value;
@@ -2972,9 +2991,7 @@ var HtmlView = (function () {
         // Draw cards
         if (event.type === session_1.EventType.Draw) {
             var current_player = this.session.getPlayer(event.player_id);
-            var name_1 = current_player.name;
-            var delta = this.getDiceDeltaMessage(this.session.getDiceDelta());
-            var message = name_1 + " \u306E\u30AD\u30E3\u30E9\u30AB\u30FC\u30C9\u307E\u305F\u306F\u30B5\u30A4\u30B3\u30ED" + delta + "\u3067\u3059";
+            var message = current_player.name + " \u306E\u30BF\u30FC\u30F3\u3067\u3059";
             var color = this.getPlayerColor(event.player_id);
             this.message_view.drawMessage(message, color);
             if (event.player_id === this.client.player_id) {
@@ -3011,8 +3028,8 @@ var HtmlView = (function () {
                     continue;
                 }
                 this.player_views[pid].addMoney(money);
-                var name_2 = this.session.getPlayer(pid).name;
-                var message = name_2 + " \u306B\u7D66\u6599 " + money + " \u304C\u5165\u308A\u307E\u3057\u305F";
+                var name_1 = this.session.getPlayer(pid).name;
+                var message = name_1 + " \u306B\u7D66\u6599 " + money + " \u304C\u5165\u308A\u307E\u3057\u305F";
                 var color = this.getPlayerColor(pid);
                 this.message_view.drawMessage(message, color);
             }
@@ -3020,8 +3037,8 @@ var HtmlView = (function () {
         }
         if (event.type === session_1.EventType.Build) {
             if (event.card_id === -1) {
-                var name_3 = this.session.getPlayer(event.player_id).name;
-                var message = name_3 + " \u306F\u4F55\u3082\u5EFA\u8A2D\u3057\u307E\u305B\u3093\u3067\u3057\u305F\u3002";
+                var name_2 = this.session.getPlayer(event.player_id).name;
+                var message = name_2 + " \u306F\u4F55\u3082\u5EFA\u8A2D\u3057\u307E\u305B\u3093\u3067\u3057\u305F\u3002";
                 var color = this.getPlayerColor(event.player_id);
                 this.message_view.drawMessage(message, color);
                 return true;
@@ -3288,8 +3305,12 @@ var HtmlCardsView = (function (_super) {
         _this.max_size = max_size;
         _this.cards = [];
         _this.card_ids = [];
+        var base = document.getElementById("card_widget");
         for (var i = 0; i < _this.max_size; ++i) {
-            var card_view = new HtmlCardView(element_id + "_" + i);
+            var new_node = base.cloneNode(true);
+            var new_element = _this.element.appendChild(new_node);
+            new_element.id = element_id + "_" + i;
+            var card_view = new HtmlCardView(new_element.id);
             _this.cards.push(card_view);
             card_view.none();
         }

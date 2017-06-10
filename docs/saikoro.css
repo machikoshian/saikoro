@@ -1,5 +1,8 @@
 .none { display: none; }
-
+.devinfo {
+    font-size: smaller;
+    color: #80A1F0;
+}
 .ui_box {
     font-size: 20px;
     margin-top: 10px;
@@ -9,7 +12,11 @@
     display: inline-block;
 }
 
-body { width: 660px; color: #222; background-color: #82B1FF; }
+body {
+    width: 660px;
+    color: #222;
+    background-color: #82B1FF;
+}
 
 .title {
     color: white;
@@ -40,7 +47,7 @@ body { width: 660px; color: #222; background-color: #82B1FF; }
 }
 #matching hr {
     margin-left: 5px;
-    width: 420px;
+    width: 490px;
 }
 .menu_button {
     font-size: 20px;
