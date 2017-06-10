@@ -360,6 +360,39 @@ export class HtmlMessageView extends HtmlViewObject {
     }
 }
 
+export class HtmlBoardView extends HtmlViewObject {
+    readonly clickable_fields: HtmlClickableFieldsView;
+    public callback: (x: number, y: number) => void;
+
+    constructor(element_id: string, column: number, row: number) {
+        super(document.getElementById(element_id));
+
+        this.clickable_fields = new HtmlClickableFieldsView("click", row, column);
+        for (let y: number = 0; y < row; ++y) {
+            for (let x: number = 0; x < column; ++x) {
+                this.clickable_fields.fields[x][y].addClickListener(
+                    () => { this.onClick(x, y); });
+            }
+        }
+    }
+
+    private onClick(x: number, y: number): void {
+        this.callback(x, y);
+    }
+
+    public redraw(): void {  // TODO: Need refactoring?
+        this.clickable_fields.resetAll();
+    }
+
+    public setClickable([x, y]: [number, number], is_clickable: boolean): void {
+        this.clickable_fields.setClickable([x, y], is_clickable);
+    }
+
+    public animateDiceResult(result: number, color: string): void {
+        this.clickable_fields.animateDiceResult(result, color);
+    }
+}
+
 export class HtmlDeckCharView extends HtmlViewObject {
     public callback: (i: number) => void;
     readonly fields: HtmlViewObject[];

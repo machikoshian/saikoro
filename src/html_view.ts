@@ -8,8 +8,8 @@ import { Client, Request } from "./client";
 import { DeckMaker } from "./deck_maker";
 import { GameMode } from "./protocol";
 import { HtmlViewObject, HtmlCardsView, HtmlCardView, HtmlPlayerView,
-         HtmlMessageView, HtmlButtonsView,HtmlClickableFieldsView,
-         HtmlDeckCharView, } from "./html_view_parts";
+         HtmlMessageView, HtmlButtonsView,
+         HtmlDeckCharView, HtmlBoardView } from "./html_view_parts";
 
 const COLOR_FIELD: string = "#FFF8E1";
 const COLOR_LANDMARK: string = "#B0BEC5";
@@ -44,14 +44,13 @@ export class HtmlView {
     private player_views: HtmlPlayerView[] = [];
     private back_button_view: HtmlViewObject = null;
     private reset_button_view: HtmlViewObject = null;
-    private board_view: HtmlViewObject = null;
+    private board_view: HtmlBoardView = null;
     private landmarks_view: HtmlCardsView = null;
     private field_card_view: HtmlCardView = null;
     private card_widget_view: HtmlCardView = null;
     private money_motion_view: HtmlViewObject = null;
     private message_view: HtmlMessageView = null;
     private buttons_view: HtmlButtonsView = null;
-    private clickable_fields_view: HtmlClickableFieldsView = null;
     private scene: Scene = Scene.None;
 
     constructor(client: Client) {
@@ -109,7 +108,10 @@ export class HtmlView {
         }
 
         // Board
-        this.board_view = new HtmlViewObject(document.getElementById("board"));
+        this.board_view = new HtmlBoardView("board", column, row);
+        this.board_view.callback = (x, y) => {
+            this.onClickField(x, y);
+        }
 
         // HtmlDeckCharView
         this.deck_char_view = new HtmlDeckCharView("deck_char");
@@ -136,15 +138,6 @@ export class HtmlView {
 
         // Field card
         this.field_card_view = new HtmlCardView("field_card");
-
-        // Fields
-        this.clickable_fields_view = new HtmlClickableFieldsView("click", row, column);
-        for (let y: number = 0; y < row; ++y) {
-            for (let x: number = 0; x < column; ++x) {
-                this.clickable_fields_view.fields[x][y].addClickListener(
-                    () => { this.onClickField(x, y); });
-            }
-        }
 
         // Character motion
         this.card_widget_view = new HtmlCardView("card_widget");
@@ -207,7 +200,7 @@ export class HtmlView {
             // Message view.
             this.message_view.show();
             this.board_view.show();
-            this.clickable_fields_view.resetAll();
+            this.board_view.redraw();
             if (this.session != null) {
                 this.drawSession(this.session);
             }
@@ -229,7 +222,7 @@ export class HtmlView {
             this.deck_char_view.setHighlight(px, false);
         }
         else {
-            this.clickable_fields_view.setClickable(this.clicked_field, false);
+            this.board_view.setClickable(this.clicked_field, false);
         }
         this.clicked_field = [x, y];
 
@@ -254,7 +247,7 @@ export class HtmlView {
             }
         }
         else {
-            this.clickable_fields_view.setClickable(this.clicked_field, true);
+            this.board_view.setClickable(this.clicked_field, true);
             let data_ids: CardDataId[] = this.deck_maker.getAvailableFacilities(x);
             for (; i < data_ids.length; ++i) {
                 let facility: Facility = new Facility(data_ids[i]);
@@ -397,7 +390,7 @@ export class HtmlView {
                     let event: Event =
                         this.session.getEventBuildFacility(player, x, y, clicked_card_id);
                     if (event && event.valid) {
-                        this.clickable_fields_view.setClickable([x, y], true);
+                        this.board_view.setClickable([x, y], true);
                     }
                 }
             }
@@ -428,7 +421,7 @@ export class HtmlView {
 
         this.drawBoard(this.session);
 
-        this.clickable_fields_view.setClickable(this.session.getPosition(clicked_card_id), true);
+        this.board_view.setClickable(this.session.getPosition(clicked_card_id), true);
     }
 
     private getPlayerColor(player_id: PlayerId): string {
@@ -556,7 +549,7 @@ export class HtmlView {
 
         let [x, y]: [number, number] = this.clicked_field;
         if (y !== -1) {
-            this.clickable_fields_view.setClickable(this.clicked_field, true);
+            this.board_view.setClickable(this.clicked_field, true);
         }
         document.getElementById("deck").innerText =
             JSON.stringify(this.deck_maker.getDeck());
@@ -565,7 +558,7 @@ export class HtmlView {
     private drawField(x: number, y: number,
                       facility_id: CardId, facility: Facility, owner_id: PlayerId): void {
         let field: HTMLElement = document.getElementById(`field_${x}_${y}`);
-        this.clickable_fields_view.setClickable([x, y], false);
+        this.board_view.setClickable([x, y], false);
 
         (<HTMLTableCellElement>field).colSpan = 1;
         field.style.display = "";
@@ -764,7 +757,7 @@ export class HtmlView {
         if (event.type === EventType.Dice) {
             let message: string = this.getDiceResultMessage(event.dice, event.player_id);
             let color: string = this.getPlayerColor(event.player_id);
-            this.clickable_fields_view.animateDiceResult(event.dice.result(), color);
+            this.board_view.animateDiceResult(event.dice.result(), color);
             this.message_view.drawMessage(message, color);
             return true;
         }
