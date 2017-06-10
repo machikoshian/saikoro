@@ -153,8 +153,14 @@ export class HtmlCardsView extends HtmlViewObject {
 
     constructor(readonly element_id: string, readonly max_size: number) {
         super(document.getElementById(element_id));
+
+        let base: HTMLElement = document.getElementById("card_widget");
+
         for (let i: number = 0; i < this.max_size; ++i) {
-            let card_view: HtmlCardView = new HtmlCardView(`${element_id}_${i}`);
+            let new_node: Node = base.cloneNode(true);
+            let new_element: HTMLElement = <HTMLElement>this.element.appendChild(new_node);
+            new_element.id = `${element_id}_${i}`;
+            let card_view: HtmlCardView = new HtmlCardView(new_element.id);
             this.cards.push(card_view);
             card_view.none();
         }
