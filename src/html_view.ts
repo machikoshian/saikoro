@@ -333,6 +333,7 @@ export class HtmlView {
 
     private onClickEndTurn(): void {
         this.client.sendRequest(Request.endTurn());
+        this.drawEventsLater();
     }
 
     private onClickMatching(mode: GameMode): void {
@@ -756,9 +757,7 @@ export class HtmlView {
         // Draw cards
         if (event.type === EventType.Draw) {  // TODO: Change the event type to StartTurn?
             let current_player: Player = this.session.getPlayer(event.player_id);
-            let name: string =  current_player.name;
-            let delta: string = this.getDiceDeltaMessage(this.session.getDiceDelta());
-            let message = `${name} のキャラカードまたはサイコロ${delta}です`;
+            let message = `${current_player.name} のターンです`;
             let color: string = this.getPlayerColor(event.player_id);
             this.message_view.drawMessage(message, color);
 
