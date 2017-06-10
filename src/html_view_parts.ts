@@ -362,15 +362,19 @@ export class HtmlMessageView extends HtmlViewObject {
 
 export class HtmlDeckCharView extends HtmlViewObject {
     public callback: (i: number) => void;
-    readonly fields: HtmlClickableFieldView[];
+    readonly fields: HtmlViewObject[];
+    readonly clickables: HtmlClickableFieldView[];
 
     constructor(element_id: string) {
         super(document.getElementById(element_id));
         this.fields = [];
+        this.clickables = [];
         for (let i: number = 0; i < 5; ++i) {
-            let field: HtmlClickableFieldView = new HtmlClickableFieldView(`${element_id}_${i}`);
+            let field: HtmlViewObject = new HtmlViewObject(document.getElementById(`${element_id}_${i}`));
             this.fields.push(field);
-            field.addClickListener(() => { this.onClick(i); });
+            let clickable: HtmlClickableFieldView = new HtmlClickableFieldView(`clickable_${element_id}_${i}`);
+            this.clickables.push(clickable);
+            clickable.addClickListener(() => { this.onClick(i); });
         }
     }
 
@@ -379,7 +383,7 @@ export class HtmlDeckCharView extends HtmlViewObject {
     }
 
     public setHighlight(i: number, highlight: boolean): void {
-        this.fields[i].setColor(highlight ? COLOR_CLICKABLE : "#FFA000");
+        this.clickables[i].setClickable(highlight);
     }
 
     public drawCharacter(i: number, character: Character): void {
