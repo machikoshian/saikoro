@@ -3,7 +3,7 @@ import { Session } from "./session";
 import { Board, PlayerId } from "./board";
 import { CardId, CardDataId, FacilityType, Facility, CardData } from "./facility";
 import { AutoPlay } from "./auto_play";
-import { GameMode } from "./protocol";
+import { GameMode, Protocol } from "./protocol";
 
 export class KeyValue {
     constructor(
@@ -191,12 +191,8 @@ export class SessionHandler {
             // Invalid deck format. Ignore it.
         }
 
-        let num_players: number = 1;
-        let num_npc: number = 2;
-        if (mode === GameMode.OnLine2Players) {
-            num_players = 2;
-            num_npc = 0;
-        }
+        let num_players: number = Protocol.getPlayerCount(mode);
+        let num_npc: number = Protocol.getNpcCount(mode);
 
         let matched_data: MatchedData = new MatchedData();
         let matching_key: string = `matching_${mode}`;

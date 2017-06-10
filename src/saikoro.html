@@ -18,8 +18,8 @@
         <font color="#EF5350">さ</font>いコロ！
       </div>
 
-      <div class="ui_box">
-        名前<br />
+      <div id="matching_name_box" class="ui_box">
+        😺 名前<br />
         <input id="matching_name" type="text" name="name" value="コロまる">
       </div>
       <div id="matching_button_deck" class="ui_button">
@@ -28,21 +28,28 @@
       <br />
       <hr>
       <br />
-      <div id="matching_button_offline" class="menu_button">
+      <div class="ui_box">
         一人プレイ (オフライン) <br />
-        <small>Internet Explorer では動きません。</small><br />
+        <div id="matching_button_offline_2" class="menu_button">2人バトル😺 👻</div>
+        <div id="matching_button_offline_3" class="menu_button">3人バトル😺 👻 👾</div>
+        <div id="matching_button_offline_4" class="menu_button">4人バトル😺 👻 👾 🗿</div><br />
+        <small>Internet Explorer では動きません。</small>
       </div>
-      <br />
-      <br />
-      <div id="matching_button_online" class="menu_button">
+
+      <div class="ui_box">
         一人プレイ (ネット通信) <br />
-        <small>オフライン版と機能は同じです。</small><br />
+        <div id="matching_button_online_2" class="menu_button">2人バトル😺 👻</div>
+        <div id="matching_button_online_3" class="menu_button">3人バトル😺 👻 👾</div>
+        <div id="matching_button_online_4" class="menu_button">4人バトル😺 👻 👾 🗿</div><br />
+        <small>オフライン版と機能は同じです。</small>
       </div>
-      <br />
-      <br />
-      <div id="matching_button_2players" class="menu_button">
-        二人プレイ（実験中）<br />
-        <small>同時にプレイできる人が必要です。</small>
+
+      <div class="ui_box">
+        対戦プレイ (ネット通信) <br />
+        <div id="matching_button_multi_2" class="menu_button">2人バトル😺 😺</div>
+        <div id="matching_button_multi_3" class="menu_button inactive">準備中</div>
+        <div id="matching_button_multi_4" class="menu_button inactive">準備中</div><br />
+        <small>実験段階です。同時にプレイできる人が必要です。</small>
       </div>
       <br />
       <br />
@@ -56,28 +63,32 @@
       <table id="players">
         <tr>
           <td><table id="player_0" class="player">
-            <tr><td>😺</td><td id="player_0_name">こしあん</td></tr>
-            <tr><td>👛</td><td id="player_0_money">1000</td></tr>
-            <tr><td>💰</td><td id="player_0_salary">200</td></tr>
-            <tr><td>🃏</td><td id="player_0_talon">10</td></tr>
+            <tr><td>😺</td><td class="player_name" colspan=3>こしあん</td></tr>
+            <tr><td>👛</td><td class="player_money">1000</td>
+                <td>💰</td><td class="player_salary">200</td></tr>
+            <tr><td>🃏</td><td class="player_hand">5</td>
+                <td>📇</td><td class="player_talon">5</td></tr>
           </table></td>
           <td><table id="player_1" class="player">
-            <tr><td>😺</td><td id="player_1_name">つぶあん</td></tr>
-            <tr><td>👛</td><td id="player_1_money">1000</td></tr>
-            <tr><td>💰</td><td id="player_1_salary">200</td></tr>
-            <tr><td>🃏</td><td id="player_1_talon">10</td></tr>
+            <tr><td>👻</td><td class="player_name" colspan=3>つぶあん</td></tr>
+            <tr><td>👛</td><td class="player_money">1000</td>
+                <td>💰</td><td class="player_salary">200</td></tr>
+            <tr><td>🃏</td><td class="player_hand">5</td>
+                <td>📇</td><td class="player_talon">5</td></tr>
           </table></td>
           <td><table id="player_2" class="player">
-            <tr><td>😺</td><td id="player_2_name">だいふく</td></tr>
-            <tr><td>👛</td><td id="player_2_money">1000</td></tr>
-            <tr><td>💰</td><td id="player_2_salary">200</td></tr>
-            <tr><td>🃏</td><td id="player_2_talon">10</td></tr>
+            <tr><td>👾</td><td class="player_name" colspan=3>どらやき</td></tr>
+            <tr><td>👛</td><td class="player_money">1000</td>
+                <td>💰</td><td class="player_salary">200</td></tr>
+            <tr><td>🃏</td><td class="player_hand">5</td>
+                <td>📇</td><td class="player_talon">5</td></tr>
           </table></td>
           <td><table id="player_3" class="player">
-            <tr><td>😺</td><td id="player_3_name">どらやき</td></tr>
-            <tr><td>👛</td><td id="player_3_money">1000</td></tr>
-            <tr><td>💰</td><td id="player_3_salary">200</td></tr>
-            <tr><td>🃏</td><td id="player_3_talon">10</td></tr>
+            <tr><td>🗿</td><td class="player_name" colspan=3>だいふく</td></tr>
+            <tr><td>👛</td><td class="player_money">1000</td>
+                <td>💰</td><td class="player_salary">200</td></tr>
+            <tr><td>🃏</td><td class="player_hand">5</td>
+                <td>📇</td><td class="player_talon">5</td></tr>
           </table></td>
         </tr>
       </table>

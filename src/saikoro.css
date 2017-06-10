@@ -1,11 +1,106 @@
 .none { display: none; }
-body { width: 660px; background-color: #82B1FF; }
+
+.ui_box {
+    font-size: 20px;
+    margin-top: 10px;
+    padding: 4px;
+    color: #666666;
+    border-radius: 7px; background-color: #FFE082;
+    display: inline-block;
+}
+
+body { width: 660px; color: #222; background-color: #82B1FF; }
+
+.title {
+    color: white;
+    font-weight: bold;
+    font-size: 50px;
+    text-shadow: 2px 2px 3px #444,
+    -2px 2px 3px #444,
+    2px -2px 3px #444,
+    -2px -2px 3px #444;
+}
+
+#matching {
+    width: 590px;
+    margin: 70px;
+}
+#matching small {
+    font-size: 12px;
+    margin-left: 1em;
+}
+
+#matching_name_box {
+    margin: 5px;
+    padding: 10px;
+    width: 270px;
+}
+#matching_name {
+    font-size: 20px;
+}
+#matching hr {
+    margin-left: 5px;
+    width: 420px;
+}
+.menu_button {
+    font-size: 20px;
+    margin: 5px;
+    padding: 10px;
+    padding-left: 10px;
+    vertical-align: middle;
+    color: #666666;
+    display: inline-block;
+    width: 100px;
+    height: 60px;
+    border-radius:7px;
+    background-color: #FFCA28;
+    border-style: solid;
+    border-width: 5px;
+    border-color: #FF9800;
+
+    font-weight: bold;
+    text-shadow:
+         2px  2px 2px #FFD54F,
+        -2px  2px 2px #FFD54F,
+         2px -2px 2px #FFD54F,
+        -2px -2px 2px #FFD54F;
+}
+
+.ui_button {
+    font-size: 20px;
+    margin: 5px;
+    padding: 10px;
+    color: #666;
+    display: inline-block;
+    border-radius:7px;
+    background-color: #FFCA28;
+    text-align: center;
+
+    font-weight: bold;
+    text-shadow:
+         2px  2px 2px #FFD54F,
+        -2px  2px 2px #FFD54F,
+         2px -2px 2px #FFD54F,
+        -2px -2px 2px #FFD54F;
+}
+#matching_button_deck {
+    width: 100px;
+}
 
 table.player { width: 160px; }
 #player_0 { background-color: #909CC2; border-radius: 5px; }
 #player_1 { background-color: #D9BDC5; border-radius: 5px; }
 #player_2 { background-color: #90C290; border-radius: 5px; }
 #player_3 { background-color: #9D8189; border-radius: 5px; }
+.player td {
+    vertical-align: bottom; 
+}
+.player_salary {
+    font-size: smaller;
+}
+.player_talon {
+    font-size: smaller;
+}
 
 #board { position: relative; }
 .relative { position: relative; }
@@ -36,14 +131,6 @@ table.player { width: 160px; }
     width: 640px; height: 30px; margin: 10px 0px; padding: 5px;
     background-color: #EEEEEE; text-align: center;
     border-style: none; border-radius: 5px; border-width: 1px;
-}
-.ui_box {
-    font-size: 20px;
-    margin-top: 10px;
-    padding: 4px;
-    color: #666666;
-    border-radius: 7px; background-color: #FFE082;
-    display: inline-block;
 }
 #deck_char {
     width: 260px;
@@ -86,79 +173,4 @@ table.card {
 }
 .card_description {
     font-size: 12px; height: 70px;
-}
-#matching_name {
-    font-size: 20px;
-}
-.menu_button {
-    font-size: 20px;
-    margin: 5px;
-    padding: 10px;
-    padding-left: 70px;
-    vertical-align: middle;
-    color: #666666;
-    display: inline-block;
-    width: 335px;
-    height: 60px;
-    border-radius:7px;
-    background-color: #FFCA28;
-    border-style: solid;
-    border-width: 5px;
-    border-color: #FF9800;
-
-    font-weight: bold;
-    text-shadow:
-         2px  2px 3px #FFD54F,
-        -2px  2px 3px #FFD54F,
-         2px -2px 3px #FFD54F,
-        -2px -2px 3px #FFD54F;
-/*
-    background-color: #FF9800;
-    background-color: #FF9E80;
-*/
-}
-#matching {
-    width: 590px;
-    margin: 70px;
-}
-#matching .ui_box {
-    margin: 5px;
-    padding: 10px;
-    width: 270px;
-}
-#matching hr {
-    margin-left: 5px;
-    width: 420px;
-}
-.ui_button {
-    font-size: 20px;
-    margin: 5px;
-    padding: 10px;
-    color: #666;
-    display: inline-block;
-    border-radius:7px;
-    background-color: #FFCA28;
-    text-align: center;
-
-    font-weight: bold;
-    text-shadow:
-         2px  2px 3px #FFD54F,
-        -2px  2px 3px #FFD54F,
-         2px -2px 3px #FFD54F,
-        -2px -2px 3px #FFD54F;
-}
-#matching_button_deck {
-    width: 100px;
-}
-.menu_button small {
-    font-size: 12px;
-}
-.title {
-    color: white;
-    font-weight: bold;
-    font-size: 50px;
-    text-shadow: 2px 2px 3px #444,
-    -2px 2px 3px #444,
-    2px -2px 3px #444,
-    -2px -2px 3px #444;
 }

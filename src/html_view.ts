@@ -6,7 +6,7 @@ import { CardId, FacilityType, Facility, CharacterType, Character,
 import { Dice, DiceResult } from "./dice";
 import { Client, Request } from "./client";
 import { DeckMaker } from "./deck_maker";
-import { GameMode } from "./protocol";
+import { GameMode, Protocol } from "./protocol";
 import { HtmlViewObject, HtmlCardsView, HtmlCardView, HtmlPlayerView,
          HtmlMessageView, HtmlButtonsView,
          HtmlDeckCharView, HtmlBoardView } from "./html_view_parts";
@@ -75,12 +75,28 @@ export class HtmlView {
         // Matching.
         document.getElementById("matching_button_deck").addEventListener(
             "click", () => { this.switchScene(Scene.Deck); });
-        document.getElementById("matching_button_offline").addEventListener(
-            "click", () => { this.onClickMatching(GameMode.OffLine); });
-        document.getElementById("matching_button_online").addEventListener(
-            "click", () => { this.onClickMatching(GameMode.OnLineSingle); });
-        document.getElementById("matching_button_2players").addEventListener(
+
+        document.getElementById("matching_button_offline_2").addEventListener(
+            "click", () => { this.onClickMatching(GameMode.OffLine_2); });
+        document.getElementById("matching_button_offline_3").addEventListener(
+            "click", () => { this.onClickMatching(GameMode.OffLine_3); });
+        document.getElementById("matching_button_offline_4").addEventListener(
+            "click", () => { this.onClickMatching(GameMode.OffLine_4); });
+
+        document.getElementById("matching_button_online_2").addEventListener(
+            "click", () => { this.onClickMatching(GameMode.OnLineSingle_2); });
+        document.getElementById("matching_button_online_3").addEventListener(
+            "click", () => { this.onClickMatching(GameMode.OnLineSingle_3); });
+        document.getElementById("matching_button_online_4").addEventListener(
+            "click", () => { this.onClickMatching(GameMode.OnLineSingle_4); });
+
+        document.getElementById("matching_button_multi_2").addEventListener(
             "click", () => { this.onClickMatching(GameMode.OnLine2Players); });
+        // 3 and 4 players are not supported yet.
+        // document.getElementById("matching_button_multi_3").addEventListener(
+        //     "click", () => { this.onClickMatching(GameMode.OnLine2Players); });
+        // document.getElementById("matching_button_multi_4").addEventListener(
+        //     "click", () => { this.onClickMatching(GameMode.OnLine2Players); });
 
         // buttons.
         this.back_button_view = new HtmlViewObject(document.getElementById("back"));
@@ -205,8 +221,7 @@ export class HtmlView {
                 this.drawSession(this.session);
             }
             this.landmarks_view.show();
-            if (this.client.mode === GameMode.OffLine ||
-                this.client.mode === GameMode.OnLineSingle) {
+            if (Protocol.getPlayerCount(this.client.mode) === 1) {
                 this.reset_button_view.show();
             }
             return;

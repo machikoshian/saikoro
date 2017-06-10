@@ -1,6 +1,6 @@
 import { RequestCallback, Connection, Client } from "./client";
 import { KeyValue, Memcache, MemcacheMock, MatchedData, SessionHandler } from "./session_handler";
-import { GameMode } from "./protocol";
+import { GameMode, Protocol } from "./protocol";
 
 const mc = new MemcacheMock();
 let session_handler: SessionHandler = new SessionHandler(mc);
@@ -77,7 +77,7 @@ export class HybridConnection extends Connection {
 
     public matching(query: any, callback: RequestCallback): void {
         this.connection.stopCheckUpdate();
-        if ((query.mode !== GameMode.OffLine) && (this.online_connection != null)) {
+        if (Protocol.isOnlineMode(query.mode) && (this.online_connection != null)) {
             this.connection = this.online_connection;
         }
         else  {

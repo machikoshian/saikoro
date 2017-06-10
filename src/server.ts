@@ -75,7 +75,7 @@ class HttpServer {
 
     private serveStaticFiles(pathname: string, response): void {
         if (pathname === "/") {
-            pathname = "/saikoro.html";
+            pathname = "/index.html";
         }
 
         let filepath: string = "./out/client" + pathname;

@@ -291,6 +291,7 @@ export class HtmlPlayerView extends HtmlViewObject {
     private element_name: HTMLElement;
     private element_money: HTMLElement;
     private element_salary: HTMLElement;
+    private element_hand: HTMLElement;
     private element_talon: HTMLElement;
     private money_animation_timer = null;
     private money: number = 0;
@@ -298,10 +299,11 @@ export class HtmlPlayerView extends HtmlViewObject {
     constructor(player_id: PlayerId) {
         super(document.getElementById(`player_${player_id}`));
         this.player_id = player_id;
-        this.element_name = document.getElementById(this.element.id + "_name");
-        this.element_money = document.getElementById(this.element.id + "_money");
-        this.element_salary = document.getElementById(this.element.id + "_salary");
-        this.element_talon = document.getElementById(this.element.id + "_talon");
+        this.element_name = <HTMLElement>this.element.getElementsByClassName("player_name")[0];
+        this.element_money = <HTMLElement>this.element.getElementsByClassName("player_money")[0];
+        this.element_salary = <HTMLElement>this.element.getElementsByClassName("player_salary")[0];
+        this.element_hand = <HTMLElement>this.element.getElementsByClassName("player_hand")[0];
+        this.element_talon = <HTMLElement>this.element.getElementsByClassName("player_talon")[0];
     }
 
     public draw(session: Session): void {
@@ -310,7 +312,8 @@ export class HtmlPlayerView extends HtmlViewObject {
         this.element_name.innerText = player.name;
         this.element_salary.innerHTML = String(player.salary);
         let cards: PlayerCards = session.getPlayerCards(this.player_id);
-        this.element_talon.innerHTML = `${cards.getHandSize()}　／　📇 ${cards.getTalonSize()}`;
+        this.element_hand.innerHTML = String(cards.getHandSize());
+        this.element_talon.innerHTML = String(cards.getTalonSize());
 
         this.setMoney(player.getMoney());
     }

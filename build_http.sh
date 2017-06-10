@@ -16,7 +16,8 @@ tsc --outDir $SERVER_DIR --module commonjs --target es6 --sourceMap src/server.t
 cp ./serviceAccountKey.json $SERVER_DIR
 
 if [ "$1" != "build" ]; then
-    echo "open http://localhost:3156/saikoro.html"
+    echo "open http://localhost:3156/"
     DEBUG=1 node $SERVER_DIR/server.js
+    open http://localhost:3156/
 fi
 
