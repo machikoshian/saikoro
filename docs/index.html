@@ -3,160 +3,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="width=670" />
+    <link rel="stylesheet" type="text/css" href="saikoro.css">
     <!-- webapp modes -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="icon" sizes="192x192" type="image/png" href="icon.png">
-    <title>Saikoro</title>
-    <style type="text/css">
-    .none { display: none; }
-    body { width: 660px; background-color: #82B1FF; }
-
-    table.player { width: 160px; }
-    #player_0 { background-color: #909CC2; border-radius: 5px; }
-    #player_1 { background-color: #D9BDC5; border-radius: 5px; }
-    #player_2 { background-color: #90C290; border-radius: 5px; }
-    #player_3 { background-color: #9D8189; border-radius: 5px; }
-
-    #board { position: relative; }
-    #board table {
-      border-style: solid; border-width: 1px;
-      border-radius: 7px;
-    }
-    .field {
-      background-color: #FFE082;
-    }
-    #board .field td {
-      width: 50px; height: 40px; background-color: #FFF8E1; text-align: center;
-      border-bottom: solid 10px #FFF8E1;
-    }
-    #board .click {
-      position: absolute; top: 0px; left: 0px;
-    }
-    #board .click td {
-      width: 40px; height: 40px; border: 5px solid #FFCA28;
-      border-color: transparent;
-      z-index: 1;
-      background-color: transparent; text-align: center;
-    }
-    #board th {
-      width: 50px; height: 25px;
-    }
-    #message {
-      width: 640px; height: 30px; margin: 10px 0px; padding: 5px;
-      background-color: #EEEEEE; text-align: center;
-      border-style: none; border-radius: 5px; border-width: 1px;
-    }
-    .ui_box {
-      font-size: 20px;
-      margin-top: 10px;
-      padding: 4px;
-      color: #666666;
-      border-radius: 7px; background-color: #FFE082;
-      display: inline-block;
-    }
-    #deck_char {
-      width: 260px;
-      margin-bottom: 10px;
-    }
-    span.deck_char {
-      width: 50px; height: 50px; background-color: #FFF8E1;
-      font-size: 17px;
-      text-align: center;
-      vertical-align: top;
-      border: solid 1px #FFE082;
-      display: inline-block;
-    }
-
-    #buttons { width: 435px; padding-left: 225px; }
-    td.dice_button {
-      width: 80px; height: 60px; padding: 10px;
-      font-size: 40px; text-align: center;
-      border-radius: 10px; background-color: #EEEEEE;
-    }
-    #buttons_char_card {
-      width: 80px; height: 60px; padding: 10px;
-      text-align: center;
-      border-radius: 10px; background-color: #EFF0D1;
-    }
-    #buttons_end_turn {
-      width: 80px; height: 60px; padding: 10px;
-      text-align: center;
-      border-radius: 10px; background-color: #FFCA28;
-    }
-    /* Motion elements should have width and height. */
-    #money_motion {
-      width: 40px; height: 40px;
-    }
-    table.card {
-      display: inline-block;
-      width: 98px; height: 140px;
-      background-color: #90CAF9;
-      border: solid 3px #EEEEEE;
-      border-radius: 3px;
-      margin: 0px;
-    }
-    .card_description {
-      font-size: 12px; height: 70px;
-    }
-    #matching_name {
-      font-size: 20px;
-    }
-    .menu_button {
-      font-size: 20px;
-      margin: 5px;
-      padding: 10px;
-      padding-left: 70px;
-      vertical-align: middle;
-      color: #666666;
-      display: inline-block;
-      width: 345px;
-      height: 60px;
-      border-radius:7px;
-      background-color: #FFCA28;
-      background-color: #FF9800;
-      background-color: #FF9E80;
-    }
-    #matching {
-      width: 590px;
-      margin: 70px;
-    }
-    #matching .ui_box {
-      margin: 5px;
-      padding: 10px;
-      width: 270px;
-    }
-    #matching hr {
-      margin-left: 5px;
-      width: 420px;
-    }
-    .ui_button {
-      font-size: 20px;
-      margin: 5px;
-      padding: 10px;
-      color: #666666;
-      display: inline-block;
-      border-radius:7px;
-      background-color: #FFCA28;
-      text-align: center;
-    }
-    #matching_button_deck {
-      width: 100px;
-    }
-    .menu_button small {
-      font-size: 12px;
-    }
-    .title {
-      color: white;
-      font-weight: bold;
-      font-size: 50px;
-      text-shadow: 2px 2px 3px #444,
-      -2px 2px 3px #444,
-      2px -2px 3px #444,
-      -2px -2px 3px #444;
-    }
-    </style>
+    <title>さいコロ！</title>
     <script type="text/javascript" src="saikoro_client.js"></script>
   </head>
   <body>
@@ -165,8 +18,8 @@
         <font color="#EF5350">さ</font>いコロ！
       </div>
 
-      <div class="ui_box">
-        名前<br />
+      <div id="matching_name_box" class="ui_box">
+        😺 名前<br />
         <input id="matching_name" type="text" name="name" value="コロまる">
       </div>
       <div id="matching_button_deck" class="ui_button">
@@ -175,21 +28,28 @@
       <br />
       <hr>
       <br />
-      <div id="matching_button_offline" class="menu_button">
+      <div class="ui_box">
         一人プレイ (オフライン) <br />
-        <small>Internet Explorer では動きません。</small><br />
+        <div id="matching_button_offline_2" class="menu_button">2人バトル😺 👻</div>
+        <div id="matching_button_offline_3" class="menu_button">3人バトル😺 👻 👾</div>
+        <div id="matching_button_offline_4" class="menu_button">4人バトル😺 👻 👾 🗿</div><br />
+        <small>Internet Explorer では動きません。</small>
       </div>
-      <br />
-      <br />
-      <div id="matching_button_online" class="menu_button">
+
+      <div class="ui_box">
         一人プレイ (ネット通信) <br />
-        <small>オフライン版と機能は同じです。</small><br />
+        <div id="matching_button_online_2" class="menu_button">2人バトル😺 👻</div>
+        <div id="matching_button_online_3" class="menu_button">3人バトル😺 👻 👾</div>
+        <div id="matching_button_online_4" class="menu_button">4人バトル😺 👻 👾 🗿</div><br />
+        <small>オフライン版と機能は同じです。</small>
       </div>
-      <br />
-      <br />
-      <div id="matching_button_2players" class="menu_button">
-        二人プレイ（実験中）<br />
-        <small>同時にプレイできる人が必要です。</small>
+
+      <div class="ui_box">
+        対戦プレイ (ネット通信) <br />
+        <div id="matching_button_multi_2" class="menu_button">2人バトル😺 😺</div>
+        <div id="matching_button_multi_3" class="menu_button inactive">準備中</div>
+        <div id="matching_button_multi_4" class="menu_button inactive">準備中</div><br />
+        <small>実験段階です。同時にプレイできる人が必要です。</small>
       </div>
       <br />
       <br />
@@ -203,35 +63,39 @@
       <table id="players">
         <tr>
           <td><table id="player_0" class="player">
-            <tr><td>😺</td><td id="player_0_name">こしあん</td></tr>
-            <tr><td>👛</td><td id="player_0_money">1000</td></tr>
-            <tr><td>💰</td><td id="player_0_salary">200</td></tr>
-            <tr><td>🃏</td><td id="player_0_talon">10</td></tr>
+            <tr><td>😺</td><td class="player_name" colspan=3>こしあん</td></tr>
+            <tr><td>👛</td><td class="player_money">1000</td>
+                <td>💰</td><td class="player_salary">200</td></tr>
+            <tr><td>🃏</td><td class="player_hand">5</td>
+                <td>📇</td><td class="player_talon">5</td></tr>
           </table></td>
           <td><table id="player_1" class="player">
-            <tr><td>😺</td><td id="player_1_name">つぶあん</td></tr>
-            <tr><td>👛</td><td id="player_1_money">1000</td></tr>
-            <tr><td>💰</td><td id="player_1_salary">200</td></tr>
-            <tr><td>🃏</td><td id="player_1_talon">10</td></tr>
+            <tr><td>👻</td><td class="player_name" colspan=3>つぶあん</td></tr>
+            <tr><td>👛</td><td class="player_money">1000</td>
+                <td>💰</td><td class="player_salary">200</td></tr>
+            <tr><td>🃏</td><td class="player_hand">5</td>
+                <td>📇</td><td class="player_talon">5</td></tr>
           </table></td>
           <td><table id="player_2" class="player">
-            <tr><td>😺</td><td id="player_2_name">だいふく</td></tr>
-            <tr><td>👛</td><td id="player_2_money">1000</td></tr>
-            <tr><td>💰</td><td id="player_2_salary">200</td></tr>
-            <tr><td>🃏</td><td id="player_2_talon">10</td></tr>
+            <tr><td>👾</td><td class="player_name" colspan=3>どらやき</td></tr>
+            <tr><td>👛</td><td class="player_money">1000</td>
+                <td>💰</td><td class="player_salary">200</td></tr>
+            <tr><td>🃏</td><td class="player_hand">5</td>
+                <td>📇</td><td class="player_talon">5</td></tr>
           </table></td>
           <td><table id="player_3" class="player">
-            <tr><td>😺</td><td id="player_3_name">どらやき</td></tr>
-            <tr><td>👛</td><td id="player_3_money">1000</td></tr>
-            <tr><td>💰</td><td id="player_3_salary">200</td></tr>
-            <tr><td>🃏</td><td id="player_3_talon">10</td></tr>
+            <tr><td>🗿</td><td class="player_name" colspan=3>だいふく</td></tr>
+            <tr><td>👛</td><td class="player_money">1000</td>
+                <td>💰</td><td class="player_salary">200</td></tr>
+            <tr><td>🃏</td><td class="player_hand">5</td>
+                <td>📇</td><td class="player_talon">5</td></tr>
           </table></td>
         </tr>
       </table>
       <div id="message">
         🎲 こしあんのターンです 🎲
       </div>
-      <div id="board">
+      <div id="board" class="relative">
         <table class="field"><tbody>
           <tr><td id="field_0_0"></td><td id="field_1_0"></td><td id="field_2_0"></td><td id="field_3_0"></td><td id="field_4_0"></td><td id="field_5_0"></td><td id="field_6_0"></td><td id="field_7_0"></td><td id="field_8_0"></td><td id="field_9_0"></td><td id="field_10_0"></td><td id="field_11_0"></td></tr>
           <tr><td id="field_0_1"></td><td id="field_1_1"></td><td id="field_2_1"></td><td id="field_3_1"></td><td id="field_4_1"></td><td id="field_5_1"></td><td id="field_6_1"></td><td id="field_7_1"></td><td id="field_8_1"></td><td id="field_9_1"></td><td id="field_10_1"></td><td id="field_11_1"></td></tr>
@@ -251,7 +115,14 @@
       </div>
       <div id="deck_char" class="ui_box">
         キャラカード<br />
-        <span id="deck_char_0" class="deck_char"></span><span id="deck_char_1" class="deck_char"></span><span id="deck_char_2" class="deck_char"></span><span id="deck_char_3" class="deck_char"></span><span id="deck_char_4" class="deck_char"></span>
+        <div class="relative">
+          <table><tbody>
+            <tr><td id="deck_char_0" class="deck_char"></td><td id="deck_char_1" class="deck_char"></td><td id="deck_char_2" class="deck_char"></td><td id="deck_char_3" class="deck_char"></td><td id="deck_char_4" class="deck_char"></td>
+          </tbody></table>
+          <table class="click"><tbody>
+            <tr><td id="clickable_deck_char_0" class="deck_char"></td><td id="clickable_deck_char_1" class="deck_char"></td><td id="clickable_deck_char_2" class="deck_char"></td><td id="clickable_deck_char_3" class="deck_char"></td><td id="clickable_deck_char_4" class="deck_char"></td>
+          </tbody></table>
+        </div>
       </div>
       <div id="buttons">
         <table><tr>
