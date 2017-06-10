@@ -2453,9 +2453,6 @@ class HtmlView {
         this.client.sendRequest(__WEBPACK_IMPORTED_MODULE_2__client__["b" /* Request */].endTurn());
     }
     onClickMatching(mode) {
-        if (document.body.webkitRequestFullScreen) {
-            document.body.webkitRequestFullScreen();
-        }
         let name = document.getElementById("matching_name").value;
         if (name.length === 0) {
             return;
