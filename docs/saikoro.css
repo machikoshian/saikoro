@@ -33,7 +33,7 @@ body { width: 660px; color: #222; background-color: #82B1FF; }
 #matching_name_box {
     margin: 5px;
     padding: 10px;
-    width: 270px;
+    width: 330px;
 }
 #matching_name {
     font-size: 20px;
@@ -50,7 +50,7 @@ body { width: 660px; color: #222; background-color: #82B1FF; }
     vertical-align: middle;
     color: #666666;
     display: inline-block;
-    width: 100px;
+    width: 120px;
     height: 60px;
     border-radius:7px;
     background-color: #FFCA28;
