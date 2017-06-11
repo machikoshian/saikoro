@@ -100,6 +100,14 @@ export class Request {
         };
     }
 
+    static interactFacilityAction(card_id: CardId, target_player_id: PlayerId): Object {
+        return {
+            command: "interact",
+            card_id: card_id,
+            target_player_id: target_player_id,
+        };
+    }
+
     static endTurn(): Object {
         return {
             command: "build",

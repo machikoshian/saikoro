@@ -231,8 +231,17 @@ export class HtmlView {
         }
     }
 
-    private onClickPlayer(player_id: PlayerId): void {
-        // this.message_view.drawMessage(`${player_id}`);
+    private onClickPlayer(target_player_id: PlayerId): void {
+        if (this.session.getPhase() !== Phase.FacilityActionWithInteraction) {
+            return;
+        }
+        const target_facilities: CardId[] = this.session.getTargetFacilities();
+        if (target_facilities.length === 0) {
+            return;
+        }
+        const card_id: CardId = target_facilities[0];
+        this.client.sendRequest(Request.interactFacilityAction(card_id, target_player_id));
+        this.drawEventsLater();
     }
 
     private onClickDeckField(x: number, y: number): void {
@@ -861,6 +870,12 @@ export class HtmlView {
                     this.drawMoneyMotion(money, pid, x, y);
                 }, delay);
             }
+        }
+
+        if (event.type === EventType.Interaction) {
+            let message = "対象プレイヤーを選択してください";
+            let color: string = this.getPlayerColor(event.player_id);
+            this.message_view.drawMessage(message, color);
         }
         return true;
     }

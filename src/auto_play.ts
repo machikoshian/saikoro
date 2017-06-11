@@ -12,8 +12,22 @@ export class AutoPlay {
                 return session.diceRoll(player_id, 2, 0);
             case Phase.BuildFacility:
                 return AutoPlay.playBuildFacility(session);
+            case Phase.FacilityActionWithInteraction:
+                return AutoPlay.playInteractFacilityAction(session);
         }
         return false;
+    }
+
+    static playInteractFacilityAction(session: Session): boolean {
+        let player_id: PlayerId = session.getCurrentPlayerId();
+        let target_facilities: CardId[] = session.getTargetFacilities();
+        let target_id: PlayerId = (player_id === 0) ? 1 : 0;  // TODO: Fixme :)
+
+        if (target_facilities.length === 0) {
+            return false;
+        }
+
+        return session.interactFacilityAction(player_id, target_facilities[0], target_id);
     }
 
     static playBuildFacility(session: Session): boolean {

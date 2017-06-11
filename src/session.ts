@@ -1024,4 +1024,7 @@ export class Session {
     public getDiceDelta(): number {
         return this.effect_manager.getDiceDelta();
     }
+    public getTargetFacilities(): CardId[] {
+        return this.target_facilities;
+    }
 }

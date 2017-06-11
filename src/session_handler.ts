@@ -144,6 +144,16 @@ export class SessionHandler {
             }
         }
 
+        else if (query.command === "interact") {
+            let player_id: PlayerId = Number(query.player_id);
+            let card_id: CardId = Number(query.card_id);
+            let target_player_id: PlayerId = Number(query.target_player_id);
+            if (session.interactFacilityAction(player_id, card_id, target_player_id)) {
+                // TODO: integrate interactFacilityAction and doNext.
+                this.doNext(session);
+            }
+        }
+
         else if (query.command === "quit") {
             let player_id: PlayerId = Number(query.player_id);
             if (session.quit(player_id)) {
