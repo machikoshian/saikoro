@@ -15,7 +15,7 @@ export enum Phase {
     FacilityAction,  // Blue and Greeen
     FacilityActionRed,
     FacilityActionPurple,
-    FacilityActionPurpleWithArgs,
+    FacilityActionWithInteraction,
     // FacilityAction2,
     // FacilityAction3,
     // FacilityAction4,
@@ -92,6 +92,7 @@ export class Session {
     private turn: number;
     private current_player_id: PlayerId;
     private winner: PlayerId;
+    private target_facilities: CardId[];
     private dice_result: DiceResult;  // TODO: change it to Events.
 
     constructor() {
@@ -106,6 +107,7 @@ export class Session {
         this.turn = 0;
         this.current_player_id = 0;
         this.winner = -1;  // NO_PLAYER
+        this.target_facilities = [];
         this.dice_result = null;
     }
 
@@ -123,6 +125,7 @@ export class Session {
             turn: this.turn,
             current_player_id: this.current_player_id,
             winner: this.winner,
+            target_facilities: this.target_facilities,
             dice_result: this.dice_result ? this.dice_result.toJSON() : null,
         };
     }
@@ -142,6 +145,7 @@ export class Session {
         session.turn = json.turn;
         session.current_player_id = json.current_player_id;
         session.winner = json.winner;
+        session.target_facilities = json.target_facilities;
         session.dice_result = json.dice_result ? DiceResult.fromJSON(json.dice_result) : null;
         return session;
     }
@@ -188,10 +192,18 @@ export class Session {
                 return;
 
             case Phase.FacilityActionPurple:
-            //     this.phase = Phase.FacilityActionPurpleWithArgs;
-            //     return;
+                if (this.target_facilities.length === 0) {
+                    this.phase = Phase.PaySalary;
+                    return;
+                }
+                this.phase = Phase.FacilityActionWithInteraction;
+                return;
 
-            // case Phase.FacilityActionPurpleWithArgs:
+            case Phase.FacilityActionWithInteraction:
+                if (this.target_facilities.length > 0) {
+                    // If target_facilities remains, keep the same phase while increasing the step.
+                    return;
+                }
                 this.phase = Phase.PaySalary;
                 return;
 
@@ -243,7 +255,7 @@ export class Session {
                 return this.facilityAction(this.phase);
             case Phase.FacilityActionPurple:
                 return this.facilityAction(this.phase);
-            case Phase.FacilityActionPurpleWithArgs:
+            case Phase.FacilityActionWithInteraction:
                 return false;
             case Phase.PaySalary:
                 return this.paySalary();
@@ -317,12 +329,16 @@ export class Session {
         return true;
     }
 
-    public diceRoll(player_id: number, dice_num: number, aim: number): boolean {
+    public diceRoll(player_id: PlayerId, dice_num: number, aim: number): boolean {
         if (!this.isValid(player_id, Phase.DiceRoll)) {
             return false;
         }
         let delta: number = this.effect_manager.getDiceDelta();
         this.dice_result = Dice.roll(dice_num, aim, delta);
+
+        // TODO: Move this to other place?
+        this.target_facilities = this.getFacilitiesInArea(this.dice_result.result());
+
         let event: Event = new Event();
         this.events.push(event);
         event.type = EventType.Dice;
@@ -333,9 +349,33 @@ export class Session {
         return true;
     }
 
+    public interactFacilityAction(player_id: PlayerId, card_id: CardId,
+                                  target_id: PlayerId): boolean {
+        if (!this.isValid(player_id, Phase.FacilityActionWithInteraction)) {
+            return false;
+        }
+
+        if (this.target_facilities.length === 0) {
+            return false;
+        }
+
+        if (this.target_facilities[0] !== card_id) {
+            return false;
+        }
+
+        let event: Event = this.doFacilityActionWithTargetPlayer(card_id, target_id);
+        if (event.type === EventType.None) {
+            return false;
+        }
+
+        this.events.push(event);
+        this.target_facilities.shift();
+
+        return this.facilityAction(Phase.FacilityActionWithInteraction);
+    }
+
     public facilityAction(phase: Phase): boolean {
         let number: number = this.dice_result.result();
-        let facilities: CardId[] = this.getFacilitiesInArea(number);
         let facility_types: FacilityType[] = [];
         switch(phase) {
             case Phase.FacilityAction:
@@ -345,19 +385,29 @@ export class Session {
                 facility_types = [FacilityType.Red];
                 break;
             case Phase.FacilityActionPurple:
+            case Phase.FacilityActionWithInteraction:  // Only Purple has interactive facilities.
                 facility_types = [FacilityType.Purple];
                 break;
         }
 
-        for (let type of facility_types) {
-            for (let card_id of facilities) {
-                let facility: Facility = this.getFacility(card_id);
-                if (facility.getType() !== type) {
-                    continue;
-                }
-                this.doFacilityAction(card_id);
+        while (this.target_facilities.length > 0) {
+            let card_id: CardId = this.target_facilities[0];
+            let facility: Facility = this.getFacility(card_id);
+            if (facility_types.indexOf(facility.getType()) === -1) {
+                break;
             }
+
+            let event: Event = this.doFacilityAction(card_id);
+            if (event.type !== EventType.None) {
+                this.events.push(event);
+            }
+            if (event.type === EventType.Interaction) {
+                // The facility requires user's interaction.
+                break;
+            }
+            this.target_facilities.shift();
         }
+
         this.done(phase);
         return true;
     }
@@ -406,7 +456,37 @@ export class Session {
         return actual;
     }
 
-    public doFacilityAction(card_id: CardId) {
+    public doFacilityActionWithTargetPlayer(card_id: CardId, target_id: PlayerId): Event {
+        let event: Event = new Event();
+        let facility: Facility = this.getFacility(card_id);
+        if (facility.getType() !== FacilityType.Purple) {
+            return event;
+        }
+
+        if (facility.property["all"] === true) {
+            return event;
+        }
+
+        let player_id: PlayerId = this.getCurrentPlayerId();
+        let owner_id: PlayerId = this.getOwnerId(card_id);
+        if (player_id !== owner_id) {
+            return event;
+        }
+
+        let owner: Player = this.getOwner(card_id);
+        event.step = this.step;
+        event.card_id = card_id;
+        event.type = EventType.Purple;
+
+        let value: number = facility.getPropertyValue();
+        let amount: number = this.moveMoney(target_id, owner_id, value);
+        event.moneys[target_id] -= amount;
+        event.moneys[owner_id] += amount;
+
+        return event;
+    }
+
+    public doFacilityAction(card_id: CardId): Event {
         let facility: Facility = this.getFacility(card_id);
         let player_id: PlayerId = this.getCurrentPlayerId();
         let owner_id: PlayerId = this.getOwnerId(card_id);
@@ -415,7 +495,6 @@ export class Session {
         event.step = this.step;
         event.card_id = card_id;
 
-        // TODO: Add event log.
         if (facility.getType() === FacilityType.Blue) {
             let amount: number = owner.addMoney(facility.getPropertyValue());
             event.type = EventType.Blue;
@@ -452,21 +531,23 @@ export class Session {
         else if (facility.getType() === FacilityType.Purple) {
             if (player_id === owner_id) {
                 let value: number = facility.getPropertyValue();
-                event.type = EventType.Purple;
-                for (let pid: number = 0; pid < this.players.length; ++pid) {
-                    if (pid === owner_id) {
-                        continue;
+                if (facility.property["all"] !== true) {  // TODO: Update the logic.
+                    event.type = EventType.Interaction;
+                }
+                else {
+                    event.type = EventType.Purple;
+                    for (let pid: number = 0; pid < this.players.length; ++pid) {
+                        if (pid === owner_id) {
+                            continue;
+                        }
+                        let amount: number = this.moveMoney(pid, owner_id, value);
+                        event.moneys[pid] -= amount;
+                        event.moneys[owner_id] += amount;
                     }
-                    let amount: number = this.moveMoney(pid, owner_id, value);
-                    event.moneys[pid] -= amount;
-                    event.moneys[owner_id] += amount;
                 }
             }
         }
-
-        if (event.type !== EventType.None) {
-            this.events.push(event);
-        }
+        return event;
     }
 
     private getOverwriteCosts(x: number, y: number, size: number): number[] {
