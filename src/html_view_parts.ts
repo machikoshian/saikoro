@@ -542,7 +542,7 @@ export class HtmlButtonsView extends HtmlViewObject {
 
     public draw(session: Session, player_id: PlayerId): void {
         if (session.getCurrentPlayerId() !== player_id) {
-            this.none();
+            this.hide();
             return;
         }
 
