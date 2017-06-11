@@ -147,6 +147,8 @@ var FACILITY_DATA = [
     new FacilityData(22, 1, [11], "👓", 100, FacilityType.Green, { "value": 1000 }),
     new FacilityData(23, 1, [12], "🔨", 300, FacilityType.Purple, { "value": 2000 }),
     new FacilityData(24, 2, [8], "🍻", 300, FacilityType.Red, { "value": 100, "all": true }),
+    new FacilityData(25, 2, [8], "🎥", 300, FacilityType.Purple, { "value": 200, "all": true }),
+    new FacilityData(26, 2, [9], "🐬", 500, FacilityType.Purple, { "value": 300, "all": true }),
 ];
 var LANDMARK_DATA_BASE = 10000;
 var LANDMARK_DATA = [
@@ -252,7 +254,12 @@ var Facility = (function () {
                     return this.property["value"] + "\u30B3\u30A4\u30F3\u596A\u3046\n\u81EA\u5206\u4EE5\u5916\u306E\u30BF\u30FC\u30F3\u306E\u307F";
                 }
             case FacilityType.Purple:
-                return this.property["value"] + "\u30B3\u30A4\u30F3\u596A\u3046\n\u81EA\u5206\u306E\u30BF\u30FC\u30F3\u306E\u307F";
+                if (this.property["all"]) {
+                    return this.property["value"] + "\u30B3\u30A4\u30F3\u3092\u5168\u54E1\u304B\u3089\u596A\u3046\n\u81EA\u5206\u306E\u30BF\u30FC\u30F3\u306E\u307F";
+                }
+                else {
+                    return this.property["value"] + "\u30B3\u30A4\u30F3\u596A\u3046\n\u81EA\u5206\u306E\u30BF\u30FC\u30F3\u306E\u307F";
+                }
         }
         return "";
     };
@@ -326,29 +333,33 @@ var Phase;
     Phase[Phase["DiceRoll"] = 3] = "DiceRoll";
     // DiceRollAgain,
     Phase[Phase["FacilityAction"] = 4] = "FacilityAction";
+    Phase[Phase["FacilityActionRed"] = 5] = "FacilityActionRed";
+    Phase[Phase["FacilityActionPurple"] = 6] = "FacilityActionPurple";
+    Phase[Phase["FacilityActionWithInteraction"] = 7] = "FacilityActionWithInteraction";
     // FacilityAction2,
     // FacilityAction3,
     // FacilityAction4,
     // FacilityAction5,
-    Phase[Phase["PaySalary"] = 5] = "PaySalary";
-    Phase[Phase["BuildFacility"] = 6] = "BuildFacility";
-    Phase[Phase["CardRemoval"] = 7] = "CardRemoval";
-    Phase[Phase["EndTurn"] = 8] = "EndTurn";
-    Phase[Phase["EndGame"] = 9] = "EndGame";
+    Phase[Phase["PaySalary"] = 8] = "PaySalary";
+    Phase[Phase["BuildFacility"] = 9] = "BuildFacility";
+    Phase[Phase["CardRemoval"] = 10] = "CardRemoval";
+    Phase[Phase["EndTurn"] = 11] = "EndTurn";
+    Phase[Phase["EndGame"] = 12] = "EndGame";
 })(Phase = exports.Phase || (exports.Phase = {}));
 var EventType;
 (function (EventType) {
     EventType[EventType["None"] = 0] = "None";
-    EventType[EventType["Blue"] = 1] = "Blue";
-    EventType[EventType["Green"] = 2] = "Green";
-    EventType[EventType["Red"] = 3] = "Red";
-    EventType[EventType["Purple"] = 4] = "Purple";
-    EventType[EventType["Build"] = 5] = "Build";
-    EventType[EventType["Character"] = 6] = "Character";
-    EventType[EventType["Dice"] = 7] = "Dice";
-    EventType[EventType["Salary"] = 8] = "Salary";
-    EventType[EventType["Draw"] = 9] = "Draw";
-    EventType[EventType["Quit"] = 10] = "Quit";
+    EventType[EventType["Draw"] = 1] = "Draw";
+    EventType[EventType["Character"] = 2] = "Character";
+    EventType[EventType["Dice"] = 3] = "Dice";
+    EventType[EventType["Blue"] = 4] = "Blue";
+    EventType[EventType["Green"] = 5] = "Green";
+    EventType[EventType["Red"] = 6] = "Red";
+    EventType[EventType["Purple"] = 7] = "Purple";
+    EventType[EventType["Build"] = 8] = "Build";
+    EventType[EventType["Salary"] = 9] = "Salary";
+    EventType[EventType["Interaction"] = 10] = "Interaction";
+    EventType[EventType["Quit"] = 11] = "Quit";
 })(EventType = exports.EventType || (exports.EventType = {}));
 var Event = (function () {
     function Event() {
@@ -402,6 +413,7 @@ var Session = (function () {
         this.turn = 0;
         this.current_player_id = 0;
         this.winner = -1; // NO_PLAYER
+        this.target_facilities = [];
         this.dice_result = null;
     }
     Session.prototype.toJSON = function () {
@@ -418,6 +430,7 @@ var Session = (function () {
             turn: this.turn,
             current_player_id: this.current_player_id,
             winner: this.winner,
+            target_facilities: this.target_facilities,
             dice_result: this.dice_result ? this.dice_result.toJSON() : null,
         };
     };
@@ -436,6 +449,7 @@ var Session = (function () {
         session.turn = json.turn;
         session.current_player_id = json.current_player_id;
         session.winner = json.winner;
+        session.target_facilities = json.target_facilities;
         session.dice_result = json.dice_result ? dice_1.DiceResult.fromJSON(json.dice_result) : null;
         return session;
     };
@@ -468,6 +482,24 @@ var Session = (function () {
                 this.phase = Phase.FacilityAction;
                 return;
             case Phase.FacilityAction:
+                this.phase = Phase.FacilityActionRed;
+                return;
+            case Phase.FacilityActionRed:
+                this.phase = Phase.FacilityActionPurple;
+                return;
+            case Phase.FacilityActionPurple:
+                if (this.target_facilities.length === 0) {
+                    this.phase = Phase.PaySalary;
+                    return;
+                }
+                this.phase = Phase.FacilityActionWithInteraction;
+                return;
+            case Phase.FacilityActionWithInteraction:
+                if (this.target_facilities.length > 0) {
+                    // If target_facilities remains, go back to the previous step.
+                    this.phase = Phase.FacilityActionPurple;
+                    return;
+                }
                 this.phase = Phase.PaySalary;
                 return;
             case Phase.PaySalary:
@@ -510,7 +542,13 @@ var Session = (function () {
             case Phase.DiceRoll:
                 return false; // Need interactions.
             case Phase.FacilityAction:
-                return this.facilityAction();
+                return this.facilityAction(this.phase);
+            case Phase.FacilityActionRed:
+                return this.facilityAction(this.phase);
+            case Phase.FacilityActionPurple:
+                return this.facilityAction(this.phase);
+            case Phase.FacilityActionWithInteraction:
+                return false;
             case Phase.PaySalary:
                 return this.paySalary();
             case Phase.BuildFacility:
@@ -578,6 +616,8 @@ var Session = (function () {
         }
         var delta = this.effect_manager.getDiceDelta();
         this.dice_result = dice_1.Dice.roll(dice_num, aim, delta);
+        // TODO: Move this to other place?
+        this.target_facilities = this.getFacilitiesInArea(this.dice_result.result());
         var event = new Event();
         this.events.push(event);
         event.type = EventType.Dice;
@@ -587,33 +627,85 @@ var Session = (function () {
         this.done(Phase.DiceRoll);
         return true;
     };
-    Session.prototype.facilityAction = function () {
-        var number = this.dice_result.result();
-        if (number < 1 || 12 < number) {
-            this.done(Phase.FacilityAction);
-            return true;
+    Session.prototype.interactFacilityAction = function (player_id, card_id, target_id) {
+        if (!this.isValid(player_id, Phase.FacilityActionWithInteraction)) {
+            return false;
         }
-        var facilities = [];
-        for (var y = 0; y < 5; y++) {
-            var card_id = this.getCardIdOnBoard(number - 1, 4 - y);
-            if (card_id !== -1) {
-                facilities.push(card_id);
-            }
+        if (this.target_facilities.length === 0) {
+            return false;
         }
-        var type_order = [facility_1.FacilityType.Blue, facility_1.FacilityType.Green, facility_1.FacilityType.Red, facility_1.FacilityType.Purple];
-        for (var _i = 0, type_order_1 = type_order; _i < type_order_1.length; _i++) {
-            var type = type_order_1[_i];
-            for (var _a = 0, facilities_1 = facilities; _a < facilities_1.length; _a++) {
-                var card_id = facilities_1[_a];
-                var facility = this.getFacility(card_id);
-                if (facility.getType() !== type) {
-                    continue;
-                }
-                this.doFacilityAction(card_id);
-            }
+        if (this.target_facilities[0] !== card_id) {
+            return false;
         }
-        this.done(Phase.FacilityAction);
+        var event = this.doFacilityActionWithTargetPlayer(card_id, target_id);
+        if (event.type === EventType.None) {
+            return false;
+        }
+        this.events.push(event);
+        this.target_facilities.shift();
+        this.done(Phase.FacilityActionWithInteraction);
         return true;
+    };
+    Session.prototype.facilityAction = function (phase) {
+        var number = this.dice_result.result();
+        var facility_types = [];
+        switch (phase) {
+            case Phase.FacilityAction:
+                facility_types = [facility_1.FacilityType.Blue, facility_1.FacilityType.Green];
+                break;
+            case Phase.FacilityActionRed:
+                facility_types = [facility_1.FacilityType.Red];
+                break;
+            case Phase.FacilityActionPurple:
+            case Phase.FacilityActionWithInteraction:
+                facility_types = [facility_1.FacilityType.Purple];
+                break;
+        }
+        while (this.target_facilities.length > 0) {
+            var card_id = this.target_facilities[0];
+            var facility = this.getFacility(card_id);
+            if (facility_types.indexOf(facility.getType()) === -1) {
+                break;
+            }
+            var event_2 = this.doFacilityAction(card_id);
+            if (event_2.type !== EventType.None) {
+                this.events.push(event_2);
+            }
+            if (event_2.type === EventType.Interaction) {
+                // The facility requires user's interaction.
+                break;
+            }
+            this.target_facilities.shift();
+        }
+        this.done(phase);
+        return true;
+    };
+    Session.prototype.getFacilitiesInArea = function (area) {
+        var _this = this;
+        var x = area - 1;
+        var card_ids = [];
+        if (x < 0 || 11 < x) {
+            return card_ids;
+        }
+        var map_y = {};
+        for (var y = 0; y < 5; y++) {
+            var card_id = this.getCardIdOnBoard(x, y);
+            if (this.card_manager.isFacility(card_id)) {
+                card_ids.push(card_id);
+                map_y[card_id] = y;
+            }
+        }
+        return card_ids.sort(function (id1, id2) {
+            var f1 = _this.getFacility(id1);
+            var f2 = _this.getFacility(id2);
+            // Blue < Green < Red < Purple
+            if (f1.getType() !== f2.getType()) {
+                return f1.getType() - f2.getType();
+            }
+            // TODO: change the order for Red.
+            // y4 < y3 < y2 < y1 < y0;
+            return map_y[id2] - map_y[id1];
+        });
     };
     Session.prototype.moveMoney = function (player_id_from, player_id_to, money) {
         if (player_id_from === player_id_to) {
@@ -626,6 +718,31 @@ var Session = (function () {
         this.getPlayer(player_id_to).addMoney(actual);
         return actual;
     };
+    Session.prototype.doFacilityActionWithTargetPlayer = function (card_id, target_id) {
+        var event = new Event();
+        var facility = this.getFacility(card_id);
+        if (facility.getType() !== facility_1.FacilityType.Purple) {
+            return event;
+        }
+        if (facility.property["all"] === true) {
+            return event;
+        }
+        var player_id = this.getCurrentPlayerId();
+        var owner_id = this.getOwnerId(card_id);
+        if (player_id !== owner_id) {
+            return event;
+        }
+        var owner = this.getOwner(card_id);
+        event.step = this.step;
+        event.card_id = card_id;
+        event.player_id = player_id;
+        event.type = EventType.Purple;
+        var value = facility.getPropertyValue();
+        var amount = this.moveMoney(target_id, owner_id, value);
+        event.moneys[target_id] -= amount;
+        event.moneys[owner_id] += amount;
+        return event;
+    };
     Session.prototype.doFacilityAction = function (card_id) {
         var facility = this.getFacility(card_id);
         var player_id = this.getCurrentPlayerId();
@@ -634,7 +751,7 @@ var Session = (function () {
         var event = new Event();
         event.step = this.step;
         event.card_id = card_id;
-        // TODO: Add event log.
+        event.player_id = player_id;
         if (facility.getType() === facility_1.FacilityType.Blue) {
             var amount = owner.addMoney(facility.getPropertyValue());
             event.type = EventType.Blue;
@@ -671,20 +788,23 @@ var Session = (function () {
         else if (facility.getType() === facility_1.FacilityType.Purple) {
             if (player_id === owner_id) {
                 var value = facility.getPropertyValue();
-                event.type = EventType.Purple;
-                for (var pid = 0; pid < this.players.length; ++pid) {
-                    if (pid === owner_id) {
-                        continue;
+                if (facility.property["all"] !== true) {
+                    event.type = EventType.Interaction;
+                }
+                else {
+                    event.type = EventType.Purple;
+                    for (var pid = 0; pid < this.players.length; ++pid) {
+                        if (pid === owner_id) {
+                            continue;
+                        }
+                        var amount = this.moveMoney(pid, owner_id, value);
+                        event.moneys[pid] -= amount;
+                        event.moneys[owner_id] += amount;
                     }
-                    var amount = this.moveMoney(pid, owner_id, value);
-                    event.moneys[pid] -= amount;
-                    event.moneys[owner_id] += amount;
                 }
             }
         }
-        if (event.type !== EventType.None) {
-            this.events.push(event);
-        }
+        return event;
     };
     Session.prototype.getOverwriteCosts = function (x, y, size) {
         var costs = [0, 0, 0, 0];
@@ -1101,6 +1221,9 @@ var Session = (function () {
     Session.prototype.getDiceDelta = function () {
         return this.effect_manager.getDiceDelta();
     };
+    Session.prototype.getTargetFacilities = function () {
+        return this.target_facilities;
+    };
     return Session;
 }());
 exports.Session = Session;
@@ -1190,6 +1313,13 @@ var Request = (function () {
         return {
             command: "character",
             card_id: card_id,
+        };
+    };
+    Request.interactFacilityAction = function (card_id, target_player_id) {
+        return {
+            command: "interact",
+            card_id: card_id,
+            target_player_id: target_player_id,
         };
     };
     Request.endTurn = function () {
@@ -1662,8 +1792,19 @@ var AutoPlay = (function () {
                 return session.diceRoll(player_id, 2, 0);
             case session_1.Phase.BuildFacility:
                 return AutoPlay.playBuildFacility(session);
+            case session_1.Phase.FacilityActionWithInteraction:
+                return AutoPlay.playInteractFacilityAction(session);
         }
         return false;
+    };
+    AutoPlay.playInteractFacilityAction = function (session) {
+        var player_id = session.getCurrentPlayerId();
+        var target_facilities = session.getTargetFacilities();
+        var target_id = (player_id === 0) ? 1 : 0; // TODO: Fixme :)
+        if (target_facilities.length === 0) {
+            return false;
+        }
+        return session.interactFacilityAction(player_id, target_facilities[0], target_id);
     };
     AutoPlay.playBuildFacility = function (session) {
         var landmarks = session.getLandmarks();
@@ -2369,7 +2510,6 @@ var HtmlView = (function () {
         this.deck_char_view = null;
         this.clicked_field = [-1, -1];
         this.cards_views = [];
-        this.player_views = [];
         this.back_button_view = null;
         this.reset_button_view = null;
         this.board_view = null;
@@ -2427,11 +2567,11 @@ var HtmlView = (function () {
         this.buttons_view.end_turn.addClickListener(function () { _this.onClickEndTurn(); });
         // Message view.
         this.message_view = new html_view_parts_1.HtmlMessageView("message");
-        // HtmlPlayerView
-        for (var pid = 0; pid < 4; ++pid) {
-            var player_view = new html_view_parts_1.HtmlPlayerView(pid);
-            this.player_views.push(player_view);
-        }
+        // HtmlPlayersView
+        this.players_view = new html_view_parts_1.HtmlPlayersView("players");
+        this.players_view.callback = function (player_id) {
+            _this.onClickPlayer(player_id);
+        };
         // Board
         this.board_view = new html_view_parts_1.HtmlBoardView("board", row, column);
         this.board_view.callback = function (x, y) {
@@ -2484,19 +2624,15 @@ var HtmlView = (function () {
         // Hide all
         document.getElementById("matching").style.display = "none";
         this.back_button_view.none();
-        document.getElementById("players").style.display = "none";
-        for (var _i = 0, _a = this.player_views; _i < _a.length; _i++) {
-            var player_view = _a[_i];
-            player_view.none();
-        }
+        this.players_view.none();
         this.message_view.none();
         this.board_view.none();
         this.deck_char_view.none();
         this.buttons_view.none();
         this.landmarks_view.none();
         this.reset_button_view.none();
-        for (var _b = 0, _c = this.cards_views; _b < _c.length; _b++) {
-            var cards_view = _c[_b];
+        for (var _i = 0, _a = this.cards_views; _i < _a.length; _i++) {
+            var cards_view = _a[_i];
             cards_view.none();
         }
         this.field_card_view.none();
@@ -2510,16 +2646,14 @@ var HtmlView = (function () {
             this.board_view.show();
             this.deck_char_view.show();
             this.drawDeckBoard();
-            for (var _d = 0, _e = this.cards_views[0].cards; _d < _e.length; _d++) {
-                var card_view = _e[_d];
+            for (var _b = 0, _c = this.cards_views[0].cards; _b < _c.length; _b++) {
+                var card_view = _c[_b];
                 card_view.none();
             }
             return;
         }
         if (scene === Scene.Game) {
             // Show components for game.
-            document.getElementById("players").style.display = "";
-            // Message view.
             this.message_view.show();
             this.board_view.show();
             this.board_view.redraw();
@@ -2532,6 +2666,18 @@ var HtmlView = (function () {
             }
             return;
         }
+    };
+    HtmlView.prototype.onClickPlayer = function (target_player_id) {
+        if (this.session.getPhase() !== session_1.Phase.FacilityActionWithInteraction) {
+            return;
+        }
+        var target_facilities = this.session.getTargetFacilities();
+        if (target_facilities.length === 0) {
+            return;
+        }
+        var card_id = target_facilities[0];
+        this.client.sendRequest(client_1.Request.interactFacilityAction(card_id, target_player_id));
+        this.drawEventsLater();
     };
     HtmlView.prototype.onClickDeckField = function (x, y) {
         var _a = this.clicked_field, px = _a[0], py = _a[1];
@@ -2805,6 +2951,13 @@ var HtmlView = (function () {
                 this.drawField(x, y, facility_id, facility, owner_id);
             }
         }
+        if (session.getCurrentPlayerId() === this.client.player_id &&
+            session.getPhase() === session_1.Phase.FacilityActionWithInteraction &&
+            session.getTargetFacilities().length > 0) {
+            var facility_id = session.getTargetFacilities()[0];
+            var _a = session.getPosition(facility_id), x = _a[0], y = _a[1];
+            this.board_view.setHighlight([x, y], COLOR_CLICKABLE);
+        }
     };
     HtmlView.prototype.drawDeckBoard = function () {
         var board = this.deck_maker.board;
@@ -2848,15 +3001,6 @@ var HtmlView = (function () {
         field.style.backgroundColor = owner_color;
         field.style.borderColor = this.getFacilityColor(facility);
         field.colSpan = facility.size;
-    };
-    HtmlView.prototype.drawPlayers = function () {
-        var players = this.session.getPlayers();
-        for (var i = 0; i < players.length; ++i) {
-            this.player_views[i].draw(this.session);
-        }
-        for (var i = players.length; i < 4; ++i) {
-            this.player_views[i].hide();
-        }
     };
     // TODO: move this function to other place/class.
     HtmlView.prototype.hasCharacterCard = function (session, player_id) {
@@ -2914,7 +3058,7 @@ var HtmlView = (function () {
     };
     HtmlView.prototype.drawSession = function (session) {
         this.drawStatusMessage(session);
-        this.drawPlayers();
+        this.players_view.draw(session);
         this.drawBoard(session);
         this.drawCards(session);
         // Update buttons.
@@ -3027,7 +3171,7 @@ var HtmlView = (function () {
                 if (money === 0) {
                     continue;
                 }
-                this.player_views[pid].addMoney(money);
+                this.players_view.players[pid].addMoney(money);
                 var name_1 = this.session.getPlayer(pid).name;
                 var message = name_1 + " \u306B\u7D66\u6599 " + money + " \u304C\u5165\u308A\u307E\u3057\u305F";
                 var color = this.getPlayerColor(pid);
@@ -3078,10 +3222,26 @@ var HtmlView = (function () {
                 }
                 window.setTimeout(function () {
                     _this.drawMoneyMotion(money, pid, x_3, y_2);
+                    _this.board_view.setHighlight([x_3, y_2], COLOR_CLICKABLE);
+                    window.setTimeout(function () {
+                        _this.board_view.setHighlight([x_3, y_2], "transparent");
+                    }, 1000);
                 }, delay);
             };
             for (var pid = 0; pid < event.moneys.length; pid++) {
                 _loop_4(pid);
+            }
+        }
+        if (event.type === session_1.EventType.Interaction) {
+            var color = this.getPlayerColor(event.player_id);
+            var position = this.session.getPosition(event.card_id);
+            this.board_view.setHighlight(position, COLOR_CLICKABLE);
+            if (event.player_id === this.client.player_id) {
+                this.message_view.drawMessage("対象プレイヤーを選択してください", color);
+                this.players_view.setClickableForPlayer(event.player_id);
+            }
+            else {
+                this.message_view.drawMessage("対象プレイヤーを選択中です", color);
             }
         }
         return true;
@@ -3093,7 +3253,7 @@ var HtmlView = (function () {
         else if (money < 0) {
             this.effectMoneyMotion("player_" + player_id, "field_" + x + "_" + y, money);
         }
-        this.player_views[player_id].addMoney(money);
+        this.players_view.players[player_id].addMoney(money);
     };
     HtmlView.prototype.getPosition = function (element_id) {
         var rect = document.getElementById(element_id).getBoundingClientRect();
@@ -3428,29 +3588,95 @@ var HtmlCardView = (function (_super) {
     return HtmlCardView;
 }(HtmlViewObject));
 exports.HtmlCardView = HtmlCardView;
+var HtmlPlayersView = (function (_super) {
+    __extends(HtmlPlayersView, _super);
+    function HtmlPlayersView(element_id) {
+        var _this = _super.call(this, document.getElementById(element_id)) || this;
+        _this.element_id = element_id;
+        _this.players = [];
+        _this.players_length = 0;
+        for (var pid = 0; pid < 4; ++pid) {
+            var player_view = new HtmlPlayerView(pid);
+            player_view.callback = function (player_id) {
+                _this.onClick(player_id);
+            };
+            _this.players.push(player_view);
+        }
+        return _this;
+    }
+    HtmlPlayersView.prototype.onClick = function (player_id) {
+        for (var _i = 0, _a = this.players; _i < _a.length; _i++) {
+            var player = _a[_i];
+            player.setClickable(false);
+        }
+        this.callback(player_id);
+    };
+    HtmlPlayersView.prototype.draw = function (session) {
+        var players = session.getPlayers();
+        this.players_length = players.length;
+        for (var i = 0; i < this.players_length; ++i) {
+            this.players[i].draw(session);
+        }
+        for (var i = this.players_length; i < 4; ++i) {
+            this.players[i].hide();
+        }
+        this.show();
+    };
+    HtmlPlayersView.prototype.setClickableForPlayer = function (player_id) {
+        for (var i = 0; i < this.players_length; ++i) {
+            this.players[i].setClickable(player_id !== i);
+        }
+    };
+    return HtmlPlayersView;
+}(HtmlViewObject));
+exports.HtmlPlayersView = HtmlPlayersView;
 var HtmlPlayerView = (function (_super) {
     __extends(HtmlPlayerView, _super);
     function HtmlPlayerView(player_id) {
         var _this = _super.call(this, document.getElementById("player_" + player_id)) || this;
         _this.money_animation_timer = null;
         _this.money = 0;
+        _this.is_clickable = false;
         _this.player_id = player_id;
+        _this.element_avatar = _this.element.getElementsByClassName("player_avatar")[0];
         _this.element_name = _this.element.getElementsByClassName("player_name")[0];
         _this.element_money = _this.element.getElementsByClassName("player_money")[0];
         _this.element_salary = _this.element.getElementsByClassName("player_salary")[0];
         _this.element_hand = _this.element.getElementsByClassName("player_hand")[0];
         _this.element_talon = _this.element.getElementsByClassName("player_talon")[0];
+        _this.addClickListener(function () { _this.onClick(); });
         return _this;
     }
+    HtmlPlayerView.prototype.onClick = function () {
+        if (this.is_clickable) {
+            this.callback(this.player_id);
+        }
+    };
     HtmlPlayerView.prototype.draw = function (session) {
         this.show();
         var player = session.getPlayer(this.player_id);
+        // Avatar
+        var npc_avatars = ["⛄", "👻", "👾", "🗿"];
+        var avatar = "😺";
+        if (player.isAuto()) {
+            avatar = npc_avatars[this.player_id];
+        }
+        this.element_avatar.innerText = avatar;
         this.element_name.innerText = player.name;
         this.element_salary.innerHTML = String(player.salary);
         var cards = session.getPlayerCards(this.player_id);
         this.element_hand.innerHTML = String(cards.getHandSize());
         this.element_talon.innerHTML = String(cards.getTalonSize());
         this.setMoney(player.getMoney());
+    };
+    HtmlPlayerView.prototype.setClickable = function (is_clickable) {
+        this.is_clickable = is_clickable;
+        if (is_clickable) {
+            this.element.style.backgroundColor = COLOR_CLICKABLE;
+        }
+        else {
+            this.element.style.backgroundColor = getPlayerColor(this.player_id);
+        }
     };
     HtmlPlayerView.prototype.setMoney = function (money) {
         this.money = money;
@@ -3523,9 +3749,11 @@ var HtmlBoardView = (function (_super) {
     HtmlBoardView.prototype.redraw = function () {
         this.clickable_fields.resetAll();
     };
-    HtmlBoardView.prototype.setClickable = function (_a, is_clickable) {
-        var x = _a[0], y = _a[1];
-        this.clickable_fields.setClickable([x, y], is_clickable);
+    HtmlBoardView.prototype.setClickable = function (position, is_clickable) {
+        this.clickable_fields.setClickable(position, is_clickable);
+    };
+    HtmlBoardView.prototype.setHighlight = function (position, color) {
+        this.clickable_fields.setHighlight(position, color);
     };
     HtmlBoardView.prototype.animateDiceResult = function (result, color) {
         this.clickable_fields.animateDiceResult(result, color);
@@ -3592,7 +3820,7 @@ var HtmlButtonsView = (function (_super) {
     }
     HtmlButtonsView.prototype.draw = function (session, player_id) {
         if (session.getCurrentPlayerId() !== player_id) {
-            this.none();
+            this.hide();
             return;
         }
         this.dice1.hide();
@@ -3668,6 +3896,10 @@ var HtmlClickableFieldsView = (function (_super) {
     HtmlClickableFieldsView.prototype.setClickable = function (_a, is_clickable) {
         var x = _a[0], y = _a[1];
         this.fields[x][y].setClickable(is_clickable);
+    };
+    HtmlClickableFieldsView.prototype.setHighlight = function (_a, color) {
+        var x = _a[0], y = _a[1];
+        this.fields[x][y].setColor(color);
     };
     HtmlClickableFieldsView.prototype.animateDiceResult = function (pip, color) {
         var _this = this;
@@ -3866,6 +4098,15 @@ var SessionHandler = (function () {
                     // TODO: integrate buildFacility and doNext.
                     this.doNext(session);
                 }
+            }
+        }
+        else if (query.command === "interact") {
+            var player_id = Number(query.player_id);
+            var card_id = Number(query.card_id);
+            var target_player_id = Number(query.target_player_id);
+            if (session.interactFacilityAction(player_id, card_id, target_player_id)) {
+                // TODO: integrate interactFacilityAction and doNext.
+                this.doNext(session);
             }
         }
         else if (query.command === "quit") {
