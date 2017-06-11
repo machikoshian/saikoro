@@ -201,7 +201,8 @@ export class Session {
 
             case Phase.FacilityActionWithInteraction:
                 if (this.target_facilities.length > 0) {
-                    // If target_facilities remains, keep the same phase while increasing the step.
+                    // If target_facilities remains, go back to the previous step.
+                    this.phase = Phase.FacilityActionPurple;
                     return;
                 }
                 this.phase = Phase.PaySalary;
@@ -370,8 +371,8 @@ export class Session {
 
         this.events.push(event);
         this.target_facilities.shift();
-
-        return this.facilityAction(Phase.FacilityActionWithInteraction);
+        this.done(Phase.FacilityActionWithInteraction);
+        return true;
     }
 
     public facilityAction(phase: Phase): boolean {
@@ -422,7 +423,7 @@ export class Session {
         let map_y: { [card_id: number]: number } = {};
         for (let y: number = 0; y < 5; y++) {
             let card_id: CardId = this.getCardIdOnBoard(x, y);
-            if (card_id !== -1) {
+            if (this.card_manager.isFacility(card_id)) {
                 card_ids.push(card_id);
                 map_y[card_id] = y;
             }

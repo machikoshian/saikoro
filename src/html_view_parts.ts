@@ -325,6 +325,7 @@ export class HtmlPlayersView extends HtmlViewObject {
         for (let i: number = this.players_length; i < 4; ++i) {
             this.players[i].hide();
         }
+        this.show();
     }
 
     public setClickableForPlayer(player_id: PlayerId): void {

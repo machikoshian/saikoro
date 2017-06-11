@@ -208,9 +208,6 @@ export class HtmlView {
 
         if (scene === Scene.Game) {
             // Show components for game.
-            document.getElementById("players").style.display = "";
-
-            // Message view.
             this.message_view.show();
             this.board_view.show();
             this.board_view.redraw();
@@ -868,14 +865,18 @@ export class HtmlView {
             }
         }
 
-        if (event.type === EventType.Interaction &&
-            event.player_id === this.client.player_id) {
-            let message = "対象プレイヤーを選択してください";
-            let color: string = this.getPlayerColor(event.player_id);
-            this.message_view.drawMessage(message, color);
-            let position: [number, number] = this.session.getPosition(event.card_id);
+        if (event.type === EventType.Interaction) {
+            const color: string = this.getPlayerColor(event.player_id);
+            const position: [number, number] = this.session.getPosition(event.card_id);
             this.board_view.setHighlight(position, COLOR_CLICKABLE);
-            this.players_view.setClickableForPlayer(event.player_id);
+
+            if (event.player_id === this.client.player_id) {
+                this.message_view.drawMessage("対象プレイヤーを選択してください", color);
+                this.players_view.setClickableForPlayer(event.player_id);
+            }
+            else {
+                this.message_view.drawMessage("対象プレイヤーを選択中です", color);
+            }
         }
         return true;
     }
