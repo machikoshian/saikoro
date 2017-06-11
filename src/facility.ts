@@ -71,7 +71,9 @@ const FACILITY_DATA: FacilityData[] = [
     new FacilityData(22, 1, [11], "👓", 100, FacilityType.Green,  {"value": 1000}),
     new FacilityData(23, 1, [12], "🔨", 300, FacilityType.Purple, {"value": 2000}),
 
-    new FacilityData(24, 2, [8], "🍻", 300, FacilityType.Red, {"value": 100, "all": true}),
+    new FacilityData(24, 2, [8], "🍻", 300, FacilityType.Red,    {"value": 100, "all": true}),
+    new FacilityData(25, 2, [8], "🎥", 300, FacilityType.Purple, {"value": 200, "all": true}),
+    new FacilityData(26, 2, [9], "🐬", 500, FacilityType.Purple, {"value": 300, "all": true}),
 ];
 
 const LANDMARK_DATA_BASE: number = 10000;
