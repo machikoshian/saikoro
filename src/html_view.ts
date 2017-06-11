@@ -120,18 +120,21 @@ export class HtmlView {
         // HtmlPlayerView
         for (let pid = 0; pid < 4; ++pid) {
             let player_view: HtmlPlayerView = new HtmlPlayerView(pid);
+            player_view.callback = (player_id: PlayerId) => {
+                this.onClickPlayer(player_id);
+            }
             this.player_views.push(player_view);
         }
 
         // Board
         this.board_view = new HtmlBoardView("board", row, column);
-        this.board_view.callback = (x, y) => {
+        this.board_view.callback = (x: number, y: number) => {
             this.onClickField(x, y);
         }
 
         // HtmlDeckCharView
         this.deck_char_view = new HtmlDeckCharView("deck_char");
-        this.deck_char_view.callback = (x) => {
+        this.deck_char_view.callback = (x: number) => {
             this.onClickDeckField(x, -1);
         }
 
@@ -226,6 +229,10 @@ export class HtmlView {
             }
             return;
         }
+    }
+
+    private onClickPlayer(player_id: PlayerId): void {
+        // this.message_view.drawMessage(`${player_id}`);
     }
 
     private onClickDeckField(x: number, y: number): void {

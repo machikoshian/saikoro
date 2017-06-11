@@ -302,6 +302,7 @@ export class HtmlPlayerView extends HtmlViewObject {
     private element_talon: HTMLElement;
     private money_animation_timer = null;
     private money: number = 0;
+    public callback: (player_id: PlayerId) => void;
 
     constructor(player_id: PlayerId) {
         super(document.getElementById(`player_${player_id}`));
@@ -312,6 +313,11 @@ export class HtmlPlayerView extends HtmlViewObject {
         this.element_salary = <HTMLElement>this.element.getElementsByClassName("player_salary")[0];
         this.element_hand   = <HTMLElement>this.element.getElementsByClassName("player_hand")[0];
         this.element_talon  = <HTMLElement>this.element.getElementsByClassName("player_talon")[0];
+        this.addClickListener(() => { this.onClick(); });
+    }
+
+    private onClick(): void {
+        this.callback(this.player_id);
     }
 
     public draw(session: Session): void {
