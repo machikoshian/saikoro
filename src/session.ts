@@ -15,6 +15,7 @@ export enum Phase {
     FacilityAction,  // Blue and Greeen
     FacilityActionRed,
     FacilityActionPurple,
+    FacilityActionPurpleWithArgs,
     // FacilityAction2,
     // FacilityAction3,
     // FacilityAction4,
@@ -28,15 +29,16 @@ export enum Phase {
 
 export enum EventType {
     None,
+    Draw,
+    Character,
+    Dice,
     Blue,
     Green,
     Red,
     Purple,
     Build,
-    Character,
-    Dice,
     Salary,
-    Draw,
+    Interaction,
     Quit,
 }
 
@@ -186,6 +188,10 @@ export class Session {
                 return;
 
             case Phase.FacilityActionPurple:
+            //     this.phase = Phase.FacilityActionPurpleWithArgs;
+            //     return;
+
+            // case Phase.FacilityActionPurpleWithArgs:
                 this.phase = Phase.PaySalary;
                 return;
 
@@ -237,6 +243,8 @@ export class Session {
                 return this.facilityAction(this.phase);
             case Phase.FacilityActionPurple:
                 return this.facilityAction(this.phase);
+            case Phase.FacilityActionPurpleWithArgs:
+                return false;
             case Phase.PaySalary:
                 return this.paySalary();
             case Phase.BuildFacility:
@@ -327,20 +335,8 @@ export class Session {
 
     public facilityAction(phase: Phase): boolean {
         let number: number = this.dice_result.result();
-        if (number < 1 || 12 < number) {
-            this.done(Phase.FacilityAction);
-            return true;
-        }
-
-        let facilities: CardId[] = [];
-        for (let y: number = 0; y < 5; y++) {
-            let card_id: CardId = this.getCardIdOnBoard(number - 1, 4 - y);
-            if (card_id !== -1) {
-                facilities.push(card_id);
-            }
-        }
-
-        let facility_types: FacilityType[];
+        let facilities: CardId[] = this.getFacilitiesInArea(number);
+        let facility_types: FacilityType[] = [];
         switch(phase) {
             case Phase.FacilityAction:
                 facility_types = [FacilityType.Blue, FacilityType.Green];
@@ -351,8 +347,6 @@ export class Session {
             case Phase.FacilityActionPurple:
                 facility_types = [FacilityType.Purple];
                 break;
-            default:
-                return false;
         }
 
         for (let type of facility_types) {
@@ -366,6 +360,38 @@ export class Session {
         }
         this.done(phase);
         return true;
+    }
+
+    public getFacilitiesInArea(area: number): CardId[] {
+        let x: number = area - 1;
+        let card_ids: CardId[] = [];
+        if (x < 0 || 11 < x) {
+            return card_ids;
+        }
+
+        let map_y: { [card_id: number]: number } = {};
+        for (let y: number = 0; y < 5; y++) {
+            let card_id: CardId = this.getCardIdOnBoard(x, y);
+            if (card_id !== -1) {
+                card_ids.push(card_id);
+                map_y[card_id] = y;
+            }
+        }
+
+        return card_ids.sort((id1: CardId, id2: CardId) => {
+            let f1: Facility = this.getFacility(id1);
+            let f2: Facility = this.getFacility(id2);
+
+            // Blue < Green < Red < Purple
+            if (f1.getType() !== f2.getType()) {
+                return f1.getType() - f2.getType();
+            }
+
+            // TODO: change the order for Red.
+
+            // y4 < y3 < y2 < y1 < y0;
+            return map_y[id2] - map_y[id1];
+        });
     }
 
     public moveMoney(player_id_from: PlayerId, player_id_to: PlayerId, money: number): number {
