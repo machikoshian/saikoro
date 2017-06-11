@@ -476,6 +476,7 @@ export class Session {
         let owner: Player = this.getOwner(card_id);
         event.step = this.step;
         event.card_id = card_id;
+        event.player_id = player_id;
         event.type = EventType.Purple;
 
         let value: number = facility.getPropertyValue();
@@ -494,6 +495,7 @@ export class Session {
         let event: Event = new Event();
         event.step = this.step;
         event.card_id = card_id;
+        event.player_id = player_id;
 
         if (facility.getType() === FacilityType.Blue) {
             let amount: number = owner.addMoney(facility.getPropertyValue());
