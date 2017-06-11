@@ -12,7 +12,9 @@ export enum Phase {
     CharacterCard,
     DiceRoll,
     // DiceRollAgain,
-    FacilityAction,
+    FacilityAction,  // Blue and Greeen
+    FacilityActionRed,
+    FacilityActionPurple,
     // FacilityAction2,
     // FacilityAction3,
     // FacilityAction4,
@@ -176,6 +178,14 @@ export class Session {
                 return;
 
             case Phase.FacilityAction:
+                this.phase = Phase.FacilityActionRed;
+                return;
+
+            case Phase.FacilityActionRed:
+                this.phase = Phase.FacilityActionPurple;
+                return;
+
+            case Phase.FacilityActionPurple:
                 this.phase = Phase.PaySalary;
                 return;
 
@@ -222,7 +232,11 @@ export class Session {
             case Phase.DiceRoll:
                 return false;  // Need interactions.
             case Phase.FacilityAction:
-                return this.facilityAction();
+                return this.facilityAction(this.phase);
+            case Phase.FacilityActionRed:
+                return this.facilityAction(this.phase);
+            case Phase.FacilityActionPurple:
+                return this.facilityAction(this.phase);
             case Phase.PaySalary:
                 return this.paySalary();
             case Phase.BuildFacility:
@@ -311,7 +325,7 @@ export class Session {
         return true;
     }
 
-    public facilityAction(): boolean {
+    public facilityAction(phase: Phase): boolean {
         let number: number = this.dice_result.result();
         if (number < 1 || 12 < number) {
             this.done(Phase.FacilityAction);
@@ -326,9 +340,22 @@ export class Session {
             }
         }
 
-        let type_order: FacilityType[] =
-            [FacilityType.Blue, FacilityType.Green, FacilityType.Red, FacilityType.Purple];
-        for (let type of type_order) {
+        let facility_types: FacilityType[];
+        switch(phase) {
+            case Phase.FacilityAction:
+                facility_types = [FacilityType.Blue, FacilityType.Green];
+                break;
+            case Phase.FacilityActionRed:
+                facility_types = [FacilityType.Red];
+                break;
+            case Phase.FacilityActionPurple:
+                facility_types = [FacilityType.Purple];
+                break;
+            default:
+                return false;
+        }
+
+        for (let type of facility_types) {
             for (let card_id of facilities) {
                 let facility: Facility = this.getFacility(card_id);
                 if (facility.getType() !== type) {
@@ -337,7 +364,7 @@ export class Session {
                 this.doFacilityAction(card_id);
             }
         }
-        this.done(Phase.FacilityAction);
+        this.done(phase);
         return true;
     }
 
