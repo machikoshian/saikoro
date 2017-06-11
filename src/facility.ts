@@ -194,7 +194,12 @@ export class Facility {
                     return `${this.property["value"]}コイン奪う\n自分以外のターンのみ`;
                 }
             case FacilityType.Purple:
-                return `${this.property["value"]}コイン奪う\n自分のターンのみ`;
+                if (this.property["all"]) {
+                    return `${this.property["value"]}コインを全員から奪う\n自分のターンのみ`;
+                }
+                else {
+                    return `${this.property["value"]}コイン奪う\n自分のターンのみ`;
+                }
         }
         return "";
     }

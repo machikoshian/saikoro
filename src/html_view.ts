@@ -7,7 +7,7 @@ import { Dice, DiceResult } from "./dice";
 import { Client, Request } from "./client";
 import { DeckMaker } from "./deck_maker";
 import { GameMode, Protocol } from "./protocol";
-import { HtmlViewObject, HtmlCardsView, HtmlCardView, HtmlPlayerView,
+import { HtmlViewObject, HtmlCardsView, HtmlCardView, HtmlPlayersView,
          HtmlMessageView, HtmlButtonsView,
          HtmlDeckCharView, HtmlBoardView } from "./html_view_parts";
 
@@ -41,7 +41,7 @@ export class HtmlView {
     private deck_char_view: HtmlDeckCharView = null;
     private clicked_field: [number, number] = [-1, -1];
     private cards_views: HtmlCardsView[] = [];
-    private player_views: HtmlPlayerView[] = [];
+    private players_view: HtmlPlayersView;
     private back_button_view: HtmlViewObject = null;
     private reset_button_view: HtmlViewObject = null;
     private board_view: HtmlBoardView = null;
@@ -117,13 +117,10 @@ export class HtmlView {
         // Message view.
         this.message_view = new HtmlMessageView("message");
 
-        // HtmlPlayerView
-        for (let pid = 0; pid < 4; ++pid) {
-            let player_view: HtmlPlayerView = new HtmlPlayerView(pid);
-            player_view.callback = (player_id: PlayerId) => {
-                this.onClickPlayer(player_id);
-            }
-            this.player_views.push(player_view);
+        // HtmlPlayersView
+        this.players_view = new HtmlPlayersView("players");
+        this.players_view.callback = (player_id: PlayerId) => {
+            this.onClickPlayer(player_id);
         }
 
         // Board
@@ -177,10 +174,7 @@ export class HtmlView {
         // Hide all
         document.getElementById("matching").style.display = "none";
         this.back_button_view.none();
-        document.getElementById("players").style.display = "none";
-        for (let player_view of this.player_views) {
-            player_view.none();
-        }
+        this.players_view.none();
         this.message_view.none();
         this.board_view.none();
         this.deck_char_view.none();
@@ -562,6 +556,14 @@ export class HtmlView {
                 this.drawField(x, y, facility_id, facility, owner_id);
             }
         }
+
+        if (session.getCurrentPlayerId() === this.client.player_id &&
+            session.getPhase() === Phase.FacilityActionWithInteraction &&
+            session.getTargetFacilities().length > 0) {
+            const facility_id: CardId = session.getTargetFacilities()[0];
+            const [x, y]: [number, number] = session.getPosition(facility_id);
+            this.board_view.setHighlight([x, y], COLOR_CLICKABLE);
+        }
     }
 
     public drawDeckBoard(): void {
@@ -617,16 +619,6 @@ export class HtmlView {
         field.style.borderColor = this.getFacilityColor(facility);
 
         (<HTMLTableCellElement>field).colSpan = facility.size;
-    }
-
-    private drawPlayers(): void {
-        let players: Player[] = this.session.getPlayers();
-        for (let i: number = 0; i < players.length; ++i) {
-            this.player_views[i].draw(this.session);
-        }
-        for (let i: number = players.length; i < 4; ++i) {
-            this.player_views[i].hide();
-        }
     }
 
     // TODO: move this function to other place/class.
@@ -688,7 +680,7 @@ export class HtmlView {
 
     private drawSession(session: Session): void {
         this.drawStatusMessage(session);
-        this.drawPlayers();
+        this.players_view.draw(session);
         this.drawBoard(session);
         this.drawCards(session);
 
@@ -813,7 +805,7 @@ export class HtmlView {
                 if (money === 0) {
                     continue;
                 }
-                this.player_views[pid].addMoney(money);
+                this.players_view.players[pid].addMoney(money);
                 let name: string = this.session.getPlayer(pid).name;
                 let message = `${name} に給料 ${money} が入りました`;
                 let color: string = this.getPlayerColor(pid);
@@ -868,14 +860,22 @@ export class HtmlView {
                 }
                 window.setTimeout(() => {
                     this.drawMoneyMotion(money, pid, x, y);
+                    this.board_view.setHighlight([x, y], COLOR_CLICKABLE);
+                    window.setTimeout(() => {
+                        this.board_view.setHighlight([x, y], "transparent");
+                    }, 1000);
                 }, delay);
             }
         }
 
-        if (event.type === EventType.Interaction) {
+        if (event.type === EventType.Interaction &&
+            event.player_id === this.client.player_id) {
             let message = "対象プレイヤーを選択してください";
             let color: string = this.getPlayerColor(event.player_id);
             this.message_view.drawMessage(message, color);
+            let position: [number, number] = this.session.getPosition(event.card_id);
+            this.board_view.setHighlight(position, COLOR_CLICKABLE);
+            this.players_view.setClickableForPlayer(event.player_id);
         }
         return true;
     }
@@ -887,7 +887,7 @@ export class HtmlView {
         else if (money < 0) {
             this.effectMoneyMotion(`player_${player_id}`, `field_${x}_${y}`, money);
         }
-        this.player_views[player_id].addMoney(money);
+        this.players_view.players[player_id].addMoney(money);
     }
 
     private getPosition(element_id: string): [number, number] {

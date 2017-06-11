@@ -292,6 +292,48 @@ export class HtmlCardView extends HtmlViewObject {
     }
 }
 
+export class HtmlPlayersView extends HtmlViewObject {
+    readonly players: HtmlPlayerView[] = [];
+    private players_length: number = 0;
+    public callback: (player_id: PlayerId) => void;
+
+    constructor(readonly element_id: string) {
+        super(document.getElementById(element_id));
+        for (let pid = 0; pid < 4; ++pid) {
+            let player_view: HtmlPlayerView = new HtmlPlayerView(pid);
+            player_view.callback = (player_id: PlayerId) => {
+                this.onClick(player_id);
+            }
+            this.players.push(player_view);
+        }
+    }
+
+    private onClick(player_id: PlayerId): void {
+        for (let player of this.players) {
+            player.setClickable(false);
+        }
+
+        this.callback(player_id);
+    }
+
+    public draw(session: Session): void {
+        let players: Player[] = session.getPlayers();
+        this.players_length = players.length;
+        for (let i: number = 0; i < this.players_length; ++i) {
+            this.players[i].draw(session);
+        }
+        for (let i: number = this.players_length; i < 4; ++i) {
+            this.players[i].hide();
+        }
+    }
+
+    public setClickableForPlayer(player_id: PlayerId): void {
+        for (let i: number = 0; i < this.players_length; ++i) {
+            this.players[i].setClickable(player_id !== i);
+        }
+    }
+}
+
 export class HtmlPlayerView extends HtmlViewObject {
     readonly player_id: PlayerId;
     private element_avatar: HTMLElement;
@@ -302,6 +344,7 @@ export class HtmlPlayerView extends HtmlViewObject {
     private element_talon: HTMLElement;
     private money_animation_timer = null;
     private money: number = 0;
+    private is_clickable: boolean = false;
     public callback: (player_id: PlayerId) => void;
 
     constructor(player_id: PlayerId) {
@@ -317,7 +360,9 @@ export class HtmlPlayerView extends HtmlViewObject {
     }
 
     private onClick(): void {
-        this.callback(this.player_id);
+        if (this.is_clickable) {
+            this.callback(this.player_id);
+        }
     }
 
     public draw(session: Session): void {
@@ -340,6 +385,15 @@ export class HtmlPlayerView extends HtmlViewObject {
         this.element_talon.innerHTML = String(cards.getTalonSize());
 
         this.setMoney(player.getMoney());
+    }
+
+    public setClickable(is_clickable: boolean): void {
+        this.is_clickable = is_clickable;
+        if (is_clickable) {
+            this.element.style.backgroundColor = COLOR_CLICKABLE;
+        } else {
+            this.element.style.backgroundColor = getPlayerColor(this.player_id);
+        }
     }
 
     public setMoney(money: number): void {
@@ -411,8 +465,12 @@ export class HtmlBoardView extends HtmlViewObject {
         this.clickable_fields.resetAll();
     }
 
-    public setClickable([x, y]: [number, number], is_clickable: boolean): void {
-        this.clickable_fields.setClickable([x, y], is_clickable);
+    public setClickable(position: [number, number], is_clickable: boolean): void {
+        this.clickable_fields.setClickable(position, is_clickable);
+    }
+
+    public setHighlight(position: [number, number], color: string): void {
+        this.clickable_fields.setHighlight(position, color);
     }
 
     public animateDiceResult(result: number, color: string): void {
@@ -564,8 +622,12 @@ export class HtmlClickableFieldsView extends HtmlViewObject {
         }
     }
 
-    public setClickable([x, y]: [number, number], is_clickable): void {
+    public setClickable([x, y]: [number, number], is_clickable: boolean): void {
         this.fields[x][y].setClickable(is_clickable);
+    }
+
+    public setHighlight([x, y]: [number, number], color: string): void {
+        this.fields[x][y].setColor(color);
     }
 
     public animateDiceResult(pip: number, color: string): void {
