@@ -294,6 +294,7 @@ export class HtmlCardView extends HtmlViewObject {
 
 export class HtmlPlayerView extends HtmlViewObject {
     readonly player_id: PlayerId;
+    private element_avatar: HTMLElement;
     private element_name: HTMLElement;
     private element_money: HTMLElement;
     private element_salary: HTMLElement;
@@ -305,16 +306,27 @@ export class HtmlPlayerView extends HtmlViewObject {
     constructor(player_id: PlayerId) {
         super(document.getElementById(`player_${player_id}`));
         this.player_id = player_id;
-        this.element_name = <HTMLElement>this.element.getElementsByClassName("player_name")[0];
-        this.element_money = <HTMLElement>this.element.getElementsByClassName("player_money")[0];
+        this.element_avatar = <HTMLElement>this.element.getElementsByClassName("player_avatar")[0];
+        this.element_name   = <HTMLElement>this.element.getElementsByClassName("player_name")[0];
+        this.element_money  = <HTMLElement>this.element.getElementsByClassName("player_money")[0];
         this.element_salary = <HTMLElement>this.element.getElementsByClassName("player_salary")[0];
-        this.element_hand = <HTMLElement>this.element.getElementsByClassName("player_hand")[0];
-        this.element_talon = <HTMLElement>this.element.getElementsByClassName("player_talon")[0];
+        this.element_hand   = <HTMLElement>this.element.getElementsByClassName("player_hand")[0];
+        this.element_talon  = <HTMLElement>this.element.getElementsByClassName("player_talon")[0];
     }
 
     public draw(session: Session): void {
         this.show();
+
         let player: Player = session.getPlayer(this.player_id);
+
+        // Avatar
+        const npc_avatars: string[] = ["⛄", "👻",  "👾", "🗿"];
+        let avatar: string = "😺";
+        if (player.isAuto()) {
+            avatar = npc_avatars[this.player_id];
+        }
+        this.element_avatar.innerText = avatar;
+
         this.element_name.innerText = player.name;
         this.element_salary.innerHTML = String(player.salary);
         let cards: PlayerCards = session.getPlayerCards(this.player_id);
