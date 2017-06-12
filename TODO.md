@@ -8,7 +8,6 @@
 * event.target_card_ids を event.buildFacility でも使う。
 * html_view.ts のリファクタリング
 * 観戦モードの追加
-* 紫施設に、相手を選ぶタイプを追加
 * 各イベントの同期
 * タイムアウトの実装
 * abstract View クラスの作成
