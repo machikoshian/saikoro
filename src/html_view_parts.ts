@@ -531,11 +531,17 @@ export class HtmlButtonsView extends HtmlViewObject {
     readonly char_card: HtmlButtonView;
     readonly end_turn: HtmlButtonView;
 
-    constructor(element_id: string) {
+    constructor(readonly element_id: string, dice_widget: HtmlDiceView) {
         super(document.getElementById(element_id));
 
         this.dice1 = new HtmlButtonView(element_id + "_dice1");
+        let dice1: HtmlViewObject = dice_widget.clone();
+        this.dice1.element.appendChild(dice1.element);
+        let dice2_1: HtmlViewObject = dice_widget.clone();
+        let dice2_2: HtmlViewObject = dice_widget.clone();
         this.dice2 = new HtmlButtonView(element_id + "_dice2");
+        this.dice2.element.appendChild(dice2_1.element);
+        this.dice2.element.appendChild(dice2_2.element);
         this.char_card = new HtmlButtonView(element_id + "_char_card");
         this.end_turn = new HtmlButtonView(element_id + "_end_turn");
     }
@@ -643,5 +649,11 @@ export class HtmlClickableFieldsView extends HtmlViewObject {
             }, delay);
             delay = delay + 10 * i;  // 0, 10, 30, 60, 100, ...
         }
+    }
+}
+
+export class HtmlDiceView extends HtmlViewObject {
+    constructor(readonly element_id: string) {
+        super(document.getElementById(element_id));
     }
 }

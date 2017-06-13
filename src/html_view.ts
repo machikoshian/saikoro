@@ -9,7 +9,7 @@ import { DeckMaker } from "./deck_maker";
 import { GameMode, Protocol } from "./protocol";
 import { HtmlViewObject, HtmlCardsView, HtmlCardView, HtmlPlayersView,
          HtmlMessageView, HtmlButtonsView,
-         HtmlDeckCharView, HtmlBoardView } from "./html_view_parts";
+         HtmlDeckCharView, HtmlBoardView, HtmlDiceView } from "./html_view_parts";
 
 const COLOR_FIELD: string = "#FFF8E1";
 const COLOR_LANDMARK: string = "#B0BEC5";
@@ -48,6 +48,7 @@ export class HtmlView {
     private landmarks_view: HtmlCardsView = null;
     private field_card_view: HtmlCardView = null;
     private card_widget_view: HtmlCardView = null;
+    private dice_widget_view: HtmlDiceView = null;
     private money_motion_view: HtmlViewObject = null;
     private message_view: HtmlMessageView = null;
     private buttons_view: HtmlButtonsView = null;
@@ -98,6 +99,10 @@ export class HtmlView {
         // document.getElementById("matching_button_multi_4").addEventListener(
         //     "click", () => { this.onClickMatching(GameMode.OnLine2Players); });
 
+        // Widgets
+        this.card_widget_view = new HtmlCardView("card_widget");
+        this.dice_widget_view = new HtmlDiceView("dice_widget");
+
         // buttons.
         this.back_button_view = new HtmlViewObject(document.getElementById("back"));
         this.back_button_view.addClickListener(() => { this.switchScene(Scene.Matching); });
@@ -108,7 +113,8 @@ export class HtmlView {
             this.switchScene(Scene.Matching);
         });
 
-        this.buttons_view = new HtmlButtonsView("buttons");
+        this.buttons_view = new HtmlButtonsView("buttons", this.dice_widget_view);
+
         this.buttons_view.dice1.addClickListener(() => { this.onClickDice(1, 0); });
         this.buttons_view.dice2.addClickListener(() => { this.onClickDice(2, 0); });
         this.buttons_view.char_card.addClickListener(() => { this.onClickCharacter(); });
@@ -154,9 +160,6 @@ export class HtmlView {
 
         // Field card
         this.field_card_view = new HtmlCardView("field_card");
-
-        // Character motion
-        this.card_widget_view = new HtmlCardView("card_widget");
 
         // Money motion
         this.money_motion_view = new HtmlViewObject(document.getElementById("money_motion"));
