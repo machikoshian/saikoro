@@ -535,11 +535,14 @@ export class HtmlButtonsView extends HtmlViewObject {
         super(document.getElementById(element_id));
 
         this.dice1 = new HtmlButtonView(element_id + "_dice1");
-        let dice1: HtmlViewObject = dice_widget.clone();
-        this.dice1.element.appendChild(dice1.element);
+        let dice1_1: HtmlViewObject = dice_widget.clone();
+        dice1_1.element.id = "buttons_dice1_1";
         let dice2_1: HtmlViewObject = dice_widget.clone();
+        dice2_1.element.id = "buttons_dice2_1";
         let dice2_2: HtmlViewObject = dice_widget.clone();
+        dice2_2.element.id = "buttons_dice2_2";
         this.dice2 = new HtmlButtonView(element_id + "_dice2");
+        this.dice1.element.appendChild(dice1_1.element);
         this.dice2.element.appendChild(dice2_1.element);
         this.dice2.element.appendChild(dice2_2.element);
         this.char_card = new HtmlButtonView(element_id + "_char_card");
