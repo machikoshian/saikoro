@@ -166,16 +166,19 @@ table.player { width: 160px; }
     position: absolute;
     top: 20px;
     left: 30px;
+    animation: roll1 0.7s linear infinite;
 }
 #buttons_dice2_1 {
     position: absolute;
     top: 15px;
     left: 10px;
+    animation: roll1 0.7s linear infinite;
 }
 #buttons_dice2_2 {
     position: absolute;
     top: 25px;
     left: 50px;
+    animation: roll1 0.7s linear infinite;
 }
 
 #buttons_char_card {
