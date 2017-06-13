@@ -166,19 +166,24 @@ table.player { width: 160px; }
     position: absolute;
     top: 20px;
     left: 30px;
-    animation: roll1 0.7s linear infinite;
 }
 #buttons_dice2_1 {
     position: absolute;
     top: 15px;
     left: 10px;
-    animation: roll1 0.7s linear infinite;
 }
 #buttons_dice2_2 {
     position: absolute;
     top: 25px;
     left: 50px;
-    animation: roll1 0.7s linear infinite;
+}
+
+.roll .dice_base {
+    animation: roll_x 0.7s linear infinite;
+}
+
+.roll #buttons_dice2_2 {
+    animation: roll_x 0.8s linear infinite;
 }
 
 #buttons_char_card {
@@ -315,13 +320,16 @@ table.card {
     transform: rotateX(60deg) rotateY(0deg) rotateZ(45deg);
 }
 
-.animate1 {
-    animation: roll1 0.7s linear infinite;
+.animate_x {
+    animation: roll_x 0.7s linear infinite;
 }
 
-@keyframes roll1 {
-    from { transform: rotate3d(0, 0, 0, 0); }
-    to   { transform: rotate3d(1, 1, 1, 1turn); }
+@keyframes roll_x {
+    0%   { transform: rotateX(0); }
+    25%  { transform: rotateX(0.25turn) rotateZ(20deg); }
+    50%  { transform: rotateX(0.50turn) rotateZ(0deg);  }
+    75%  { transform: rotateX(0.75turn) rotateZ(-20deg); }
+    100% { transform: rotateX(1.00turn); }
 }
 
 .animate2 {

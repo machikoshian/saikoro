@@ -124,11 +124,11 @@ export class HtmlViewObject {
         return this.getPositionAligned(rect);
     }
 
-    public animateMoveToElementId(element_id: string): void {
-        this.animateMoveTo(this.getPositionAlignedWithElementId(element_id));
+    public animateMoveToElementId(element_id: string, duration: number = 1000): void {
+        this.animateMoveTo(this.getPositionAlignedWithElementId(element_id), duration);
     }
 
-    public animateMoveTo([x, y]: [number, number]): void {
+    public animateMoveTo([x, y]: [number, number], duration: number = 1000): void {
         let rect_from = this.element.getBoundingClientRect();
         let diff_x: number = x - rect_from.left;
         let diff_y: number = y - rect_from.top;
@@ -139,11 +139,11 @@ export class HtmlViewObject {
         this.element.style.top = rect_from.top + "px";
         this.element.style.left = rect_from.left + "px";
 
-        this.element.style.transitionDuration = "1s";
+        this.element.style.transitionDuration = `${duration / 1000}s`;
         this.element.style.transitionTimingFunction = "ease";
         this.element.style.transform = `translate(${diff_x}px, ${diff_y}px)`;
 
-        window.setTimeout(() => { this.none(); }, 1500);
+        window.setTimeout(() => { this.none(); }, duration + 500);
     }
 }
 

@@ -54,6 +54,8 @@ export class HtmlView {
     private buttons_view: HtmlButtonsView = null;
     private scene: Scene = Scene.None;
 
+    private dice_roll_view: HtmlViewObject = null;  // TODO: try not to use it.
+
     constructor(client: Client) {
         this.client = client;
         this.reset();
@@ -72,6 +74,8 @@ export class HtmlView {
     }
 
     public initView(row: number = 5, column: number = 12): void {
+        document.getElementById("widgets").style.display = "none";
+
         // Add click listeners.
         // Matching.
         document.getElementById("matching_button_deck").addEventListener(
@@ -327,7 +331,7 @@ export class HtmlView {
         let dice_view: HtmlViewObject =
             (dice_num === 1) ? this.buttons_view.dice1 : this.buttons_view.dice2;
         dice_view.hide();
-        this.effectClonedObjectMove(dice_view, dice_view.element.id, "board");
+        this.effectDiceMove(dice_view, "board");
         this.drawEventsLater();
     }
 
@@ -777,6 +781,11 @@ export class HtmlView {
 
         // Dice
         if (event.type === EventType.Dice) {
+            if (this.dice_roll_view) {
+                this.dice_roll_view.remove();
+                this.dice_roll_view = null;
+            }
+
             let message: string = this.getDiceResultMessage(event.dice, event.player_id);
             let color: string = this.getPlayerColor(event.player_id);
             this.board_view.animateDiceResult(event.dice.result(), color);
@@ -913,6 +922,14 @@ export class HtmlView {
             this.card_widget_view.draw(this.session, card_id);
             this.effectClonedObjectMove(this.card_widget_view, `player_${pid}`, "board");
         }
+    }
+
+    private effectDiceMove(node: HtmlViewObject, dest_id: string): void {
+        let new_view: HtmlViewObject = node.clone();
+        new_view.showAt(new_view.getPositionAlignedWithElementId(node.element.id));
+        new_view.element.className += " roll";
+        new_view.animateMoveToElementId(dest_id, 1000);
+        this.dice_roll_view = new_view;
     }
 
     private effectClonedObjectMove(node: HtmlViewObject, id1: string, id2: string): void {
