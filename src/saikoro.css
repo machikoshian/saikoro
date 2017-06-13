@@ -151,11 +151,22 @@ table.player { width: 160px; }
 }
 
 #buttons { width: 435px; padding-left: 225px; }
-td.dice_button {
+#buttons div {
+    display: inline-block;
+}
+.dice_button {
     width: 80px; height: 60px; padding: 10px;
     font-size: 40px; text-align: center;
     border-radius: 10px; background-color: #EEEEEE;
 }
+
+#buttons_dice2 .dice_button:nth-child(1) {
+    top: -3pt;
+}
+#buttons_dice2 .dice_button:nth-child(2) {
+    top: 3pt;
+}
+
 #buttons_char_card {
     width: 80px; height: 60px; padding: 10px;
     text-align: center;
@@ -166,6 +177,7 @@ td.dice_button {
     text-align: center;
     border-radius: 10px; background-color: #FFCA28;
 }
+
 /* Motion elements should have width and height. */
 #money_motion {
     width: 40px; height: 40px;
