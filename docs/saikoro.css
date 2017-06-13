@@ -151,21 +151,52 @@ table.player { width: 160px; }
 }
 
 #buttons { width: 435px; padding-left: 225px; }
-td.dice_button {
-    width: 80px; height: 60px; padding: 10px;
-    font-size: 40px; text-align: center;
+#buttons div {
+    display: inline-block;
+    vertical-align: top;
+}
+.dice_button {
+    position: relative;
+    width: 100px; height: 80px; padding: 0px;
+    font-size: 40px;
     border-radius: 10px; background-color: #EEEEEE;
 }
+
+#buttons_dice1_1 {
+    position: absolute;
+    top: 20px;
+    left: 30px;
+}
+#buttons_dice2_1 {
+    position: absolute;
+    top: 15px;
+    left: 10px;
+}
+#buttons_dice2_2 {
+    position: absolute;
+    top: 25px;
+    left: 50px;
+}
+
+.roll .dice_base {
+    animation: roll_x 0.7s linear infinite;
+}
+
+.roll #buttons_dice2_2 {
+    animation: roll_x 0.8s linear infinite;
+}
+
 #buttons_char_card {
-    width: 80px; height: 60px; padding: 10px;
+    width: 80px; height: 55px; padding: 10px; padding-top: 15px;
     text-align: center;
     border-radius: 10px; background-color: #EFF0D1;
 }
 #buttons_end_turn {
-    width: 80px; height: 60px; padding: 10px;
+    width: 80px; height: 55px; padding: 10px; padding-top: 15px;
     text-align: center;
     border-radius: 10px; background-color: #FFCA28;
 }
+
 /* Motion elements should have width and height. */
 #money_motion {
     width: 40px; height: 40px;
@@ -185,18 +216,18 @@ table.card {
 .dice_base {
     transform-style: preserve-3d;
     display: inline-block;
-    width: 23pt;
-    height: 23pt;
+    width: 45px;
+    height: 45px;
     /*border: solid 1pt black;*/
 }
 
 .cube {
     transform-style: preserve-3d;
     position: relative;
-    top: 0pt;
-    left: 0pt;
-    width: 23pt;
-    height: 23pt;
+    top: 5px;
+    left: 5px;
+    width: 32px;
+    height: 32px;
     /*border: solid 1pt red;*/
 }
 
@@ -206,7 +237,7 @@ table.card {
     left: 0pt;
     width: 100%;
     height: 100%;
-    border: 1pt solid #EEEEEE;
+    border: 2px solid #EEEEEE;
     background-color: #FFFFFF;
     color: transparent;
     line-height: 100%;
@@ -289,13 +320,16 @@ table.card {
     transform: rotateX(60deg) rotateY(0deg) rotateZ(45deg);
 }
 
-.animate1 {
-    animation: roll1 0.7s linear infinite;
+.animate_x {
+    animation: roll_x 0.7s linear infinite;
 }
 
-@keyframes roll1 {
-    from { transform: rotate3d(0, 0, 0, 0); }
-    to   { transform: rotate3d(1, 1, 1, 1turn); }
+@keyframes roll_x {
+    0%   { transform: rotateX(0); }
+    25%  { transform: rotateX(0.25turn) rotateZ(20deg); }
+    50%  { transform: rotateX(0.50turn) rotateZ(0deg);  }
+    75%  { transform: rotateX(0.75turn) rotateZ(-20deg); }
+    100% { transform: rotateX(1.00turn); }
 }
 
 .animate2 {
