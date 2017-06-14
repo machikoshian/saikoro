@@ -1,0 +1,176 @@
+body {
+    width: 660px;
+    color: #222;
+    background-color: #82B1FF;
+}
+
+.dice_base {
+    transform-style: preserve-3d;
+    display: inline-block;
+    width: 45px;
+    height: 45px;
+    /*border: solid 1pt black;*/
+}
+
+.cube {
+    transform-style: preserve-3d;
+    position: relative;
+    top: 5px;
+    left: 5px;
+    width: 32px;
+    height: 32px;
+    /*border: solid 1pt red;*/
+}
+
+.dice_face {
+    position: absolute;
+    top: 0pt;
+    left: 0pt;
+    width: 100%;
+    height: 100%;
+    border: 2px solid #EEEEEE;
+    background-color: #FFFFFF;
+    color: transparent;
+    line-height: 100%;
+    font-size: 1em;
+    text-align: center;
+    box-sizing: border-box;
+    margin: 0;
+    border-radius: 10%;
+}
+
+.cube div:nth-child(1) {
+    transform: rotateY(90deg) translateX(-47%) rotateY(-90deg);
+}
+
+.cube div:nth-child(2) {
+    transform: translateY(47%) rotateX(-90deg);
+}
+
+.cube div:nth-child(3) {
+    transform: translateX(47%) rotateY(90deg);
+}
+
+.cube div:nth-child(4) {
+    transform: translateX(-47%) rotateY(-90deg);
+}
+
+.cube div:nth-child(5) {
+    transform: translateY(-47%) rotateX(90deg);
+}
+
+.cube div:nth-child(6) {
+    transform: rotateY(90deg) translateX(47%) rotateY(90deg);
+}
+
+.pip1 {
+    background: radial-gradient(red 22%, white 28%);
+}
+
+.pip2 {
+    background:
+        radial-gradient(15% 15% at 29% 29%, black 75%, transparent),
+        radial-gradient(15% 15% at 71% 71%, black 75%, white);
+}
+
+.pip3 {
+    background:
+        radial-gradient(13% 13% at 25% 25%, black 75%, transparent),
+        radial-gradient(13% 13% at 50% 50%, black 75%, transparent),
+        radial-gradient(13% 13% at 75% 75%, black 75%, white);
+}
+
+.pip4 {
+    background:
+        radial-gradient(13% 13% at 28% 28%, black 75%, transparent),
+        radial-gradient(13% 13% at 28% 72%, black 75%, transparent),
+        radial-gradient(13% 13% at 72% 28%, black 75%, transparent),
+        radial-gradient(13% 13% at 72% 72%, black 75%, white);
+}
+
+.pip5 {
+    background:
+        radial-gradient(13% 13% at 25% 25%, black 75%, transparent),
+        radial-gradient(13% 13% at 25% 75%, black 75%, transparent),
+        radial-gradient(13% 13% at 50% 50%, black 75%, transparent),
+        radial-gradient(13% 13% at 75% 25%, black 75%, transparent),
+        radial-gradient(13% 13% at 75% 75%, black 75%, white);
+}
+
+.pip6 {
+    background:
+        radial-gradient(13% 13% at 28% 20%, black 75%, transparent),
+        radial-gradient(13% 13% at 28% 50%, black 75%, transparent),
+        radial-gradient(13% 13% at 28% 80%, black 75%, transparent),
+        radial-gradient(13% 13% at 72% 20%, black 75%, transparent),
+        radial-gradient(13% 13% at 72% 50%, black 75%, transparent),
+        radial-gradient(13% 13% at 72% 80%, black 75%, white);
+}
+
+/*.dice_base:hover {
+    animation: rotate2 3s;
+}*/
+
+.test {
+    transform: rotateX(60deg) rotateY(0deg) rotateZ(-45deg);
+}
+
+.face1 {
+    transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+}
+.face2 {
+    transform: rotateX(90deg) rotateY(0deg) rotateZ(0deg);
+}
+.face3 {
+    transform: rotateX(90deg) rotateY(0deg) rotateZ(90deg);
+}
+.face6 {
+    transform: rotateX(180deg) rotateY(0deg) rotateZ(90deg);
+}
+.face5 {
+    transform: rotateX(180deg) rotateY(90deg) rotateZ(90deg);
+}
+.face4 {
+    transform: rotateX(270deg) rotateY(90deg) rotateZ(90deg);
+}
+
+.rotate0 {
+    transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+}
+
+.rotate1 {
+    transform: rotateX(60deg) rotateY(0deg) rotateZ(30deg);
+}
+
+.roll1 {
+    animation: roll1 1s linear infinite;
+}
+@keyframes roll1 {
+    0%   { transform: rotateX(0); }
+    25%  { transform: rotateX(0.25turn) rotateY(0deg); }
+    50%  { transform: rotateX(0.50turn) rotateY(0deg); }
+    75%  { transform: rotateX(0.75turn) rotateY(0deg); }
+    100% { transform: rotateX(1.00turn); }
+}
+
+.roll2 {
+    animation: roll2 1s linear infinite;
+}
+@keyframes roll2 {
+    0%   { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0); }
+    25%  { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.25turn); }
+    50%  { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.50turn); }
+    75%  { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.75turn); }
+    100% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 1.00turn); }
+}
+
+.roll3 {
+    animation: roll3 1s linear infinite;
+}
+@keyframes roll3 {
+    0%   { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0); }
+    25%  { transform: rotateZ(20deg) rotate3d(1, -1, 0, 0.25turn); }
+    50%  { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.50turn); }
+    75%  { transform: rotateZ(70deg) rotate3d(1, -1, 0, 0.75turn); }
+    100% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 1.00turn); }
+}
