@@ -107,9 +107,9 @@ body {
         radial-gradient(13% 13% at 72% 80%, black 75%, white);
 }
 
-/*.dice_base:hover {
-    animation: rotate2 3s;
-}*/
+.dice_base:hover {
+    animation-play-state: paused;
+}
 
 .test {
     transform: rotateX(60deg) rotateY(0deg) rotateZ(-45deg);
@@ -132,6 +132,12 @@ body {
 }
 .face4 {
     transform: rotateX(270deg) rotateY(90deg) rotateZ(90deg);
+}
+
+.dice_view {
+    display: inline-block;
+    transform-style: preserve-3d;
+    transform: rotateX(60deg) rotateY(0deg) rotateZ(-15deg);
 }
 
 .rotate0 {
