@@ -12,19 +12,6 @@ export class StandaloneConnection extends Connection {
 
     public startCheckUpdate(client: Client): void {}
     public stopCheckUpdate(): void {}
-    public checkUpdate(client: Client): void {
-        let query = {
-            command: "board",
-            session_id: client.session_id,
-            player_id: client.player_id,
-            step: client.step,
-        };
-        session_handler.handleCommand(query).then((data: KeyValue) => {
-            setTimeout(() => {
-                client.callback(data.value);
-            }, this.delay);
-        });
-    }
 
     public matching(query: any, callback: RequestCallback): void {
         session_handler.handleMatching(query).then((matched: MatchedData) => {
@@ -70,9 +57,6 @@ export class HybridConnection extends Connection {
 
     public stopCheckUpdate(): void {
         this.connection.stopCheckUpdate();
-    }
-    public checkUpdate(client: Client): void {
-        this.connection.checkUpdate(client);
     }
 
     public matching(query: any, callback: RequestCallback): void {

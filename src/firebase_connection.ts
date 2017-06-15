@@ -37,9 +37,6 @@ export class FirebaseConnection extends Connection {
     public stopCheckUpdate(): void {
         this.ref.off();
     }
-    public checkUpdate(client: Client): void {
-        // Do nothing.
-    }
 
     public matching(query: any, callback: RequestCallback): void {
         if (!query.user_id) {

@@ -31,20 +31,10 @@ export class HttpConnection extends Connection {
     public check_update_timer: any = 0;  // Timer
 
     public startCheckUpdate(client: Client): void {
-        this.check_update_timer = setInterval(() => { this.checkUpdate(client) }, 2000);
+        this.check_update_timer = setInterval(() => { client.checkUpdate(); }, 2000);
     }
     public stopCheckUpdate(): void {
         clearInterval(this.check_update_timer);
-    }
-    public checkUpdate(client: Client): void {  // TODO: client argument can be callback?
-        console.log(`checkUpdate(${client.step})`);
-        let request = {
-            command: "board",
-            session_id: client.session_id,
-            player_id: client.player_id,
-            step: client.step,
-        };
-        this.sendRequest(request, client.callback);
     }
 
     public matching(query: any, callback: RequestCallback): void {

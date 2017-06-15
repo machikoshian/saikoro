@@ -8,7 +8,6 @@ export abstract class Connection {
     // Receivers from server.
     abstract startCheckUpdate(client: Client): void;
     abstract stopCheckUpdate(): void;
-    abstract checkUpdate(client: Client): void;
 
     // Senders from client.
     abstract sendRequest(query: any, callback: RequestCallback): void;
@@ -46,13 +45,23 @@ export abstract class Client {
         this.connection.matching(query, this.callbackMatching.bind(this));
     }
 
+    public checkUpdate(): void {
+        let query = {
+            command: "board",
+            session_id: this.session_id,
+            player_id: this.player_id,
+            step: this.step,
+        };
+        this.sendRequest(query);
+    }
+
     private callbackMatching(response: string): void {
         const response_json = JSON.parse(response);
         this.session_id = response_json.session_id;
         this.player_id = response_json.player_id;
         this.matching_id = response_json.matching_id;
 
-        this.connection.checkUpdate(this);
+        this.checkUpdate();
         this.connection.startCheckUpdate(this);
     }
 
