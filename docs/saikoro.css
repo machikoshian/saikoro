@@ -150,32 +150,32 @@ table.player { width: 160px; }
     vertical-align: top;
 }
 
-#buttons { width: 435px; padding-left: 225px; }
+#buttons { width: 450px; padding-left: 205px; }
 #buttons div {
     display: inline-block;
     vertical-align: top;
 }
 .dice_button {
     position: relative;
-    width: 100px; height: 80px; padding: 0px;
+    width: 120px; height: 80px; padding: 0px;
     font-size: 40px;
     border-radius: 10px; background-color: #EEEEEE;
 }
 
 #buttons_dice1_1 {
     position: absolute;
-    top: 15px;
-    left: 27px;
+    top: 13px;
+    left: 32px;
 }
 #buttons_dice2_1 {
     position: absolute;
-    top: 10px;
-    left: 4px;
+    top: 7px;
+    left: 5px;
 }
 #buttons_dice2_2 {
     position: absolute;
-    top: 20px;
-    left: 42px;
+    top: 16px;
+    left: 54px;
 }
 
 #buttons_char_card {
@@ -184,7 +184,7 @@ table.player { width: 160px; }
     border-radius: 10px; background-color: #EFF0D1;
 }
 #buttons_end_turn {
-    width: 80px; height: 55px; padding: 10px; padding-top: 15px;
+    width: 70px; height: 55px; padding: 10px; padding-top: 15px;
     text-align: center;
     border-radius: 10px; background-color: #FFCA28;
 }
@@ -212,8 +212,8 @@ table.card {
     position: relative;
     top: 5px;
     left: 5px;
-    width: 32px;
-    height: 32px;
+    width: 50px;
+    height: 50px;
 }
 
 .cube div:nth-child(1) {
@@ -249,8 +249,8 @@ table.card {
 .dice {
     transform-style: preserve-3d;
     display: inline-block;
-    width: 45px;
-    height: 45px;
+    width: 60px;
+    height: 60px;
 }
 
 .dice_face {
@@ -259,7 +259,7 @@ table.card {
     left: 0pt;
     width: 100%;
     height: 100%;
-    border: 2px solid #EEEEEE;
+    border: 3px solid #EEEEEE;
     background-color: #FFFFFF;
     color: transparent;
     line-height: 100%;

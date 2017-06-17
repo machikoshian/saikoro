@@ -2808,7 +2808,7 @@ var HtmlView = (function () {
             dice_view.hide();
             _this.buttons_view.hide();
             // TODO: Make prependDuration to check the response from the server.
-            _this.effectDiceMove(dice_view, "field_7_4");
+            _this.effectDiceMove(dice_view, "board");
             return true;
         }, 1000);
     };
@@ -3340,9 +3340,7 @@ var HtmlView = (function () {
         for (var i = 0; i < dices.length; ++i) {
             dices[i].style.animation = "roll " + (0.8 + i / 10) + "s linear infinite";
         }
-        dice_view.element.style.transform = "scale(3)";
         dice_view.animateMoveToElementId(dest_id, 1000);
-        dice_view.element.style.transform += " scale(3)";
         this.dice_roll_view = dice_view;
     };
     HtmlView.prototype.effectClonedObjectMove = function (node, id1, id2) {
