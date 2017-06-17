@@ -30,47 +30,47 @@ enum Scene {
     Game,
 }
 
-class DurationKeeper {
+class EventQueue {
     private is_running: boolean = false;
-    private durations: [number, () => void][] = [];
+    private event_queue: [() => void, number][] = [];
 
-    public runTimer(): void {
-        if (this.durations.length === 0) {
+    public run(): void {
+        if (this.event_queue.length === 0) {
             return;
         }
         if (this.is_running) {
             return;
         }
         this.is_running = true;
-        this.processTimer();
+        this.processQueue();
     }
 
-    public addDuration(duration: number, callback: () => void): void {
-        this.durations.push([duration, callback]);
-        if (this.durations.length === 1) {
-            this.runTimer();
+    public addEvent(event_function: () => void, duration: number): void {
+        this.event_queue.push([event_function, duration]);
+        if (!this.is_running) {
+            this.run();
         }
     }
 
-    private processTimer(): void {
-        let item: [number, () => void] = this.durations.shift();
+    private processQueue(): void {
+        let item: [() => void, number] = this.event_queue.shift();
         if (item == undefined) {
             this.is_running = false;
             return;
         }
-        let duration: number = item[0];
-        let callback: () => void = item[1];
+        let event_function: () => void = item[0];
+        let duration: number = item[1];
 
+        event_function();
         window.setTimeout(() => {
-            callback();
-            this.processTimer();
+            this.processQueue();
         }, duration);
     }
 }
 
 export class HtmlView {
     private event_drawer_timer = null;
-    private duration_keeper = new DurationKeeper();
+    private event_queue = new EventQueue();
     private client: Client;
     private session: Session = null;
     private prev_session: Session = null;
@@ -278,7 +278,6 @@ export class HtmlView {
         }
         const card_id: CardId = target_facilities[0];
         this.client.sendRequest(Request.interactFacilityAction(card_id, target_player_id));
-        this.drawEventsLater();
     }
 
     private onClickDeckField(x: number, y: number): void {
@@ -349,10 +348,13 @@ export class HtmlView {
         if (event == null || !event.valid) {
             return;
         }
+
         this.client.sendRequest(Request.buildFacility(x, y, card_id));
-        this.effectClonedObjectMove(this.clicked_card_view,
-                                    this.clicked_card_view.element_id, `field_${x}_${y}`);
-        this.drawEventsLater();
+
+        this.event_queue.addEvent(() => {
+            this.effectClonedObjectMove(this.clicked_card_view,
+                                        this.clicked_card_view.element_id, `field_${x}_${y}`);
+        }, 2000);
     }
 
     private isRequestReady(): boolean {
@@ -367,26 +369,35 @@ export class HtmlView {
         }
 
         this.client.sendRequest(Request.rollDice(dice_num, aim));
-        let dice_view: HtmlViewObject =
-            (dice_num === 1) ? this.buttons_view.dice1 : this.buttons_view.dice2;
-        dice_view.hide();
-        this.effectDiceMove(dice_view, "board");
-        this.drawEventsLater();
+
+        this.event_queue.addEvent(() => {
+            let dice_view: HtmlViewObject =
+                (dice_num === 1) ? this.buttons_view.dice1 : this.buttons_view.dice2;
+            dice_view.hide();
+
+            // TODO: Make prependDuration to check the response from the server.
+            this.effectDiceMove(dice_view, "board");
+        }, 2000);
     }
 
     private onClickCharacter(): void {
         if (this.clicked_card_view == null) {
             return;
         }
+
         const card_id: CardId = this.clicked_card_view.getCardId();
         this.client.sendRequest(Request.characterCard(card_id));
-        this.effectCharacter(this.client.player_id, card_id);
-        this.drawEventsLater();
+
+        this.event_queue.addEvent(() => {
+            this.effectCharacter(this.client.player_id, card_id);
+        }, 2000);
     }
 
     private onClickEndTurn(): void {
         this.client.sendRequest(Request.endTurn());
-        this.drawEventsLater();
+        this.event_queue.addEvent(() => {
+            this.buttons_view.hide();
+        }, 500);
     }
 
     private onClickMatching(mode: GameMode): void {
@@ -733,20 +744,14 @@ export class HtmlView {
         this.prev_session = session;
     }
 
-    private drawEventsLater(): void {
-        // TODO: This is a hack to abuse this function is always called after sendRequest.
-        // Nice to rename this function.
-        this.buttons_view.hide();
-
-        this.drawEvents(false);
-    }
-
-    public drawEvents(soon: boolean = true): void {
-        if (this.drawEventsByStep()) {
-            this.duration_keeper.addDuration(2000, () => { this.drawEvents(); });
-        } else {
-            this.drawSession(this.session);
-        }
+    public drawEvents(): void {
+        this.event_queue.addEvent(() => {
+            if (!this.drawEventsByStep()) {
+                this.drawSession(this.session);
+                return;
+            }
+            this.drawEvents();
+        }, 2000);
     }
 
     private drawEventsByStep(): boolean {
