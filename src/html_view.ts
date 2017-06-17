@@ -33,10 +33,13 @@ enum Scene {
 class EventQueue {
     private is_running: boolean = false;
     private event_queue: [() => boolean, number][] = [];
+    private timer: number;
 
     public reset(): void {
         this.is_running = false;
         this.event_queue = [];
+        window.clearTimeout(this.timer);
+        this.timer = null;
     }
 
     public run(): void {
@@ -67,7 +70,7 @@ class EventQueue {
         let is_success: boolean = event_function();
         let duration: number = is_success ? item[1] : 0;
 
-        window.setTimeout(() => {
+        this.timer = window.setTimeout(() => {
             this.processQueue();
         }, duration);
     }

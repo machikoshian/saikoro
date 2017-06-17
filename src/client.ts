@@ -36,6 +36,7 @@ export abstract class Client {
         this.mode = 0;
         this.player_id = 0;
         this.step = 0;
+        this.connection.stopCheckUpdate();
     }
 
     public matching(query: any): void {
