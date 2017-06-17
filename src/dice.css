@@ -1,17 +1,3 @@
-body {
-    width: 660px;
-    color: #222;
-    background-color: #82B1FF;
-}
-
-.dice_base {
-    transform-style: preserve-3d;
-    display: inline-block;
-    width: 45px;
-    height: 45px;
-    /*border: solid 1pt black;*/
-}
-
 .cube {
     transform-style: preserve-3d;
     position: relative;
@@ -19,24 +5,6 @@ body {
     left: 5px;
     width: 32px;
     height: 32px;
-    /*border: solid 1pt red;*/
-}
-
-.dice_face {
-    position: absolute;
-    top: 0pt;
-    left: 0pt;
-    width: 100%;
-    height: 100%;
-    border: 2px solid #EEEEEE;
-    background-color: #FFFFFF;
-    color: transparent;
-    line-height: 100%;
-    font-size: 1em;
-    text-align: center;
-    box-sizing: border-box;
-    margin: 0;
-    border-radius: 10%;
 }
 
 .cube div:nth-child(1) {
@@ -61,6 +29,36 @@ body {
 
 .cube div:nth-child(6) {
     transform: rotateY(90deg) translateX(47%) rotateY(90deg);
+}
+
+.dice_view {
+    display: inline-block;
+    transform-style: preserve-3d;
+    transform: rotateX(60deg) rotateY(0deg) rotateZ(0deg);
+}
+
+.dice {
+    transform-style: preserve-3d;
+    display: inline-block;
+    width: 45px;
+    height: 45px;
+}
+
+.dice_face {
+    position: absolute;
+    top: 0pt;
+    left: 0pt;
+    width: 100%;
+    height: 100%;
+    border: 2px solid #EEEEEE;
+    background-color: #FFFFFF;
+    color: transparent;
+    line-height: 100%;
+    font-size: 1em;
+    text-align: center;
+    box-sizing: border-box;
+    margin: 0;
+    border-radius: 10%;
 }
 
 .pip1 {
@@ -107,16 +105,6 @@ body {
         radial-gradient(13% 13% at 72% 80%, black 75%, white);
 }
 
-.dice_base:hover {
-    animation: roll_end 1s ease-out;
-    animation-iteration-count: 1;
-    animation-fill-mode: forwards;
-}
-
-.dice_base:hover .cube {
-    transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg);  /* .face1 */
-}
-
 .face1 {
     transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg);
 }
@@ -136,58 +124,55 @@ body {
     transform: rotateX(270deg) rotateY(90deg) rotateZ(90deg);
 }
 
-.dice_view {
-    display: inline-block;
-    transform-style: preserve-3d;
-    transform: rotateX(60deg) rotateY(0deg) rotateZ(30deg);
-}
-
-.rotate0 {
-    transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg);
-}
-
-.rotate1 {
-    transform: rotateX(60deg) rotateY(0deg) rotateZ(30deg);
-}
-
-.roll1 {
-    animation: roll1 1s linear infinite;
-}
-@keyframes roll1 {
-    0%   { transform: rotateX(0); }
-    25%  { transform: rotateX(0.25turn) rotateY(0deg); }
-    50%  { transform: rotateX(0.50turn) rotateY(0deg); }
-    75%  { transform: rotateX(0.75turn) rotateY(0deg); }
-    100% { transform: rotateX(1.00turn); }
-}
-
-.roll2 {
-    animation: roll2 1s linear infinite;
-}
-@keyframes roll2 {
-    0%   { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0); }
-    25%  { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.25turn); }
-    50%  { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.50turn); }
-    75%  { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.75turn); }
-    100% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 1.00turn); }
-}
-
-.roll3 {
-    animation: roll3 1s linear;
+.roll {
+    animation: roll 1s linear;
     animation-iteration-count: infinite;
 }
-@keyframes roll3 {
-    0%   { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0); }
-    25%  { transform: rotateZ(20deg) rotate3d(1, -1, 0, 0.25turn); }
-    50%  { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.50turn); }
-    75%  { transform: rotateZ(70deg) rotate3d(1, -1, 0, 0.75turn); }
+@keyframes roll {
+      0% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0); }
+     25% { transform: rotateZ(20deg) rotate3d(1, -1, 0, 0.25turn); }
+     50% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.50turn); }
+     75% { transform: rotateZ(70deg) rotate3d(1, -1, 0, 0.75turn); }
     100% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 1.00turn); }
 }
 
-@keyframes roll_end {
-    0%   { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0); }
-    25%  { transform: rotateZ(10deg) rotate3d(1, -1, 0, 0.25turn); }
-    50%  { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.50turn); }
-    75%  { transform: rotateZ(80deg) rotate3d(1, -1, 0, 0.75turn); }
-    100% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 1.00turn); }
+@keyframes roll_end1 {
+      0% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0); }
+     25% { transform: rotateZ(20deg) rotate3d(1, -1, 0, 0.25turn); }
+     50% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.5turn); }
+     75% { transform: rotateZ(70deg) rotate3d(1, -1, 0, 0.75turn); }
+    100% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 1turn); }
+}
+
+@keyframes roll_end2 {
+      0% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0); }
+     50% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.25turn) rotateZ(-45deg) rotateY(-45deg); }
+    100% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.25turn) rotateZ(-45deg) rotateY(-45deg); }
+}
+
+@keyframes roll_end3 {
+      0% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0); }
+     50% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.25turn) rotateZ(-45deg) rotateY(-45deg) rotateZ(90deg); }
+    100% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.25turn) rotateZ(-45deg) rotateY(-45deg) rotateZ(90deg); }
+}
+
+@keyframes roll_end6 {
+      0% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0); }
+     25% { transform: rotateZ(20deg) rotate3d(1, -1, 0, 0.25turn); }
+     50% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.5turn); }
+    100% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.5turn); }
+}
+
+@keyframes roll_end5 {
+      0% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0); }
+     25% { transform: rotateZ(20deg) rotate3d(1, -1, 0, 0.25turn); }
+     50% { transform: rotateZ(10deg) rotate3d(1, -1, 0, 0.5turn); }
+    100% { transform: rotateZ(0deg)  rotate3d(1, -1, 0, 0.75turn) rotateZ(-45deg); }
+}
+
+@keyframes roll_end4 {
+      0% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0); }
+     25% { transform: rotateZ(20deg) rotate3d(1, -1, 0, 0.25turn); }
+     50% { transform: rotateZ(10deg) rotate3d(1, -1, 0, 0.5turn); }
+    100% { transform: rotateZ(0deg)  rotate3d(1, -1, 0, 0.75turn) rotateZ(45deg); }
 }
