@@ -107,6 +107,15 @@ class HttpServer {
             return;
         }
 
+        if (pathname === "/memcache") {
+            let output: string = "";
+            for (let key of mc.getKeys()) {
+                output += (key + "\n");
+            }
+            response.end(output);
+            return;
+        }
+
         if (pathname === "/command") {
             this.session_handler.handleCommand(query).then((data: KeyValue) => {
                 response.setHeader("Content-Type", "application/json; charset=utf-8");

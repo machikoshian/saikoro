@@ -33,6 +33,10 @@ export class MemcacheMock extends Memcache {
         });
     }
 
+    public getKeys(): string[] {
+        return Object.keys(this.cache);
+    }
+
     public set(key: string, value: any, callback: (err: any) => void, expire: number): void {
         this.cache[key] = value;
         callback(null);
@@ -240,7 +244,7 @@ export class SessionHandler {
             matched_data.player_id = player_id;
             if (player_id === num_players - 1) {
                 // Add NPC.
-                const NPC_NAMES = ["ごましお", "グラ", "ヂータ", "エル", "茜"];
+                const NPC_NAMES = ["ごましお", "グラ", "ヂータ", "エル", "茜", "ベリー", "パールヴァティー"];
                 for (let i: number = 0; i < num_npc; ++i) {
                     let npc_name: string = NPC_NAMES[Math.floor(Math.random() * NPC_NAMES.length)];
                     this.addNewPlayer(session, `${i}`, npc_name + " (NPC)", [], true);
