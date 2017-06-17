@@ -164,26 +164,26 @@ table.player { width: 160px; }
 
 #buttons_dice1_1 {
     position: absolute;
-    top: 20px;
-    left: 30px;
+    top: 15px;
+    left: 27px;
 }
 #buttons_dice2_1 {
     position: absolute;
-    top: 15px;
-    left: 10px;
+    top: 10px;
+    left: 4px;
 }
 #buttons_dice2_2 {
     position: absolute;
-    top: 25px;
-    left: 50px;
+    top: 20px;
+    left: 42px;
 }
 
 .roll .dice_base {
-    animation: roll_x 0.7s linear infinite;
+    animation: roll 0.2s linear infinite;
 }
 
 .roll #buttons_dice2_2 {
-    animation: roll_x 0.8s linear infinite;
+    animation: roll 0.3s linear infinite;
 }
 
 #buttons_char_card {
@@ -213,13 +213,7 @@ table.card {
     font-size: 12px; height: 70px;
 }
 
-.dice_base {
-    transform-style: preserve-3d;
-    display: inline-block;
-    width: 45px;
-    height: 45px;
-    /*border: solid 1pt black;*/
-}
+/* ---- Dice ---- */
 
 .cube {
     transform-style: preserve-3d;
@@ -228,24 +222,6 @@ table.card {
     left: 5px;
     width: 32px;
     height: 32px;
-    /*border: solid 1pt red;*/
-}
-
-.dice_face {
-    position: absolute;
-    top: 0pt;
-    left: 0pt;
-    width: 100%;
-    height: 100%;
-    border: 2px solid #EEEEEE;
-    background-color: #FFFFFF;
-    color: transparent;
-    line-height: 100%;
-    font-size: 1em;
-    text-align: center;
-    box-sizing: border-box;
-    margin: 0;
-    border-radius: 10%;
 }
 
 .cube div:nth-child(1) {
@@ -270,6 +246,36 @@ table.card {
 
 .cube div:nth-child(6) {
     transform: rotateY(90deg) translateX(47%) rotateY(90deg);
+}
+
+.dice_view {
+    display: inline-block;
+    transform-style: preserve-3d;
+    transform: rotateX(60deg) rotateY(0deg) rotateZ(45deg);
+}
+
+.dice {
+    transform-style: preserve-3d;
+    display: inline-block;
+    width: 45px;
+    height: 45px;
+}
+
+.dice_face {
+    position: absolute;
+    top: 0pt;
+    left: 0pt;
+    width: 100%;
+    height: 100%;
+    border: 2px solid #EEEEEE;
+    background-color: #FFFFFF;
+    color: transparent;
+    line-height: 100%;
+    font-size: 1em;
+    text-align: center;
+    box-sizing: border-box;
+    margin: 0;
+    border-radius: 10%;
 }
 
 .pip1 {
@@ -316,27 +322,74 @@ table.card {
         radial-gradient(13% 13% at 72% 80%, black 75%, white);
 }
 
-.rotate1 {
-    transform: rotateX(60deg) rotateY(0deg) rotateZ(45deg);
+.face1 {
+    transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+}
+.face2 {
+    transform: rotateX(90deg) rotateY(0deg) rotateZ(0deg);
+}
+.face3 {
+    transform: rotateX(90deg) rotateY(0deg) rotateZ(90deg);
+}
+.face6 {
+    transform: rotateX(180deg) rotateY(0deg) rotateZ(90deg);
+}
+.face5 {
+    transform: rotateX(180deg) rotateY(90deg) rotateZ(90deg);
+}
+.face4 {
+    transform: rotateX(270deg) rotateY(90deg) rotateZ(90deg);
 }
 
-.animate_x {
-    animation: roll_x 0.7s linear infinite;
+.roll {
+    animation: roll 1s linear;
+    animation-iteration-count: infinite;
+}
+@keyframes roll {
+      0% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0); }
+     25% { transform: rotateZ(20deg) rotate3d(1, -1, 0, 0.25turn); }
+     50% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.50turn); }
+     75% { transform: rotateZ(70deg) rotate3d(1, -1, 0, 0.75turn); }
+    100% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 1.00turn); }
 }
 
-@keyframes roll_x {
-    0%   { transform: rotateX(0); }
-    25%  { transform: rotateX(0.25turn) rotateZ(20deg); }
-    50%  { transform: rotateX(0.50turn) rotateZ(0deg);  }
-    75%  { transform: rotateX(0.75turn) rotateZ(-20deg); }
-    100% { transform: rotateX(1.00turn); }
+@keyframes roll_end1 {
+      0% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0); }
+     25% { transform: rotateZ(20deg) rotate3d(1, -1, 0, 0.25turn); }
+     50% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.5turn); }
+     75% { transform: rotateZ(70deg) rotate3d(1, -1, 0, 0.75turn); }
+    100% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 1turn); }
 }
 
-.animate2 {
-    animation: roll2 0.8s linear infinite;
+@keyframes roll_end2 {
+      0% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0); }
+     50% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.25turn) rotateZ(-45deg) rotateY(-45deg); }
+    100% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.25turn) rotateZ(-45deg) rotateY(-45deg); }
 }
 
-@keyframes roll2 {
-    from { transform: rotate3d(0, 0, 0, 0); }
-    to   { transform: rotate3d(1, 1, 1, 1turn); }
+@keyframes roll_end3 {
+      0% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0); }
+     50% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.25turn) rotateZ(-45deg) rotateY(-45deg) rotateZ(90deg); }
+    100% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.25turn) rotateZ(-45deg) rotateY(-45deg) rotateZ(90deg); }
+}
+
+@keyframes roll_end6 {
+      0% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0); }
+     25% { transform: rotateZ(20deg) rotate3d(1, -1, 0, 0.25turn); }
+     50% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.5turn); }
+    100% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.5turn); }
+}
+
+@keyframes roll_end5 {
+      0% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0); }
+     25% { transform: rotateZ(20deg) rotate3d(1, -1, 0, 0.25turn); }
+     50% { transform: rotateZ(10deg) rotate3d(1, -1, 0, 0.5turn); }
+    100% { transform: rotateZ(0deg)  rotate3d(1, -1, 0, 0.75turn) rotateZ(-45deg); }
+}
+
+@keyframes roll_end4 {
+      0% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0); }
+     25% { transform: rotateZ(20deg) rotate3d(1, -1, 0, 0.25turn); }
+     50% { transform: rotateZ(10deg) rotate3d(1, -1, 0, 0.5turn); }
+    100% { transform: rotateZ(0deg)  rotate3d(1, -1, 0, 0.75turn) rotateZ(45deg); }
 }

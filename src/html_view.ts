@@ -925,11 +925,14 @@ export class HtmlView {
     }
 
     private effectDiceMove(node: HtmlViewObject, dest_id: string): void {
-        let new_view: HtmlViewObject = node.clone();
-        new_view.showAt(new_view.getPositionAlignedWithElementId(node.element.id));
-        new_view.element.className += " roll";
-        new_view.animateMoveToElementId(dest_id, 1000);
-        this.dice_roll_view = new_view;
+        let dice_view: HtmlViewObject = node.clone();
+        dice_view.showAt(dice_view.getPositionAlignedWithElementId(node.element.id));
+        let dices = dice_view.element.getElementsByClassName("dice");
+        for (let i: number = 0; i < dices.length; ++i) {
+            dices[i].className += " roll";
+        }
+        dice_view.animateMoveToElementId(dest_id, 1000);
+        this.dice_roll_view = dice_view;
     }
 
     private effectClonedObjectMove(node: HtmlViewObject, id1: string, id2: string): void {
