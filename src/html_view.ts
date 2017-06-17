@@ -391,7 +391,7 @@ export class HtmlView {
             this.buttons_view.hide();
 
             // TODO: Make prependDuration to check the response from the server.
-            this.effectDiceMove(dice_view, "field_7_4");
+            this.effectDiceMove(dice_view, "board");
             return true;
         }, 1000);
     }
@@ -991,9 +991,7 @@ export class HtmlView {
         for (let i: number = 0; i < dices.length; ++i) {
             (<HTMLElement>dices[i]).style.animation = `roll ${0.8 + i / 10 }s linear infinite`;
         }
-        dice_view.element.style.transform = "scale(3)";
         dice_view.animateMoveToElementId(dest_id, 1000);
-        dice_view.element.style.transform += " scale(3)";
         this.dice_roll_view = dice_view;
     }
 
