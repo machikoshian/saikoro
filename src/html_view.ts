@@ -32,8 +32,7 @@ enum Scene {
 
 class DurationKeeper {
     private is_running: boolean = false;
-    private durations: number[] = [];
-    public callback: () => void;
+    private durations: [number, () => void][] = [];
 
     public runTimer(): void {
         if (this.durations.length === 0) {
@@ -46,21 +45,24 @@ class DurationKeeper {
         this.processTimer();
     }
 
-    public addDuration(duration: number): void {
-        this.durations.push(duration);
+    public addDuration(duration: number, callback: () => void): void {
+        this.durations.push([duration, callback]);
         if (this.durations.length === 1) {
             this.runTimer();
         }
     }
 
     private processTimer(): void {
-        let duration: number = this.durations.shift();
-        if (duration == undefined) {
+        let item: [number, () => void] = this.durations.shift();
+        if (item == undefined) {
             this.is_running = false;
             return;
         }
+        let duration: number = item[0];
+        let callback: () => void = item[1];
+
         window.setTimeout(() => {
-            this.callback();
+            callback();
             this.processTimer();
         }, duration);
     }
@@ -96,8 +98,6 @@ export class HtmlView {
     constructor(client: Client) {
         this.client = client;
         this.reset();
-
-        this.duration_keeper.callback = (() => { this.drawEvents(); });
     }
 
     private reset(): void {
@@ -743,7 +743,7 @@ export class HtmlView {
 
     public drawEvents(soon: boolean = true): void {
         if (this.drawEventsByStep()) {
-            this.duration_keeper.addDuration(2000);
+            this.duration_keeper.addDuration(2000, () => { this.drawEvents(); });
         } else {
             this.drawSession(this.session);
         }
