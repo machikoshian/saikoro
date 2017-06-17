@@ -32,7 +32,7 @@ enum Scene {
 
 class EventQueue {
     private is_running: boolean = false;
-    private event_queue: [() => void, number][] = [];
+    private event_queue: [() => boolean, number][] = [];
 
     public run(): void {
         if (this.event_queue.length === 0) {
@@ -45,7 +45,7 @@ class EventQueue {
         this.processQueue();
     }
 
-    public addEvent(event_function: () => void, duration: number): void {
+    public addEvent(event_function: () => boolean, duration: number): void {
         this.event_queue.push([event_function, duration]);
         if (!this.is_running) {
             this.run();
@@ -53,15 +53,15 @@ class EventQueue {
     }
 
     private processQueue(): void {
-        let item: [() => void, number] = this.event_queue.shift();
+        let item: [() => boolean, number] = this.event_queue.shift();
         if (item == undefined) {
             this.is_running = false;
             return;
         }
-        let event_function: () => void = item[0];
-        let duration: number = item[1];
+        let event_function: () => boolean = item[0];
+        let is_success: boolean = event_function();
+        let duration: number = is_success ? item[1] : 0;
 
-        event_function();
         window.setTimeout(() => {
             this.processQueue();
         }, duration);
@@ -354,6 +354,7 @@ export class HtmlView {
         this.event_queue.addEvent(() => {
             this.effectClonedObjectMove(this.clicked_card_view,
                                         this.clicked_card_view.element_id, `field_${x}_${y}`);
+            return true;
         }, 2000);
     }
 
@@ -371,12 +372,14 @@ export class HtmlView {
         this.client.sendRequest(Request.rollDice(dice_num, aim));
 
         this.event_queue.addEvent(() => {
+            console.log("dice roll.");
             let dice_view: HtmlViewObject =
                 (dice_num === 1) ? this.buttons_view.dice1 : this.buttons_view.dice2;
             dice_view.hide();
 
             // TODO: Make prependDuration to check the response from the server.
             this.effectDiceMove(dice_view, "board");
+            return true;
         }, 2000);
     }
 
@@ -390,6 +393,7 @@ export class HtmlView {
 
         this.event_queue.addEvent(() => {
             this.effectCharacter(this.client.player_id, card_id);
+            return true;
         }, 2000);
     }
 
@@ -397,6 +401,7 @@ export class HtmlView {
         this.client.sendRequest(Request.endTurn());
         this.event_queue.addEvent(() => {
             this.buttons_view.hide();
+            return true;
         }, 500);
     }
 
@@ -748,9 +753,10 @@ export class HtmlView {
         this.event_queue.addEvent(() => {
             if (!this.drawEventsByStep()) {
                 this.drawSession(this.session);
-                return;
+                return false;
             }
             this.drawEvents();
+            return true;
         }, 2000);
     }
 
