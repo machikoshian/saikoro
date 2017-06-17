@@ -54,8 +54,7 @@ export class MatchedData {
     constructor(
         public matching_id: string = "",
         public session_id: string = "",
-        public player_id: number = -1,
-        public session_string: string = "") {}
+        public player_id: number = -1) {}
 }
 
 export class SessionHandler {
@@ -259,8 +258,6 @@ export class SessionHandler {
             }
 
             let session_string: string = JSON.stringify(session.toJSON());
-            matched_data.session_string = session_string;
-
             return this.storage.setWithPromise(session_key, session_string);
         }).then((data) => {
             return matched_data;

@@ -15,7 +15,7 @@ firebase_admin.initializeApp({
 export class FirebaseStorage extends Storage {
     public get(key: string, callback: (err: any, value: any) => void): void {
         let db = firebase_admin.database();
-        let ref_memcache = db.ref("memcache").child(key);
+        let ref_memcache = db.ref(key);
         ref_memcache.once('value').then((snapshot) => {
             callback(null, snapshot.val());
         });
@@ -23,7 +23,7 @@ export class FirebaseStorage extends Storage {
 
     public getWithPromise(key: string): Promise<KeyValue> {
         let db = firebase_admin.database();
-        let ref_memcache = db.ref("memcache").child(key);
+        let ref_memcache = db.ref(key);
         return ref_memcache.once('value').then((snapshot) => {
             return new KeyValue(key, snapshot.val());
         });
@@ -31,13 +31,13 @@ export class FirebaseStorage extends Storage {
 
     public set(key: string, value: any, callback: (err: any) => void, expire: number): void {
         let db = firebase_admin.database();
-        let ref_memcache = db.ref("memcache").child(key);
+        let ref_memcache = db.ref(key);
         ref_memcache.set(value).then((unused) => { callback(null); });
     }
 
     public setWithPromise(key: string, value: any): Promise<KeyValue> {
         let db = firebase_admin.database();
-        let ref_memcache = db.ref("memcache").child(key);
+        let ref_memcache = db.ref(key);
         return ref_memcache.set(value).then((snapshot) => {
             return new KeyValue(key, value);
         });
@@ -66,10 +66,7 @@ export class FirebaseServer {
 
         return this.session_handler.handleMatching(data.val()).then((matched: MatchedData) => {
             return Promise.all([
-                this.ref_session.child(`session_${matched.session_id}`).set(matched.session_string),
-                this.ref_matched.child(user_id).set({ matching_id: matched.matching_id,
-                                                        player_id: matched.player_id,
-                                                       session_id: matched.session_id }),
+                this.ref_matched.child(user_id).set(JSON.stringify(matched)),
                 // Delete handled event.
                 this.ref_matching.child(data.key).set(null)
             ]);
