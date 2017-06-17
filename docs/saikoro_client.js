@@ -2534,7 +2534,6 @@ var EventQueue = (function () {
 }());
 var HtmlView = (function () {
     function HtmlView(client) {
-        this.event_drawer_timer = null;
         this.event_queue = new EventQueue();
         this.session = null;
         this.prev_session = null;
@@ -2564,10 +2563,11 @@ var HtmlView = (function () {
         this.prev_session = new session_1.Session();
         this.prev_step = -1;
         this.clicked_field = [-1, -1];
-        if (this.event_drawer_timer) {
-            clearInterval(this.event_drawer_timer);
-            this.event_drawer_timer = null;
+        if (this.dice_roll_view) {
+            this.dice_roll_view.remove();
+            this.dice_roll_view = null;
         }
+        this.event_queue.reset();
     };
     HtmlView.prototype.initView = function (row, column) {
         var _this = this;
@@ -2674,11 +2674,6 @@ var HtmlView = (function () {
             cards_view.none();
         }
         this.field_card_view.none();
-        if (this.dice_roll_view) {
-            this.dice_roll_view.remove();
-            this.dice_roll_view = null;
-        }
-        this.event_queue.reset();
         if (scene === Scene.Matching) {
             document.getElementById("matching").style.display = "";
             return;
