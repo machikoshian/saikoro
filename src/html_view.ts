@@ -782,8 +782,15 @@ export class HtmlView {
         // Dice
         if (event.type === EventType.Dice) {
             if (this.dice_roll_view) {
-                this.dice_roll_view.remove();
-                this.dice_roll_view = null;
+                let dices = this.dice_roll_view.element.getElementsByClassName("dice");
+                for (let i: number = 0; i < dices.length; ++i) {
+                    let pip: number = (i === 0) ? event.dice.dice1 : event.dice.dice2;
+                    (<HTMLElement>dices[i]).style.animation = `roll_end${pip} 0.5s ease-out forwards`;
+                }
+                window.setTimeout(() => {
+                    this.dice_roll_view.remove();
+                    this.dice_roll_view = null;
+                }, 1000);
             }
 
             let message: string = this.getDiceResultMessage(event.dice, event.player_id);
@@ -929,7 +936,7 @@ export class HtmlView {
         dice_view.showAt(dice_view.getPositionAlignedWithElementId(node.element.id));
         let dices = dice_view.element.getElementsByClassName("dice");
         for (let i: number = 0; i < dices.length; ++i) {
-            dices[i].className += " roll";
+            (<HTMLElement>dices[i]).style.animation = "roll 0.5s linear infinite";
         }
         dice_view.animateMoveToElementId(dest_id, 1000);
         this.dice_roll_view = dice_view;

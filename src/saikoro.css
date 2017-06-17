@@ -178,14 +178,6 @@ table.player { width: 160px; }
     left: 42px;
 }
 
-.roll .dice_base {
-    animation: roll 0.2s linear infinite;
-}
-
-.roll #buttons_dice2_2 {
-    animation: roll 0.3s linear infinite;
-}
-
 #buttons_char_card {
     width: 80px; height: 55px; padding: 10px; padding-top: 15px;
     text-align: center;
