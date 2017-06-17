@@ -1266,12 +1266,21 @@ var Client = (function () {
         this.mode = query["mode"];
         this.connection.matching(query, this.callbackMatching.bind(this));
     };
+    Client.prototype.checkUpdate = function () {
+        var query = {
+            command: "board",
+            session_id: this.session_id,
+            player_id: this.player_id,
+            step: this.step,
+        };
+        this.sendRequest(query);
+    };
     Client.prototype.callbackMatching = function (response) {
         var response_json = JSON.parse(response);
         this.session_id = response_json.session_id;
         this.player_id = response_json.player_id;
         this.matching_id = response_json.matching_id;
-        this.connection.checkUpdate(this);
+        this.checkUpdate();
         this.connection.startCheckUpdate(this);
     };
     Client.prototype.sendRequest = function (request) {
@@ -1691,20 +1700,6 @@ var StandaloneConnection = (function (_super) {
     }
     StandaloneConnection.prototype.startCheckUpdate = function (client) { };
     StandaloneConnection.prototype.stopCheckUpdate = function () { };
-    StandaloneConnection.prototype.checkUpdate = function (client) {
-        var _this = this;
-        var query = {
-            command: "board",
-            session_id: client.session_id,
-            player_id: client.player_id,
-            step: client.step,
-        };
-        session_handler.handleCommand(query).then(function (data) {
-            setTimeout(function () {
-                client.callback(data.value);
-            }, _this.delay);
-        });
-    };
     StandaloneConnection.prototype.matching = function (query, callback) {
         var _this = this;
         session_handler.handleMatching(query).then(function (matched) {
@@ -1750,9 +1745,6 @@ var HybridConnection = (function (_super) {
     };
     HybridConnection.prototype.stopCheckUpdate = function () {
         this.connection.stopCheckUpdate();
-    };
-    HybridConnection.prototype.checkUpdate = function (client) {
-        this.connection.checkUpdate(client);
     };
     HybridConnection.prototype.matching = function (query, callback) {
         this.connection.stopCheckUpdate();
@@ -2499,9 +2491,51 @@ var Scene;
     Scene[Scene["Deck"] = 2] = "Deck";
     Scene[Scene["Game"] = 3] = "Game";
 })(Scene || (Scene = {}));
+var EventQueue = (function () {
+    function EventQueue() {
+        this.is_running = false;
+        this.event_queue = [];
+    }
+    EventQueue.prototype.reset = function () {
+        this.is_running = false;
+        this.event_queue = [];
+    };
+    EventQueue.prototype.run = function () {
+        if (this.event_queue.length === 0) {
+            return;
+        }
+        if (this.is_running) {
+            return;
+        }
+        this.is_running = true;
+        this.processQueue();
+    };
+    EventQueue.prototype.addEvent = function (event_function, duration) {
+        this.event_queue.push([event_function, duration]);
+        if (!this.is_running) {
+            this.run();
+        }
+    };
+    EventQueue.prototype.processQueue = function () {
+        var _this = this;
+        var item = this.event_queue.shift();
+        if (item == undefined) {
+            this.is_running = false;
+            return;
+        }
+        var event_function = item[0];
+        var is_success = event_function();
+        var duration = is_success ? item[1] : 0;
+        window.setTimeout(function () {
+            _this.processQueue();
+        }, duration);
+    };
+    return EventQueue;
+}());
 var HtmlView = (function () {
     function HtmlView(client) {
         this.event_drawer_timer = null;
+        this.event_queue = new EventQueue();
         this.session = null;
         this.prev_session = null;
         this.prev_step = -1;
@@ -2640,6 +2674,11 @@ var HtmlView = (function () {
             cards_view.none();
         }
         this.field_card_view.none();
+        if (this.dice_roll_view) {
+            this.dice_roll_view.remove();
+            this.dice_roll_view = null;
+        }
+        this.event_queue.reset();
         if (scene === Scene.Matching) {
             document.getElementById("matching").style.display = "";
             return;
@@ -2681,7 +2720,6 @@ var HtmlView = (function () {
         }
         var card_id = target_facilities[0];
         this.client.sendRequest(client_1.Request.interactFacilityAction(card_id, target_player_id));
-        this.drawEventsLater();
     };
     HtmlView.prototype.onClickDeckField = function (x, y) {
         var _a = this.clicked_field, px = _a[0], py = _a[1];
@@ -2727,6 +2765,7 @@ var HtmlView = (function () {
         }
     };
     HtmlView.prototype.onClickField = function (x, y) {
+        var _this = this;
         console.log("clicked: field_" + x + "_" + y);
         if (this.scene === Scene.Matching) {
             return;
@@ -2746,8 +2785,11 @@ var HtmlView = (function () {
             return;
         }
         this.client.sendRequest(client_1.Request.buildFacility(x, y, card_id));
-        this.effectClonedObjectMove(this.clicked_card_view, this.clicked_card_view.element_id, "field_" + x + "_" + y);
-        this.drawEventsLater();
+        this.event_queue.addEvent(function () {
+            _this.buttons_view.hide(); // for the turn end button.
+            _this.effectClonedObjectMove(_this.clicked_card_view, _this.clicked_card_view.element_id, "field_" + x + "_" + y);
+            return true;
+        }, 1000);
     };
     HtmlView.prototype.isRequestReady = function () {
         // TODO: Create a function in Session.
@@ -2755,27 +2797,40 @@ var HtmlView = (function () {
             this.client.player_id === this.session.getCurrentPlayerId());
     };
     HtmlView.prototype.onClickDice = function (dice_num, aim) {
+        var _this = this;
         if (!this.isRequestReady()) {
             return;
         }
         this.client.sendRequest(client_1.Request.rollDice(dice_num, aim));
-        var dice_view = (dice_num === 1) ? this.buttons_view.dice1 : this.buttons_view.dice2;
-        dice_view.hide();
-        this.effectDiceMove(dice_view, "board");
-        this.drawEventsLater();
+        this.event_queue.addEvent(function () {
+            console.log("dice roll.");
+            var dice_view = (dice_num === 1) ? _this.buttons_view.dice1 : _this.buttons_view.dice2;
+            dice_view.hide();
+            _this.buttons_view.hide();
+            // TODO: Make prependDuration to check the response from the server.
+            _this.effectDiceMove(dice_view, "field_7_4");
+            return true;
+        }, 1000);
     };
     HtmlView.prototype.onClickCharacter = function () {
+        var _this = this;
         if (this.clicked_card_view == null) {
             return;
         }
         var card_id = this.clicked_card_view.getCardId();
         this.client.sendRequest(client_1.Request.characterCard(card_id));
-        this.effectCharacter(this.client.player_id, card_id);
-        this.drawEventsLater();
+        this.event_queue.addEvent(function () {
+            _this.effectCharacter(_this.client.player_id, card_id);
+            return true;
+        }, 2000);
     };
     HtmlView.prototype.onClickEndTurn = function () {
+        var _this = this;
         this.client.sendRequest(client_1.Request.endTurn());
-        this.drawEventsLater();
+        this.event_queue.addEvent(function () {
+            _this.buttons_view.hide();
+            return true;
+        }, 500);
     };
     HtmlView.prototype.onClickMatching = function (mode) {
         var name = document.getElementById("matching_name").value;
@@ -3069,33 +3124,16 @@ var HtmlView = (function () {
         this.buttons_view.draw(session, this.client.player_id);
         this.prev_session = session;
     };
-    HtmlView.prototype.drawEventsLater = function () {
-        // TODO: This is a hack to abuse this function is always called after sendRequest.
-        // Nice to rename this function.
-        this.buttons_view.hide();
-        this.drawEvents(false);
-    };
-    HtmlView.prototype.drawEvents = function (soon) {
+    HtmlView.prototype.drawEvents = function () {
         var _this = this;
-        if (soon === void 0) { soon = true; }
-        var interval = 2000; // msec.
-        if (this.event_drawer_timer) {
-            // If setInterval is ongoing, use that one. No additional action.
-        }
-        else {
-            if (soon) {
-                // Show the first message soon.
-                this.drawEventsByStep();
+        this.event_queue.addEvent(function () {
+            if (!_this.drawEventsByStep()) {
+                _this.drawSession(_this.session);
+                return false;
             }
-            // After 2 sec, continuously call showMessageFromQueue every 2 sec.
-            this.event_drawer_timer = setInterval(function () {
-                if (!_this.drawEventsByStep()) {
-                    // If the queue is empty, clear the timer.
-                    clearInterval(_this.event_drawer_timer);
-                    _this.event_drawer_timer = null;
-                }
-            }, interval);
-        }
+            _this.drawEvents();
+            return true;
+        }, 2000);
     };
     HtmlView.prototype.drawEventsByStep = function () {
         var events = this.session.getEvents();
@@ -3109,7 +3147,6 @@ var HtmlView = (function () {
             }
         }
         if (step === -1) {
-            this.drawSession(this.session);
             return false;
         }
         var handled = false;
@@ -3130,8 +3167,6 @@ var HtmlView = (function () {
         if (handled) {
             return true;
         }
-        // All events have been drawn. Then, draw the current status.
-        this.drawSession(this.session);
         return false;
     };
     HtmlView.prototype.drawEvent = function (event) {
@@ -3150,13 +3185,28 @@ var HtmlView = (function () {
         // Dice
         if (event.type === session_1.EventType.Dice) {
             if (this.dice_roll_view) {
-                this.dice_roll_view.remove();
-                this.dice_roll_view = null;
+                var dices = this.dice_roll_view.element.getElementsByClassName("dice");
+                var _loop_4 = function (i) {
+                    var pip = (i === 0) ? event.dice.dice1 : event.dice.dice2;
+                    var dice = dices[i];
+                    dice.addEventListener("animationiteration", function () {
+                        dice.style.animation = "roll_end" + pip + " " + (0.8 + i / 10) + "s ease-out forwards";
+                    });
+                };
+                for (var i = 0; i < dices.length; ++i) {
+                    _loop_4(i);
+                }
+                window.setTimeout(function () {
+                    _this.dice_roll_view.remove();
+                    _this.dice_roll_view = null;
+                }, 2000);
             }
-            var message = this.getDiceResultMessage(event.dice, event.player_id);
-            var color = this.getPlayerColor(event.player_id);
-            this.board_view.animateDiceResult(event.dice.result(), color);
-            this.message_view.drawMessage(message, color);
+            var message_1 = this.getDiceResultMessage(event.dice, event.player_id);
+            var color_1 = this.getPlayerColor(event.player_id);
+            window.setTimeout(function () {
+                _this.board_view.animateDiceResult(event.dice.result(), color_1);
+                _this.message_view.drawMessage(message_1, color_1);
+            }, 1500);
             return true;
         }
         // Character card
@@ -3218,7 +3268,7 @@ var HtmlView = (function () {
         if (money_motion.indexOf(event.type) !== -1) {
             // Money motion
             var _b = this.session.getPosition(event.card_id), x_3 = _b[0], y_2 = _b[1];
-            var _loop_4 = function (pid) {
+            var _loop_5 = function (pid) {
                 var money = event.moneys[pid];
                 if (money === 0) {
                     return "continue";
@@ -3237,7 +3287,7 @@ var HtmlView = (function () {
                 }, delay);
             };
             for (var pid = 0; pid < event.moneys.length; pid++) {
-                _loop_4(pid);
+                _loop_5(pid);
             }
         }
         if (event.type === session_1.EventType.Interaction) {
@@ -3283,11 +3333,17 @@ var HtmlView = (function () {
         }
     };
     HtmlView.prototype.effectDiceMove = function (node, dest_id) {
-        var new_view = node.clone();
-        new_view.showAt(new_view.getPositionAlignedWithElementId(node.element.id));
-        new_view.element.className += " roll";
-        new_view.animateMoveToElementId(dest_id, 1000);
-        this.dice_roll_view = new_view;
+        var dice_view = node.clone();
+        dice_view.element.style.background = "transparent";
+        dice_view.showAt(dice_view.getPositionAlignedWithElementId(node.element.id));
+        var dices = dice_view.element.getElementsByClassName("dice");
+        for (var i = 0; i < dices.length; ++i) {
+            dices[i].style.animation = "roll " + (0.8 + i / 10) + "s linear infinite";
+        }
+        dice_view.element.style.transform = "scale(3)";
+        dice_view.animateMoveToElementId(dest_id, 1000);
+        dice_view.element.style.transform += " scale(3)";
+        this.dice_roll_view = dice_view;
     };
     HtmlView.prototype.effectClonedObjectMove = function (node, id1, id2) {
         var new_view = node.clone();
@@ -3305,7 +3361,7 @@ var HtmlView = (function () {
             return;
         }
         var timeout = 1000;
-        var _loop_5 = function (card_id) {
+        var _loop_6 = function (card_id) {
             window.setTimeout(function () {
                 _this.effectCardDeal(player_id, card_id);
             }, timeout);
@@ -3313,7 +3369,7 @@ var HtmlView = (function () {
         };
         for (var _i = 0, card_ids_1 = card_ids; _i < card_ids_1.length; _i++) {
             var card_id = card_ids_1[_i];
-            _loop_5(card_id);
+            _loop_6(card_id);
         }
     };
     HtmlView.prototype.effectMoneyMotion = function (element_from, element_to, money) {
@@ -3455,7 +3511,6 @@ var HtmlViewObject = (function () {
         this.animateMoveTo(this.getPositionAlignedWithElementId(element_id), duration);
     };
     HtmlViewObject.prototype.animateMoveTo = function (_a, duration) {
-        var _this = this;
         var x = _a[0], y = _a[1];
         if (duration === void 0) { duration = 1000; }
         var rect_from = this.element.getBoundingClientRect();
@@ -3469,7 +3524,6 @@ var HtmlViewObject = (function () {
         this.element.style.transitionDuration = duration / 1000 + "s";
         this.element.style.transitionTimingFunction = "ease";
         this.element.style.transform = "translate(" + diff_x + "px, " + diff_y + "px)";
-        window.setTimeout(function () { _this.none(); }, duration + 500);
     };
     return HtmlViewObject;
 }());
