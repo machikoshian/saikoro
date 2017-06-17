@@ -46,6 +46,10 @@ export class MemcacheStorage extends Storage {
             }, 600);
         });
     }
+
+    public delete(key: string): void {
+        this.memcache.delete(key, null);
+    }
 }
 
 

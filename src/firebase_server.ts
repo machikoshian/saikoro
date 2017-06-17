@@ -15,38 +15,38 @@ firebase_admin.initializeApp({
 export class FirebaseStorage extends Storage {
     public get(key: string, callback: (err: any, value: any) => void): void {
         let db = firebase_admin.database();
-        let ref_memcache = db.ref(key);
-        ref_memcache.once('value').then((snapshot) => {
+        db.ref(key).once('value').then((snapshot) => {
             callback(null, snapshot.val());
         });
     }
 
     public getWithPromise(key: string): Promise<KeyValue> {
         let db = firebase_admin.database();
-        let ref_memcache = db.ref(key);
-        return ref_memcache.once('value').then((snapshot) => {
+        return db.ref(key).once('value').then((snapshot) => {
             return new KeyValue(key, snapshot.val());
         });
     }
 
     public set(key: string, value: any, callback: (err: any) => void, expire: number): void {
         let db = firebase_admin.database();
-        let ref_memcache = db.ref(key);
-        ref_memcache.set(value).then((unused) => { callback(null); });
+        db.ref(key).set(value).then((unused) => { callback(null); });
     }
 
     public setWithPromise(key: string, value: any): Promise<KeyValue> {
         let db = firebase_admin.database();
-        let ref_memcache = db.ref(key);
-        return ref_memcache.set(value).then((snapshot) => {
+        return db.ref(key).set(value).then((snapshot) => {
             return new KeyValue(key, value);
         });
+    }
+
+    public delete(key: string): void {
+        let db = firebase_admin.database();
+        db.ref(key).set(null);
     }
 }
 
 export class FirebaseServer {
     private db;
-    private ref_session;
     private ref_matched;
     private ref_matching;
     private ref_command;
@@ -55,7 +55,6 @@ export class FirebaseServer {
     constructor(session_handler: SessionHandler) {
         this.session_handler = session_handler;
         this.db = firebase_admin.database();
-        this.ref_session = this.db.ref("session");
         this.ref_matched = this.db.ref("matched");
         this.ref_matching = this.db.ref("matching");
         this.ref_command = this.db.ref("command");
@@ -66,7 +65,7 @@ export class FirebaseServer {
 
         return this.session_handler.handleMatching(data.val()).then((matched: MatchedData) => {
             return Promise.all([
-                this.ref_matched.child(user_id).set(JSON.stringify(matched)),
+                this.ref_matched.child(user_id).set(matched),
                 // Delete handled event.
                 this.ref_matching.child(data.key).set(null)
             ]);
@@ -79,7 +78,8 @@ export class FirebaseServer {
             let promises: Promise<{}>[] = [];
 
             if (session_string !== "{}") {
-                promises.push(this.ref_session.child(session_data.key).set(session_string));
+                // session_data.key looks like /session/session_10
+                promises.push(this.db.ref(session_data.key).set(session_string));
             }
             // Delete handled event.
             promises.push(this.ref_command.child(data.key).set(null));

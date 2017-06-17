@@ -14,6 +14,7 @@ export class KeyValue {
 export abstract class Storage {
     abstract get(key: string, callback: (err: any, value: any) => void): void;
     abstract set(key: string, value: any, callback: (err: any) => void, expire: number): void;
+    abstract delete(key: string): void;
     abstract getWithPromise(key: string): Promise<KeyValue>;
     abstract setWithPromise(key: string, value: any): Promise<KeyValue>;
 }
@@ -30,6 +31,10 @@ export class LocalStorage extends Storage {
             let data: KeyValue = new KeyValue(key, this.cache[key]);
             resolve(data);
         });
+    }
+
+    public delete(key: string): void {
+        delete this.cache[key];
     }
 
     public getKeys(): string[] {
@@ -181,7 +186,7 @@ export class SessionHandler {
             let updated: boolean = this.processCommand(session, query);
 
             if (session.isEnd()) {
-                this.closeSession(session_key);
+                this.closeSession(session_key, session);
             }
             if (!updated) {
                 return new KeyValue(data.key, "{}");
@@ -191,8 +196,10 @@ export class SessionHandler {
         });
     }
 
-    private closeSession(session_key: string): void {
-
+    private closeSession(session_key: string, session: Session): void {
+        for (let player of session.getPlayers()) {
+            this.storage.delete(`matched/${player.user_id}`);
+        }
     }
 
     // TODO: This is a quite hacky way for testing w/o considering any race conditions.
