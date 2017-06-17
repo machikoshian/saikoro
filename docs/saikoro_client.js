@@ -1224,6 +1224,9 @@ var Session = (function () {
     Session.prototype.getTargetFacilities = function () {
         return this.target_facilities;
     };
+    Session.prototype.isEnd = function () {
+        return (this.phase === Phase.EndGame);
+    };
     return Session;
 }());
 exports.Session = Session;
@@ -1259,6 +1262,7 @@ var Client = (function () {
         this.mode = 0;
         this.player_id = 0;
         this.step = 0;
+        this.connection.stopCheckUpdate();
     };
     Client.prototype.matching = function (query) {
         query.command = "matching";
@@ -1688,8 +1692,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var client_1 = __webpack_require__(2);
 var session_handler_1 = __webpack_require__(15);
 var protocol_1 = __webpack_require__(3);
-var mc = new session_handler_1.MemcacheMock();
-var session_handler = new session_handler_1.SessionHandler(mc);
+var storage = new session_handler_1.LocalStorage();
+var session_handler = new session_handler_1.SessionHandler(storage);
 var StandaloneConnection = (function (_super) {
     __extends(StandaloneConnection, _super);
     function StandaloneConnection(delay) {
@@ -1704,9 +1708,7 @@ var StandaloneConnection = (function (_super) {
         var _this = this;
         session_handler.handleMatching(query).then(function (matched) {
             setTimeout(function () {
-                callback(JSON.stringify({ matching_id: matched.matching_id,
-                    player_id: matched.player_id,
-                    session_id: matched.session_id }));
+                callback(JSON.stringify(matched));
             }, _this.delay);
         });
     };
@@ -2499,6 +2501,8 @@ var EventQueue = (function () {
     EventQueue.prototype.reset = function () {
         this.is_running = false;
         this.event_queue = [];
+        window.clearTimeout(this.timer);
+        this.timer = null;
     };
     EventQueue.prototype.run = function () {
         if (this.event_queue.length === 0) {
@@ -2526,7 +2530,7 @@ var EventQueue = (function () {
         var event_function = item[0];
         var is_success = event_function();
         var duration = is_success ? item[1] : 0;
-        window.setTimeout(function () {
+        this.timer = window.setTimeout(function () {
             _this.processQueue();
         }, duration);
     };
@@ -4055,61 +4059,64 @@ var KeyValue = (function () {
     return KeyValue;
 }());
 exports.KeyValue = KeyValue;
-// Memcache
-var Memcache = (function () {
-    function Memcache() {
+var Storage = (function () {
+    function Storage() {
     }
-    return Memcache;
+    return Storage;
 }());
-exports.Memcache = Memcache;
-var MemcacheMock = (function (_super) {
-    __extends(MemcacheMock, _super);
-    function MemcacheMock() {
+exports.Storage = Storage;
+var LocalStorage = (function (_super) {
+    __extends(LocalStorage, _super);
+    function LocalStorage() {
         var _this = _super !== null && _super.apply(this, arguments) || this;
         _this.cache = {};
         return _this;
     }
-    MemcacheMock.prototype.get = function (key, callback) {
+    LocalStorage.prototype.get = function (key, callback) {
         callback(null, this.cache[key]);
     };
-    MemcacheMock.prototype.getWithPromise = function (key) {
+    LocalStorage.prototype.getWithPromise = function (key) {
         var _this = this;
         return new Promise(function (resolve, reject) {
             var data = new KeyValue(key, _this.cache[key]);
             resolve(data);
         });
     };
-    MemcacheMock.prototype.set = function (key, value, callback, expire) {
+    LocalStorage.prototype.delete = function (key) {
+        delete this.cache[key];
+    };
+    LocalStorage.prototype.getKeys = function () {
+        return Object.keys(this.cache);
+    };
+    LocalStorage.prototype.set = function (key, value, callback, expire) {
         this.cache[key] = value;
         callback(null);
     };
-    MemcacheMock.prototype.setWithPromise = function (key, value) {
+    LocalStorage.prototype.setWithPromise = function (key, value) {
         this.cache[key] = value;
         return new Promise(function (resolve, reject) {
             var data = new KeyValue(key, value);
             resolve(data);
         });
     };
-    return MemcacheMock;
-}(Memcache));
-exports.MemcacheMock = MemcacheMock;
+    return LocalStorage;
+}(Storage));
+exports.LocalStorage = LocalStorage;
 var MatchedData = (function () {
-    function MatchedData(matching_id, session_id, player_id, session_string) {
+    function MatchedData(matching_id, session_id, player_id) {
         if (matching_id === void 0) { matching_id = ""; }
         if (session_id === void 0) { session_id = ""; }
         if (player_id === void 0) { player_id = -1; }
-        if (session_string === void 0) { session_string = ""; }
         this.matching_id = matching_id;
         this.session_id = session_id;
         this.player_id = player_id;
-        this.session_string = session_string;
     }
     return MatchedData;
 }());
 exports.MatchedData = MatchedData;
 var SessionHandler = (function () {
-    function SessionHandler(mc) {
-        this.mc = mc;
+    function SessionHandler(storage) {
+        this.storage = storage;
     }
     SessionHandler.prototype.initSession = function () {
         var session = new session_1.Session();
@@ -4205,11 +4212,11 @@ var SessionHandler = (function () {
         var _this = this;
         var session_key = "session";
         if (query.session_id) {
-            session_key = "session_" + query.session_id;
+            session_key = "session/session_" + query.session_id;
         }
         var session;
         var updated = false;
-        return this.mc.getWithPromise(session_key).then(function (data) {
+        return this.storage.getWithPromise(session_key).then(function (data) {
             if (data.value) {
                 session = session_1.Session.fromJSON(JSON.parse(data.value));
             }
@@ -4217,12 +4224,21 @@ var SessionHandler = (function () {
                 session = _this.initSession();
             }
             var updated = _this.processCommand(session, query);
+            if (session.isEnd()) {
+                _this.closeSession(session_key, session);
+            }
             if (!updated) {
                 return new KeyValue(data.key, "{}");
             }
             var session_json = JSON.stringify(session.toJSON());
-            return _this.mc.setWithPromise(session_key, session_json);
+            return _this.storage.setWithPromise(session_key, session_json);
         });
+    };
+    SessionHandler.prototype.closeSession = function (session_key, session) {
+        for (var _i = 0, _a = session.getPlayers(); _i < _a.length; _i++) {
+            var player = _a[_i];
+            this.storage.delete("matched/" + player.user_id);
+        }
     };
     // TODO: This is a quite hacky way for testing w/o considering any race conditions.
     SessionHandler.prototype.handleMatching = function (query) {
@@ -4241,9 +4257,10 @@ var SessionHandler = (function () {
         var num_players = protocol_1.Protocol.getPlayerCount(mode);
         var num_npc = protocol_1.Protocol.getNpcCount(mode);
         var matched_data = new MatchedData();
-        var matching_key = "matching_" + mode;
+        // TODO: rename it and check the permission.
+        var matching_key = "memcache/matching_" + mode;
         // TODO: Some operations can be performed in parallel.
-        return this.mc.getWithPromise(matching_key).then(function (data) {
+        return this.storage.getWithPromise(matching_key).then(function (data) {
             var matching_id;
             if (data.value) {
                 matching_id = Number(data.value);
@@ -4251,15 +4268,15 @@ var SessionHandler = (function () {
             else {
                 matching_id = 10;
             }
-            return _this.mc.setWithPromise(matching_key, matching_id + 1);
+            return _this.storage.setWithPromise(matching_key, matching_id + 1);
         }).then(function (data) {
             var matching_id = data.value - 1;
             // FIXIT: This is an obviously hacky way for two players. Fix it.
             var session_id = mode * 100000 + Math.floor(matching_id / num_players);
-            var session_key = "session_" + session_id;
+            var session_key = "session/session_" + session_id;
             matched_data.matching_id = String(matching_id);
             matched_data.session_id = String(session_id);
-            return _this.mc.getWithPromise(session_key);
+            return _this.storage.getWithPromise(session_key);
         }).then(function (data) {
             var session_key = data.key;
             var session_value = data.value;
@@ -4274,7 +4291,7 @@ var SessionHandler = (function () {
             matched_data.player_id = player_id;
             if (player_id === num_players - 1) {
                 // Add NPC.
-                var NPC_NAMES = ["ごましお", "グラ", "ヂータ", "エル", "茜"];
+                var NPC_NAMES = ["ごましお", "グラ", "ヂータ", "エル", "茜", "ベリー", "パールヴァティー"];
                 for (var i = 0; i < num_npc; ++i) {
                     var npc_name = NPC_NAMES[Math.floor(Math.random() * NPC_NAMES.length)];
                     _this.addNewPlayer(session, "" + i, npc_name + " (NPC)", [], true);
@@ -4283,8 +4300,7 @@ var SessionHandler = (function () {
                 _this.doNext(session);
             }
             var session_string = JSON.stringify(session.toJSON());
-            matched_data.session_string = session_string;
-            return _this.mc.setWithPromise(session_key, session_string);
+            return _this.storage.setWithPromise(session_key, session_string);
         }).then(function (data) {
             return matched_data;
         });
