@@ -74,7 +74,6 @@ class EventQueue {
 }
 
 export class HtmlView {
-    private event_drawer_timer = null;
     private event_queue = new EventQueue();
     private client: Client;
     private session: Session = null;
@@ -111,10 +110,11 @@ export class HtmlView {
         this.prev_step = -1;
         this.clicked_field = [-1, -1];
 
-        if (this.event_drawer_timer) {
-            clearInterval(this.event_drawer_timer);
-            this.event_drawer_timer = null;
+        if (this.dice_roll_view) {
+            this.dice_roll_view.remove();
+            this.dice_roll_view = null;
         }
+        this.event_queue.reset();
     }
 
     public initView(row: number = 5, column: number = 12): void {
@@ -238,12 +238,6 @@ export class HtmlView {
             cards_view.none();
         }
         this.field_card_view.none();
-
-        if (this.dice_roll_view) {
-            this.dice_roll_view.remove();
-            this.dice_roll_view = null;
-        }
-        this.event_queue.reset();
 
         if (scene === Scene.Matching) {
             document.getElementById("matching").style.display = "";

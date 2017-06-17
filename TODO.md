@@ -3,6 +3,7 @@
 * 建設時にカードとクリックエリアが消えない。
 * 選択がなくてもキャラカードボタンが押せるタイミングがある。
 
+* dice1, dice2 を配列に
 * 使っていない tsconfig-es6.json の削除
 * MatchedData から session をはずす。
 * event.target_card_ids を event.buildFacility でも使う。
