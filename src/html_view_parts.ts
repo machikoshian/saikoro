@@ -142,8 +142,6 @@ export class HtmlViewObject {
         this.element.style.transitionDuration = `${duration / 1000}s`;
         this.element.style.transitionTimingFunction = "ease";
         this.element.style.transform = `translate(${diff_x}px, ${diff_y}px)`;
-
-        window.setTimeout(() => { this.none(); }, duration + 500);
     }
 }
 

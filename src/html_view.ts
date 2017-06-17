@@ -34,6 +34,11 @@ class EventQueue {
     private is_running: boolean = false;
     private event_queue: [() => boolean, number][] = [];
 
+    public reset(): void {
+        this.is_running = false;
+        this.event_queue = [];
+    }
+
     public run(): void {
         if (this.event_queue.length === 0) {
             return;
@@ -234,6 +239,12 @@ export class HtmlView {
         }
         this.field_card_view.none();
 
+        if (this.dice_roll_view) {
+            this.dice_roll_view.remove();
+            this.dice_roll_view = null;
+        }
+        this.event_queue.reset();
+
         if (scene === Scene.Matching) {
             document.getElementById("matching").style.display = "";
             return;
@@ -352,10 +363,11 @@ export class HtmlView {
         this.client.sendRequest(Request.buildFacility(x, y, card_id));
 
         this.event_queue.addEvent(() => {
+            this.buttons_view.hide();  // for the turn end button.
             this.effectClonedObjectMove(this.clicked_card_view,
                                         this.clicked_card_view.element_id, `field_${x}_${y}`);
             return true;
-        }, 2000);
+        }, 1000);
     }
 
     private isRequestReady(): boolean {
@@ -376,11 +388,12 @@ export class HtmlView {
             let dice_view: HtmlViewObject =
                 (dice_num === 1) ? this.buttons_view.dice1 : this.buttons_view.dice2;
             dice_view.hide();
+            this.buttons_view.hide();
 
             // TODO: Make prependDuration to check the response from the server.
-            this.effectDiceMove(dice_view, "board");
+            this.effectDiceMove(dice_view, "field_7_4");
             return true;
-        }, 2000);
+        }, 1000);
     }
 
     private onClickCharacter(): void {
@@ -819,18 +832,23 @@ export class HtmlView {
                 let dices = this.dice_roll_view.element.getElementsByClassName("dice");
                 for (let i: number = 0; i < dices.length; ++i) {
                     let pip: number = (i === 0) ? event.dice.dice1 : event.dice.dice2;
-                    (<HTMLElement>dices[i]).style.animation = `roll_end${pip} 0.5s ease-out forwards`;
+                    let dice: HTMLElement = <HTMLElement>dices[i];
+                    dice.addEventListener("animationiteration", () => {
+                        dice.style.animation = `roll_end${pip} ${0.8 + i / 10}s ease-out forwards`;
+                    });
                 }
                 window.setTimeout(() => {
                     this.dice_roll_view.remove();
                     this.dice_roll_view = null;
-                }, 1000);
+                }, 2000);
             }
 
             let message: string = this.getDiceResultMessage(event.dice, event.player_id);
             let color: string = this.getPlayerColor(event.player_id);
-            this.board_view.animateDiceResult(event.dice.result(), color);
-            this.message_view.drawMessage(message, color);
+            window.setTimeout(() => {
+                this.board_view.animateDiceResult(event.dice.result(), color);
+                this.message_view.drawMessage(message, color);
+            }, 1500);
             return true;
         }
 
@@ -967,12 +985,15 @@ export class HtmlView {
 
     private effectDiceMove(node: HtmlViewObject, dest_id: string): void {
         let dice_view: HtmlViewObject = node.clone();
+        dice_view.element.style.background = "transparent";
         dice_view.showAt(dice_view.getPositionAlignedWithElementId(node.element.id));
         let dices = dice_view.element.getElementsByClassName("dice");
         for (let i: number = 0; i < dices.length; ++i) {
-            (<HTMLElement>dices[i]).style.animation = "roll 0.5s linear infinite";
+            (<HTMLElement>dices[i]).style.animation = `roll ${0.8 + i / 10 }s linear infinite`;
         }
+        dice_view.element.style.transform = "scale(3)";
         dice_view.animateMoveToElementId(dest_id, 1000);
+        dice_view.element.style.transform += " scale(3)";
         this.dice_roll_view = dice_view;
     }
 
