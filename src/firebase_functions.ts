@@ -1,10 +1,10 @@
-import { FirebaseMemcache, FirebaseServer } from "./firebase_server";
-import { KeyValue, Memcache, SessionHandler } from "./session_handler";
+import { FirebaseStorage, FirebaseServer } from "./firebase_server";
+import { KeyValue, SessionHandler } from "./session_handler";
 
 const functions = require('firebase-functions');
-const mc = new FirebaseMemcache();
+const storage = new FirebaseStorage();
 
-let session_handler: SessionHandler = new SessionHandler(mc);
+let session_handler: SessionHandler = new SessionHandler(storage);
 let main_firebase: FirebaseServer = new FirebaseServer(session_handler);
 
 exports.matching = functions.database.ref('/matching/{pushId}').onWrite(event => {

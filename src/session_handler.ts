@@ -11,15 +11,14 @@ export class KeyValue {
         public value: any = null) {}
 }
 
-// Memcache
-export abstract class Memcache {
+export abstract class Storage {
     abstract get(key: string, callback: (err: any, value: any) => void): void;
     abstract set(key: string, value: any, callback: (err: any) => void, expire: number): void;
     abstract getWithPromise(key: string): Promise<KeyValue>;
     abstract setWithPromise(key: string, value: any): Promise<KeyValue>;
 }
 
-export class MemcacheMock extends Memcache {
+export class LocalStorage extends Storage {
     public cache: { [key: string]: any; } = {};
 
     public get(key: string, callback: (err: any, value: any) => void): void {
@@ -60,10 +59,7 @@ export class MatchedData {
 }
 
 export class SessionHandler {
-    private mc: Memcache;
-    constructor(mc: Memcache) {
-        this.mc = mc;
-    }
+    constructor(private storage: Storage) {}
 
     public initSession(): Session {  // This is a stub, not to be used for production.
         let session = new Session();
@@ -176,7 +172,7 @@ export class SessionHandler {
 
         let session: Session;
         let updated: boolean = false;
-        return this.mc.getWithPromise(session_key).then((data) => {
+        return this.storage.getWithPromise(session_key).then((data) => {
             if (data.value) {
                 session = Session.fromJSON(JSON.parse(data.value));
             } else {
@@ -184,12 +180,20 @@ export class SessionHandler {
             }
 
             let updated: boolean = this.processCommand(session, query);
+
+            if (session.isEnd()) {
+                this.closeSession(session_key);
+            }
             if (!updated) {
                 return new KeyValue(data.key, "{}");
             }
             let session_json: string = JSON.stringify(session.toJSON());
-            return this.mc.setWithPromise(session_key, session_json);
+            return this.storage.setWithPromise(session_key, session_json);
         });
+    }
+
+    private closeSession(session_key: string): void {
+
     }
 
     // TODO: This is a quite hacky way for testing w/o considering any race conditions.
@@ -212,14 +216,14 @@ export class SessionHandler {
         let matching_key: string = `matching_${mode}`;
 
         // TODO: Some operations can be performed in parallel.
-        return this.mc.getWithPromise(matching_key).then((data) => {
+        return this.storage.getWithPromise(matching_key).then((data) => {
             let matching_id: number;
             if (data.value) {
                 matching_id = Number(data.value);
             } else {
                 matching_id = 10;
             }
-            return this.mc.setWithPromise(matching_key, matching_id + 1);
+            return this.storage.setWithPromise(matching_key, matching_id + 1);
         }).then((data) => {
             let matching_id: number = data.value - 1;
 
@@ -229,7 +233,7 @@ export class SessionHandler {
 
             matched_data.matching_id = String(matching_id);
             matched_data.session_id = String(session_id);
-            return this.mc.getWithPromise(session_key);
+            return this.storage.getWithPromise(session_key);
         }).then((data) => {
             let session_key: string = data.key;
             let session_value: string = data.value;
@@ -257,7 +261,7 @@ export class SessionHandler {
             let session_string: string = JSON.stringify(session.toJSON());
             matched_data.session_string = session_string;
 
-            return this.mc.setWithPromise(session_key, session_string);
+            return this.storage.setWithPromise(session_key, session_string);
         }).then((data) => {
             return matched_data;
         });

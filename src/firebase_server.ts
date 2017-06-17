@@ -1,4 +1,4 @@
-import { KeyValue, Memcache, MatchedData, SessionHandler } from "./session_handler";
+import { KeyValue, Storage, MatchedData, SessionHandler } from "./session_handler";
 
 // Firebase
 let firebase_admin = require("firebase-admin");
@@ -12,7 +12,7 @@ firebase_admin.initializeApp({
     }
 });
 
-export class FirebaseMemcache extends Memcache {
+export class FirebaseStorage extends Storage {
     public get(key: string, callback: (err: any, value: any) => void): void {
         let db = firebase_admin.database();
         let ref_memcache = db.ref("memcache").child(key);

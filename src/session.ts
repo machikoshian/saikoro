@@ -1030,4 +1030,7 @@ export class Session {
     public getTargetFacilities(): CardId[] {
         return this.target_facilities;
     }
+    public isEnd(): boolean {
+        return (this.phase === Phase.EndGame);
+    }
 }

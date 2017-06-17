@@ -1,9 +1,9 @@
 import { RequestCallback, Connection, Client } from "./client";
-import { KeyValue, Memcache, MemcacheMock, MatchedData, SessionHandler } from "./session_handler";
+import { KeyValue, Storage, LocalStorage, MatchedData, SessionHandler } from "./session_handler";
 import { GameMode, Protocol } from "./protocol";
 
-const mc = new MemcacheMock();
-let session_handler: SessionHandler = new SessionHandler(mc);
+const storage = new LocalStorage();
+let session_handler: SessionHandler = new SessionHandler(storage);
 
 export class StandaloneConnection extends Connection {
     constructor(public delay: number = 0) {

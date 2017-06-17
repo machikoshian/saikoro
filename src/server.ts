@@ -1,5 +1,5 @@
-import { KeyValue, Memcache, MemcacheMock, MatchedData, SessionHandler } from "./session_handler";
-import { FirebaseMemcache, FirebaseServer } from "./firebase_server";
+import { KeyValue, Storage, LocalStorage, MatchedData, SessionHandler } from "./session_handler";
+import { FirebaseStorage, FirebaseServer } from "./firebase_server";
 
 // Moduiles from Node.js
 import * as http from "http";
@@ -14,7 +14,7 @@ if (DEBUG) {
     require("source-map-support").install();
 }
 
-class MemcacheServer extends Memcache {
+class MemcacheStorage extends Storage {
     private memcache;
 
     constructor(url: string = "") {
@@ -109,7 +109,7 @@ class HttpServer {
 
         if (pathname === "/memcache") {
             let output: string = "";
-            for (let key of mc.getKeys()) {
+            for (let key of storage.getKeys()) {
                 output += (key + "\n");
             }
             response.end(output);
@@ -139,11 +139,11 @@ class HttpServer {
 }
 
 
-const mc = new MemcacheMock();
-// const mc = new MemcacheServer("localhost:11211");
-// const mc = new FirebaseMemcache();
+const storage = new LocalStorage();
+// const mc = new MemcacheStorage("localhost:11211");
+// const mc = new FirebaseStorage();
 
-let session_handler: SessionHandler = new SessionHandler(mc);
+let session_handler: SessionHandler = new SessionHandler(storage);
 
 let main_http: HttpServer = new HttpServer(session_handler);
 main_http.run();
