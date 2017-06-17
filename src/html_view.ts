@@ -30,8 +30,45 @@ enum Scene {
     Game,
 }
 
+class DurationKeeper {
+    private is_running: boolean = false;
+    private durations: number[] = [];
+    public callback: () => void;
+
+    public runTimer(): void {
+        if (this.durations.length === 0) {
+            return;
+        }
+        if (this.is_running) {
+            return;
+        }
+        this.is_running = true;
+        this.processTimer();
+    }
+
+    public addDuration(duration: number): void {
+        this.durations.push(duration);
+        if (this.durations.length === 1) {
+            this.runTimer();
+        }
+    }
+
+    private processTimer(): void {
+        let duration: number = this.durations.shift();
+        if (duration == undefined) {
+            this.is_running = false;
+            return;
+        }
+        window.setTimeout(() => {
+            this.callback();
+            this.processTimer();
+        }, duration);
+    }
+}
+
 export class HtmlView {
     private event_drawer_timer = null;
+    private duration_keeper = new DurationKeeper();
     private client: Client;
     private session: Session = null;
     private prev_session: Session = null;
@@ -59,6 +96,8 @@ export class HtmlView {
     constructor(client: Client) {
         this.client = client;
         this.reset();
+
+        this.duration_keeper.callback = (() => { this.drawEvents(); });
     }
 
     private reset(): void {
@@ -703,23 +742,10 @@ export class HtmlView {
     }
 
     public drawEvents(soon: boolean = true): void {
-        const interval: number = 2000;  // msec.
-        if (this.event_drawer_timer) {
-            // If setInterval is ongoing, use that one. No additional action.
-        }
-        else {
-            if (soon) {
-                // Show the first message soon.
-                this.drawEventsByStep();
-            }
-            // After 2 sec, continuously call showMessageFromQueue every 2 sec.
-            this.event_drawer_timer = setInterval(() => {
-                if (!this.drawEventsByStep()) {
-                    // If the queue is empty, clear the timer.
-                    clearInterval(this.event_drawer_timer);
-                    this.event_drawer_timer = null;
-                }
-            }, interval);
+        if (this.drawEventsByStep()) {
+            this.duration_keeper.addDuration(2000);
+        } else {
+            this.drawSession(this.session);
         }
     }
 
@@ -736,7 +762,6 @@ export class HtmlView {
         }
 
         if (step === -1) {
-            this.drawSession(this.session);
             return false;
         }
 
@@ -760,8 +785,6 @@ export class HtmlView {
         if (handled) {
             return true;
         }
-        // All events have been drawn. Then, draw the current status.
-        this.drawSession(this.session);
         return false;
     }
 
