@@ -166,7 +166,7 @@ export class SessionHandler {
     public handleCommand(query: any): Promise<KeyValue> {
         let session_key: string = "session";
         if (query.session_id) {
-            session_key = `session_${query.session_id}`;
+            session_key = `session/session_${query.session_id}`;
         }
 
         let session: Session;
@@ -212,7 +212,8 @@ export class SessionHandler {
         let num_npc: number = Protocol.getNpcCount(mode);
 
         let matched_data: MatchedData = new MatchedData();
-        let matching_key: string = `matching_${mode}`;
+        // TODO: rename it and check the permission.
+        let matching_key: string = `memcache/matching_${mode}`;
 
         // TODO: Some operations can be performed in parallel.
         return this.storage.getWithPromise(matching_key).then((data) => {
@@ -228,7 +229,7 @@ export class SessionHandler {
 
             // FIXIT: This is an obviously hacky way for two players. Fix it.
             let session_id: number = mode * 100000 + Math.floor(matching_id / num_players);
-            let session_key = `session_${session_id}`;
+            let session_key = `session/session_${session_id}`;
 
             matched_data.matching_id = String(matching_id);
             matched_data.session_id = String(session_id);
