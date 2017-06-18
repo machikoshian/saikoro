@@ -17,13 +17,13 @@ export abstract class Connection {
 export abstract class Client {
     // TODO: These variables should not be modified by others.
     public connection: Connection;
-    public session_id: number = 0;
-    public matching_id: number = 0;
-    public mode: GameMode = 0;
-    public player_id: PlayerId = 0;
+    public session_id: number = -1;
+    public matching_id: number = -1;
+    public mode: GameMode = GameMode.None;
+    public player_id: PlayerId = -1;
     // TODO: user_id should be unique. 0 - 9 is reserved for NPCs.
     public user_id: string = String(Math.floor(Math.random() * 1000000) + 10);
-    public step: number = 0;
+    public step: number = -1;
     public callback: RequestCallback;
 
     constructor(connection: Connection) {
@@ -31,11 +31,11 @@ export abstract class Client {
     }
 
     public reset(): void {
-        this.session_id = 0;
-        this.matching_id = 0;
-        this.mode = 0;
-        this.player_id = 0;
-        this.step = 0;
+        this.session_id = -1;
+        this.matching_id = -1;
+        this.mode = GameMode.None;
+        this.player_id = -1;
+        this.step = -1;
         this.connection.stopCheckUpdate();
     }
 
@@ -63,6 +63,14 @@ export abstract class Client {
         this.matching_id = response_json.matching_id;
 
         this.checkUpdate();
+        this.connection.startCheckUpdate(this);
+    }
+
+    public watchGame(session_id: number): void {
+        this.reset();
+        this.session_id = session_id;
+        this.mode = GameMode.OnLineWatch;
+
         this.connection.startCheckUpdate(this);
     }
 

@@ -50,6 +50,7 @@ export class HybridConnection extends Connection {
     }
 
     public startCheckUpdate(client: Client): void {
+        this.connection = this.getConnection(client.mode);
         this.connection.startCheckUpdate(client);
     }
 
@@ -59,13 +60,15 @@ export class HybridConnection extends Connection {
 
     public matching(query: any, callback: RequestCallback): void {
         this.connection.stopCheckUpdate();
-        if (Protocol.isOnlineMode(query.mode) && (this.online_connection != null)) {
-            this.connection = this.online_connection;
-        }
-        else  {
-            this.connection = this.offline_connection;
-        }
+        this.connection = this.getConnection(query.mode);
         this.connection.matching(query, callback);
+    }
+
+    private getConnection(mode: GameMode): Connection {
+        if (Protocol.isOnlineMode(mode) && (this.online_connection != null)) {
+            return this.online_connection;
+        }
+        return this.offline_connection;
     }
 
     public sendRequest(query: any, callback: RequestCallback): void {

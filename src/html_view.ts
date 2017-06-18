@@ -266,7 +266,7 @@ export class HtmlView {
                 this.drawSession(this.session);
             }
             this.landmarks_view.show();
-            if (Protocol.getPlayerCount(this.client.mode) === 1) {
+            if (Protocol.getPlayerCount(this.client.mode) < 2) {
                 this.reset_button_view.show();
             }
             return;
@@ -274,7 +274,10 @@ export class HtmlView {
     }
 
     private onResetGame(): void {
-        this.client.sendRequest(Request.quit());
+        if (this.client.mode !== GameMode.OnLineWatch) {
+            // TODO: Nice to notify the number of watchers.
+            this.client.sendRequest(Request.quit());
+        }
         this.reset();
         this.switchScene(Scene.Matching);
     }
@@ -428,6 +431,12 @@ export class HtmlView {
         this.client.matching(Request.matching(name, mode, deck));
         this.message_view.drawMessage("通信中です", this.getPlayerColor(this.client.player_id));
         this.switchScene(Scene.Game);
+    }
+
+    private onClickWatch(session_id: number): void {
+        this.switchScene(Scene.Game);
+        this.message_view.drawMessage("通信中です", this.getPlayerColor(this.client.player_id));
+        this.client.watchGame(session_id);
     }
 
     private onClickCard(player: number, card: number): void {
