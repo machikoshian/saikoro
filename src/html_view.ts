@@ -451,22 +451,21 @@ export class HtmlView {
 
     private onLiveSessionsUpdated(response: string): void {
         this.live_session_ids = JSON.parse(response);
-        if (this.live_session_ids.length === 0) {
-            return;
-        }
         for (let i: number = 0; i < 3; i++) {
             let element: HTMLElement = document.getElementById(`matching_button_watch_${i + 1}`);
             if (i < this.live_session_ids.length) {
                 element.innerText = String(this.live_session_ids[i]);
+                element.classList.remove("inactive");
             }
             else {
                 element.innerText = "準備中";
+                element.classList.add("inactive");
             }
         }
     }
 
     private onClickWatch(index: number): void {
-        if (index < this.live_session_ids.length) {
+        if (index >= this.live_session_ids.length) {
             return;
         }
         this.switchScene(Scene.Game);

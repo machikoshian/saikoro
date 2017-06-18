@@ -8,7 +8,17 @@
     margin-top: 10px;
     padding: 4px;
     color: #666666;
-    border-radius: 7px; background-color: #FFE082;
+    border-radius: 7px;
+    background-color: #FFE082;
+    display: inline-block;
+}
+.ui_box.watch {
+    font-size: 20px;
+    margin-top: 10px;
+    padding: 4px;
+    color: #666666;
+    border-radius: 7px;
+    background-color: #C5E1A5;
     display: inline-block;
 }
 
@@ -73,6 +83,19 @@ body {
         -2px  2px 2px #FFD54F,
          2px -2px 2px #FFD54F,
         -2px -2px 2px #FFD54F;
+}
+
+.watch .menu_button {
+    border-color: #7CB342;
+    background-color: #8BC34A;
+    text-shadow: none;
+}
+
+.menu_button.inactive {
+    color: #607D8B;
+    border-color: #90A4AE;
+    background-color: #B0BEC5;
+    text-shadow: none;
 }
 
 .ui_button {
