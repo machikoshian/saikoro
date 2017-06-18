@@ -28,6 +28,10 @@ export class StandaloneConnection extends Connection {
             }, this.delay);
         });
     }
+
+    public getLiveSessions(callback: RequestCallback): void {
+        // Do nothing.
+    }
 }
 
 export class HybridConnection extends Connection {

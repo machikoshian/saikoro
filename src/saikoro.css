@@ -6,20 +6,14 @@
 .ui_box {
     font-size: 20px;
     margin-top: 10px;
-    padding: 4px;
+    padding: 4px 8px;
     color: #666666;
     border-radius: 7px;
     background-color: #FFE082;
     display: inline-block;
 }
 .ui_box.watch {
-    font-size: 20px;
-    margin-top: 10px;
-    padding: 4px;
-    color: #666666;
-    border-radius: 7px;
     background-color: #C5E1A5;
-    display: inline-block;
 }
 
 body {

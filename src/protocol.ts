@@ -18,6 +18,31 @@ export class Protocol {
         return (onlines.indexOf(mode) !== -1);
     }
 
+    static getGameModeName(mode: GameMode): string {
+        switch (mode) {
+            case GameMode.OffLine_2:
+                return "2人バトル 😺 👻";
+            case GameMode.OffLine_3:
+                return "3人バトル 😺 👻 👾";
+            case GameMode.OffLine_4:
+                return "4人バトル 😺 👻 👾 🗿";
+            case GameMode.OnLineSingle_2:
+                return "2人バトル 😺 👻";
+            case GameMode.OnLineSingle_3:
+                return "3人バトル 😺 👻 👾";
+            case GameMode.OnLineSingle_4:
+                return "4人バトル 😺 👻 👾 🗿";
+            case GameMode.OnLine2Players:
+                return "2人バトル 😺 😺";
+            case GameMode.OnLineWatch:
+                return "観戦モード";
+            case GameMode.None:
+                return "";
+            default:
+                return "";
+        }
+    }
+
     static getNpcCount(mode: GameMode): number {
         switch (mode) {
             case GameMode.OffLine_2:

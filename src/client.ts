@@ -14,7 +14,7 @@ export abstract class Connection {
     abstract matching(query: any, callback: RequestCallback): void;
 
     // TODO: change this to abstract.
-    public getLiveSessions(callback: RequestCallback): void {}
+    abstract getLiveSessions(callback: RequestCallback): void;
 }
 
 export abstract class Client {

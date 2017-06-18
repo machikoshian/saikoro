@@ -56,4 +56,15 @@ export class FirebaseConnection extends Connection {
     public sendRequest(json: any, callback: RequestCallback): void {
         firebase.database().ref("command").push(json);
     }
+
+    public getLiveSessions(callback: RequestCallback): void {
+        let ref = firebase.database().ref("live");
+        ref.once("value", (snapshot) => {
+            let keys: number[] = [];
+            snapshot.forEach((childSnapshot) => {
+                keys.push(childSnapshot.key);
+            });
+            callback(JSON.stringify(keys));
+        });
+    }
 }

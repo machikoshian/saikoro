@@ -449,12 +449,18 @@ export class HtmlView {
         this.switchScene(Scene.Game);
     }
 
+    private getGameModeName(session_id: number): string {
+        // See SessionHandler.handleMatching
+        let mode: GameMode = Math.floor(session_id / 100000);
+        return Protocol.getGameModeName(mode);
+    }
+
     private onLiveSessionsUpdated(response: string): void {
         this.live_session_ids = JSON.parse(response);
         for (let i: number = 0; i < 3; i++) {
             let element: HTMLElement = document.getElementById(`matching_button_watch_${i + 1}`);
             if (i < this.live_session_ids.length) {
-                element.innerText = String(this.live_session_ids[i]);
+                element.innerText = this.getGameModeName(this.live_session_ids[i]);
                 element.classList.remove("inactive");
             }
             else {
