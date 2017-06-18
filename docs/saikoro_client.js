@@ -401,7 +401,9 @@ var Event = (function () {
 }());
 exports.Event = Event;
 var Session = (function () {
-    function Session() {
+    function Session(session_id) {
+        if (session_id === void 0) { session_id = -1; }
+        this.session_id = session_id;
         this.board = new board_1.Board();
         this.players = [];
         this.card_manager = new card_manager_1.CardManager();
@@ -419,6 +421,7 @@ var Session = (function () {
     Session.prototype.toJSON = function () {
         return {
             class_name: "Session",
+            session_id: this.session_id,
             board: this.board.toJSON(),
             players: this.players.map(function (player) { return player.toJSON(); }),
             card_manager: this.card_manager.toJSON(),
@@ -437,7 +440,7 @@ var Session = (function () {
     Session.fromJSON = function (json) {
         var board = board_1.Board.fromJSON(json.board);
         var players = json.players.map(function (player) { return board_1.Player.fromJSON(player); });
-        var session = new Session();
+        var session = new Session(json.session_id);
         session.board = board;
         session.players = players;
         session.card_manager = card_manager_1.CardManager.fromJSON(json.card_manager);
@@ -1239,6 +1242,103 @@ exports.Session = Session;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+var GameMode;
+(function (GameMode) {
+    GameMode[GameMode["None"] = 0] = "None";
+    GameMode[GameMode["OffLine_2"] = 1] = "OffLine_2";
+    GameMode[GameMode["OffLine_3"] = 2] = "OffLine_3";
+    GameMode[GameMode["OffLine_4"] = 3] = "OffLine_4";
+    GameMode[GameMode["OnLineSingle_2"] = 4] = "OnLineSingle_2";
+    GameMode[GameMode["OnLineSingle_3"] = 5] = "OnLineSingle_3";
+    GameMode[GameMode["OnLineSingle_4"] = 6] = "OnLineSingle_4";
+    GameMode[GameMode["OnLine2Players"] = 7] = "OnLine2Players";
+    GameMode[GameMode["OnLineWatch"] = 8] = "OnLineWatch";
+})(GameMode = exports.GameMode || (exports.GameMode = {}));
+;
+var Protocol = (function () {
+    function Protocol() {
+    }
+    Protocol.isOnlineMode = function (mode) {
+        var onlines = [
+            GameMode.OnLineSingle_2, GameMode.OnLineSingle_3, GameMode.OnLineSingle_4,
+            GameMode.OnLine2Players, GameMode.OnLineWatch
+        ];
+        return (onlines.indexOf(mode) !== -1);
+    };
+    Protocol.getGameModeName = function (mode) {
+        switch (mode) {
+            case GameMode.OffLine_2:
+                return "2人バトル 😺 👻";
+            case GameMode.OffLine_3:
+                return "3人バトル 😺 👻 👾";
+            case GameMode.OffLine_4:
+                return "4人バトル 😺 👻 👾 🗿";
+            case GameMode.OnLineSingle_2:
+                return "2人バトル 😺 👻";
+            case GameMode.OnLineSingle_3:
+                return "3人バトル 😺 👻 👾";
+            case GameMode.OnLineSingle_4:
+                return "4人バトル 😺 👻 👾 🗿";
+            case GameMode.OnLine2Players:
+                return "2人バトル 😺 😺";
+            case GameMode.OnLineWatch:
+                return "観戦モード";
+            case GameMode.None:
+                return "";
+            default:
+                return "";
+        }
+    };
+    Protocol.getNpcCount = function (mode) {
+        switch (mode) {
+            case GameMode.OffLine_2:
+            case GameMode.OnLineSingle_2:
+                return 1;
+            case GameMode.OffLine_3:
+            case GameMode.OnLineSingle_3:
+                return 2;
+            case GameMode.OffLine_4:
+            case GameMode.OnLineSingle_4:
+                return 3;
+            case GameMode.OnLine2Players:
+            case GameMode.OnLineWatch:
+                return 0;
+            case GameMode.None:
+            default:
+                return -1;
+        }
+    };
+    Protocol.getPlayerCount = function (mode) {
+        switch (mode) {
+            case GameMode.OffLine_2:
+            case GameMode.OnLineSingle_2:
+            case GameMode.OffLine_3:
+            case GameMode.OnLineSingle_3:
+            case GameMode.OffLine_4:
+            case GameMode.OnLineSingle_4:
+                return 1;
+            case GameMode.OnLine2Players:
+                return 2;
+            case GameMode.OnLineWatch:
+                return 0;
+            case GameMode.None:
+            default:
+                return -1;
+        }
+    };
+    return Protocol;
+}());
+exports.Protocol = Protocol;
+
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var protocol_1 = __webpack_require__(2);
 var Connection = (function () {
     function Connection() {
     }
@@ -1247,21 +1347,22 @@ var Connection = (function () {
 exports.Connection = Connection;
 var Client = (function () {
     function Client(connection) {
-        this.session_id = 0;
-        this.matching_id = 0;
-        this.mode = 0;
-        this.player_id = 0;
+        this.session_id = -1;
+        this.matching_id = -1;
+        this.mode = protocol_1.GameMode.None;
+        this.player_id = -1;
         // TODO: user_id should be unique. 0 - 9 is reserved for NPCs.
         this.user_id = String(Math.floor(Math.random() * 1000000) + 10);
-        this.step = 0;
+        this.step = -1;
+        this.live_sessions = [];
         this.connection = connection;
     }
     Client.prototype.reset = function () {
-        this.session_id = 0;
-        this.matching_id = 0;
-        this.mode = 0;
-        this.player_id = 0;
-        this.step = 0;
+        this.session_id = -1;
+        this.matching_id = -1;
+        this.mode = protocol_1.GameMode.None;
+        this.player_id = -1;
+        this.step = -1;
         this.connection.stopCheckUpdate();
     };
     Client.prototype.matching = function (query) {
@@ -1285,6 +1386,15 @@ var Client = (function () {
         this.player_id = response_json.player_id;
         this.matching_id = response_json.matching_id;
         this.checkUpdate();
+        this.connection.startCheckUpdate(this);
+    };
+    Client.prototype.getLiveSessions = function (callback) {
+        this.connection.getLiveSessions(callback);
+    };
+    Client.prototype.watchGame = function (session_id) {
+        this.reset();
+        this.session_id = session_id;
+        this.mode = protocol_1.GameMode.OnLineWatch;
         this.connection.startCheckUpdate(this);
     };
     Client.prototype.sendRequest = function (request) {
@@ -1351,67 +1461,6 @@ var Request = (function () {
     return Request;
 }());
 exports.Request = Request;
-
-
-/***/ }),
-/* 3 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var GameMode;
-(function (GameMode) {
-    GameMode[GameMode["OffLine_2"] = 0] = "OffLine_2";
-    GameMode[GameMode["OffLine_3"] = 1] = "OffLine_3";
-    GameMode[GameMode["OffLine_4"] = 2] = "OffLine_4";
-    GameMode[GameMode["OnLineSingle_2"] = 3] = "OnLineSingle_2";
-    GameMode[GameMode["OnLineSingle_3"] = 4] = "OnLineSingle_3";
-    GameMode[GameMode["OnLineSingle_4"] = 5] = "OnLineSingle_4";
-    GameMode[GameMode["OnLine2Players"] = 6] = "OnLine2Players";
-})(GameMode = exports.GameMode || (exports.GameMode = {}));
-;
-var Protocol = (function () {
-    function Protocol() {
-    }
-    Protocol.isOnlineMode = function (mode) {
-        var onlines = [
-            GameMode.OnLineSingle_2, GameMode.OnLineSingle_3, GameMode.OnLineSingle_4,
-            GameMode.OnLine2Players
-        ];
-        return (onlines.indexOf(mode) !== -1);
-    };
-    Protocol.getNpcCount = function (mode) {
-        switch (mode) {
-            case GameMode.OffLine_2:
-            case GameMode.OnLineSingle_2:
-                return 1;
-            case GameMode.OffLine_3:
-            case GameMode.OnLineSingle_3:
-                return 2;
-            case GameMode.OffLine_4:
-            case GameMode.OnLineSingle_4:
-                return 3;
-            case GameMode.OnLine2Players:
-                return 0;
-        }
-    };
-    Protocol.getPlayerCount = function (mode) {
-        switch (mode) {
-            case GameMode.OffLine_2:
-            case GameMode.OnLineSingle_2:
-            case GameMode.OffLine_3:
-            case GameMode.OnLineSingle_3:
-            case GameMode.OffLine_4:
-            case GameMode.OnLineSingle_4:
-                return 1;
-            case GameMode.OnLine2Players:
-                return 2;
-        }
-    };
-    return Protocol;
-}());
-exports.Protocol = Protocol;
 
 
 /***/ }),
@@ -1615,7 +1664,7 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-var client_1 = __webpack_require__(2);
+var client_1 = __webpack_require__(3);
 var session_1 = __webpack_require__(1);
 var html_view_1 = __webpack_require__(12);
 // TODO: can be merged with Client?
@@ -1689,9 +1738,9 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-var client_1 = __webpack_require__(2);
+var client_1 = __webpack_require__(3);
 var session_handler_1 = __webpack_require__(15);
-var protocol_1 = __webpack_require__(3);
+var protocol_1 = __webpack_require__(2);
 var storage = new session_handler_1.LocalStorage();
 var session_handler = new session_handler_1.SessionHandler(storage);
 var StandaloneConnection = (function (_super) {
@@ -1720,6 +1769,9 @@ var StandaloneConnection = (function (_super) {
             }, _this.delay);
         });
     };
+    StandaloneConnection.prototype.getLiveSessions = function (callback) {
+        // Do nothing.
+    };
     return StandaloneConnection;
 }(client_1.Connection));
 exports.StandaloneConnection = StandaloneConnection;
@@ -1743,6 +1795,7 @@ var HybridConnection = (function (_super) {
         this.online_connection = connection;
     };
     HybridConnection.prototype.startCheckUpdate = function (client) {
+        this.connection = this.getConnection(client.mode);
         this.connection.startCheckUpdate(client);
     };
     HybridConnection.prototype.stopCheckUpdate = function () {
@@ -1750,13 +1803,22 @@ var HybridConnection = (function (_super) {
     };
     HybridConnection.prototype.matching = function (query, callback) {
         this.connection.stopCheckUpdate();
-        if (protocol_1.Protocol.isOnlineMode(query.mode) && (this.online_connection != null)) {
-            this.connection = this.online_connection;
-        }
-        else {
-            this.connection = this.offline_connection;
-        }
+        this.connection = this.getConnection(query.mode);
         this.connection.matching(query, callback);
+    };
+    HybridConnection.prototype.getLiveSessions = function (callback) {
+        // Online connection is used if available.
+        if (this.online_connection) {
+            this.online_connection.getLiveSessions(callback);
+            return;
+        }
+        this.offline_connection.getLiveSessions(callback);
+    };
+    HybridConnection.prototype.getConnection = function (mode) {
+        if (protocol_1.Protocol.isOnlineMode(mode) && (this.online_connection != null)) {
+            return this.online_connection;
+        }
+        return this.offline_connection;
     };
     HybridConnection.prototype.sendRequest = function (query, callback) {
         this.connection.sendRequest(query, callback);
@@ -2471,9 +2533,9 @@ exports.Dice = Dice;
 Object.defineProperty(exports, "__esModule", { value: true });
 var session_1 = __webpack_require__(1);
 var facility_1 = __webpack_require__(0);
-var client_1 = __webpack_require__(2);
+var client_1 = __webpack_require__(3);
 var deck_maker_1 = __webpack_require__(10);
-var protocol_1 = __webpack_require__(3);
+var protocol_1 = __webpack_require__(2);
 var html_view_parts_1 = __webpack_require__(13);
 var COLOR_FIELD = "#FFF8E1";
 var COLOR_LANDMARK = "#B0BEC5";
@@ -2558,11 +2620,13 @@ var HtmlView = (function () {
         this.message_view = null;
         this.buttons_view = null;
         this.scene = Scene.None;
+        this.live_session_ids = [];
         this.dice_roll_view = null; // TODO: try not to use it.
         this.client = client;
         this.reset();
     }
     HtmlView.prototype.reset = function () {
+        var _this = this;
         this.client.reset();
         this.prev_session = new session_1.Session();
         this.prev_step = -1;
@@ -2572,6 +2636,9 @@ var HtmlView = (function () {
             this.dice_roll_view = null;
         }
         this.event_queue.reset();
+        this.client.getLiveSessions(function (response) {
+            _this.onLiveSessionsUpdated(response);
+        });
     };
     HtmlView.prototype.initView = function (row, column) {
         var _this = this;
@@ -2593,6 +2660,12 @@ var HtmlView = (function () {
         //     "click", () => { this.onClickMatching(GameMode.OnLine2Players); });
         // document.getElementById("matching_button_multi_4").addEventListener(
         //     "click", () => { this.onClickMatching(GameMode.OnLine2Players); });
+        document.getElementById("matching_button_watch_1").addEventListener("click", function () { _this.onClickWatch(0); });
+        document.getElementById("matching_button_watch_2").addEventListener("click", function () { _this.onClickWatch(1); });
+        document.getElementById("matching_button_watch_3").addEventListener("click", function () { _this.onClickWatch(2); });
+        this.client.getLiveSessions(function (response) {
+            _this.onLiveSessionsUpdated(response);
+        });
         // Widgets
         this.card_widget_view = new html_view_parts_1.HtmlCardView("card_widget");
         this.dice_widget_view = new html_view_parts_1.HtmlDiceView("dice_widget");
@@ -2600,10 +2673,7 @@ var HtmlView = (function () {
         this.back_button_view = new html_view_parts_1.HtmlViewObject(document.getElementById("back"));
         this.back_button_view.addClickListener(function () { _this.switchScene(Scene.Matching); });
         this.reset_button_view = new html_view_parts_1.HtmlViewObject(document.getElementById("reset"));
-        this.reset_button_view.addClickListener(function () {
-            _this.reset();
-            _this.switchScene(Scene.Matching);
-        });
+        this.reset_button_view.addClickListener(function () { _this.onResetGame(); });
         this.buttons_view = new html_view_parts_1.HtmlButtonsView("buttons", this.dice_widget_view);
         this.buttons_view.dice1.addClickListener(function () { _this.onClickDice(1, 0); });
         this.buttons_view.dice2.addClickListener(function () { _this.onClickDice(2, 0); });
@@ -2703,11 +2773,19 @@ var HtmlView = (function () {
                 this.drawSession(this.session);
             }
             this.landmarks_view.show();
-            if (protocol_1.Protocol.getPlayerCount(this.client.mode) === 1) {
+            if (protocol_1.Protocol.getPlayerCount(this.client.mode) < 2) {
                 this.reset_button_view.show();
             }
             return;
         }
+    };
+    HtmlView.prototype.onResetGame = function () {
+        if (this.client.mode !== protocol_1.GameMode.OnLineWatch) {
+            // TODO: Nice to notify the number of watchers.
+            this.client.sendRequest(client_1.Request.quit());
+        }
+        this.reset();
+        this.switchScene(Scene.Matching);
     };
     HtmlView.prototype.onClickPlayer = function (target_player_id) {
         if (this.session.getPhase() !== session_1.Phase.FacilityActionWithInteraction) {
@@ -2841,6 +2919,33 @@ var HtmlView = (function () {
         this.message_view.drawMessage("通信中です", this.getPlayerColor(this.client.player_id));
         this.switchScene(Scene.Game);
     };
+    HtmlView.prototype.getGameModeName = function (session_id) {
+        // See SessionHandler.handleMatching
+        var mode = Math.floor(session_id / 100000);
+        return protocol_1.Protocol.getGameModeName(mode);
+    };
+    HtmlView.prototype.onLiveSessionsUpdated = function (response) {
+        this.live_session_ids = JSON.parse(response);
+        for (var i = 0; i < 3; i++) {
+            var element = document.getElementById("matching_button_watch_" + (i + 1));
+            if (i < this.live_session_ids.length) {
+                element.innerText = this.getGameModeName(this.live_session_ids[i]);
+                element.classList.remove("inactive");
+            }
+            else {
+                element.innerText = "準備中";
+                element.classList.add("inactive");
+            }
+        }
+    };
+    HtmlView.prototype.onClickWatch = function (index) {
+        if (index >= this.live_session_ids.length) {
+            return;
+        }
+        this.switchScene(Scene.Game);
+        this.message_view.drawMessage("通信中です", this.getPlayerColor(this.client.player_id));
+        this.client.watchGame(this.live_session_ids[index]);
+    };
     HtmlView.prototype.onClickCard = function (player, card) {
         // Event on matching.
         if (this.scene === Scene.Matching) {
@@ -2964,6 +3069,9 @@ var HtmlView = (function () {
         }
     };
     HtmlView.prototype.updateView = function (session, player_id) {
+        if (this.scene !== Scene.Game) {
+            return;
+        }
         this.session = session;
         // Show event animations.
         this.drawEvents();
@@ -4048,7 +4156,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var session_1 = __webpack_require__(1);
 var facility_1 = __webpack_require__(0);
 var auto_play_1 = __webpack_require__(8);
-var protocol_1 = __webpack_require__(3);
+var protocol_1 = __webpack_require__(2);
 var KeyValue = (function () {
     function KeyValue(key, value) {
         if (key === void 0) { key = ""; }
@@ -4062,6 +4170,9 @@ exports.KeyValue = KeyValue;
 var Storage = (function () {
     function Storage() {
     }
+    Storage.prototype.getKeysForDebug = function () {
+        return [];
+    };
     return Storage;
 }());
 exports.Storage = Storage;
@@ -4069,35 +4180,38 @@ var LocalStorage = (function (_super) {
     __extends(LocalStorage, _super);
     function LocalStorage() {
         var _this = _super !== null && _super.apply(this, arguments) || this;
-        _this.cache = {};
+        _this.storage = {};
         return _this;
     }
     LocalStorage.prototype.get = function (key, callback) {
-        callback(null, this.cache[key]);
+        callback(null, this.storage[key]);
     };
     LocalStorage.prototype.getWithPromise = function (key) {
         var _this = this;
         return new Promise(function (resolve, reject) {
-            var data = new KeyValue(key, _this.cache[key]);
+            var data = new KeyValue(key, _this.storage[key]);
             resolve(data);
         });
     };
     LocalStorage.prototype.delete = function (key) {
-        delete this.cache[key];
+        delete this.storage[key];
     };
     LocalStorage.prototype.getKeys = function () {
-        return Object.keys(this.cache);
+        return Object.keys(this.storage);
     };
     LocalStorage.prototype.set = function (key, value, callback, expire) {
-        this.cache[key] = value;
+        this.storage[key] = value;
         callback(null);
     };
     LocalStorage.prototype.setWithPromise = function (key, value) {
-        this.cache[key] = value;
+        this.storage[key] = value;
         return new Promise(function (resolve, reject) {
             var data = new KeyValue(key, value);
             resolve(data);
         });
+    };
+    LocalStorage.prototype.getKeysForDebug = function () {
+        return Object.keys(this.storage);
     };
     return LocalStorage;
 }(Storage));
@@ -4118,18 +4232,6 @@ var SessionHandler = (function () {
     function SessionHandler(storage) {
         this.storage = storage;
     }
-    SessionHandler.prototype.initSession = function () {
-        var session = new session_1.Session();
-        var player_id0 = session.addPlayer("0", "こしあん", 1200, 250, false);
-        var player_id1 = session.addPlayer("1", "つぶあん", 1000, 220, false);
-        for (var i = 0; i < 10; ++i) {
-            session.addFacility(player_id0, Math.floor(Math.random() * 12));
-            session.addFacility(player_id1, Math.floor(Math.random() * 12));
-        }
-        session.startGame();
-        this.doNext(session);
-        return session;
-    };
     SessionHandler.prototype.doNext = function (session) {
         var prev_step = session.getStep();
         for (var i = 0; i < 100; ++i) {
@@ -4210,22 +4312,20 @@ var SessionHandler = (function () {
     };
     SessionHandler.prototype.handleCommand = function (query) {
         var _this = this;
-        var session_key = "session";
-        if (query.session_id) {
-            session_key = "session/session_" + query.session_id;
+        if (query.session_id == undefined) {
+            return;
         }
+        var session_key = "session/session_" + query.session_id;
         var session;
         var updated = false;
         return this.storage.getWithPromise(session_key).then(function (data) {
-            if (data.value) {
-                session = session_1.Session.fromJSON(JSON.parse(data.value));
+            if (!data.value) {
+                return new KeyValue(data.key, "{}");
             }
-            else {
-                session = _this.initSession();
-            }
+            session = session_1.Session.fromJSON(JSON.parse(data.value));
             var updated = _this.processCommand(session, query);
             if (session.isEnd()) {
-                _this.closeSession(session_key, session);
+                _this.closeSession(session);
             }
             if (!updated) {
                 return new KeyValue(data.key, "{}");
@@ -4234,11 +4334,13 @@ var SessionHandler = (function () {
             return _this.storage.setWithPromise(session_key, session_json);
         });
     };
-    SessionHandler.prototype.closeSession = function (session_key, session) {
+    SessionHandler.prototype.closeSession = function (session) {
         for (var _i = 0, _a = session.getPlayers(); _i < _a.length; _i++) {
             var player = _a[_i];
             this.storage.delete("matched/" + player.user_id);
         }
+        this.storage.delete("live/session_" + session.session_id);
+        // TODO: Possible to delete "session/session_id" after 10mins?
     };
     // TODO: This is a quite hacky way for testing w/o considering any race conditions.
     SessionHandler.prototype.handleMatching = function (query) {
@@ -4257,8 +4359,9 @@ var SessionHandler = (function () {
         var num_players = protocol_1.Protocol.getPlayerCount(mode);
         var num_npc = protocol_1.Protocol.getNpcCount(mode);
         var matched_data = new MatchedData();
-        // TODO: rename it and check the permission.
+        // TODO: rename "memcache" and check the permission.
         var matching_key = "memcache/matching_" + mode;
+        var session_id = -1;
         // TODO: Some operations can be performed in parallel.
         return this.storage.getWithPromise(matching_key).then(function (data) {
             var matching_id;
@@ -4272,7 +4375,8 @@ var SessionHandler = (function () {
         }).then(function (data) {
             var matching_id = data.value - 1;
             // FIXIT: This is an obviously hacky way for two players. Fix it.
-            var session_id = mode * 100000 + Math.floor(matching_id / num_players);
+            // HtmlView.getGameModeName also uses this hack.
+            session_id = mode * 100000 + Math.floor(matching_id / num_players);
             var session_key = "session/session_" + session_id;
             matched_data.matching_id = String(matching_id);
             matched_data.session_id = String(session_id);
@@ -4285,19 +4389,26 @@ var SessionHandler = (function () {
                 session = session_1.Session.fromJSON(JSON.parse(session_value));
             }
             else {
-                session = new session_1.Session();
+                session = new session_1.Session(session_id);
             }
             var player_id = _this.addNewPlayer(session, user_id, name, deck, false);
             matched_data.player_id = player_id;
             if (player_id === num_players - 1) {
                 // Add NPC.
-                var NPC_NAMES = ["ごましお", "グラ", "ヂータ", "エル", "茜", "ベリー", "パールヴァティー"];
+                var NPC_NAMES = ["ごましお", "グラ", "ヂータ", "エル", "茜", "ベリー", "兼石"];
                 for (var i = 0; i < num_npc; ++i) {
                     var npc_name = NPC_NAMES[Math.floor(Math.random() * NPC_NAMES.length)];
                     _this.addNewPlayer(session, "" + i, npc_name + " (NPC)", [], true);
                 }
                 session.startGame();
                 _this.doNext(session);
+                var names = session.getPlayers().map(function (player) { return player.name; });
+                var info = {
+                    session_id: session.session_id,
+                    mode: Number(query.mode),
+                    names: names,
+                };
+                _this.storage.setWithPromise("live/session_" + session.session_id, info);
             }
             var session_string = JSON.stringify(session.toJSON());
             return _this.storage.setWithPromise(session_key, session_string);
