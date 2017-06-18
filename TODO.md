@@ -1,4 +1,4 @@
-* 使用済み matched データの削除。
+* 使用済み memcache/matching データの削除。
 * 給料のイベントのタイミング
 * 建設時にカードとクリックエリアが消えない。
 * 選択がなくてもキャラカードボタンが押せるタイミングがある。
@@ -6,7 +6,6 @@
 
 * dice1, dice2 を配列に
 * 使っていない tsconfig-es6.json の削除
-* MatchedData から session をはずす。
 * event.target_card_ids を event.buildFacility でも使う。
 * html_view.ts のリファクタリング
 * 観戦モードの追加

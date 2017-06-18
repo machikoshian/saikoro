@@ -18,6 +18,5 @@ cp ./serviceAccountKey.json $SERVER_DIR
 if [ "$1" != "build" ]; then
     echo "open http://localhost:3156/"
     DEBUG=1 node $SERVER_DIR/server.js
-    open http://localhost:3156/
+    open "http://localhost:3156/"
 fi
-

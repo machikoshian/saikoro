@@ -17,41 +17,48 @@ export abstract class Storage {
     abstract delete(key: string): void;
     abstract getWithPromise(key: string): Promise<KeyValue>;
     abstract setWithPromise(key: string, value: any): Promise<KeyValue>;
+    public getKeysForDebug(): string[] {
+        return [];
+    }
 }
 
 export class LocalStorage extends Storage {
-    public cache: { [key: string]: any; } = {};
+    public storage: { [key: string]: any; } = {};
 
     public get(key: string, callback: (err: any, value: any) => void): void {
-        callback(null, this.cache[key]);
+        callback(null, this.storage[key]);
     }
 
     public getWithPromise(key: string): Promise<KeyValue> {
         return new Promise<KeyValue>((resolve, reject) => {
-            let data: KeyValue = new KeyValue(key, this.cache[key]);
+            let data: KeyValue = new KeyValue(key, this.storage[key]);
             resolve(data);
         });
     }
 
     public delete(key: string): void {
-        delete this.cache[key];
+        delete this.storage[key];
     }
 
     public getKeys(): string[] {
-        return Object.keys(this.cache);
+        return Object.keys(this.storage);
     }
 
     public set(key: string, value: any, callback: (err: any) => void, expire: number): void {
-        this.cache[key] = value;
+        this.storage[key] = value;
         callback(null);
     }
 
     public setWithPromise(key: string, value: any): Promise<KeyValue> {
-        this.cache[key] = value;
+        this.storage[key] = value;
         return new Promise<KeyValue>((resolve, reject) => {
             let data: KeyValue = new KeyValue(key, value);
             resolve(data);
         });
+    }
+
+    public getKeysForDebug(): string[] {
+        return Object.keys(this.storage);
     }
 }
 
@@ -63,7 +70,7 @@ export class MatchedData {
 }
 
 export class SessionHandler {
-    constructor(private storage: Storage) {}
+    constructor(readonly storage: Storage) {}
 
     public initSession(): Session {  // This is a stub, not to be used for production.
         let session = new Session();
@@ -219,7 +226,7 @@ export class SessionHandler {
         let num_npc: number = Protocol.getNpcCount(mode);
 
         let matched_data: MatchedData = new MatchedData();
-        // TODO: rename it and check the permission.
+        // TODO: rename "memcache" and check the permission.
         let matching_key: string = `memcache/matching_${mode}`;
 
         // TODO: Some operations can be performed in parallel.

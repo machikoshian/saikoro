@@ -102,6 +102,13 @@ export class HttpServer {
             return;
         }
 
+        if (pathname === "/storage") {
+            let output: string = "";
+            output = this.session_handler.storage.getKeysForDebug().join("\n");
+            response.end(output);
+            return;
+        }
+
         if (pathname === "/command") {
             this.session_handler.handleCommand(query).then((data: KeyValue) => {
                 response.setHeader("Content-Type", "application/json; charset=utf-8");
