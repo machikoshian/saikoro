@@ -95,7 +95,7 @@ export class Session {
     private target_facilities: CardId[];
     private dice_result: DiceResult;  // TODO: change it to Events.
 
-    constructor() {
+    constructor(readonly session_id: number = -1) {
         this.board = new Board();
         this.players = [];
         this.card_manager = new CardManager();
@@ -114,6 +114,7 @@ export class Session {
     public toJSON(): Object {
         return {
             class_name: "Session",
+            session_id: this.session_id,
             board: this.board.toJSON(),
             players: this.players.map(player => { return player.toJSON(); }),
             card_manager: this.card_manager.toJSON(),
@@ -133,7 +134,7 @@ export class Session {
     static fromJSON(json): Session {
         let board: Board = Board.fromJSON(json.board);
         let players: Player[] = json.players.map(player => { return Player.fromJSON(player); });
-        let session: Session = new Session();
+        let session: Session = new Session(json.session_id);
         session.board = board;
         session.players = players;
         session.card_manager = CardManager.fromJSON(json.card_manager);

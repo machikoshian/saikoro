@@ -72,20 +72,6 @@ export class MatchedData {
 export class SessionHandler {
     constructor(readonly storage: Storage) {}
 
-    public initSession(): Session {  // This is a stub, not to be used for production.
-        let session = new Session();
-        const player_id0: PlayerId = session.addPlayer("0", "こしあん", 1200, 250, false);
-        const player_id1: PlayerId = session.addPlayer("1", "つぶあん", 1000, 220, false);
-
-        for (let i: number = 0; i < 10; ++i) {
-            session.addFacility(player_id0, Math.floor(Math.random() * 12));
-            session.addFacility(player_id1, Math.floor(Math.random() * 12));
-        }
-        session.startGame();
-        this.doNext(session);
-        return session;
-    }
-
     public doNext(session: Session): boolean {
         let prev_step: number = session.getStep();
 
@@ -176,24 +162,23 @@ export class SessionHandler {
     }
 
     public handleCommand(query: any): Promise<KeyValue> {
-        let session_key: string = "session";
-        if (query.session_id) {
-            session_key = `session/session_${query.session_id}`;
+        if (query.session_id == undefined) {
+            return;
         }
 
+        let session_key: string = `session/session_${query.session_id}`;
         let session: Session;
         let updated: boolean = false;
         return this.storage.getWithPromise(session_key).then((data) => {
-            if (data.value) {
-                session = Session.fromJSON(JSON.parse(data.value));
-            } else {
-                session = this.initSession();
+            if (!data.value) {
+                return new KeyValue(data.key, "{}");
             }
+            session = Session.fromJSON(JSON.parse(data.value));
 
             let updated: boolean = this.processCommand(session, query);
 
             if (session.isEnd()) {
-                this.closeSession(session_key, session);
+                this.closeSession(session);
             }
             if (!updated) {
                 return new KeyValue(data.key, "{}");
@@ -203,10 +188,12 @@ export class SessionHandler {
         });
     }
 
-    private closeSession(session_key: string, session: Session): void {
+    private closeSession(session: Session): void {
         for (let player of session.getPlayers()) {
             this.storage.delete(`matched/${player.user_id}`);
         }
+        this.storage.delete(`live/session_${session.session_id}`);
+        // TODO: Possible to delete "session/session_id" after 10mins?
     }
 
     // TODO: This is a quite hacky way for testing w/o considering any race conditions.
@@ -229,6 +216,8 @@ export class SessionHandler {
         // TODO: rename "memcache" and check the permission.
         let matching_key: string = `memcache/matching_${mode}`;
 
+        let session_id: number = -1;
+
         // TODO: Some operations can be performed in parallel.
         return this.storage.getWithPromise(matching_key).then((data) => {
             let matching_id: number;
@@ -242,7 +231,7 @@ export class SessionHandler {
             let matching_id: number = data.value - 1;
 
             // FIXIT: This is an obviously hacky way for two players. Fix it.
-            let session_id: number = mode * 100000 + Math.floor(matching_id / num_players);
+            session_id = mode * 100000 + Math.floor(matching_id / num_players);
             let session_key = `session/session_${session_id}`;
 
             matched_data.matching_id = String(matching_id);
@@ -255,7 +244,7 @@ export class SessionHandler {
             if (session_value) {
                 session = Session.fromJSON(JSON.parse(session_value));
             } else {
-                session = new Session();
+                session = new Session(session_id);
             }
 
             let player_id: PlayerId = this.addNewPlayer(session, user_id, name, deck, false);
@@ -270,6 +259,8 @@ export class SessionHandler {
 
                 session.startGame();
                 this.doNext(session);
+
+                this.storage.setWithPromise(`live/session_${session.session_id}`, true);
             }
 
             let session_string: string = JSON.stringify(session.toJSON());

@@ -159,10 +159,7 @@ export class HtmlView {
         this.back_button_view.addClickListener(() => { this.switchScene(Scene.Matching); });
 
         this.reset_button_view = new HtmlViewObject(document.getElementById("reset"));
-        this.reset_button_view.addClickListener(() => {
-            this.reset();
-            this.switchScene(Scene.Matching);
-        });
+        this.reset_button_view.addClickListener(() => { this.onResetGame(); });
 
         this.buttons_view = new HtmlButtonsView("buttons", this.dice_widget_view);
 
@@ -274,6 +271,12 @@ export class HtmlView {
             }
             return;
         }
+    }
+
+    private onResetGame(): void {
+        this.client.sendRequest(Request.quit());
+        this.reset();
+        this.switchScene(Scene.Matching);
     }
 
     private onClickPlayer(target_player_id: PlayerId): void {
@@ -571,6 +574,9 @@ export class HtmlView {
     }
 
     public updateView(session: Session, player_id: PlayerId): void {
+        if (this.scene !== Scene.Game) {
+            return;
+        }
         this.session = session;
 
         // Show event animations.
