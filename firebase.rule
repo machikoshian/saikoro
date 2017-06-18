@@ -23,7 +23,7 @@
     "live": {
       ".read": true,
       ".write": "auth.uid === 'saikoro-server'"
-    }
+    },
     "public_resource": {
       ".read": true,
       ".write": true

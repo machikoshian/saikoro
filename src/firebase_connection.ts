@@ -62,7 +62,7 @@ export class FirebaseConnection extends Connection {
         ref.once("value", (snapshot) => {
             let keys: number[] = [];
             snapshot.forEach((childSnapshot) => {
-                keys.push(childSnapshot.key);
+                keys.push(Number(childSnapshot.key.substr("session_".length)));
             });
             callback(JSON.stringify(keys));
         });
