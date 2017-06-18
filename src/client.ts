@@ -12,6 +12,9 @@ export abstract class Connection {
     // Senders from client.
     abstract sendRequest(query: any, callback: RequestCallback): void;
     abstract matching(query: any, callback: RequestCallback): void;
+
+    // TODO: change this to abstract.
+    public getLiveSessions(callback: RequestCallback): void {}
 }
 
 export abstract class Client {
@@ -25,6 +28,7 @@ export abstract class Client {
     public user_id: string = String(Math.floor(Math.random() * 1000000) + 10);
     public step: number = -1;
     public callback: RequestCallback;
+    public live_sessions: number[] = [];
 
     constructor(connection: Connection) {
         this.connection = connection;
@@ -64,6 +68,10 @@ export abstract class Client {
 
         this.checkUpdate();
         this.connection.startCheckUpdate(this);
+    }
+
+    public getLiveSessions(callback: RequestCallback): void {
+        this.connection.getLiveSessions(callback);
     }
 
     public watchGame(session_id: number): void {

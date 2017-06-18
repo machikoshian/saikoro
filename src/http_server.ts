@@ -52,6 +52,11 @@ export class MemcacheStorage extends Storage {
     }
 }
 
+export class GameInformation {
+    public session_id: number;
+    public title: string;
+    //public mode: GameMode;
+}
 
 export class HttpServer {
     private server;
@@ -90,7 +95,7 @@ export class HttpServer {
     private requestHandler(request, response): void {
         let url_parts = url.parse(request.url, true);
         let pathname: string = url_parts.pathname;
-        let query = url_parts.query;
+        let query: any = url_parts.query;
 
         if (pathname === "/env") {
             let output: string = "";
@@ -118,12 +123,34 @@ export class HttpServer {
         }
 
         if (pathname === "/matching") {
+            if (query.command === "live_sessions") {
+                response.end(JSON.stringify(this.getLiveSessions()));
+                return;
+            }
             this.session_handler.handleMatching(query).then((matched: MatchedData) => {
                 response.end(JSON.stringify(matched));
             });
             return;
         }
 
+        if (pathname === "/live") {
+            response.end(JSON.stringify(this.getLiveSessions()));
+            return;
+        }
+
         this.serveStaticFiles(pathname, response);
+    }
+
+    private getLiveSessions(): number[] {
+        const prefix: string = "live/session_";
+        let session_ids: number[] = [];
+        for (let key of this.session_handler.storage.getKeysForDebug()) {
+            if (key.lastIndexOf(prefix, 0) === -1) {
+                continue;
+            }
+            let session_id: number = Number(key.substr(prefix.length));
+            session_ids.push(session_id);
+        }
+        return session_ids;
     }
 }

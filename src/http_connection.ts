@@ -2,14 +2,14 @@ import { RequestCallback, Connection, Client } from "./client";
 import { StandaloneConnection } from "./standalone_connection";
 
 class HttpRequest {
-    static Send(url: string, callback: RequestCallback) {
+    static send(url: string, callback: RequestCallback) {
         let xhr: XMLHttpRequest = new XMLHttpRequest();
-        xhr.onreadystatechange = () => HttpRequest.OnReadyStateChange(xhr,
+        xhr.onreadystatechange = () => HttpRequest.onReadyStateChange(xhr,
             callback);
         xhr.open("GET", url, true);
     }
 
-    static OnReadyStateChange(xhr: XMLHttpRequest,
+    static onReadyStateChange(xhr: XMLHttpRequest,
         callback: (response: string) => void): void {
         switch (xhr.readyState) {
             case XMLHttpRequest.OPENED:
@@ -41,13 +41,17 @@ export class HttpConnection extends Connection {
         let params: string = Object.keys(query).map((key) => {
             return encodeURIComponent(key) + "=" + encodeURIComponent(query[key]);
         }).join("&");
-        HttpRequest.Send("/matching?" + params, callback);
+        HttpRequest.send("/matching?" + params, callback);
+    }
+
+    public getLiveSessions(callback: RequestCallback): void {
+        HttpRequest.send("/live", callback);
     }
 
     public sendRequest(query: any, callback: RequestCallback): void {
         let params: string = Object.keys(query).map((key) => {
             return encodeURIComponent(key) + "=" + encodeURIComponent(query[key]);
         }).join("&");
-        HttpRequest.Send("/command?" + params, callback);
+        HttpRequest.send("/command?" + params, callback);
     }
 }

@@ -64,6 +64,15 @@ export class HybridConnection extends Connection {
         this.connection.matching(query, callback);
     }
 
+    public getLiveSessions(callback: RequestCallback): void {
+        // Online connection is used if available.
+        if (this.online_connection) {
+            this.online_connection.getLiveSessions(callback);
+            return;
+        }
+        this.offline_connection.getLiveSessions(callback);
+    }
+
     private getConnection(mode: GameMode): Connection {
         if (Protocol.isOnlineMode(mode) && (this.online_connection != null)) {
             return this.online_connection;

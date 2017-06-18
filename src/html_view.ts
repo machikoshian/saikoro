@@ -99,6 +99,7 @@ export class HtmlView {
     private message_view: HtmlMessageView = null;
     private buttons_view: HtmlButtonsView = null;
     private scene: Scene = Scene.None;
+    private live_session_ids: number[] = [];
 
     private dice_roll_view: HtmlViewObject = null;  // TODO: try not to use it.
 
@@ -118,6 +119,10 @@ export class HtmlView {
             this.dice_roll_view = null;
         }
         this.event_queue.reset();
+
+        this.client.getLiveSessions((response: string) => {
+            this.onLiveSessionsUpdated(response);
+        });
     }
 
     public initView(row: number = 5, column: number = 12): void {
@@ -149,6 +154,17 @@ export class HtmlView {
         //     "click", () => { this.onClickMatching(GameMode.OnLine2Players); });
         // document.getElementById("matching_button_multi_4").addEventListener(
         //     "click", () => { this.onClickMatching(GameMode.OnLine2Players); });
+
+        document.getElementById("matching_button_watch_1").addEventListener(
+            "click", () => { this.onClickWatch(0); });
+        document.getElementById("matching_button_watch_2").addEventListener(
+            "click", () => { this.onClickWatch(1); });
+        document.getElementById("matching_button_watch_3").addEventListener(
+            "click", () => { this.onClickWatch(2); });
+
+        this.client.getLiveSessions((response: string) => {
+            this.onLiveSessionsUpdated(response);
+        });
 
         // Widgets
         this.card_widget_view = new HtmlCardView("card_widget");
@@ -433,10 +449,29 @@ export class HtmlView {
         this.switchScene(Scene.Game);
     }
 
-    private onClickWatch(session_id: number): void {
+    private onLiveSessionsUpdated(response: string): void {
+        this.live_session_ids = JSON.parse(response);
+        if (this.live_session_ids.length === 0) {
+            return;
+        }
+        for (let i: number = 0; i < 3; i++) {
+            let element: HTMLElement = document.getElementById(`matching_button_watch_${i + 1}`);
+            if (i < this.live_session_ids.length) {
+                element.innerText = String(this.live_session_ids[i]);
+            }
+            else {
+                element.innerText = "準備中";
+            }
+        }
+    }
+
+    private onClickWatch(index: number): void {
+        if (index < this.live_session_ids.length) {
+            return;
+        }
         this.switchScene(Scene.Game);
         this.message_view.drawMessage("通信中です", this.getPlayerColor(this.client.player_id));
-        this.client.watchGame(session_id);
+        this.client.watchGame(this.live_session_ids[index]);
     }
 
     private onClickCard(player: number, card: number): void {
