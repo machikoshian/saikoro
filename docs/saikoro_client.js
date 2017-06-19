@@ -1385,6 +1385,7 @@ var Client = (function () {
         this.session_id = response_json.session_id;
         this.player_id = response_json.player_id;
         this.matching_id = response_json.matching_id;
+        this.connection.setQueryOnDisconnect(this.fillRequest(Request.quit()));
         this.checkUpdate();
         this.connection.startCheckUpdate(this);
     };
@@ -1398,9 +1399,13 @@ var Client = (function () {
         this.connection.startCheckUpdate(this);
     };
     Client.prototype.sendRequest = function (request) {
+        this.connection.sendRequest(this.fillRequest(request), this.callback);
+    };
+    Client.prototype.fillRequest = function (request) {
+        request.user_id = this.user_id;
         request.session_id = this.session_id;
         request.player_id = this.player_id;
-        this.connection.sendRequest(request, this.callback);
+        return request;
     };
     return Client;
 }());
@@ -1761,6 +1766,9 @@ var StandaloneConnection = (function (_super) {
             }, _this.delay);
         });
     };
+    StandaloneConnection.prototype.setQueryOnDisconnect = function (query) {
+        // Do nothing.
+    };
     StandaloneConnection.prototype.sendRequest = function (query, callback) {
         var _this = this;
         session_handler.handleCommand(query).then(function (data) {
@@ -1805,6 +1813,14 @@ var HybridConnection = (function (_super) {
         this.connection.stopCheckUpdate();
         this.connection = this.getConnection(query.mode);
         this.connection.matching(query, callback);
+    };
+    HybridConnection.prototype.setQueryOnDisconnect = function (query) {
+        // Online connection is used if available.
+        if (this.online_connection) {
+            this.online_connection.setQueryOnDisconnect(query);
+            return;
+        }
+        this.offline_connection.setQueryOnDisconnect(query);
     };
     HybridConnection.prototype.getLiveSessions = function (callback) {
         // Online connection is used if available.
