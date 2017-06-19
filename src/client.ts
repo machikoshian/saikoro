@@ -13,6 +13,9 @@ export abstract class Connection {
     abstract sendRequest(query: any, callback: RequestCallback): void;
     abstract matching(query: any, callback: RequestCallback): void;
 
+    // This is for Firebase.onDisconnect only so far.
+    abstract setQueryOnDisconnect(query: any): void;
+
     // TODO: change this to abstract.
     abstract getLiveSessions(callback: RequestCallback): void;
 }
@@ -66,6 +69,8 @@ export abstract class Client {
         this.player_id = response_json.player_id;
         this.matching_id = response_json.matching_id;
 
+        this.connection.setQueryOnDisconnect(this.fillRequest(Request.quit()));
+
         this.checkUpdate();
         this.connection.startCheckUpdate(this);
     }
@@ -83,9 +88,14 @@ export abstract class Client {
     }
 
     public sendRequest(request: any): void {
+        this.connection.sendRequest(this.fillRequest(request), this.callback);
+    }
+
+    public fillRequest(request: any): any {
+        request.user_id = this.user_id;
         request.session_id = this.session_id;
         request.player_id = this.player_id;
-        this.connection.sendRequest(request, this.callback);
+        return request;
     }
 
     abstract initBoard(): void;

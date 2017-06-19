@@ -44,6 +44,10 @@ export class HttpConnection extends Connection {
         HttpRequest.send("/matching?" + params, callback);
     }
 
+    public setQueryOnDisconnect(query: any): void {
+        // Do nothing.  Nice to have a way to do something if possible.
+    }
+
     public getLiveSessions(callback: RequestCallback): void {
         HttpRequest.send("/live", callback);
     }

@@ -21,6 +21,10 @@ export class StandaloneConnection extends Connection {
         });
     }
 
+    public setQueryOnDisconnect(query: any): void {
+        // Do nothing.
+    }
+
     public sendRequest(query: any, callback: RequestCallback): void {
         session_handler.handleCommand(query).then((data: KeyValue) => {
             setTimeout(() => {
@@ -66,6 +70,15 @@ export class HybridConnection extends Connection {
         this.connection.stopCheckUpdate();
         this.connection = this.getConnection(query.mode);
         this.connection.matching(query, callback);
+    }
+
+    public setQueryOnDisconnect(query: any): void {
+        // Online connection is used if available.
+        if (this.online_connection) {
+            this.online_connection.setQueryOnDisconnect(query);
+            return;
+        }
+        this.offline_connection.setQueryOnDisconnect(query);
     }
 
     public getLiveSessions(callback: RequestCallback): void {

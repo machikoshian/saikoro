@@ -17,9 +17,11 @@ firebase.initializeApp(config);
 
 export class FirebaseConnection extends Connection {
     private ref: any;
+    private ref_command: any;
 
     constructor() {
         super();
+        this.ref_command = firebase.database().ref("command");
     }
 
     public startCheckUpdate(client: Client): void {
@@ -53,8 +55,12 @@ export class FirebaseConnection extends Connection {
         firebase.database().ref("matching").push(query);
     }
 
-    public sendRequest(json: any, callback: RequestCallback): void {
-        firebase.database().ref("command").push(json);
+    public setQueryOnDisconnect(query: any): void {
+        this.ref_command.child(query.user_id).onDisconnect().set(query);
+    }
+
+    public sendRequest(query: any, callback: RequestCallback): void {
+        this.ref_command.child(query.user_id).set(query);
     }
 
     public getLiveSessions(callback: RequestCallback): void {
