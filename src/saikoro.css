@@ -169,10 +169,24 @@ table.player { width: 160px; }
     vertical-align: top;
 }
 
-#buttons { width: 450px; padding-left: 205px; }
+#buttons {
+    display: inline-block;
+    margin-left: 34px;
+    width: 460px;
+}
 #buttons div {
     display: inline-block;
     vertical-align: top;
+}
+
+#watchers {
+    display: inline-block;
+    vertical-align: top;
+    width: 120px;
+    height: 40px;
+    padding: 20px;
+    background-color: rgba(200, 200, 200, 0.4);
+    border-radius: 10px;
 }
 .dice_button {
     position: relative;

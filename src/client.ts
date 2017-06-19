@@ -15,8 +15,6 @@ export abstract class Connection {
 
     // This is for Firebase.onDisconnect only so far.
     abstract setQueryOnDisconnect(query: any): void;
-
-    // TODO: change this to abstract.
     abstract getLiveSessions(callback: RequestCallback): void;
 }
 
@@ -84,6 +82,8 @@ export abstract class Client {
         this.session_id = session_id;
         this.mode = GameMode.OnLineWatch;
 
+        this.sendRequest(Request.watch());
+        this.connection.setQueryOnDisconnect(this.fillRequest(Request.quit()));
         this.connection.startCheckUpdate(this);
     }
 
@@ -95,6 +95,7 @@ export abstract class Client {
         request.user_id = this.user_id;
         request.session_id = this.session_id;
         request.player_id = this.player_id;
+        request.mode = this.mode;
         return request;
     }
 
@@ -156,6 +157,12 @@ export class Request {
     static quit(): Object {
         return {
             command: "quit",
+        };
+    }
+
+    static watch(): Object {
+        return {
+            command: "watch",
         };
     }
 }

@@ -98,6 +98,6 @@ export class HybridConnection extends Connection {
     }
 
     public sendRequest(query: any, callback: RequestCallback): void {
-        this.connection.sendRequest(query, callback);
+        this.getConnection(query.mode).sendRequest(query, callback);
     }
 }

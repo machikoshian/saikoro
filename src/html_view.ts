@@ -98,6 +98,7 @@ export class HtmlView {
     private money_motion_view: HtmlViewObject = null;
     private message_view: HtmlMessageView = null;
     private buttons_view: HtmlButtonsView = null;
+    private watchers_view: HtmlViewObject = null;
     private scene: Scene = Scene.None;
     private live_session_ids: number[] = [];
 
@@ -169,6 +170,9 @@ export class HtmlView {
         // Widgets
         this.card_widget_view = new HtmlCardView("card_widget");
         this.dice_widget_view = new HtmlDiceView("dice_widget");
+
+        // watchers.
+        this.watchers_view = new HtmlViewObject(document.getElementById("watchers"));
 
         // buttons.
         this.back_button_view = new HtmlViewObject(document.getElementById("back"));
@@ -245,7 +249,7 @@ export class HtmlView {
         this.message_view.none();
         this.board_view.none();
         this.deck_char_view.none();
-
+        this.watchers_view.none();
         this.buttons_view.none();
         this.landmarks_view.none();
         this.reset_button_view.none();
@@ -290,10 +294,7 @@ export class HtmlView {
     }
 
     private onResetGame(): void {
-        if (this.client.mode !== GameMode.OnLineWatch) {
-            // TODO: Nice to notify the number of watchers.
-            this.client.sendRequest(Request.quit());
-        }
+        this.client.sendRequest(Request.quit());
         this.reset();
         this.switchScene(Scene.Matching);
     }
@@ -802,12 +803,22 @@ export class HtmlView {
         return false;
     }
 
+    private drawWatchers(session: Session): void {
+        const watchers_length: number = session.getWatchers().length;
+        if (watchers_length === 0) {
+            this.watchers_view.hide();
+            return;
+        }
+        this.watchers_view.element.innerText = `${watchers_length}人が観戦中`;
+        this.watchers_view.show();
+    }
+
     private drawSession(session: Session): void {
         this.drawStatusMessage(session);
         this.players_view.draw(session);
         this.drawBoard(session);
         this.drawCards(session);
-
+        this.drawWatchers(session);
         // Update buttons.
         this.buttons_view.draw(session, this.client.player_id);
 

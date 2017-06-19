@@ -152,13 +152,28 @@ export class SessionHandler {
         }
 
         else if (query.command === "quit") {
-            let player_id: PlayerId = Number(query.player_id);
-            if (session.quit(player_id)) {
-                this.doNext(session);
+            const player_id: PlayerId = Number(query.player_id);
+            if (player_id !== -1) {
+                if (session.quit(player_id)) {
+                    this.doNext(session);
+                }
+            }
+            else {
+                const user_id: string = String(query.user_id);
+                session.removeWatcher(user_id);
             }
         }
 
+        else if (query.command === "watch") {
+            const user_id: string = String(query.user_id);
+            session.addWatcher(user_id);
+        }
+
         return true;
+    }
+
+    private getSessionKey(session_id: number): string {
+        return `session/session_${session_id}`;
     }
 
     public handleCommand(query: any): Promise<KeyValue> {
@@ -166,7 +181,7 @@ export class SessionHandler {
             return;
         }
 
-        let session_key: string = `session/session_${query.session_id}`;
+        let session_key: string = this.getSessionKey(query.session_id);
         let session: Session;
         let updated: boolean = false;
         return this.storage.getWithPromise(session_key).then((data) => {
@@ -233,7 +248,7 @@ export class SessionHandler {
             // FIXIT: This is an obviously hacky way for two players. Fix it.
             // HtmlView.getGameModeName also uses this hack.
             session_id = mode * 100000 + Math.floor(matching_id / num_players);
-            let session_key = `session/session_${session_id}`;
+            const session_key: string = this.getSessionKey(session_id);
 
             matched_data.matching_id = String(matching_id);
             matched_data.session_id = String(session_id);

@@ -94,6 +94,7 @@ export class Session {
     private winner: PlayerId;
     private target_facilities: CardId[];
     private dice_result: DiceResult;  // TODO: change it to Events.
+    private watcher_user_ids: string[] = [];
 
     constructor(readonly session_id: number = -1) {
         this.board = new Board();
@@ -128,6 +129,7 @@ export class Session {
             winner: this.winner,
             target_facilities: this.target_facilities,
             dice_result: this.dice_result ? this.dice_result.toJSON() : null,
+            watcher_user_ids: this.watcher_user_ids,
         };
     }
 
@@ -148,6 +150,7 @@ export class Session {
         session.winner = json.winner;
         session.target_facilities = json.target_facilities;
         session.dice_result = json.dice_result ? DiceResult.fromJSON(json.dice_result) : null;
+        session.watcher_user_ids = json.watcher_user_ids;
         return session;
     }
 
@@ -1033,5 +1036,19 @@ export class Session {
     }
     public isEnd(): boolean {
         return (this.phase === Phase.EndGame);
+    }
+    public getWatchers(): string[] {
+        return this.watcher_user_ids;
+    }
+    public addWatcher(user_id: string): void {
+        if (this.watcher_user_ids.indexOf(user_id) === -1) {
+            this.watcher_user_ids.push(user_id);
+        }
+    }
+    public removeWatcher(user_id: string): void {
+        const index: number = this.watcher_user_ids.indexOf(user_id);
+        if (index !== -1) {
+            this.watcher_user_ids.splice(index, 1);
+        }
     }
 }
