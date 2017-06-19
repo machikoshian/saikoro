@@ -404,6 +404,7 @@ var Session = (function () {
     function Session(session_id) {
         if (session_id === void 0) { session_id = -1; }
         this.session_id = session_id;
+        this.watcher_user_ids = [];
         this.board = new board_1.Board();
         this.players = [];
         this.card_manager = new card_manager_1.CardManager();
@@ -435,6 +436,7 @@ var Session = (function () {
             winner: this.winner,
             target_facilities: this.target_facilities,
             dice_result: this.dice_result ? this.dice_result.toJSON() : null,
+            watcher_user_ids: this.watcher_user_ids,
         };
     };
     Session.fromJSON = function (json) {
@@ -454,6 +456,7 @@ var Session = (function () {
         session.winner = json.winner;
         session.target_facilities = json.target_facilities;
         session.dice_result = json.dice_result ? dice_1.DiceResult.fromJSON(json.dice_result) : null;
+        session.watcher_user_ids = json.watcher_user_ids;
         return session;
     };
     Session.prototype.isValidPhase = function (phase) {
@@ -1230,6 +1233,20 @@ var Session = (function () {
     Session.prototype.isEnd = function () {
         return (this.phase === Phase.EndGame);
     };
+    Session.prototype.getWatchers = function () {
+        return this.watcher_user_ids;
+    };
+    Session.prototype.addWatcher = function (user_id) {
+        if (this.watcher_user_ids.indexOf(user_id) === -1) {
+            this.watcher_user_ids.push(user_id);
+        }
+    };
+    Session.prototype.removeWatcher = function (user_id) {
+        var index = this.watcher_user_ids.indexOf(user_id);
+        if (index !== -1) {
+            this.watcher_user_ids.splice(index, 1);
+        }
+    };
     return Session;
 }());
 exports.Session = Session;
@@ -1396,6 +1413,8 @@ var Client = (function () {
         this.reset();
         this.session_id = session_id;
         this.mode = protocol_1.GameMode.OnLineWatch;
+        this.sendRequest(Request.watch());
+        this.connection.setQueryOnDisconnect(this.fillRequest(Request.quit()));
         this.connection.startCheckUpdate(this);
     };
     Client.prototype.sendRequest = function (request) {
@@ -1405,6 +1424,7 @@ var Client = (function () {
         request.user_id = this.user_id;
         request.session_id = this.session_id;
         request.player_id = this.player_id;
+        request.mode = this.mode;
         return request;
     };
     return Client;
@@ -1461,6 +1481,11 @@ var Request = (function () {
     Request.quit = function () {
         return {
             command: "quit",
+        };
+    };
+    Request.watch = function () {
+        return {
+            command: "watch",
         };
     };
     return Request;
@@ -1837,7 +1862,7 @@ var HybridConnection = (function (_super) {
         return this.offline_connection;
     };
     HybridConnection.prototype.sendRequest = function (query, callback) {
-        this.connection.sendRequest(query, callback);
+        this.getConnection(query.mode).sendRequest(query, callback);
     };
     return HybridConnection;
 }(client_1.Connection));
@@ -2635,6 +2660,7 @@ var HtmlView = (function () {
         this.money_motion_view = null;
         this.message_view = null;
         this.buttons_view = null;
+        this.watchers_view = null;
         this.scene = Scene.None;
         this.live_session_ids = [];
         this.dice_roll_view = null; // TODO: try not to use it.
@@ -2685,6 +2711,8 @@ var HtmlView = (function () {
         // Widgets
         this.card_widget_view = new html_view_parts_1.HtmlCardView("card_widget");
         this.dice_widget_view = new html_view_parts_1.HtmlDiceView("dice_widget");
+        // watchers.
+        this.watchers_view = new html_view_parts_1.HtmlViewObject(document.getElementById("watchers"));
         // buttons.
         this.back_button_view = new html_view_parts_1.HtmlViewObject(document.getElementById("back"));
         this.back_button_view.addClickListener(function () { _this.switchScene(Scene.Matching); });
@@ -2756,6 +2784,7 @@ var HtmlView = (function () {
         this.message_view.none();
         this.board_view.none();
         this.deck_char_view.none();
+        this.watchers_view.none();
         this.buttons_view.none();
         this.landmarks_view.none();
         this.reset_button_view.none();
@@ -2796,10 +2825,7 @@ var HtmlView = (function () {
         }
     };
     HtmlView.prototype.onResetGame = function () {
-        if (this.client.mode !== protocol_1.GameMode.OnLineWatch) {
-            // TODO: Nice to notify the number of watchers.
-            this.client.sendRequest(client_1.Request.quit());
-        }
+        this.client.sendRequest(client_1.Request.quit());
         this.reset();
         this.switchScene(Scene.Matching);
     };
@@ -3238,11 +3264,21 @@ var HtmlView = (function () {
         }
         return false;
     };
+    HtmlView.prototype.drawWatchers = function (session) {
+        var watchers_length = session.getWatchers().length;
+        if (watchers_length === 0) {
+            this.watchers_view.hide();
+            return;
+        }
+        this.watchers_view.element.innerText = watchers_length + "\u4EBA\u304C\u89B3\u6226\u4E2D";
+        this.watchers_view.show();
+    };
     HtmlView.prototype.drawSession = function (session) {
         this.drawStatusMessage(session);
         this.players_view.draw(session);
         this.drawBoard(session);
         this.drawCards(session);
+        this.drawWatchers(session);
         // Update buttons.
         this.buttons_view.draw(session, this.client.player_id);
         this.prev_session = session;
@@ -4320,18 +4356,31 @@ var SessionHandler = (function () {
         }
         else if (query.command === "quit") {
             var player_id = Number(query.player_id);
-            if (session.quit(player_id)) {
-                this.doNext(session);
+            if (player_id !== -1) {
+                if (session.quit(player_id)) {
+                    this.doNext(session);
+                }
+            }
+            else {
+                var user_id = String(query.user_id);
+                session.removeWatcher(user_id);
             }
         }
+        else if (query.command === "watch") {
+            var user_id = String(query.user_id);
+            session.addWatcher(user_id);
+        }
         return true;
+    };
+    SessionHandler.prototype.getSessionKey = function (session_id) {
+        return "session/session_" + session_id;
     };
     SessionHandler.prototype.handleCommand = function (query) {
         var _this = this;
         if (query.session_id == undefined) {
             return;
         }
-        var session_key = "session/session_" + query.session_id;
+        var session_key = this.getSessionKey(query.session_id);
         var session;
         var updated = false;
         return this.storage.getWithPromise(session_key).then(function (data) {
@@ -4393,7 +4442,7 @@ var SessionHandler = (function () {
             // FIXIT: This is an obviously hacky way for two players. Fix it.
             // HtmlView.getGameModeName also uses this hack.
             session_id = mode * 100000 + Math.floor(matching_id / num_players);
-            var session_key = "session/session_" + session_id;
+            var session_key = _this.getSessionKey(session_id);
             matched_data.matching_id = String(matching_id);
             matched_data.session_id = String(session_id);
             return _this.storage.getWithPromise(session_key);
