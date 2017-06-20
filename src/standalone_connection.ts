@@ -1,5 +1,6 @@
 import { RequestCallback, Connection, Client } from "./client";
-import { KeyValue, Storage, LocalStorage, MatchedData, SessionHandler } from "./session_handler";
+import { MatchedData, SessionHandler } from "./session_handler";
+import { KeyValue, Storage, LocalStorage } from "./storage";
 import { GameMode, Protocol } from "./protocol";
 
 const storage = new LocalStorage();

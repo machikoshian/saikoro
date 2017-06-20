@@ -1,4 +1,5 @@
-import { KeyValue, Storage, MatchedData, SessionHandler } from "./session_handler";
+import { MatchedData, SessionHandler } from "./session_handler";
+import { KeyValue, Storage } from "./storage";
 
 // Firebase
 let firebase_admin = require("firebase-admin");

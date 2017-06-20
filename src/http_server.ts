@@ -1,4 +1,5 @@
-import { KeyValue, Storage, LocalStorage, MatchedData, SessionHandler } from "./session_handler";
+import { MatchedData, SessionHandler } from "./session_handler";
+import { KeyValue, Storage, LocalStorage } from "./storage";
 
 // Moduiles from Node.js
 import * as http from "http";
@@ -107,10 +108,10 @@ export class HttpServer {
             return;
         }
 
-        if (pathname === "/storage") {
-            let output: string = "";
-            output = this.session_handler.storage.getKeysForDebug().join("\n");
-            response.end(output);
+        if (pathname === "/data") {
+            this.session_handler.storage.getWithPromise(query.key).then((data: KeyValue) => {
+                response.end(JSON.stringify(data.value));
+            });
             return;
         }
 

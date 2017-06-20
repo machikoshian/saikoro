@@ -18,26 +18,35 @@ firebase.initializeApp(config);
 export class FirebaseConnection extends Connection {
     private ref: any;
     private ref_command: any;
+    private ref_map: {} = {};
+    private session_key: string;
 
     constructor() {
         super();
         this.ref_command = firebase.database().ref("command");
     }
 
-    public startCheckUpdate(client: Client): void {
-        let session_key = `session_${client.session_id}`;
-        this.ref = firebase.database().ref("session").child(session_key);
-        this.ref.on("value", (snapshot) => {
+    public startCheckValue(key: string, callback: (value) => void): void {
+        let ref = firebase.database().ref(key);
+        ref.on("value", (snapshot) => {
             let value = snapshot.val();
             if (!value) {
                 return;
             }
-            console.log(value);
-            client.callback(value);
+            callback(value);
         });
+        this.ref_map[key] = ref;
+    }
+    public stopCheckValue(key: string): void {
+        this.ref_map[key].off();
+    }
+
+    public startCheckUpdate(client: Client): void {
+        this.session_key = `/session/session_${client.session_id}`;
+        this.startCheckValue(this.session_key, (value) => { client.callback(value); });
     }
     public stopCheckUpdate(): void {
-        this.ref.off();
+        this.stopCheckValue(this.session_key);
     }
 
     public matching(query: any, callback: RequestCallback): void {

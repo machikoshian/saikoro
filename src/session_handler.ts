@@ -4,63 +4,7 @@ import { Board, PlayerId } from "./board";
 import { CardId, CardDataId, FacilityType, Facility, CardData } from "./facility";
 import { AutoPlay } from "./auto_play";
 import { GameMode, Protocol } from "./protocol";
-
-export class KeyValue {
-    constructor(
-        public key: string = "",
-        public value: any = null) {}
-}
-
-export abstract class Storage {
-    abstract get(key: string, callback: (err: any, value: any) => void): void;
-    abstract set(key: string, value: any, callback: (err: any) => void, expire: number): void;
-    abstract delete(key: string): void;
-    abstract getWithPromise(key: string): Promise<KeyValue>;
-    abstract setWithPromise(key: string, value: any): Promise<KeyValue>;
-    public getKeysForDebug(): string[] {
-        return [];
-    }
-}
-
-export class LocalStorage extends Storage {
-    public storage: { [key: string]: any; } = {};
-
-    public get(key: string, callback: (err: any, value: any) => void): void {
-        callback(null, this.storage[key]);
-    }
-
-    public getWithPromise(key: string): Promise<KeyValue> {
-        return new Promise<KeyValue>((resolve, reject) => {
-            let data: KeyValue = new KeyValue(key, this.storage[key]);
-            resolve(data);
-        });
-    }
-
-    public delete(key: string): void {
-        delete this.storage[key];
-    }
-
-    public getKeys(): string[] {
-        return Object.keys(this.storage);
-    }
-
-    public set(key: string, value: any, callback: (err: any) => void, expire: number): void {
-        this.storage[key] = value;
-        callback(null);
-    }
-
-    public setWithPromise(key: string, value: any): Promise<KeyValue> {
-        this.storage[key] = value;
-        return new Promise<KeyValue>((resolve, reject) => {
-            let data: KeyValue = new KeyValue(key, value);
-            resolve(data);
-        });
-    }
-
-    public getKeysForDebug(): string[] {
-        return Object.keys(this.storage);
-    }
-}
+import { KeyValue, Storage } from "./storage";
 
 export class MatchedData {
     constructor(

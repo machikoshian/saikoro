@@ -1,5 +1,5 @@
 import { FirebaseStorage, FirebaseServer } from "./firebase_server";
-import { KeyValue, SessionHandler } from "./session_handler";
+import { SessionHandler } from "./session_handler";
 
 const functions = require("firebase-functions");
 const storage = new FirebaseStorage();

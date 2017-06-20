@@ -1,4 +1,5 @@
-import { Storage, LocalStorage, SessionHandler } from "./session_handler";
+import { SessionHandler } from "./session_handler";
+import { Storage, LocalStorage } from "./storage";
 import { HttpServer } from "./http_server";
 import { FirebaseStorage, FirebaseServer } from "./firebase_server";
 
