@@ -18,6 +18,8 @@ firebase.initializeApp(config);
 export class FirebaseConnection extends Connection {
     private ref: any;
     private ref_command: any;
+    private ref_session: any;
+    private ref_live: any;
     private ref_map: {} = {};
     private session_key: string;
 
@@ -26,14 +28,10 @@ export class FirebaseConnection extends Connection {
         this.ref_command = firebase.database().ref("command");
     }
 
-    public startCheckValue(key: string, callback: (value) => void): void {
+    public startCheckValue(key: string, callback: (snapshot) => void): void {
         let ref = firebase.database().ref(key);
         ref.on("value", (snapshot) => {
-            let value = snapshot.val();
-            if (!value) {
-                return;
-            }
-            callback(value);
+            callback(snapshot);
         });
         this.ref_map[key] = ref;
     }
@@ -42,19 +40,25 @@ export class FirebaseConnection extends Connection {
     }
 
     public startCheckUpdate(client: Client): void {
-        this.session_key = `/session/session_${client.session_id}`;
-        this.startCheckValue(this.session_key, (value) => { client.callback(value); });
+        this.ref_session = firebase.database().ref(`/session/session_${client.session_id}`);
+        this.ref_session.on("value", (snapshot) => {
+            let value = snapshot.val();
+            if (!value) {
+                return;
+            }
+            client.callback(value);
+        });
     }
     public stopCheckUpdate(): void {
-        this.stopCheckValue(this.session_key);
+        this.ref_session.off();
     }
 
     public matching(query: any, callback: RequestCallback): void {
         if (!query.user_id) {
             return;
         }
-        let ref_matched = firebase.database().ref("matched").child(query.user_id);
-        ref_matched.on("value", (snapshot) => {
+        let ref_matched = firebase.database().ref(`/matched/${query.user_id}`);
+        ref_matched.once("value", (snapshot) => {
             let value = snapshot.val();
             if (!value) {
                 return;
@@ -72,14 +76,17 @@ export class FirebaseConnection extends Connection {
         this.ref_command.child(query.user_id).set(query);
     }
 
-    public getLiveSessions(callback: RequestCallback): void {
-        let ref = firebase.database().ref("live");
-        ref.once("value", (snapshot) => {
+    public startCheckLive(callback: RequestCallback): void {
+        this.ref_live = firebase.database().ref("live");
+        this.ref_live.on("value", (snapshot) => {
             let keys: number[] = [];
             snapshot.forEach((childSnapshot) => {
                 keys.push(Number(childSnapshot.key.substr("session_".length)));
             });
             callback(JSON.stringify(keys));
         });
+    }
+    public stopCheckLive(): void {
+        this.ref_live.off();
     }
 }

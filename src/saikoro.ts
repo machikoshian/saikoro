@@ -1,6 +1,7 @@
 import { RequestCallback, Connection, Client } from "./client";
 import { Phase, Session } from "./session";
 import { HtmlView } from "./html_view";
+import { GameMode } from "./protocol";
 
 // TODO: can be merged with Client?
 export class WebClient extends Client {
@@ -26,6 +27,10 @@ export class WebClient extends Client {
     // Do not directly call this method.
     // Use this.callback.bind(this) as a wrapper of this method.
     private callbackSession(response: string): void {
+        if (this.mode === GameMode.None) {
+            return;
+        }
+
         if (!response) {
             console.log("Stop polling.");
             this.connection.stopCheckUpdate();

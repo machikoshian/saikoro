@@ -125,7 +125,7 @@ export class HttpServer {
 
         if (pathname === "/matching") {
             if (query.command === "live_sessions") {
-                response.end(JSON.stringify(this.getLiveSessions()));
+                this.getLiveSessions(response);
                 return;
             }
             this.session_handler.handleMatching(query).then((matched: MatchedData) => {
@@ -135,23 +135,29 @@ export class HttpServer {
         }
 
         if (pathname === "/live") {
-            response.end(JSON.stringify(this.getLiveSessions()));
+            this.getLiveSessions(response);
             return;
         }
 
         this.serveStaticFiles(pathname, response);
     }
 
-    private getLiveSessions(): number[] {
-        const prefix: string = "live/session_";
-        let session_ids: number[] = [];
-        for (let key of this.session_handler.storage.getKeysForDebug()) {
-            if (key.lastIndexOf(prefix, 0) === -1) {
-                continue;
+    private getLiveSessions(response): void {
+        this.session_handler.storage.getWithPromise("/live").then((data) => {
+            const prefix: string = "session_";
+            let session_ids: number[] = [];
+            if (data.value == undefined) {
+                response.end(JSON.stringify(session_ids));
+                return;
             }
-            let session_id: number = Number(key.substr(prefix.length));
-            session_ids.push(session_id);
-        }
-        return session_ids;
+            for (let key of Object.keys(data.value)) {
+                if (key.lastIndexOf(prefix, 0) === -1) {
+                    continue;
+                }
+                let session_id: number = Number(key.substr(prefix.length));
+                session_ids.push(session_id);
+            }
+            response.end(JSON.stringify(session_ids));
+        });
     }
 }

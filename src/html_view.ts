@@ -121,7 +121,7 @@ export class HtmlView {
         }
         this.event_queue.reset();
 
-        this.client.getLiveSessions((response: string) => {
+        this.client.startCheckLive((response: string) => {
             this.onLiveSessionsUpdated(response);
         });
     }
@@ -163,7 +163,7 @@ export class HtmlView {
         document.getElementById("matching_button_watch_3").addEventListener(
             "click", () => { this.onClickWatch(2); });
 
-        this.client.getLiveSessions((response: string) => {
+        this.client.startCheckLive((response: string) => {
             this.onLiveSessionsUpdated(response);
         });
 
@@ -261,6 +261,10 @@ export class HtmlView {
 
         if (scene === Scene.Matching) {
             document.getElementById("matching").style.display = "";
+
+            this.client.startCheckLive((response: string) => {
+                this.onLiveSessionsUpdated(response);
+            });
             return;
         }
 

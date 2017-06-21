@@ -34,7 +34,10 @@ export class StandaloneConnection extends Connection {
         });
     }
 
-    public getLiveSessions(callback: RequestCallback): void {
+    public startCheckLive(callback: RequestCallback): void {
+        // Do nothing.
+    }
+    public stopCheckLive(): void {
         // Do nothing.
     }
 }
@@ -82,13 +85,21 @@ export class HybridConnection extends Connection {
         this.offline_connection.setQueryOnDisconnect(query);
     }
 
-    public getLiveSessions(callback: RequestCallback): void {
+    public startCheckLive(callback: RequestCallback): void {
         // Online connection is used if available.
         if (this.online_connection) {
-            this.online_connection.getLiveSessions(callback);
+            this.online_connection.startCheckLive(callback);
             return;
         }
-        this.offline_connection.getLiveSessions(callback);
+        this.offline_connection.startCheckLive(callback);
+    }
+    public stopCheckLive(): void {
+        // Online connection is used if available.
+        if (this.online_connection) {
+            this.online_connection.stopCheckLive();
+            return;
+        }
+        this.offline_connection.stopCheckLive();
     }
 
     private getConnection(mode: GameMode): Connection {

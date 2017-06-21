@@ -9,13 +9,15 @@ export abstract class Connection {
     abstract startCheckUpdate(client: Client): void;
     abstract stopCheckUpdate(): void;
 
+    abstract startCheckLive(callback: RequestCallback): void;
+    abstract stopCheckLive(): void;
+
     // Senders from client.
     abstract sendRequest(query: any, callback: RequestCallback): void;
     abstract matching(query: any, callback: RequestCallback): void;
 
     // This is for Firebase.onDisconnect only so far.
     abstract setQueryOnDisconnect(query: any): void;
-    abstract getLiveSessions(callback: RequestCallback): void;
 }
 
 export abstract class Client {
@@ -42,6 +44,7 @@ export abstract class Client {
         this.player_id = -1;
         this.step = -1;
         this.connection.stopCheckUpdate();
+        this.connection.stopCheckLive();
     }
 
     public matching(query: any): void {
@@ -71,10 +74,11 @@ export abstract class Client {
 
         this.checkUpdate();
         this.connection.startCheckUpdate(this);
+        this.connection.stopCheckLive();
     }
 
-    public getLiveSessions(callback: RequestCallback): void {
-        this.connection.getLiveSessions(callback);
+    public startCheckLive(callback: RequestCallback): void {
+        this.connection.startCheckLive(callback);
     }
 
     public watchGame(session_id: number): void {
@@ -85,6 +89,7 @@ export abstract class Client {
         this.sendRequest(Request.watch());
         this.connection.setQueryOnDisconnect(this.fillRequest(Request.quit()));
         this.connection.startCheckUpdate(this);
+        this.connection.stopCheckLive();
     }
 
     public sendRequest(request: any): void {

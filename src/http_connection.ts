@@ -28,13 +28,18 @@ class HttpRequest {
 }
 
 export class HttpConnection extends Connection {
-    public check_update_timer: any = 0;  // Timer
+    public check_update_timer: number = 0;  // Timer
+    private check_live_timer: number = 0;
 
     public startCheckUpdate(client: Client): void {
-        this.check_update_timer = setInterval(() => { client.checkUpdate(); }, 2000);
+        if (this.check_update_timer != null) {
+            return;
+        }
+        this.check_update_timer = window.setInterval(() => { client.checkUpdate(); }, 2000);
     }
     public stopCheckUpdate(): void {
-        clearInterval(this.check_update_timer);
+        window.clearInterval(this.check_update_timer);
+        this.check_update_timer = null;
     }
 
     public matching(query: any, callback: RequestCallback): void {
@@ -48,8 +53,18 @@ export class HttpConnection extends Connection {
         // Do nothing.  Nice to have a way to do something if possible.
     }
 
-    public getLiveSessions(callback: RequestCallback): void {
+    public startCheckLive(callback: RequestCallback): void {
+        if (this.check_live_timer != null) {
+            return;
+        }
         HttpRequest.send("/live", callback);
+        this.check_live_timer = window.setInterval(() => {
+            HttpRequest.send("/live", callback);
+        }, 30000);
+    }
+    public stopCheckLive(): void {
+        window.clearInterval(this.check_live_timer);
+        this.check_live_timer = null;
     }
 
     public sendRequest(query: any, callback: RequestCallback): void {
