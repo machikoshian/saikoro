@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 14);
+/******/ 	return __webpack_require__(__webpack_require__.s = 15);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -319,11 +319,107 @@ exports.Character = Character;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var dice_1 = __webpack_require__(11);
+var GameMode;
+(function (GameMode) {
+    GameMode[GameMode["None"] = 0] = "None";
+    GameMode[GameMode["OffLine_2"] = 1] = "OffLine_2";
+    GameMode[GameMode["OffLine_3"] = 2] = "OffLine_3";
+    GameMode[GameMode["OffLine_4"] = 3] = "OffLine_4";
+    GameMode[GameMode["OnLineSingle_2"] = 4] = "OnLineSingle_2";
+    GameMode[GameMode["OnLineSingle_3"] = 5] = "OnLineSingle_3";
+    GameMode[GameMode["OnLineSingle_4"] = 6] = "OnLineSingle_4";
+    GameMode[GameMode["OnLine2Players"] = 7] = "OnLine2Players";
+    GameMode[GameMode["OnLineWatch"] = 8] = "OnLineWatch";
+})(GameMode = exports.GameMode || (exports.GameMode = {}));
+;
+var Protocol = (function () {
+    function Protocol() {
+    }
+    Protocol.isOnlineMode = function (mode) {
+        var onlines = [
+            GameMode.OnLineSingle_2, GameMode.OnLineSingle_3, GameMode.OnLineSingle_4,
+            GameMode.OnLine2Players, GameMode.OnLineWatch
+        ];
+        return (onlines.indexOf(mode) !== -1);
+    };
+    Protocol.getGameModeName = function (mode) {
+        switch (mode) {
+            case GameMode.OffLine_2:
+                return "2人バトル 😺 👻";
+            case GameMode.OffLine_3:
+                return "3人バトル 😺 👻 👾";
+            case GameMode.OffLine_4:
+                return "4人バトル 😺 👻 👾 🗿";
+            case GameMode.OnLineSingle_2:
+                return "2人バトル 😺 👻";
+            case GameMode.OnLineSingle_3:
+                return "3人バトル 😺 👻 👾";
+            case GameMode.OnLineSingle_4:
+                return "4人バトル 😺 👻 👾 🗿";
+            case GameMode.OnLine2Players:
+                return "2人バトル 😺 😺";
+            case GameMode.OnLineWatch:
+                return "観戦モード";
+            case GameMode.None:
+                return "";
+            default:
+                return "";
+        }
+    };
+    Protocol.getNpcCount = function (mode) {
+        switch (mode) {
+            case GameMode.OffLine_2:
+            case GameMode.OnLineSingle_2:
+                return 1;
+            case GameMode.OffLine_3:
+            case GameMode.OnLineSingle_3:
+                return 2;
+            case GameMode.OffLine_4:
+            case GameMode.OnLineSingle_4:
+                return 3;
+            case GameMode.OnLine2Players:
+            case GameMode.OnLineWatch:
+                return 0;
+            case GameMode.None:
+            default:
+                return -1;
+        }
+    };
+    Protocol.getPlayerCount = function (mode) {
+        switch (mode) {
+            case GameMode.OffLine_2:
+            case GameMode.OnLineSingle_2:
+            case GameMode.OffLine_3:
+            case GameMode.OnLineSingle_3:
+            case GameMode.OffLine_4:
+            case GameMode.OnLineSingle_4:
+                return 1;
+            case GameMode.OnLine2Players:
+                return 2;
+            case GameMode.OnLineWatch:
+                return 0;
+            case GameMode.None:
+            default:
+                return -1;
+        }
+    };
+    return Protocol;
+}());
+exports.Protocol = Protocol;
+
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var dice_1 = __webpack_require__(12);
 var board_1 = __webpack_require__(4);
 var facility_1 = __webpack_require__(0);
-var utils_1 = __webpack_require__(5);
-var card_manager_1 = __webpack_require__(9);
+var utils_1 = __webpack_require__(6);
+var card_manager_1 = __webpack_require__(10);
 var Phase;
 (function (Phase) {
     Phase[Phase["StartGame"] = 0] = "StartGame";
@@ -1253,109 +1349,13 @@ exports.Session = Session;
 
 
 /***/ }),
-/* 2 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var GameMode;
-(function (GameMode) {
-    GameMode[GameMode["None"] = 0] = "None";
-    GameMode[GameMode["OffLine_2"] = 1] = "OffLine_2";
-    GameMode[GameMode["OffLine_3"] = 2] = "OffLine_3";
-    GameMode[GameMode["OffLine_4"] = 3] = "OffLine_4";
-    GameMode[GameMode["OnLineSingle_2"] = 4] = "OnLineSingle_2";
-    GameMode[GameMode["OnLineSingle_3"] = 5] = "OnLineSingle_3";
-    GameMode[GameMode["OnLineSingle_4"] = 6] = "OnLineSingle_4";
-    GameMode[GameMode["OnLine2Players"] = 7] = "OnLine2Players";
-    GameMode[GameMode["OnLineWatch"] = 8] = "OnLineWatch";
-})(GameMode = exports.GameMode || (exports.GameMode = {}));
-;
-var Protocol = (function () {
-    function Protocol() {
-    }
-    Protocol.isOnlineMode = function (mode) {
-        var onlines = [
-            GameMode.OnLineSingle_2, GameMode.OnLineSingle_3, GameMode.OnLineSingle_4,
-            GameMode.OnLine2Players, GameMode.OnLineWatch
-        ];
-        return (onlines.indexOf(mode) !== -1);
-    };
-    Protocol.getGameModeName = function (mode) {
-        switch (mode) {
-            case GameMode.OffLine_2:
-                return "2人バトル 😺 👻";
-            case GameMode.OffLine_3:
-                return "3人バトル 😺 👻 👾";
-            case GameMode.OffLine_4:
-                return "4人バトル 😺 👻 👾 🗿";
-            case GameMode.OnLineSingle_2:
-                return "2人バトル 😺 👻";
-            case GameMode.OnLineSingle_3:
-                return "3人バトル 😺 👻 👾";
-            case GameMode.OnLineSingle_4:
-                return "4人バトル 😺 👻 👾 🗿";
-            case GameMode.OnLine2Players:
-                return "2人バトル 😺 😺";
-            case GameMode.OnLineWatch:
-                return "観戦モード";
-            case GameMode.None:
-                return "";
-            default:
-                return "";
-        }
-    };
-    Protocol.getNpcCount = function (mode) {
-        switch (mode) {
-            case GameMode.OffLine_2:
-            case GameMode.OnLineSingle_2:
-                return 1;
-            case GameMode.OffLine_3:
-            case GameMode.OnLineSingle_3:
-                return 2;
-            case GameMode.OffLine_4:
-            case GameMode.OnLineSingle_4:
-                return 3;
-            case GameMode.OnLine2Players:
-            case GameMode.OnLineWatch:
-                return 0;
-            case GameMode.None:
-            default:
-                return -1;
-        }
-    };
-    Protocol.getPlayerCount = function (mode) {
-        switch (mode) {
-            case GameMode.OffLine_2:
-            case GameMode.OnLineSingle_2:
-            case GameMode.OffLine_3:
-            case GameMode.OnLineSingle_3:
-            case GameMode.OffLine_4:
-            case GameMode.OnLineSingle_4:
-                return 1;
-            case GameMode.OnLine2Players:
-                return 2;
-            case GameMode.OnLineWatch:
-                return 0;
-            case GameMode.None:
-            default:
-                return -1;
-        }
-    };
-    return Protocol;
-}());
-exports.Protocol = Protocol;
-
-
-/***/ }),
 /* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var protocol_1 = __webpack_require__(2);
+var protocol_1 = __webpack_require__(1);
 var Connection = (function () {
     function Connection() {
     }
@@ -1381,6 +1381,7 @@ var Client = (function () {
         this.player_id = -1;
         this.step = -1;
         this.connection.stopCheckUpdate();
+        this.connection.stopCheckLive();
     };
     Client.prototype.matching = function (query) {
         query.command = "matching";
@@ -1405,9 +1406,10 @@ var Client = (function () {
         this.connection.setQueryOnDisconnect(this.fillRequest(Request.quit()));
         this.checkUpdate();
         this.connection.startCheckUpdate(this);
+        this.connection.stopCheckLive();
     };
-    Client.prototype.getLiveSessions = function (callback) {
-        this.connection.getLiveSessions(callback);
+    Client.prototype.startCheckLive = function (callback) {
+        this.connection.startCheckLive(callback);
     };
     Client.prototype.watchGame = function (session_id) {
         this.reset();
@@ -1416,6 +1418,7 @@ var Client = (function () {
         this.sendRequest(Request.watch());
         this.connection.setQueryOnDisconnect(this.fillRequest(Request.quit()));
         this.connection.startCheckUpdate(this);
+        this.connection.stopCheckLive();
     };
     Client.prototype.sendRequest = function (request) {
         this.connection.sendRequest(this.fillRequest(request), this.callback);
@@ -1664,6 +1667,143 @@ exports.Board = Board;
 
 "use strict";
 
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var KeyValue = (function () {
+    function KeyValue(key, value) {
+        if (key === void 0) { key = ""; }
+        if (value === void 0) { value = null; }
+        this.key = key;
+        this.value = value;
+    }
+    return KeyValue;
+}());
+exports.KeyValue = KeyValue;
+var Storage = (function () {
+    function Storage() {
+    }
+    Storage.prototype.getKeysForDebug = function () {
+        return [];
+    };
+    return Storage;
+}());
+exports.Storage = Storage;
+var LocalStorage = (function (_super) {
+    __extends(LocalStorage, _super);
+    function LocalStorage() {
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this.storage = {};
+        return _this;
+    }
+    LocalStorage.prototype.parseKey = function (key_string) {
+        var keys = [];
+        for (var _i = 0, _a = key_string.split("/"); _i < _a.length; _i++) {
+            var key = _a[_i];
+            if (key !== "") {
+                keys.push(key);
+            }
+        }
+        return keys;
+    };
+    LocalStorage.prototype.getValue = function (key) {
+        var keys = this.parseKey(key);
+        var storage = this.storage;
+        for (var i = 0; i < keys.length; ++i) {
+            storage = storage[keys[i]];
+            if (storage == undefined) {
+                return undefined;
+            }
+        }
+        return storage;
+    };
+    LocalStorage.prototype.setValue = function (key, value) {
+        var keys = this.parseKey(key);
+        if (keys.length === 0) {
+            this.storage = value; // Replace all.
+            return;
+        }
+        var storage = this.storage;
+        for (var i = 0; i < keys.length - 1; ++i) {
+            var child = storage[keys[i]];
+            if (child == undefined) {
+                storage[keys[i]] = {};
+                storage = storage[keys[i]];
+            }
+            else {
+                storage = child;
+            }
+        }
+        storage[keys[keys.length - 1]] = value;
+    };
+    LocalStorage.prototype.deleteValue = function (key) {
+        var keys = this.parseKey(key);
+        if (keys.length === 0) {
+            this.storage = {}; // Delete all.
+            return;
+        }
+        var storage = this.storage;
+        for (var i = 0; i < keys.length - 1; ++i) {
+            storage = storage[keys[i]];
+            if (storage == undefined) {
+                return; // Already deleted.
+            }
+        }
+        delete storage[keys[keys.length - 1]];
+        // TODO: delete parent nodes.
+    };
+    LocalStorage.prototype.get = function (key, callback) {
+        var value = this.getValue(key);
+        if (value != undefined) {
+            callback(null, this.storage[key]);
+        }
+    };
+    LocalStorage.prototype.getWithPromise = function (key) {
+        var _this = this;
+        return new Promise(function (resolve, reject) {
+            var data = new KeyValue(key, _this.getValue(key));
+            resolve(data);
+        });
+    };
+    LocalStorage.prototype.delete = function (key) {
+        this.deleteValue(key);
+    };
+    LocalStorage.prototype.getKeys = function () {
+        return Object.keys(this.storage);
+    };
+    LocalStorage.prototype.set = function (key, value, callback, expire) {
+        this.setValue(key, value);
+        callback(null);
+    };
+    LocalStorage.prototype.setWithPromise = function (key, value) {
+        this.setValue(key, value);
+        return new Promise(function (resolve, reject) {
+            var data = new KeyValue(key, value);
+            resolve(data);
+        });
+    };
+    LocalStorage.prototype.getKeysForDebug = function () {
+        return Object.keys(this.storage);
+    };
+    return LocalStorage;
+}(Storage));
+exports.LocalStorage = LocalStorage;
+
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
 Object.defineProperty(exports, "__esModule", { value: true });
 function shuffle(array) {
     var shuffled_array = array.slice(0);
@@ -1678,7 +1818,7 @@ exports.shuffle = shuffle;
 
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1695,8 +1835,9 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var client_1 = __webpack_require__(3);
-var session_1 = __webpack_require__(1);
-var html_view_1 = __webpack_require__(12);
+var session_1 = __webpack_require__(2);
+var html_view_1 = __webpack_require__(13);
+var protocol_1 = __webpack_require__(1);
 // TODO: can be merged with Client?
 var WebClient = (function (_super) {
     __extends(WebClient, _super);
@@ -1717,6 +1858,9 @@ var WebClient = (function (_super) {
     // Do not directly call this method.
     // Use this.callback.bind(this) as a wrapper of this method.
     WebClient.prototype.callbackSession = function (response) {
+        if (this.mode === protocol_1.GameMode.None) {
+            return;
+        }
         if (!response) {
             console.log("Stop polling.");
             this.connection.stopCheckUpdate();
@@ -1752,7 +1896,7 @@ exports.WebClient = WebClient;
 
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1769,9 +1913,10 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var client_1 = __webpack_require__(3);
-var session_handler_1 = __webpack_require__(15);
-var protocol_1 = __webpack_require__(2);
-var storage = new session_handler_1.LocalStorage();
+var session_handler_1 = __webpack_require__(16);
+var storage_1 = __webpack_require__(5);
+var protocol_1 = __webpack_require__(1);
+var storage = new storage_1.LocalStorage();
 var session_handler = new session_handler_1.SessionHandler(storage);
 var StandaloneConnection = (function (_super) {
     __extends(StandaloneConnection, _super);
@@ -1802,7 +1947,10 @@ var StandaloneConnection = (function (_super) {
             }, _this.delay);
         });
     };
-    StandaloneConnection.prototype.getLiveSessions = function (callback) {
+    StandaloneConnection.prototype.startCheckLive = function (callback) {
+        // Do nothing.
+    };
+    StandaloneConnection.prototype.stopCheckLive = function () {
         // Do nothing.
     };
     return StandaloneConnection;
@@ -1847,13 +1995,21 @@ var HybridConnection = (function (_super) {
         }
         this.offline_connection.setQueryOnDisconnect(query);
     };
-    HybridConnection.prototype.getLiveSessions = function (callback) {
+    HybridConnection.prototype.startCheckLive = function (callback) {
         // Online connection is used if available.
         if (this.online_connection) {
-            this.online_connection.getLiveSessions(callback);
+            this.online_connection.startCheckLive(callback);
             return;
         }
-        this.offline_connection.getLiveSessions(callback);
+        this.offline_connection.startCheckLive(callback);
+    };
+    HybridConnection.prototype.stopCheckLive = function () {
+        // Online connection is used if available.
+        if (this.online_connection) {
+            this.online_connection.stopCheckLive();
+            return;
+        }
+        this.offline_connection.stopCheckLive();
     };
     HybridConnection.prototype.getConnection = function (mode) {
         if (protocol_1.Protocol.isOnlineMode(mode) && (this.online_connection != null)) {
@@ -1870,14 +2026,14 @@ exports.HybridConnection = HybridConnection;
 
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var session_1 = __webpack_require__(1);
-var utils_1 = __webpack_require__(5);
+var session_1 = __webpack_require__(2);
+var utils_1 = __webpack_require__(6);
 var AutoPlay = (function () {
     function AutoPlay() {
     }
@@ -1944,7 +2100,7 @@ exports.AutoPlay = AutoPlay;
 
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2404,7 +2560,7 @@ exports.EffectManager = EffectManager;
 
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2491,7 +2647,7 @@ exports.DeckMaker = DeckMaker;
 
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2566,18 +2722,18 @@ exports.Dice = Dice;
 
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var session_1 = __webpack_require__(1);
+var session_1 = __webpack_require__(2);
 var facility_1 = __webpack_require__(0);
 var client_1 = __webpack_require__(3);
-var deck_maker_1 = __webpack_require__(10);
-var protocol_1 = __webpack_require__(2);
-var html_view_parts_1 = __webpack_require__(13);
+var deck_maker_1 = __webpack_require__(11);
+var protocol_1 = __webpack_require__(1);
+var html_view_parts_1 = __webpack_require__(14);
 var COLOR_FIELD = "#FFF8E1";
 var COLOR_LANDMARK = "#B0BEC5";
 var COLOR_CLICKABLE = "#FFCA28";
@@ -2678,7 +2834,7 @@ var HtmlView = (function () {
             this.dice_roll_view = null;
         }
         this.event_queue.reset();
-        this.client.getLiveSessions(function (response) {
+        this.client.startCheckLive(function (response) {
             _this.onLiveSessionsUpdated(response);
         });
     };
@@ -2698,14 +2854,17 @@ var HtmlView = (function () {
         document.getElementById("matching_button_online_4").addEventListener("click", function () { _this.onClickMatching(protocol_1.GameMode.OnLineSingle_4); });
         document.getElementById("matching_button_multi_2").addEventListener("click", function () { _this.onClickMatching(protocol_1.GameMode.OnLine2Players); });
         // 3 and 4 players are not supported yet.
+        document.getElementById("matching_button_multi_3").classList.remove("promote");
+        document.getElementById("matching_button_multi_3").classList.add("inactive");
         // document.getElementById("matching_button_multi_3").addEventListener(
         //     "click", () => { this.onClickMatching(GameMode.OnLine2Players); });
         // document.getElementById("matching_button_multi_4").addEventListener(
         //     "click", () => { this.onClickMatching(GameMode.OnLine2Players); });
+        document.getElementById("matching_button_watch_1").classList.add("inactive");
         document.getElementById("matching_button_watch_1").addEventListener("click", function () { _this.onClickWatch(0); });
         document.getElementById("matching_button_watch_2").addEventListener("click", function () { _this.onClickWatch(1); });
         document.getElementById("matching_button_watch_3").addEventListener("click", function () { _this.onClickWatch(2); });
-        this.client.getLiveSessions(function (response) {
+        this.client.startCheckLive(function (response) {
             _this.onLiveSessionsUpdated(response);
         });
         // Widgets
@@ -2773,6 +2932,7 @@ var HtmlView = (function () {
         this.switchScene(Scene.Matching);
     };
     HtmlView.prototype.switchScene = function (scene) {
+        var _this = this;
         if (this.scene === scene) {
             return;
         }
@@ -2795,6 +2955,9 @@ var HtmlView = (function () {
         this.field_card_view.none();
         if (scene === Scene.Matching) {
             document.getElementById("matching").style.display = "";
+            this.client.startCheckLive(function (response) {
+                _this.onLiveSessionsUpdated(response);
+            });
             return;
         }
         if (scene === Scene.Deck) {
@@ -2961,22 +3124,35 @@ var HtmlView = (function () {
         this.message_view.drawMessage("通信中です", this.getPlayerColor(this.client.player_id));
         this.switchScene(Scene.Game);
     };
-    HtmlView.prototype.getGameModeName = function (session_id) {
-        // See SessionHandler.handleMatching
-        var mode = Math.floor(session_id / 100000);
-        return protocol_1.Protocol.getGameModeName(mode);
-    };
     HtmlView.prototype.onLiveSessionsUpdated = function (response) {
-        this.live_session_ids = JSON.parse(response);
-        for (var i = 0; i < 3; i++) {
-            var element = document.getElementById("matching_button_watch_" + (i + 1));
-            if (i < this.live_session_ids.length) {
-                element.innerText = this.getGameModeName(this.live_session_ids[i]);
+        // Reset states.
+        for (var i = 1; i <= 3; i++) {
+            var element = document.getElementById("matching_button_watch_" + i);
+            element.innerText = "準備中";
+            element.classList.add("inactive");
+        }
+        document.getElementById("matching_button_multi_2").classList.remove("promote");
+        // TODO: session_info should be a class instance.
+        var session_infos = JSON.parse(response);
+        var keys = Object.keys(session_infos);
+        // Update states.
+        var index = 1;
+        this.live_session_ids = [];
+        for (var _i = 0, keys_1 = keys; _i < keys_1.length; _i++) {
+            var key = keys_1[_i];
+            var info = session_infos[key];
+            if (info.is_matched) {
+                if (index > 3) {
+                    continue;
+                }
+                this.live_session_ids.push(info.session_id);
+                var element = document.getElementById("matching_button_watch_" + index);
+                element.innerText = protocol_1.Protocol.getGameModeName(info.mode);
                 element.classList.remove("inactive");
+                index++;
             }
-            else {
-                element.innerText = "準備中";
-                element.classList.add("inactive");
+            else if (info.mode === protocol_1.GameMode.OnLine2Players) {
+                document.getElementById("matching_button_multi_2").classList.add("promote");
             }
         }
     };
@@ -3539,7 +3715,7 @@ exports.HtmlView = HtmlView;
 
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3556,7 +3732,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var facility_1 = __webpack_require__(0);
-var session_1 = __webpack_require__(1);
+var session_1 = __webpack_require__(2);
 // TODO: Move it to a new file for util.
 var COLOR_FIELD = "#FFE082";
 var COLOR_LANDMARK = "#B0BEC5";
@@ -4174,14 +4350,14 @@ exports.HtmlDiceView = HtmlDiceView;
 
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var standalone_connection_1 = __webpack_require__(7);
-var saikoro_1 = __webpack_require__(6);
+var standalone_connection_1 = __webpack_require__(8);
+var saikoro_1 = __webpack_require__(7);
 var delay = 0; // msec
 var connection = new standalone_connection_1.StandaloneConnection(delay);
 var client = new saikoro_1.WebClient(connection);
@@ -4189,85 +4365,17 @@ document.addEventListener("DOMContentLoaded", function () { client.initBoard(); 
 
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
-var session_1 = __webpack_require__(1);
+var session_1 = __webpack_require__(2);
 var facility_1 = __webpack_require__(0);
-var auto_play_1 = __webpack_require__(8);
-var protocol_1 = __webpack_require__(2);
-var KeyValue = (function () {
-    function KeyValue(key, value) {
-        if (key === void 0) { key = ""; }
-        if (value === void 0) { value = null; }
-        this.key = key;
-        this.value = value;
-    }
-    return KeyValue;
-}());
-exports.KeyValue = KeyValue;
-var Storage = (function () {
-    function Storage() {
-    }
-    Storage.prototype.getKeysForDebug = function () {
-        return [];
-    };
-    return Storage;
-}());
-exports.Storage = Storage;
-var LocalStorage = (function (_super) {
-    __extends(LocalStorage, _super);
-    function LocalStorage() {
-        var _this = _super !== null && _super.apply(this, arguments) || this;
-        _this.storage = {};
-        return _this;
-    }
-    LocalStorage.prototype.get = function (key, callback) {
-        callback(null, this.storage[key]);
-    };
-    LocalStorage.prototype.getWithPromise = function (key) {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            var data = new KeyValue(key, _this.storage[key]);
-            resolve(data);
-        });
-    };
-    LocalStorage.prototype.delete = function (key) {
-        delete this.storage[key];
-    };
-    LocalStorage.prototype.getKeys = function () {
-        return Object.keys(this.storage);
-    };
-    LocalStorage.prototype.set = function (key, value, callback, expire) {
-        this.storage[key] = value;
-        callback(null);
-    };
-    LocalStorage.prototype.setWithPromise = function (key, value) {
-        this.storage[key] = value;
-        return new Promise(function (resolve, reject) {
-            var data = new KeyValue(key, value);
-            resolve(data);
-        });
-    };
-    LocalStorage.prototype.getKeysForDebug = function () {
-        return Object.keys(this.storage);
-    };
-    return LocalStorage;
-}(Storage));
-exports.LocalStorage = LocalStorage;
+var auto_play_1 = __webpack_require__(9);
+var protocol_1 = __webpack_require__(1);
+var storage_1 = __webpack_require__(5);
 var MatchedData = (function () {
     function MatchedData(matching_id, session_id, player_id) {
         if (matching_id === void 0) { matching_id = ""; }
@@ -4385,7 +4493,7 @@ var SessionHandler = (function () {
         var updated = false;
         return this.storage.getWithPromise(session_key).then(function (data) {
             if (!data.value) {
-                return new KeyValue(data.key, "{}");
+                return new storage_1.KeyValue(data.key, "{}");
             }
             session = session_1.Session.fromJSON(JSON.parse(data.value));
             var updated = _this.processCommand(session, query);
@@ -4393,7 +4501,7 @@ var SessionHandler = (function () {
                 _this.closeSession(session);
             }
             if (!updated) {
-                return new KeyValue(data.key, "{}");
+                return new storage_1.KeyValue(data.key, "{}");
             }
             var session_json = JSON.stringify(session.toJSON());
             return _this.storage.setWithPromise(session_key, session_json);
@@ -4440,7 +4548,6 @@ var SessionHandler = (function () {
         }).then(function (data) {
             var matching_id = data.value - 1;
             // FIXIT: This is an obviously hacky way for two players. Fix it.
-            // HtmlView.getGameModeName also uses this hack.
             session_id = mode * 100000 + Math.floor(matching_id / num_players);
             var session_key = _this.getSessionKey(session_id);
             matched_data.matching_id = String(matching_id);
@@ -4458,6 +4565,7 @@ var SessionHandler = (function () {
             }
             var player_id = _this.addNewPlayer(session, user_id, name, deck, false);
             matched_data.player_id = player_id;
+            var is_matched = false;
             if (player_id === num_players - 1) {
                 // Add NPC.
                 var NPC_NAMES = ["ごましお", "グラ", "ヂータ", "エル", "茜", "ベリー", "兼石"];
@@ -4467,14 +4575,16 @@ var SessionHandler = (function () {
                 }
                 session.startGame();
                 _this.doNext(session);
-                var names = session.getPlayers().map(function (player) { return player.name; });
-                var info = {
-                    session_id: session.session_id,
-                    mode: Number(query.mode),
-                    names: names,
-                };
-                _this.storage.setWithPromise("live/session_" + session.session_id, info);
+                is_matched = true;
             }
+            var names = session.getPlayers().map(function (player) { return player.name; });
+            var info = {
+                session_id: session.session_id,
+                is_matched: is_matched,
+                mode: Number(query.mode),
+                names: names,
+            };
+            _this.storage.setWithPromise("live/session_" + session.session_id, info);
             var session_string = JSON.stringify(session.toJSON());
             return _this.storage.setWithPromise(session_key, session_string);
         }).then(function (data) {
