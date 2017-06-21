@@ -28,8 +28,8 @@ class HttpRequest {
 }
 
 export class HttpConnection extends Connection {
-    public check_update_timer: number = 0;  // Timer
-    private check_live_timer: number = 0;
+    public check_update_timer: number = null;  // Timer
+    private check_live_timer: number = null;
 
     public startCheckUpdate(client: Client): void {
         if (this.check_update_timer != null) {

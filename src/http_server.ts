@@ -144,20 +144,11 @@ export class HttpServer {
 
     private getLiveSessions(response): void {
         this.session_handler.storage.getWithPromise("/live").then((data) => {
-            const prefix: string = "session_";
-            let session_ids: number[] = [];
             if (data.value == undefined) {
-                response.end(JSON.stringify(session_ids));
+                response.end("{}");
                 return;
             }
-            for (let key of Object.keys(data.value)) {
-                if (key.lastIndexOf(prefix, 0) === -1) {
-                    continue;
-                }
-                let session_id: number = Number(key.substr(prefix.length));
-                session_ids.push(session_id);
-            }
-            response.end(JSON.stringify(session_ids));
+            response.end(JSON.stringify(data.value));
         });
     }
 }

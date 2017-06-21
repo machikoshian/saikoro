@@ -151,13 +151,17 @@ export class HtmlView {
         document.getElementById("matching_button_multi_2").addEventListener(
             "click", () => { this.onClickMatching(GameMode.OnLine2Players); });
         // 3 and 4 players are not supported yet.
+        document.getElementById("matching_button_multi_3").classList.remove("promote");
+        document.getElementById("matching_button_multi_3").classList.add("inactive");
         // document.getElementById("matching_button_multi_3").addEventListener(
         //     "click", () => { this.onClickMatching(GameMode.OnLine2Players); });
         // document.getElementById("matching_button_multi_4").addEventListener(
         //     "click", () => { this.onClickMatching(GameMode.OnLine2Players); });
 
+        document.getElementById("matching_button_watch_1").classList.add("inactive");
         document.getElementById("matching_button_watch_1").addEventListener(
             "click", () => { this.onClickWatch(0); });
+
         document.getElementById("matching_button_watch_2").addEventListener(
             "click", () => { this.onClickWatch(1); });
         document.getElementById("matching_button_watch_3").addEventListener(
@@ -454,23 +458,36 @@ export class HtmlView {
         this.switchScene(Scene.Game);
     }
 
-    private getGameModeName(session_id: number): string {
-        // See SessionHandler.handleMatching
-        let mode: GameMode = Math.floor(session_id / 100000);
-        return Protocol.getGameModeName(mode);
-    }
-
     private onLiveSessionsUpdated(response: string): void {
-        this.live_session_ids = JSON.parse(response);
-        for (let i: number = 0; i < 3; i++) {
-            let element: HTMLElement = document.getElementById(`matching_button_watch_${i + 1}`);
-            if (i < this.live_session_ids.length) {
-                element.innerText = this.getGameModeName(this.live_session_ids[i]);
+        // Reset states.
+        for (let i: number = 1; i <= 3; i++) {
+            let element: HTMLElement = document.getElementById(`matching_button_watch_${i}`);
+            element.innerText = "準備中";
+            element.classList.add("inactive");
+        }
+        document.getElementById("matching_button_multi_2").classList.remove("promote");
+
+        // TODO: session_info should be a class instance.
+        const session_infos: any = JSON.parse(response);
+        const keys: string[] = Object.keys(session_infos);
+
+        // Update states.
+        let index: number = 1;
+        this.live_session_ids = [];
+        for (let key of keys) {
+            const info: any = session_infos[key];
+            if (info.is_matched) {
+                if (index > 3) {
+                    continue;
+                }
+                this.live_session_ids.push(info.session_id);
+                let element: HTMLElement = document.getElementById(`matching_button_watch_${index}`);
+                element.innerText = Protocol.getGameModeName(info.mode);
                 element.classList.remove("inactive");
+                index++;
             }
-            else {
-                element.innerText = "準備中";
-                element.classList.add("inactive");
+            else if (info.mode === GameMode.OnLine2Players) {
+                document.getElementById("matching_button_multi_2").classList.add("promote");
             }
         }
     }

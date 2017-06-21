@@ -83,11 +83,11 @@ export class FirebaseConnection extends Connection {
     public startCheckLive(callback: RequestCallback): void {
         this.ref_live = firebase.database().ref("live");
         this.ref_live.on("value", (snapshot) => {
-            let keys: number[] = [];
-            snapshot.forEach((childSnapshot) => {
-                keys.push(Number(childSnapshot.key.substr("session_".length)));
-            });
-            callback(JSON.stringify(keys));
+            let value = snapshot.val();
+            if (!value) {
+                return;
+            }
+            callback(JSON.stringify(value));
         });
     }
     public stopCheckLive(): void {

@@ -190,7 +190,6 @@ export class SessionHandler {
             let matching_id: number = data.value - 1;
 
             // FIXIT: This is an obviously hacky way for two players. Fix it.
-            // HtmlView.getGameModeName also uses this hack.
             session_id = mode * 100000 + Math.floor(matching_id / num_players);
             const session_key: string = this.getSessionKey(session_id);
 
@@ -209,6 +208,7 @@ export class SessionHandler {
 
             let player_id: PlayerId = this.addNewPlayer(session, user_id, name, deck, false);
             matched_data.player_id = player_id;
+            let is_matched: boolean = false;
             if (player_id === num_players - 1) {
                 // Add NPC.
                 const NPC_NAMES = ["ごましお", "グラ", "ヂータ", "エル", "茜", "ベリー", "兼石"];
@@ -219,15 +219,17 @@ export class SessionHandler {
 
                 session.startGame();
                 this.doNext(session);
-
-                let names: string[] = session.getPlayers().map((player) => { return player.name; });
-                let info = {
-                    session_id: session.session_id,
-                    mode: Number(query.mode),
-                    names: names,
-                };
-                this.storage.setWithPromise(`live/session_${session.session_id}`, info);
+                is_matched = true;
             }
+
+            let names: string[] = session.getPlayers().map((player) => { return player.name; });
+            let info = {
+                session_id: session.session_id,
+                is_matched: is_matched,
+                mode: Number(query.mode),
+                names: names,
+            };
+            this.storage.setWithPromise(`live/session_${session.session_id}`, info);
 
             let session_string: string = JSON.stringify(session.toJSON());
             return this.storage.setWithPromise(session_key, session_string);

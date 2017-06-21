@@ -85,6 +85,16 @@ body {
     text-shadow: none;
 }
 
+.menu_button.promote {
+    animation: promote 7s infinite;
+}
+
+@keyframes promote {
+    0% { background-color: #FFCA28; }
+   50% { background-color: #FF9800; text-shadow: none; }
+  100% { background-color: #FFCA28; }
+}
+
 .menu_button.inactive {
     color: #607D8B;
     border-color: #90A4AE;
