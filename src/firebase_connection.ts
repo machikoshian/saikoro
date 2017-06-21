@@ -17,9 +17,9 @@ firebase.initializeApp(config);
 
 export class FirebaseConnection extends Connection {
     private ref: any;
-    private ref_command: any;
-    private ref_session: any;
-    private ref_live: any;
+    private ref_command: any = null;
+    private ref_session: any = null;
+    private ref_live: any = null;
     private ref_map: {} = {};
     private session_key: string;
 
@@ -36,7 +36,9 @@ export class FirebaseConnection extends Connection {
         this.ref_map[key] = ref;
     }
     public stopCheckValue(key: string): void {
-        this.ref_map[key].off();
+        if (this.ref_map[key]) {
+            this.ref_map[key].off();
+        }
     }
 
     public startCheckUpdate(client: Client): void {
@@ -50,7 +52,9 @@ export class FirebaseConnection extends Connection {
         });
     }
     public stopCheckUpdate(): void {
-        this.ref_session.off();
+        if (this.ref_session) {
+            this.ref_session.off();
+        }
     }
 
     public matching(query: any, callback: RequestCallback): void {
@@ -58,7 +62,7 @@ export class FirebaseConnection extends Connection {
             return;
         }
         let ref_matched = firebase.database().ref(`/matched/${query.user_id}`);
-        ref_matched.once("value", (snapshot) => {
+        ref_matched.on("value", (snapshot) => {
             let value = snapshot.val();
             if (!value) {
                 return;
@@ -87,6 +91,8 @@ export class FirebaseConnection extends Connection {
         });
     }
     public stopCheckLive(): void {
-        this.ref_live.off();
+        if (this.ref_live) {
+            this.ref_live.off();
+        }
     }
 }
