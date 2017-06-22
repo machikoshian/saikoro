@@ -989,6 +989,14 @@ export class Session {
     public getCurrentPlayer(): Player {
         return this.getPlayer(this.current_player_id);
     }
+    public getPlayerId(user_id: string): PlayerId {
+        for (let pid: number = 0; pid < this.players.length; ++pid) {
+            if (this.players[pid].user_id === user_id) {
+                return pid;
+            }
+        }
+        return -1;
+    }
     public getPlayer(player_id: PlayerId): Player {
         if (player_id == null || player_id < 0) {
             return null;

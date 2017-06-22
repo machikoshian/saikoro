@@ -62,6 +62,7 @@ export class WebClient extends Client {
             console.log("Already updated.");
             return;
         }
+        this.player_id = session.getPlayerId(this.user_id);
         this.step = step;
 
         this.view.updateView(session, this.player_id);

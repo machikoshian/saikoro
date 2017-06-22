@@ -67,7 +67,6 @@ export abstract class Client {
     private callbackMatching(response: string): void {
         const response_json = JSON.parse(response);
         this.session_id = response_json.session_id;
-        this.player_id = response_json.player_id;
         this.matching_id = response_json.matching_id;
 
         this.connection.setQueryOnDisconnect(this.fillRequest(Request.quit()));
