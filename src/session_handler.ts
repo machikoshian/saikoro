@@ -269,6 +269,7 @@ export class SessionHandler {
 
         let num_facilities: number = 0;
         let num_chars: number = 0;
+        deck = deck ? deck : [];
         for (let data_id of deck) {
             if (CardData.isFacility(data_id)) {
                 session.addFacility(player_id, data_id);
