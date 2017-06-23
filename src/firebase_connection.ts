@@ -56,6 +56,7 @@ export class FirebaseConnection extends Connection {
         if (this.ref_session) {
             this.ref_session.off();
         }
+        this.ref_session = null;
     }
 
     public matching(query: any, callback: RequestCallback): void {
@@ -73,7 +74,9 @@ export class FirebaseConnection extends Connection {
         firebase.database().ref("matching").push(query);
     }
     public stopCheckMatching(): void {
-        this.ref_matched.off();
+        if (this.ref_matched) {
+            this.ref_matched.off();
+        }
         this.ref_matched = null;
     }
 
@@ -99,5 +102,6 @@ export class FirebaseConnection extends Connection {
         if (this.ref_live) {
             this.ref_live.off();
         }
+        this.ref_live = null;
     }
 }
