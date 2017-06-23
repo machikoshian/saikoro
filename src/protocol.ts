@@ -10,6 +10,22 @@ export enum GameMode {
     OnLineWatch,
 };
 
+export interface MatchingPlayerInfo {
+    user_id: string,
+    mode: GameMode,
+    name: string,
+    deck: number[],
+}
+
+// TODO: Unify MatchingInfo and MatchedInfo.
+
+export interface MatchingInfo {
+    mode: GameMode,
+    session_id: number,
+    player_names: string[],
+    is_matched: boolean,
+}
+
 export class Protocol {
     static isOnlineMode(mode: GameMode): boolean {
         const onlines: GameMode[] = [

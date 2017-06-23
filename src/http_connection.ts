@@ -1,5 +1,6 @@
 import { RequestCallback, Connection, Client } from "./client";
 import { StandaloneConnection } from "./standalone_connection";
+import { MatchingInfo } from "./protocol";
 
 class HttpRequest {
     static send(url: string, callback: RequestCallback) {
@@ -29,6 +30,7 @@ class HttpRequest {
 
 export class HttpConnection extends Connection {
     public check_update_timer: number = null;  // Timer
+    private check_matched_timer: number = null;
     private check_live_timer: number = null;
 
     public startCheckUpdate(client: Client): void {
@@ -46,7 +48,16 @@ export class HttpConnection extends Connection {
         let params: string = Object.keys(query).map((key) => {
             return encodeURIComponent(key) + "=" + encodeURIComponent(query[key]);
         }).join("&");
+
+        this.check_matched_timer = window.setInterval(() => {
+            HttpRequest.send(`/data?key=matched/${query.user_id}`, callback);
+        }, 2000);
         HttpRequest.send("/matching?" + params, callback);
+    }
+
+    public stopCheckMatching(): void {
+        window.clearInterval(this.check_matched_timer);
+        this.check_matched_timer = null;
     }
 
     public setQueryOnDisconnect(query: any): void {

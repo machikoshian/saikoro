@@ -19,6 +19,7 @@ export class FirebaseConnection extends Connection {
     private ref: any;
     private ref_command: any = null;
     private ref_session: any = null;
+    private ref_matched: any = null;
     private ref_live: any = null;
     private ref_map: {} = {};
     private session_key: string;
@@ -61,8 +62,8 @@ export class FirebaseConnection extends Connection {
         if (!query.user_id) {
             return;
         }
-        let ref_matched = firebase.database().ref(`/matched/${query.user_id}`);
-        ref_matched.on("value", (snapshot) => {
+        this.ref_matched = firebase.database().ref(`/matched/${query.user_id}`);
+        this.ref_matched.on("value", (snapshot) => {
             let value = snapshot.val();
             if (!value) {
                 return;
@@ -70,6 +71,10 @@ export class FirebaseConnection extends Connection {
             callback(JSON.stringify(value));
         });
         firebase.database().ref("matching").push(query);
+    }
+    public stopCheckMatching(): void {
+        this.ref_matched.off();
+        this.ref_matched = null;
     }
 
     public setQueryOnDisconnect(query: any): void {

@@ -1,7 +1,7 @@
 import { RequestCallback, Connection, Client } from "./client";
 import { MatchedData, SessionHandler } from "./session_handler";
 import { KeyValue, Storage, LocalStorage } from "./storage";
-import { GameMode, Protocol } from "./protocol";
+import { GameMode, Protocol, MatchingInfo } from "./protocol";
 
 const storage = new LocalStorage();
 let session_handler: SessionHandler = new SessionHandler(storage);
@@ -15,11 +15,15 @@ export class StandaloneConnection extends Connection {
     public stopCheckUpdate(): void {}
 
     public matching(query: any, callback: RequestCallback): void {
-        session_handler.handleMatching(query).then((matched: MatchedData) => {
+        session_handler.handleMatching(query).then((data: KeyValue) => {
+            let matching_info: MatchingInfo = data.value;
             setTimeout(() => {
-                callback(JSON.stringify(matched));
+                callback(JSON.stringify(matching_info));
             }, this.delay);
         });
+    }
+    public stopCheckMatching(): void {
+        // Do nothing.
     }
 
     public setQueryOnDisconnect(query: any): void {
@@ -74,6 +78,13 @@ export class HybridConnection extends Connection {
         this.connection.stopCheckUpdate();
         this.connection = this.getConnection(query.mode);
         this.connection.matching(query, callback);
+    }
+    public stopCheckMatching(): void {
+        if (this.online_connection) {
+            this.online_connection.stopCheckMatching();
+            return;
+        }
+        this.offline_connection.stopCheckMatching();
     }
 
     public setQueryOnDisconnect(query: any): void {

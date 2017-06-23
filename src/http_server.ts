@@ -110,6 +110,10 @@ export class HttpServer {
 
         if (pathname === "/data") {
             this.session_handler.storage.getWithPromise(query.key).then((data: KeyValue) => {
+                if (data.value == undefined) {
+                    response.end("null");
+                    return;
+                }
                 response.end(JSON.stringify(data.value));
             });
             return;
@@ -128,8 +132,8 @@ export class HttpServer {
                 this.getLiveSessions(response);
                 return;
             }
-            this.session_handler.handleMatching(query).then((matched: MatchedData) => {
-                response.end(JSON.stringify(matched));
+            this.session_handler.handleMatching(query).then((data: KeyValue) => {
+                response.end(JSON.stringify(data.value));
             });
             return;
         }

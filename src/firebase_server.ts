@@ -64,13 +64,7 @@ export class FirebaseServer {
     public onMatching(data): Promise<{}> {
         let user_id: string = data.val().user_id;
 
-        return this.session_handler.handleMatching(data.val()).then((matched: MatchedData) => {
-            return Promise.all([
-                this.ref_matched.child(user_id).set(matched),
-                // Delete handled event.
-                this.ref_matching.child(data.key).set(null)
-            ]);
-        });
+        return this.session_handler.handleMatching(data.val());
     }
 
     public onCommand(data): Promise<{}> {

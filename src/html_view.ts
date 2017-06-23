@@ -6,7 +6,7 @@ import { CardId, FacilityType, Facility, CharacterType, Character,
 import { Dice, DiceResult } from "./dice";
 import { Client, Request } from "./client";
 import { DeckMaker } from "./deck_maker";
-import { GameMode, Protocol } from "./protocol";
+import { GameMode, Protocol, MatchingInfo } from "./protocol";
 import { HtmlViewObject, HtmlCardsView, HtmlCardView, HtmlPlayersView,
          HtmlMessageView, HtmlButtonsView,
          HtmlDeckCharView, HtmlBoardView, HtmlDiceView } from "./html_view_parts";
@@ -468,25 +468,26 @@ export class HtmlView {
         document.getElementById("matching_button_multi_2").classList.remove("promote");
 
         // TODO: session_info should be a class instance.
-        const session_infos: any = JSON.parse(response);
-        const keys: string[] = Object.keys(session_infos);
+        const live_dict: {[key: string]: MatchingInfo} = JSON.parse(response);
+
+        const keys: string[] = Object.keys(live_dict);
 
         // Update states.
         let index: number = 1;
         this.live_session_ids = [];
         for (let key of keys) {
-            const info: any = session_infos[key];
-            if (info.is_matched) {
+            const matching_info: MatchingInfo = live_dict[key];
+            if (matching_info.is_matched) {
                 if (index > 3) {
                     continue;
                 }
-                this.live_session_ids.push(info.session_id);
+                this.live_session_ids.push(matching_info.session_id);
                 let element: HTMLElement = document.getElementById(`matching_button_watch_${index}`);
-                element.innerText = Protocol.getGameModeName(info.mode);
+                element.innerText = Protocol.getGameModeName(matching_info.mode);
                 element.classList.remove("inactive");
                 index++;
             }
-            else if (info.mode === GameMode.OnLine2Players) {
+            else if (matching_info.mode === GameMode.OnLine2Players) {
                 document.getElementById("matching_button_multi_2").classList.add("promote");
             }
         }

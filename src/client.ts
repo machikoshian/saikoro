@@ -1,6 +1,6 @@
 import { CardId } from "./facility";
 import { PlayerId } from "./board";
-import { GameMode } from "./protocol";
+import { GameMode, MatchingInfo } from "./protocol";
 
 export type RequestCallback = (response: string) => void;
 
@@ -15,6 +15,7 @@ export abstract class Connection {
     // Senders from client.
     abstract sendRequest(query: any, callback: RequestCallback): void;
     abstract matching(query: any, callback: RequestCallback): void;
+    abstract stopCheckMatching(): void;
 
     // This is for Firebase.onDisconnect only so far.
     abstract setQueryOnDisconnect(query: any): void;
@@ -24,7 +25,6 @@ export abstract class Client {
     // TODO: These variables should not be modified by others.
     public connection: Connection;
     public session_id: number = -1;
-    public matching_id: number = -1;
     public mode: GameMode = GameMode.None;
     public player_id: PlayerId = -1;
     // TODO: user_id should be unique. 0 - 9 is reserved for NPCs.
@@ -39,7 +39,6 @@ export abstract class Client {
 
     public reset(): void {
         this.session_id = -1;
-        this.matching_id = -1;
         this.mode = GameMode.None;
         this.player_id = -1;
         this.step = -1;
@@ -51,6 +50,7 @@ export abstract class Client {
         query.command = "matching";
         query.user_id = this.user_id;
         this.mode = query["mode"];
+        this.connection.stopCheckMatching();
         this.connection.matching(query, this.callbackMatching.bind(this));
     }
 
@@ -65,13 +65,17 @@ export abstract class Client {
     }
 
     private callbackMatching(response: string): void {
-        const response_json = JSON.parse(response);
+        const response_json: MatchingInfo = JSON.parse(response);
+        if (response_json == null || !response_json.is_matched) {
+            return;
+        }
+
         this.session_id = response_json.session_id;
-        this.matching_id = response_json.matching_id;
 
         this.connection.setQueryOnDisconnect(this.fillRequest(Request.quit()));
 
         this.checkUpdate();
+        this.connection.stopCheckMatching();
         this.connection.startCheckUpdate(this);
         this.connection.stopCheckLive();
     }

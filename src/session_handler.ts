@@ -3,7 +3,7 @@ import { Session } from "./session";
 import { Board, PlayerId } from "./board";
 import { CardId, CardDataId, FacilityType, Facility, CardData } from "./facility";
 import { AutoPlay } from "./auto_play";
-import { GameMode, Protocol } from "./protocol";
+import { GameMode, MatchingInfo, MatchingPlayerInfo, Protocol } from "./protocol";
 import { KeyValue, Storage } from "./storage";
 
 export class MatchedData {
@@ -155,8 +155,27 @@ export class SessionHandler {
         // TODO: Possible to delete "session/session_id" after 10mins?
     }
 
+    private createSession(session_id: number, mode: GameMode, player_infos: any[]): Session {
+        let session: Session = new Session(session_id);
+        for (let info of player_infos) {
+            this.addNewPlayer(session, info.user_id, info.name, info.deck, false);
+        }
+
+        // Add NPC.
+        const NPC_NAMES = ["ごましお", "グラ", "ヂータ", "エル", "茜", "ベリー", "兼石"];
+        const num_npc: number = Protocol.getNpcCount(mode);
+        for (let i: number = 0; i < num_npc; ++i) {
+            let npc_name: string = NPC_NAMES[Math.floor(Math.random() * NPC_NAMES.length)];
+            this.addNewPlayer(session, `${i}`, npc_name + " (NPC)", [], true);
+        }
+
+        session.startGame();
+        this.doNext(session);
+        return session;
+    }
+
     // TODO: This is a quite hacky way for testing w/o considering any race conditions.
-    public handleMatching(query: any): Promise<MatchedData> {
+    public handleMatching(query: any): Promise<KeyValue> {
         let name: string = query.name;
         let mode: GameMode = Number(query.mode);
         let user_id: string = query.user_id;
@@ -168,73 +187,79 @@ export class SessionHandler {
             // Invalid deck format. Ignore it.
         }
 
-        let num_players: number = Protocol.getPlayerCount(mode);
-        let num_npc: number = Protocol.getNpcCount(mode);
-
-        let matched_data: MatchedData = new MatchedData();
         // TODO: rename "memcache" and check the permission.
         let matching_key: string = `memcache/matching_${mode}`;
 
-        let session_id: number = -1;
+        let player_info: MatchingPlayerInfo = <MatchingPlayerInfo> {
+            user_id: user_id,
+            mode: mode,
+            name: name,
+            deck: deck,
+        };
 
         // TODO: Some operations can be performed in parallel.
         return this.storage.getWithPromise(matching_key).then((data) => {
-            let matching_id: number;
-            if (data.value) {
-                matching_id = Number(data.value);
-            } else {
-                matching_id = 10;
-            }
-            return this.storage.setWithPromise(matching_key, matching_id + 1);
-        }).then((data) => {
-            let matching_id: number = data.value - 1;
+            let matching_player_infos: {[user_id: string]: MatchingPlayerInfo};
+            matching_player_infos = data.value ? data.value : {};
+            let user_ids: string[] = Object.keys(matching_player_infos);
+            let names: string[] = [name];
 
-            // FIXIT: This is an obviously hacky way for two players. Fix it.
-            session_id = mode * 100000 + Math.floor(matching_id / num_players);
-            const session_key: string = this.getSessionKey(session_id);
+            // The number of players is not enough.
+            const num_players: number = Protocol.getPlayerCount(mode);
+            if (user_ids.length < num_players - 1) {
+                this.storage.setWithPromise(`${matching_key}/${user_id}`, player_info);
 
-            matched_data.matching_id = String(matching_id);
-            matched_data.session_id = String(session_id);
-            return this.storage.getWithPromise(session_key);
-        }).then((data) => {
-            let session_key: string = data.key;
-            let session_value: string = data.value;
-            let session: Session;
-            if (session_value) {
-                session = Session.fromJSON(JSON.parse(session_value));
-            } else {
-                session = new Session(session_id);
-            }
-
-            let player_id: PlayerId = this.addNewPlayer(session, user_id, name, deck, false);
-            matched_data.player_id = player_id;
-            let is_matched: boolean = false;
-            if (player_id === num_players - 1) {
-                // Add NPC.
-                const NPC_NAMES = ["ごましお", "グラ", "ヂータ", "エル", "茜", "ベリー", "兼石"];
-                for (let i: number = 0; i < num_npc; ++i) {
-                    let npc_name: string = NPC_NAMES[Math.floor(Math.random() * NPC_NAMES.length)];
-                    this.addNewPlayer(session, `${i}`, npc_name + " (NPC)", [], true);
+                for (let user_id of user_ids) {
+                    names.push(matching_player_infos[user_id].name);
                 }
 
-                session.startGame();
-                this.doNext(session);
-                is_matched = true;
+                const matching_info: MatchingInfo = <MatchingInfo>{
+                    mode: mode,
+                    session_id: -1,
+                    player_names: names,
+                    is_matched: false,
+                };
+                return this.storage.setWithPromise(`live/matching_${mode}`, matching_info);
+            }
+            this.storage.delete(`live/matching_${mode}`);
+
+            // Create session.
+
+            // Update player info.
+            let player_infos: MatchingPlayerInfo[] = [player_info];
+            for (let i: number = 0; i < num_players - 1; ++i) {
+                const user_id: string = user_ids[i];
+                names.push(matching_player_infos[user_id].name);
+                player_infos.push(matching_player_infos[user_id]);
+                delete matching_player_infos[user_id];
+            }
+            // TODO: Transaction.
+            this.storage.setWithPromise(matching_key, matching_player_infos);
+
+            // TODO: session_id should be exactly unique.
+            const session_id = new Date().getTime();  // Msec.
+            let session = this.createSession(session_id, mode, player_infos);
+            const session_key: string = this.getSessionKey(session_id);
+            const session_string: string = JSON.stringify(session.toJSON());
+            this.storage.setWithPromise(session_key, session_string);
+
+            const matching_info: MatchingInfo = <MatchingInfo>{
+                mode: mode,
+                session_id: session_id,
+                player_names: names,
+                is_matched: true,
+            };
+
+            // Set matched/ data.
+            for (let player of session.getPlayers()) {
+                if (player.isAuto()) {
+                    continue;
+                }
+                this.storage.setWithPromise(`matched/${player.user_id}`, matching_info);
             }
 
-            let names: string[] = session.getPlayers().map((player) => { return player.name; });
-            let info = {
-                session_id: session.session_id,
-                is_matched: is_matched,
-                mode: Number(query.mode),
-                names: names,
-            };
-            this.storage.setWithPromise(`live/session_${session.session_id}`, info);
-
-            let session_string: string = JSON.stringify(session.toJSON());
-            return this.storage.setWithPromise(session_key, session_string);
-        }).then((data) => {
-            return matched_data;
+            // Set live/ data.
+            return this.storage.setWithPromise(`live/session_${session_id}`, matching_info);
         });
     }
 
