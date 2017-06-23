@@ -61,9 +61,9 @@ export class FirebaseServer {
         this.ref_command = this.db.ref("command");
     }
 
-    public onMatching(data): Promise<{}> {
+    public onMatching(data): Promise<KeyValue> {
         let user_id: string = data.val().user_id;
-
+        this.ref_matching.child(user_id).set(null);
         return this.session_handler.handleMatching(data.val());
     }
 

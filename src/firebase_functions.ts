@@ -7,7 +7,7 @@ const storage = new FirebaseStorage();
 let session_handler: SessionHandler = new SessionHandler(storage);
 let main_firebase: FirebaseServer = new FirebaseServer(session_handler);
 
-exports.matching = functions.database.ref("/matching/{pushId}").onWrite(event => {
+exports.matching = functions.database.ref("/matching/{saikoro_user_id}").onWrite(event => {
     if (!event.data.exists()) {
         return;
     }

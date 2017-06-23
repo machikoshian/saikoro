@@ -43,7 +43,7 @@ export class FirebaseConnection extends Connection {
     }
 
     public startCheckUpdate(client: Client): void {
-        this.ref_session = firebase.database().ref(`/session/session_${client.session_id}`);
+        this.ref_session = firebase.database().ref(`session/session_${client.session_id}`);
         this.ref_session.on("value", (snapshot) => {
             let value = snapshot.val();
             if (!value) {
@@ -63,7 +63,7 @@ export class FirebaseConnection extends Connection {
         if (!query.user_id) {
             return;
         }
-        this.ref_matched = firebase.database().ref(`/matched/${query.user_id}`);
+        this.ref_matched = firebase.database().ref(`matched/${query.user_id}`);
         this.ref_matched.on("value", (snapshot) => {
             let value = snapshot.val();
             if (!value) {
@@ -71,7 +71,7 @@ export class FirebaseConnection extends Connection {
             }
             callback(JSON.stringify(value));
         });
-        firebase.database().ref("matching").push(query);
+        firebase.database().ref(`/matching/${query.user_id}`).set(query);
     }
     public stopCheckMatching(): void {
         if (this.ref_matched) {

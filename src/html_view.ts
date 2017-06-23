@@ -111,7 +111,8 @@ export class HtmlView {
 
     private reset(): void {
         this.client.reset();
-        this.prev_session = new Session();
+        this.session = null;
+        this.prev_session = null;
         this.prev_step = -1;
         this.clicked_field = [-1, -1];
 
@@ -151,14 +152,11 @@ export class HtmlView {
         document.getElementById("matching_button_multi_2").addEventListener(
             "click", () => { this.onClickMatching(GameMode.OnLine2Players); });
         // 3 and 4 players are not supported yet.
-        document.getElementById("matching_button_multi_3").classList.remove("promote");
-        document.getElementById("matching_button_multi_3").classList.add("inactive");
         // document.getElementById("matching_button_multi_3").addEventListener(
         //     "click", () => { this.onClickMatching(GameMode.OnLine2Players); });
         // document.getElementById("matching_button_multi_4").addEventListener(
         //     "click", () => { this.onClickMatching(GameMode.OnLine2Players); });
 
-        document.getElementById("matching_button_watch_1").classList.add("inactive");
         document.getElementById("matching_button_watch_1").addEventListener(
             "click", () => { this.onClickWatch(0); });
 
@@ -239,6 +237,21 @@ export class HtmlView {
         this.switchScene(Scene.Matching);
     }
 
+    private resetMatchingButtons(): void {
+        // Reset states.
+        for (let i: number = 1; i <= 3; i++) {
+            let element: HTMLElement = document.getElementById(`matching_button_watch_${i}`);
+            element.innerText = "準備中";
+            element.classList.add("inactive");
+        }
+        document.getElementById("matching_button_multi_2").classList.remove("promote");
+        document.getElementById("matching_button_multi_3").classList.remove("promote");
+        document.getElementById("matching_button_multi_3").classList.add("inactive");
+        document.getElementById("matching_button_multi_4").classList.remove("promote");
+        document.getElementById("matching_button_multi_4").classList.add("inactive");
+        document.getElementById("matching_button_watch_1").classList.add("inactive");
+    }
+
     private switchScene(scene: Scene): void {
         if (this.scene === scene) {
             return;
@@ -248,6 +261,8 @@ export class HtmlView {
 
         // Hide all
         document.getElementById("matching").style.display = "none";
+        this.resetMatchingButtons();
+        this.resetBoard();
         this.back_button_view.none();
         this.players_view.none();
         this.message_view.none();
@@ -459,6 +474,7 @@ export class HtmlView {
     }
 
     private onLiveSessionsUpdated(response: string): void {
+        this.resetMatchingButtons();
         // Reset states.
         for (let i: number = 1; i <= 3; i++) {
             let element: HTMLElement = document.getElementById(`matching_button_watch_${i}`);
@@ -650,7 +666,10 @@ export class HtmlView {
             return;
         }
         this.session = session;
-
+        if (this.prev_session == null) {
+            this.drawSession(session);
+            return;
+        }
         // Show event animations.
         this.drawEvents();
     }
@@ -690,6 +709,11 @@ export class HtmlView {
 
         this.field_card_view.draw(this.session, card_id);
         this.field_card_view.showAt(this.getPosition((x < 6) ? "click_10_1" : "click_0_1"));
+    }
+
+    private resetBoard(): void {
+        // TODO: Do more efficient way.
+        this.drawBoard(new Session(-1));
     }
 
     public drawBoard(session: Session): void {  // session may take a different value.
