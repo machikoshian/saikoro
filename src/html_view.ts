@@ -25,6 +25,7 @@ const COLOR_PURPLE: string = "#B39DDB";
 
 enum Scene {
     None,
+    Home,
     Matching,
     Deck,
     Game,
@@ -178,7 +179,7 @@ export class HtmlView {
 
         // buttons.
         this.back_button_view = new HtmlViewObject(document.getElementById("back"));
-        this.back_button_view.addClickListener(() => { this.switchScene(Scene.Matching); });
+        this.back_button_view.addClickListener(() => { this.switchScene(Scene.Home); });
 
         this.reset_button_view = new HtmlViewObject(document.getElementById("reset"));
         this.reset_button_view.addClickListener(() => { this.onResetGame(); });
@@ -234,7 +235,7 @@ export class HtmlView {
         // Money motion
         this.money_motion_view = new HtmlViewObject(document.getElementById("money_motion"));
 
-        this.switchScene(Scene.Matching);
+        this.switchScene(Scene.Home);
     }
 
     private resetMatchingButtons(): void {
@@ -260,7 +261,7 @@ export class HtmlView {
         this.scene = scene;
 
         // Hide all
-        document.getElementById("matching").style.display = "none";
+        document.getElementById("home").style.display = "none";
         this.resetMatchingButtons();
         this.resetBoard();
         this.back_button_view.none();
@@ -278,8 +279,8 @@ export class HtmlView {
         }
         this.field_card_view.none();
 
-        if (scene === Scene.Matching) {
-            document.getElementById("matching").style.display = "";
+        if (scene === Scene.Home) {
+            document.getElementById("home").style.display = "";
 
             this.client.startCheckLive((response: string) => {
                 this.onLiveSessionsUpdated(response);
@@ -298,6 +299,11 @@ export class HtmlView {
                 card_view.none();
             }
             return;
+        }
+
+        if (scene === Scene.Matching) {
+            this.message_view.show();
+            this.reset_button_view.show();
         }
 
         if (scene === Scene.Game) {
@@ -319,7 +325,7 @@ export class HtmlView {
     private onResetGame(): void {
         this.client.sendRequest(Request.quit());
         this.reset();
-        this.switchScene(Scene.Matching);
+        this.switchScene(Scene.Home);
     }
 
     private onClickPlayer(target_player_id: PlayerId): void {
@@ -383,7 +389,7 @@ export class HtmlView {
 
     private onClickField(x: number, y: number): void {
         console.log(`clicked: field_${x}_${y}`);
-        if (this.scene === Scene.Matching) {
+        if (this.scene === Scene.Home || this.scene === Scene.Matching) {
             return;
         }
 
@@ -470,7 +476,7 @@ export class HtmlView {
 
         this.client.matching(Request.matching(name, mode, deck));
         this.message_view.drawMessage("通信中です", this.getPlayerColor(this.client.player_id));
-        this.switchScene(Scene.Game);
+        this.switchScene(Scene.Matching);
     }
 
     private onLiveSessionsUpdated(response: string): void {
@@ -520,7 +526,7 @@ export class HtmlView {
 
     private onClickCard(player: number, card: number): void {
         // Event on matching.
-        if (this.scene === Scene.Matching) {
+        if (this.scene === Scene.Home || this.scene === Scene.Matching) {
             return;
         }
         if (this.scene === Scene.Deck) {
