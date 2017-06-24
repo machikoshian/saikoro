@@ -178,6 +178,9 @@ export class HtmlView {
 
         // Chat
         this.chat_button_view = new HtmlChatButtonView("chat", "stamp_box");
+        this.chat_button_view.callback = (index: number) => {
+            this.onClickStamp(index);
+        };
 
         // watchers.
         this.watchers_view = new HtmlViewObject(document.getElementById("watchers"));
@@ -324,8 +327,8 @@ export class HtmlView {
             if (Protocol.getPlayerCount(this.client.mode) < 2) {
                 this.reset_button_view.show();
             }
-            this.chat_button_view.hide();
-            // this.chat_button_view.show();
+            // this.chat_button_view.hide();
+            this.chat_button_view.show();
             return;
         }
     }
@@ -425,6 +428,11 @@ export class HtmlView {
                                         this.clicked_card_view.element_id, `field_${x}_${y}`);
             return true;
         }, 1000);
+    }
+
+    private onClickStamp(index: number): void {
+        const element_id: string = this.players_view.players[this.client.player_id].element.id;
+        this.chat_button_view.showStampAt(index, element_id);
     }
 
     private isRequestReady(): boolean {

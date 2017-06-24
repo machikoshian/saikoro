@@ -661,7 +661,9 @@ export class HtmlDiceView extends HtmlViewObject {
 
 export class HtmlChatButtonView extends HtmlViewObject {
     public stamp_box: HtmlViewObject;
-    public is_visibile: boolean = false;
+    private stamps: HtmlViewObject[] = [];
+    private prev_stamps: { [element_id: string]: HtmlViewObject } = {};
+    public is_visible: boolean = false;
     public callback: (index: number) => void = null;
 
     constructor(readonly element_id: string, readonly stamp_box_id: string) {
@@ -669,28 +671,52 @@ export class HtmlChatButtonView extends HtmlViewObject {
         this.stamp_box = new HtmlViewObject(document.getElementById(stamp_box_id));
         this.stamp_box.none();
 
-        this.addClickListener(this.toggleStampBox);
+        this.addClickListener(() => { this.toggleStampBox(); });
 
         let stamp_elements = this.stamp_box.element.getElementsByClassName("stamp");
         for (let i: number = 0; i < stamp_elements.length; ++i) {
-            let stamp = stamp_elements[i];
-            stamp.addEventListener("click", () => {
+            let stamp: HtmlViewObject = new HtmlViewObject(<HTMLElement>stamp_elements[i]);
+            stamp.addClickListener(() => {
                 if (this.callback) {
                     this.callback(i);
                 }
+                this.showStampBox(false);
             });
+            this.stamps.push(stamp);
         }
     }
 
-    private toggleStampBox(): void {
-        if (this.is_visibile) {
-            this.is_visibile = false;
-            this.stamp_box.none();
-            return;
-        }
+    public showStampAt(index: number, element_id: string): void {
+        let stamp: HtmlViewObject = this.stamps[index].clone();
+        stamp.show();
+        stamp.showAt(stamp.getPositionAlignedWithElementId(element_id));
+        window.setTimeout(() => {
+            if (this.prev_stamps[element_id] === stamp) {
+                delete this.prev_stamps[element_id];
+            }
+            stamp.remove();
+        }, 2000);
 
-        this.is_visibile = true;
-        this.stamp_box.show();
-        this.stamp_box.showAt(this.stamp_box.getPositionAlignedWithElementId("board"));
+        let prev_stamp: HtmlViewObject = this.prev_stamps[element_id];
+        if (prev_stamp) {
+            prev_stamp.none();
+        }
+        this.prev_stamps[element_id] = stamp;
+    }
+
+    private toggleStampBox(): void {
+        this.showStampBox(!this.is_visible);
+    }
+
+    private showStampBox(is_visible: boolean): void {
+        if (is_visible) {
+            this.is_visible = true;
+            this.stamp_box.show();
+            this.stamp_box.showAt(this.stamp_box.getPositionAlignedWithElementId("board"));
+        }
+        else {
+            this.is_visible = false;
+            this.stamp_box.none();
+        }
     }
 }
