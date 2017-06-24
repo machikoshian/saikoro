@@ -5,6 +5,10 @@
 * size=2 施設を上書きするとアニメーションがおかしくなる。
 * HybridConnection の機能を Client に移す
 
+* firebase の観戦モードの情報が消えない
+* firebase で以前の session データが残ったまま
+* onDisconnect が動いていない？
+
 * dice1, dice2 を配列に
 * 使っていない tsconfig-es6.json の削除
 * event.target_card_ids を event.buildFacility でも使う。

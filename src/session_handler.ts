@@ -119,18 +119,22 @@ export class SessionHandler {
     }
 
     public handleCommand(query: any): Promise<KeyValue> {
-        if (query.session_id == undefined) {
+        const session_id = (query.session_id != undefined) ? Number(query.session_id) : -1;
+        const mode = Number(query.mode);
+        if (session_id === -1) {
             // Quit from matching.
             if (query.command === "quit") {
                 // TODO: rename "memcache" and check the permission.
-                let matching_key: string = this.getMacthingKey(query.mode);
+                let matching_key: string = this.getMacthingKey(mode);
                 return this.storage.deleteWithPromise(`${matching_key}/${query.user_id}`).then((data) => {
-                    return this.updateMatching(query.mode);
+                    return this.updateMatching(mode);
+                }).then((data) => {
+                    return new KeyValue(data.key, "{}");
                 });
             }
         }
 
-        let session_key: string = this.getSessionKey(query.session_id);
+        let session_key: string = this.getSessionKey(session_id);
         let session: Session;
         let updated: boolean = false;
         return this.storage.getWithPromise(session_key).then((data) => {
@@ -223,6 +227,10 @@ export class SessionHandler {
 
         // The number of players is not enough.
         const num_players: number = Protocol.getPlayerCount(mode);
+        if (user_ids.length === 0) {
+            return this.storage.deleteWithPromise(`live/matching_${mode}`);
+        }
+
         if (user_ids.length < num_players) {
             for (let user_id of user_ids) {
                 names.push(matching_player_infos[user_id].name);

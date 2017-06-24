@@ -34,11 +34,11 @@ body {
     -2px -2px 3px #444;
 }
 
-#matching {
+#home {
     width: 590px;
     margin: 70px;
 }
-#matching small {
+#home small {
     font-size: 12px;
     margin-left: 1em;
 }
@@ -51,7 +51,7 @@ body {
 #matching_name {
     font-size: 20px;
 }
-#matching hr {
+#home hr {
     margin-left: 5px;
     width: 490px;
 }

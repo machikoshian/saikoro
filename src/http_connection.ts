@@ -71,7 +71,7 @@ export class HttpConnection extends Connection {
         HttpRequest.send("/live", callback);
         this.check_live_timer = window.setInterval(() => {
             HttpRequest.send("/live", callback);
-        }, 30000);
+        }, 10000);
     }
     public stopCheckLive(): void {
         window.clearInterval(this.check_live_timer);
