@@ -3344,6 +3344,11 @@ var HtmlView = (function () {
         }
     };
     HtmlView.prototype.updateView = function (session, player_id) {
+        if (this.scene === Scene.Matching) {
+            this.session = session;
+            this.switchScene(Scene.Game);
+            return;
+        }
         if (this.scene !== Scene.Game) {
             return;
         }
