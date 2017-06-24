@@ -196,69 +196,69 @@ export class SessionHandler {
             deck: deck,
         };
 
-        // TODO: Some operations can be performed in parallel.
-        return this.storage.getWithPromise(matching_key).then((data) => {
-            let matching_player_infos: {[user_id: string]: MatchingPlayerInfo};
-            matching_player_infos = data.value ? data.value : {};
-            let user_ids: string[] = Object.keys(matching_player_infos);
-            let names: string[] = [name];
+        return this.storage.setWithPromise(`${matching_key}/${user_id}`, player_info).then((data) => {
+            // TODO: Some operations can be performed in parallel.
+            return this.storage.getWithPromise(matching_key).then((data) => {
+                let matching_player_infos: {[user_id: string]: MatchingPlayerInfo};
+                matching_player_infos = data.value ? data.value : {};
+                let user_ids: string[] = Object.keys(matching_player_infos);
+                let names: string[] = [name];
 
-            // The number of players is not enough.
-            const num_players: number = Protocol.getPlayerCount(mode);
-            if (user_ids.length < num_players - 1) {
-                this.storage.setWithPromise(`${matching_key}/${user_id}`, player_info);
+                // The number of players is not enough.
+                const num_players: number = Protocol.getPlayerCount(mode);
+                if (user_ids.length < num_players) {
+                    for (let user_id of user_ids) {
+                        names.push(matching_player_infos[user_id].name);
+                    }
 
-                for (let user_id of user_ids) {
-                    names.push(matching_player_infos[user_id].name);
+                    const matching_info: MatchingInfo = <MatchingInfo>{
+                        mode: mode,
+                        session_id: -1,
+                        player_names: names,
+                        is_matched: false,
+                    };
+                    return this.storage.setWithPromise(`live/matching_${mode}`, matching_info);
                 }
+                this.storage.delete(`live/matching_${mode}`);
+
+                // Create session.
+
+                // Update player info.
+                let player_infos: MatchingPlayerInfo[] = [player_info];
+                for (let i: number = 0; i < num_players; ++i) {
+                    const user_id: string = user_ids[i];
+                    names.push(matching_player_infos[user_id].name);
+                    player_infos.push(matching_player_infos[user_id]);
+                    delete matching_player_infos[user_id];
+                }
+                // TODO: Transaction.
+                this.storage.setWithPromise(matching_key, matching_player_infos);
+
+                // TODO: session_id should be exactly unique.
+                const session_id = new Date().getTime();  // Msec.
+                let session = this.createSession(session_id, mode, player_infos);
+                const session_key: string = this.getSessionKey(session_id);
+                const session_string: string = JSON.stringify(session.toJSON());
+                this.storage.setWithPromise(session_key, session_string);
 
                 const matching_info: MatchingInfo = <MatchingInfo>{
                     mode: mode,
-                    session_id: -1,
+                    session_id: session_id,
                     player_names: names,
-                    is_matched: false,
+                    is_matched: true,
                 };
-                return this.storage.setWithPromise(`live/matching_${mode}`, matching_info);
-            }
-            this.storage.delete(`live/matching_${mode}`);
 
-            // Create session.
-
-            // Update player info.
-            let player_infos: MatchingPlayerInfo[] = [player_info];
-            for (let i: number = 0; i < num_players - 1; ++i) {
-                const user_id: string = user_ids[i];
-                names.push(matching_player_infos[user_id].name);
-                player_infos.push(matching_player_infos[user_id]);
-                delete matching_player_infos[user_id];
-            }
-            // TODO: Transaction.
-            this.storage.setWithPromise(matching_key, matching_player_infos);
-
-            // TODO: session_id should be exactly unique.
-            const session_id = new Date().getTime();  // Msec.
-            let session = this.createSession(session_id, mode, player_infos);
-            const session_key: string = this.getSessionKey(session_id);
-            const session_string: string = JSON.stringify(session.toJSON());
-            this.storage.setWithPromise(session_key, session_string);
-
-            const matching_info: MatchingInfo = <MatchingInfo>{
-                mode: mode,
-                session_id: session_id,
-                player_names: names,
-                is_matched: true,
-            };
-
-            // Set matched/ data.
-            for (let player of session.getPlayers()) {
-                if (player.isAuto()) {
-                    continue;
+                // Set matched/ data.
+                for (let player of session.getPlayers()) {
+                    if (player.isAuto()) {
+                        continue;
+                    }
+                    this.storage.setWithPromise(`matched/${player.user_id}`, matching_info);
                 }
-                this.storage.setWithPromise(`matched/${player.user_id}`, matching_info);
-            }
 
-            // Set live/ data.
-            return this.storage.setWithPromise(`live/session_${session_id}`, matching_info);
+                // Set live/ data.
+                return this.storage.setWithPromise(`live/session_${session_id}`, matching_info);
+            });
         });
     }
 
