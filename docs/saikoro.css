@@ -181,7 +181,6 @@ table.player { width: 160px; }
 
 #buttons {
     display: inline-block;
-    margin-left: 34px;
     width: 460px;
 }
 #buttons div {
@@ -189,10 +188,20 @@ table.player { width: 160px; }
     vertical-align: top;
 }
 
+#chat {
+    display: inline-block;
+    vertical-align: top;
+    width: 20px;
+    height: 40px;
+    padding: 20px;
+    font-size: 25px;
+    background-color: #FFCA28;
+    border-radius: 10px;
+}
 #watchers {
     display: inline-block;
     vertical-align: top;
-    width: 120px;
+    width: 85px;
     height: 40px;
     padding: 20px;
     background-color: rgba(200, 200, 200, 0.4);
@@ -246,6 +255,74 @@ table.card {
 }
 .card_description {
     font-size: 12px; height: 70px;
+}
+
+/* ---- Stamps ---- */
+
+.stamp_box {
+    width: 310px;
+    height: 150px;
+    background-color: #607D8B;
+    opacity: 0.9;
+    padding: 10px;
+    border-radius: 10px;
+    border-style: solid;
+    border-width: 3px;
+    border-color: rgba(0, 0, 0, 0.2);
+}
+
+.stamp_box .stamp {
+    vertical-align: top;
+    display: inline-block;
+}
+
+.stamp {
+    width: 140px;
+    height: 45px;
+    font-size: 20px;
+    padding-top: 15px;
+    text-align: center;
+    background-color: rgba(255, 255, 255, 0.6);
+    border-radius: 10px;
+    font-weight: bold;
+    margin: 5px;
+}
+
+.konnichiwa {
+    color: red;
+    text-shadow:
+      1px 1px 1px white,
+     -1px 1px 1px white,
+     1px -1px 1px white,
+    -1px -1px 1px white;
+}
+
+.dokidoki {
+    color: yellow;
+    text-shadow:
+      1px 1px 1px red,
+     -1px 1px 1px red,
+     1px -1px 1px red,
+    -1px -1px 1px red;
+}
+
+.sugoi {
+    color: lightblue;
+    text-shadow:
+     1px 1px 1px blue,
+    -1px 1px 1px blue,
+    1px -1px 1px blue,
+   -1px -1px 1px blue;
+}
+
+.otsukare {
+    font-size: 17px;
+    color: yellow;
+    text-shadow:
+     1px 1px 1px green,
+    -1px 1px 1px green,
+    1px -1px 1px green,
+   -1px -1px 1px green;
 }
 
 /* ---- Dice ---- */

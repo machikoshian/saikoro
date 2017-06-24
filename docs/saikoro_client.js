@@ -332,6 +332,14 @@ var GameMode;
     GameMode[GameMode["OnLineWatch"] = 8] = "OnLineWatch";
 })(GameMode = exports.GameMode || (exports.GameMode = {}));
 ;
+var StampId;
+(function (StampId) {
+    StampId[StampId["None"] = 0] = "None";
+    StampId[StampId["Hello"] = 1] = "Hello";
+    StampId[StampId["Doki"] = 2] = "Doki";
+    StampId[StampId["Sugoi"] = 3] = "Sugoi";
+    StampId[StampId["Otsukare"] = 4] = "Otsukare";
+})(StampId = exports.StampId || (exports.StampId = {}));
 var Protocol = (function () {
     function Protocol() {
     }
@@ -2853,6 +2861,7 @@ var HtmlView = (function () {
         this.dice_widget_view = null;
         this.money_motion_view = null;
         this.message_view = null;
+        this.chat_button_view = null;
         this.buttons_view = null;
         this.watchers_view = null;
         this.scene = Scene.None;
@@ -2906,6 +2915,8 @@ var HtmlView = (function () {
         // Widgets
         this.card_widget_view = new html_view_parts_1.HtmlCardView("card_widget");
         this.dice_widget_view = new html_view_parts_1.HtmlDiceView("dice_widget");
+        // Chat
+        this.chat_button_view = new html_view_parts_1.HtmlChatButtonView("chat", "stamp_box");
         // watchers.
         this.watchers_view = new html_view_parts_1.HtmlViewObject(document.getElementById("watchers"));
         // buttons.
@@ -2996,6 +3007,7 @@ var HtmlView = (function () {
         this.message_view.none();
         this.board_view.none();
         this.deck_char_view.none();
+        this.chat_button_view.none();
         this.watchers_view.none();
         this.buttons_view.none();
         this.landmarks_view.none();
@@ -3040,6 +3052,8 @@ var HtmlView = (function () {
             if (protocol_1.Protocol.getPlayerCount(this.client.mode) < 2) {
                 this.reset_button_view.show();
             }
+            this.chat_button_view.hide();
+            // this.chat_button_view.show();
             return;
         }
     };
@@ -3217,7 +3231,7 @@ var HtmlView = (function () {
         if (index >= this.live_session_ids.length) {
             return;
         }
-        this.switchScene(Scene.Game);
+        this.switchScene(Scene.Matching);
         this.message_view.drawMessage("通信中です", this.getPlayerColor(this.client.player_id));
         this.client.watchGame(this.live_session_ids[index]);
     };
@@ -3346,7 +3360,8 @@ var HtmlView = (function () {
     HtmlView.prototype.updateView = function (session, player_id) {
         if (this.scene === Scene.Matching) {
             this.session = session;
-            this.prev_step = session.getStep();
+            this.prev_step = session.getStep() - 1;
+            this.prev_session = session;
             this.switchScene(Scene.Game);
             return;
         }
@@ -3354,11 +3369,6 @@ var HtmlView = (function () {
             return;
         }
         this.session = session;
-        if (this.prev_session == null) {
-            this.prev_step = session.getStep();
-            this.drawSession(session);
-            return;
-        }
         // Show event animations.
         this.drawEvents();
     };
@@ -3518,7 +3528,7 @@ var HtmlView = (function () {
             this.watchers_view.hide();
             return;
         }
-        this.watchers_view.element.innerText = watchers_length + "\u4EBA\u304C\u89B3\u6226\u4E2D";
+        this.watchers_view.element.innerText = watchers_length + "\u4EBA\u89B3\u6226\u4E2D";
         this.watchers_view.show();
     };
     HtmlView.prototype.drawSession = function (session) {
@@ -4419,6 +4429,44 @@ var HtmlDiceView = (function (_super) {
     return HtmlDiceView;
 }(HtmlViewObject));
 exports.HtmlDiceView = HtmlDiceView;
+var HtmlChatButtonView = (function (_super) {
+    __extends(HtmlChatButtonView, _super);
+    function HtmlChatButtonView(element_id, stamp_box_id) {
+        var _this = _super.call(this, document.getElementById(element_id)) || this;
+        _this.element_id = element_id;
+        _this.stamp_box_id = stamp_box_id;
+        _this.is_visibile = false;
+        _this.callback = null;
+        _this.stamp_box = new HtmlViewObject(document.getElementById(stamp_box_id));
+        _this.stamp_box.none();
+        _this.addClickListener(_this.toggleStampBox);
+        var stamp_elements = _this.stamp_box.element.getElementsByClassName("stamp");
+        var _loop_5 = function (i) {
+            var stamp = stamp_elements[i];
+            stamp.addEventListener("click", function () {
+                if (_this.callback) {
+                    _this.callback(i);
+                }
+            });
+        };
+        for (var i = 0; i < stamp_elements.length; ++i) {
+            _loop_5(i);
+        }
+        return _this;
+    }
+    HtmlChatButtonView.prototype.toggleStampBox = function () {
+        if (this.is_visibile) {
+            this.is_visibile = false;
+            this.stamp_box.none();
+            return;
+        }
+        this.is_visibile = true;
+        this.stamp_box.show();
+        this.stamp_box.showAt(this.stamp_box.getPositionAlignedWithElementId("board"));
+    };
+    return HtmlChatButtonView;
+}(HtmlViewObject));
+exports.HtmlChatButtonView = HtmlChatButtonView;
 
 
 /***/ }),
