@@ -113,6 +113,10 @@ export class SessionHandler {
     private getSessionKey(session_id: number): string {
         return `session/session_${session_id}`;
     }
+    private getMacthingKey(mode: GameMode): string {
+        // TODO: rename "memcache" and check the permission.
+        return `memcache/matching_${mode}`;
+    }
 
     public handleCommand(query: any): Promise<KeyValue> {
         if (query.session_id == undefined) {
@@ -186,8 +190,7 @@ export class SessionHandler {
             // Invalid deck format. Ignore it.
         }
 
-        // TODO: rename "memcache" and check the permission.
-        let matching_key: string = `memcache/matching_${mode}`;
+        let matching_key: string = this.getMacthingKey(mode);
 
         let player_info: MatchingPlayerInfo = <MatchingPlayerInfo> {
             user_id: user_id,
@@ -201,65 +204,72 @@ export class SessionHandler {
             return this.storage.getWithPromise(matching_key).then((data) => {
                 let matching_player_infos: {[user_id: string]: MatchingPlayerInfo};
                 matching_player_infos = data.value ? data.value : {};
-                let user_ids: string[] = Object.keys(matching_player_infos);
-                let names: string[] = [name];
-
-                // The number of players is not enough.
-                const num_players: number = Protocol.getPlayerCount(mode);
-                if (user_ids.length < num_players) {
-                    for (let user_id of user_ids) {
-                        names.push(matching_player_infos[user_id].name);
-                    }
-
-                    const matching_info: MatchingInfo = <MatchingInfo>{
-                        mode: mode,
-                        session_id: -1,
-                        player_names: names,
-                        is_matched: false,
-                    };
-                    return this.storage.setWithPromise(`live/matching_${mode}`, matching_info);
-                }
-                this.storage.delete(`live/matching_${mode}`);
-
-                // Create session.
-
-                // Update player info.
-                let player_infos: MatchingPlayerInfo[] = [player_info];
-                for (let i: number = 0; i < num_players; ++i) {
-                    const user_id: string = user_ids[i];
-                    names.push(matching_player_infos[user_id].name);
-                    player_infos.push(matching_player_infos[user_id]);
-                    delete matching_player_infos[user_id];
-                }
-                // TODO: Transaction.
-                this.storage.setWithPromise(matching_key, matching_player_infos);
-
-                // TODO: session_id should be exactly unique.
-                const session_id = new Date().getTime();  // Msec.
-                let session = this.createSession(session_id, mode, player_infos);
-                const session_key: string = this.getSessionKey(session_id);
-                const session_string: string = JSON.stringify(session.toJSON());
-                this.storage.setWithPromise(session_key, session_string);
-
-                const matching_info: MatchingInfo = <MatchingInfo>{
-                    mode: mode,
-                    session_id: session_id,
-                    player_names: names,
-                    is_matched: true,
-                };
-
-                // Set matched/ data.
-                for (let player of session.getPlayers()) {
-                    if (player.isAuto()) {
-                        continue;
-                    }
-                    this.storage.setWithPromise(`matched/${player.user_id}`, matching_info);
-                }
-
-                // Set live/ data.
-                return this.storage.setWithPromise(`live/session_${session_id}`, matching_info);
+                return this.updateMatching(mode, matching_player_infos);
             });
         });
+    }
+
+    // TODO: This is a quite hacky way for testing w/o considering any race conditions.
+    public updateMatching(mode: GameMode,
+                          matching_player_infos: {[user_id: string]: MatchingPlayerInfo}): Promise<KeyValue> {
+        let user_ids: string[] = Object.keys(matching_player_infos);
+        let names: string[] = [];
+
+        // The number of players is not enough.
+        const num_players: number = Protocol.getPlayerCount(mode);
+        if (user_ids.length < num_players) {
+            for (let user_id of user_ids) {
+                names.push(matching_player_infos[user_id].name);
+            }
+
+            const matching_info: MatchingInfo = <MatchingInfo>{
+                mode: mode,
+                session_id: -1,
+                player_names: names,
+                is_matched: false,
+            };
+            return this.storage.setWithPromise(`live/matching_${mode}`, matching_info);
+        }
+
+        this.storage.deleteWithPromise(`live/matching_${mode}`);
+
+        // Create session.
+
+        // Update player info.
+        let player_infos: MatchingPlayerInfo[] = [];
+        for (let i: number = 0; i < num_players; ++i) {
+            const user_id: string = user_ids[i];
+            names.push(matching_player_infos[user_id].name);
+            player_infos.push(matching_player_infos[user_id]);
+            delete matching_player_infos[user_id];
+        }
+        // TODO: Transaction.
+        this.storage.setWithPromise(this.getMacthingKey(mode), matching_player_infos);
+
+        // TODO: session_id should be exactly unique.
+        const session_id = new Date().getTime();  // Msec.
+        let session = this.createSession(session_id, mode, player_infos);
+        const session_key: string = this.getSessionKey(session_id);
+        const session_string: string = JSON.stringify(session.toJSON());
+        this.storage.setWithPromise(session_key, session_string);
+
+        const matching_info: MatchingInfo = <MatchingInfo>{
+            mode: mode,
+            session_id: session_id,
+            player_names: names,
+            is_matched: true,
+        };
+
+        // Set matched/ data.
+        for (let player of session.getPlayers()) {
+            if (player.isAuto()) {
+                continue;
+            }
+            this.storage.setWithPromise(`matched/${player.user_id}`, matching_info);
+        }
+
+        // Set live/ data.
+        return this.storage.setWithPromise(`live/session_${session_id}`, matching_info);
     }
 
     public addNewPlayer(session: Session, user_id: string, name: string,
