@@ -1245,6 +1245,14 @@ var Session = (function () {
         this.step++;
         return true;
     };
+    Session.prototype.quitGame = function (user_id) {
+        this.removeWatcher(user_id);
+        var player_id = this.getPlayerId(user_id);
+        if (player_id === -1) {
+            return false;
+        }
+        return this.quit(player_id);
+    };
     Session.prototype.getEvents = function () {
         return this.events;
     };
@@ -1394,6 +1402,7 @@ var Client = (function () {
         query.user_id = this.user_id;
         this.mode = query["mode"];
         this.connection.stopCheckMatching();
+        this.connection.setQueryOnDisconnect(this.fillRequest(Request.quit()));
         this.connection.matching(query, this.callbackMatching.bind(this));
     };
     Client.prototype.checkUpdate = function () {
@@ -1784,6 +1793,13 @@ var LocalStorage = (function (_super) {
     };
     LocalStorage.prototype.delete = function (key) {
         this.deleteValue(key);
+    };
+    LocalStorage.prototype.deleteWithPromise = function (key) {
+        this.deleteValue(key);
+        return new Promise(function (resolve, reject) {
+            var data = new KeyValue(key, null);
+            resolve(data);
+        });
     };
     LocalStorage.prototype.getKeys = function () {
         return Object.keys(this.storage);
@@ -2769,9 +2785,10 @@ var COLOR_PURPLE = "#B39DDB";
 var Scene;
 (function (Scene) {
     Scene[Scene["None"] = 0] = "None";
-    Scene[Scene["Matching"] = 1] = "Matching";
-    Scene[Scene["Deck"] = 2] = "Deck";
-    Scene[Scene["Game"] = 3] = "Game";
+    Scene[Scene["Home"] = 1] = "Home";
+    Scene[Scene["Matching"] = 2] = "Matching";
+    Scene[Scene["Deck"] = 3] = "Deck";
+    Scene[Scene["Game"] = 4] = "Game";
 })(Scene || (Scene = {}));
 var EventQueue = (function () {
     function EventQueue() {
@@ -2893,7 +2910,7 @@ var HtmlView = (function () {
         this.watchers_view = new html_view_parts_1.HtmlViewObject(document.getElementById("watchers"));
         // buttons.
         this.back_button_view = new html_view_parts_1.HtmlViewObject(document.getElementById("back"));
-        this.back_button_view.addClickListener(function () { _this.switchScene(Scene.Matching); });
+        this.back_button_view.addClickListener(function () { _this.switchScene(Scene.Home); });
         this.reset_button_view = new html_view_parts_1.HtmlViewObject(document.getElementById("reset"));
         this.reset_button_view.addClickListener(function () { _this.onResetGame(); });
         this.buttons_view = new html_view_parts_1.HtmlButtonsView("buttons", this.dice_widget_view);
@@ -2948,7 +2965,7 @@ var HtmlView = (function () {
         this.field_card_view = new html_view_parts_1.HtmlCardView("field_card");
         // Money motion
         this.money_motion_view = new html_view_parts_1.HtmlViewObject(document.getElementById("money_motion"));
-        this.switchScene(Scene.Matching);
+        this.switchScene(Scene.Home);
     };
     HtmlView.prototype.resetMatchingButtons = function () {
         // Reset states.
@@ -2971,7 +2988,7 @@ var HtmlView = (function () {
         }
         this.scene = scene;
         // Hide all
-        document.getElementById("matching").style.display = "none";
+        document.getElementById("home").style.display = "none";
         this.resetMatchingButtons();
         this.resetBoard();
         this.back_button_view.none();
@@ -2988,8 +3005,8 @@ var HtmlView = (function () {
             cards_view.none();
         }
         this.field_card_view.none();
-        if (scene === Scene.Matching) {
-            document.getElementById("matching").style.display = "";
+        if (scene === Scene.Home) {
+            document.getElementById("home").style.display = "";
             this.client.startCheckLive(function (response) {
                 _this.onLiveSessionsUpdated(response);
             });
@@ -3006,6 +3023,10 @@ var HtmlView = (function () {
                 card_view.none();
             }
             return;
+        }
+        if (scene === Scene.Matching) {
+            this.message_view.show();
+            this.reset_button_view.show();
         }
         if (scene === Scene.Game) {
             // Show components for game.
@@ -3025,7 +3046,7 @@ var HtmlView = (function () {
     HtmlView.prototype.onResetGame = function () {
         this.client.sendRequest(client_1.Request.quit());
         this.reset();
-        this.switchScene(Scene.Matching);
+        this.switchScene(Scene.Home);
     };
     HtmlView.prototype.onClickPlayer = function (target_player_id) {
         if (this.session.getPhase() !== session_1.Phase.FacilityActionWithInteraction) {
@@ -3084,7 +3105,7 @@ var HtmlView = (function () {
     HtmlView.prototype.onClickField = function (x, y) {
         var _this = this;
         console.log("clicked: field_" + x + "_" + y);
-        if (this.scene === Scene.Matching) {
+        if (this.scene === Scene.Home || this.scene === Scene.Matching) {
             return;
         }
         if (this.scene === Scene.Deck) {
@@ -3157,7 +3178,7 @@ var HtmlView = (function () {
         var deck = document.getElementById("deck").value;
         this.client.matching(client_1.Request.matching(name, mode, deck));
         this.message_view.drawMessage("通信中です", this.getPlayerColor(this.client.player_id));
-        this.switchScene(Scene.Game);
+        this.switchScene(Scene.Matching);
     };
     HtmlView.prototype.onLiveSessionsUpdated = function (response) {
         this.resetMatchingButtons();
@@ -3202,7 +3223,7 @@ var HtmlView = (function () {
     };
     HtmlView.prototype.onClickCard = function (player, card) {
         // Event on matching.
-        if (this.scene === Scene.Matching) {
+        if (this.scene === Scene.Home || this.scene === Scene.Matching) {
             return;
         }
         if (this.scene === Scene.Deck) {
@@ -4507,15 +4528,9 @@ var SessionHandler = (function () {
             }
         }
         else if (query.command === "quit") {
-            var player_id = Number(query.player_id);
-            if (player_id !== -1) {
-                if (session.quit(player_id)) {
-                    this.doNext(session);
-                }
-            }
-            else {
-                var user_id = String(query.user_id);
-                session.removeWatcher(user_id);
+            var user_id = String(query.user_id);
+            if (session.quitGame(user_id)) {
+                this.doNext(session);
             }
         }
         else if (query.command === "watch") {
@@ -4527,12 +4542,27 @@ var SessionHandler = (function () {
     SessionHandler.prototype.getSessionKey = function (session_id) {
         return "session/session_" + session_id;
     };
+    SessionHandler.prototype.getMacthingKey = function (mode) {
+        // TODO: rename "memcache" and check the permission.
+        return "memcache/matching_" + mode;
+    };
     SessionHandler.prototype.handleCommand = function (query) {
         var _this = this;
-        if (query.session_id == undefined) {
-            return;
+        var session_id = (query.session_id != undefined) ? Number(query.session_id) : -1;
+        var mode = Number(query.mode);
+        if (session_id === -1) {
+            // Quit from matching.
+            if (query.command === "quit") {
+                // TODO: rename "memcache" and check the permission.
+                var matching_key = this.getMacthingKey(mode);
+                return this.storage.deleteWithPromise(matching_key + "/" + query.user_id).then(function (data) {
+                    return _this.updateMatching(mode);
+                }).then(function (data) {
+                    return new storage_1.KeyValue(data.key, "{}");
+                });
+            }
         }
-        var session_key = this.getSessionKey(query.session_id);
+        var session_key = this.getSessionKey(session_id);
         var session;
         var updated = false;
         return this.storage.getWithPromise(session_key).then(function (data) {
@@ -4566,7 +4596,7 @@ var SessionHandler = (function () {
             this.addNewPlayer(session, info.user_id, info.name, info.deck, false);
         }
         // Add NPC.
-        var NPC_NAMES = ["ごましお", "グラ", "ヂータ", "エル", "茜", "ベリー", "兼石"];
+        var NPC_NAMES = ["ごましお", "グラ", "ヂータ", "エル", "茜", "ベリー", "兼石", "ハルカ"];
         var num_npc = protocol_1.Protocol.getNpcCount(mode);
         for (var i = 0; i < num_npc; ++i) {
             var npc_name = NPC_NAMES[Math.floor(Math.random() * NPC_NAMES.length)];
@@ -4590,76 +4620,92 @@ var SessionHandler = (function () {
         catch (e) {
             // Invalid deck format. Ignore it.
         }
-        // TODO: rename "memcache" and check the permission.
-        var matching_key = "memcache/matching_" + mode;
+        var matching_key = this.getMacthingKey(mode);
         var player_info = {
             user_id: user_id,
             mode: mode,
             name: name,
             deck: deck,
         };
-        // TODO: Some operations can be performed in parallel.
+        return this.storage.setWithPromise(matching_key + "/" + user_id, player_info).then(function (data) {
+            return _this.updateMatching(mode);
+        });
+    };
+    SessionHandler.prototype.updateMatching = function (mode) {
+        var _this = this;
+        var matching_key = this.getMacthingKey(mode);
         return this.storage.getWithPromise(matching_key).then(function (data) {
             var matching_player_infos;
             matching_player_infos = data.value ? data.value : {};
-            var user_ids = Object.keys(matching_player_infos);
-            var names = [name];
-            // The number of players is not enough.
-            var num_players = protocol_1.Protocol.getPlayerCount(mode);
-            if (user_ids.length < num_players - 1) {
-                _this.storage.setWithPromise(matching_key + "/" + user_id, player_info);
-                for (var _i = 0, user_ids_1 = user_ids; _i < user_ids_1.length; _i++) {
-                    var user_id_1 = user_ids_1[_i];
-                    names.push(matching_player_infos[user_id_1].name);
-                }
-                var matching_info_1 = {
-                    mode: mode,
-                    session_id: -1,
-                    player_names: names,
-                    is_matched: false,
-                };
-                return _this.storage.setWithPromise("live/matching_" + mode, matching_info_1);
+            return _this.processMatching(mode, matching_player_infos);
+        });
+    };
+    // TODO: This is a quite hacky way for testing w/o considering any race conditions.
+    SessionHandler.prototype.processMatching = function (mode, matching_player_infos) {
+        var user_ids = Object.keys(matching_player_infos);
+        var names = [];
+        // The number of players is not enough.
+        var num_players = protocol_1.Protocol.getPlayerCount(mode);
+        if (user_ids.length === 0) {
+            return this.storage.deleteWithPromise("live/matching_" + mode);
+        }
+        if (user_ids.length < num_players) {
+            for (var _i = 0, user_ids_1 = user_ids; _i < user_ids_1.length; _i++) {
+                var user_id = user_ids_1[_i];
+                names.push(matching_player_infos[user_id].name);
             }
-            _this.storage.delete("live/matching_" + mode);
-            // Create session.
-            // Update player info.
-            var player_infos = [player_info];
-            for (var i = 0; i < num_players - 1; ++i) {
-                var user_id_2 = user_ids[i];
-                names.push(matching_player_infos[user_id_2].name);
-                player_infos.push(matching_player_infos[user_id_2]);
-                delete matching_player_infos[user_id_2];
-            }
-            // TODO: Transaction.
-            _this.storage.setWithPromise(matching_key, matching_player_infos);
-            // TODO: session_id should be exactly unique.
-            var session_id = new Date().getTime(); // Msec.
-            var session = _this.createSession(session_id, mode, player_infos);
-            var session_key = _this.getSessionKey(session_id);
-            var session_string = JSON.stringify(session.toJSON());
-            _this.storage.setWithPromise(session_key, session_string);
-            var matching_info = {
+            var matching_info_1 = {
                 mode: mode,
-                session_id: session_id,
+                session_id: -1,
                 player_names: names,
-                is_matched: true,
+                is_matched: false,
             };
-            // Set matched/ data.
-            for (var _a = 0, _b = session.getPlayers(); _a < _b.length; _a++) {
-                var player = _b[_a];
-                if (player.isAuto()) {
-                    continue;
-                }
-                _this.storage.setWithPromise("matched/" + player.user_id, matching_info);
+            return this.storage.setWithPromise("live/matching_" + mode, matching_info_1);
+        }
+        var promises = [];
+        promises.push(this.storage.deleteWithPromise("live/matching_" + mode));
+        // Create session.
+        // Update player info.
+        var matching_key = this.getMacthingKey(mode);
+        var player_infos = [];
+        for (var i = 0; i < num_players; ++i) {
+            var user_id = user_ids[i];
+            names.push(matching_player_infos[user_id].name);
+            player_infos.push(matching_player_infos[user_id]);
+            promises.push(this.storage.deleteWithPromise(matching_key + "/" + user_id));
+        }
+        // TODO: session_id should be exactly unique.
+        var session_id = new Date().getTime(); // Msec.
+        var session = this.createSession(session_id, mode, player_infos);
+        var session_key = this.getSessionKey(session_id);
+        var session_string = JSON.stringify(session.toJSON());
+        promises.push(this.storage.setWithPromise(session_key, session_string));
+        var matching_info = {
+            mode: mode,
+            session_id: session_id,
+            player_names: names,
+            is_matched: true,
+        };
+        // Set matched/ data.
+        for (var _a = 0, _b = session.getPlayers(); _a < _b.length; _a++) {
+            var player = _b[_a];
+            if (player.isAuto()) {
+                continue;
             }
-            // Set live/ data.
-            return _this.storage.setWithPromise("live/session_" + session_id, matching_info);
+            promises.push(this.storage.setWithPromise("matched/" + player.user_id, matching_info));
+        }
+        // Set live/ data.
+        promises.push(this.storage.setWithPromise("live/session_" + session_id, matching_info));
+        return Promise.all(promises).then(function (data) {
+            // Return the last item (key: live/session_${session_id}).
+            return data[data.length - 1];
         });
     };
     SessionHandler.prototype.addNewPlayer = function (session, user_id, name, deck, is_auto) {
         var player_id = session.addPlayer(user_id, name, 1200, 250, is_auto);
         var num_facilities = 0;
         var num_chars = 0;
+        deck = deck ? deck : [];
         for (var _i = 0, deck_1 = deck; _i < deck_1.length; _i++) {
             var data_id = deck_1[_i];
             if (facility_1.CardData.isFacility(data_id)) {
