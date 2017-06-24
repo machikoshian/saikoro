@@ -123,8 +123,10 @@ export class SessionHandler {
             // Quit from matching.
             if (query.command === "quit") {
                 // TODO: rename "memcache" and check the permission.
-                let matching_key: string = `memcache/matching_${query.mode}`;
-                return this.storage.deleteWithPromise(`${matching_key}/${query.user_id}`);
+                let matching_key: string = this.getMacthingKey(query.mode);
+                return this.storage.deleteWithPromise(`${matching_key}/${query.user_id}`).then((data) => {
+                    return this.updateMatching(query.mode);
+                });
             }
         }
 
@@ -190,7 +192,7 @@ export class SessionHandler {
             // Invalid deck format. Ignore it.
         }
 
-        let matching_key: string = this.getMacthingKey(mode);
+        const matching_key: string = this.getMacthingKey(mode);
 
         let player_info: MatchingPlayerInfo = <MatchingPlayerInfo> {
             user_id: user_id,
@@ -200,18 +202,22 @@ export class SessionHandler {
         };
 
         return this.storage.setWithPromise(`${matching_key}/${user_id}`, player_info).then((data) => {
-            // TODO: Some operations can be performed in parallel.
-            return this.storage.getWithPromise(matching_key).then((data) => {
-                let matching_player_infos: {[user_id: string]: MatchingPlayerInfo};
-                matching_player_infos = data.value ? data.value : {};
-                return this.updateMatching(mode, matching_player_infos);
-            });
+            return this.updateMatching(mode);
+        });
+    }
+
+    public updateMatching(mode: GameMode): Promise<KeyValue> {
+        const matching_key: string = this.getMacthingKey(mode);
+        return this.storage.getWithPromise(matching_key).then((data) => {
+            let matching_player_infos: {[user_id: string]: MatchingPlayerInfo};
+            matching_player_infos = data.value ? data.value : {};
+            return this.processMatching(mode, matching_player_infos);
         });
     }
 
     // TODO: This is a quite hacky way for testing w/o considering any race conditions.
-    public updateMatching(mode: GameMode,
-                          matching_player_infos: {[user_id: string]: MatchingPlayerInfo}): Promise<KeyValue> {
+    public processMatching(mode: GameMode,
+                           matching_player_infos: {[user_id: string]: MatchingPlayerInfo}): Promise<KeyValue> {
         let user_ids: string[] = Object.keys(matching_player_infos);
         let names: string[] = [];
 
@@ -231,27 +237,28 @@ export class SessionHandler {
             return this.storage.setWithPromise(`live/matching_${mode}`, matching_info);
         }
 
-        this.storage.deleteWithPromise(`live/matching_${mode}`);
+        let promises: Promise<KeyValue>[] = [];
+
+        promises.push(this.storage.deleteWithPromise(`live/matching_${mode}`));
 
         // Create session.
 
         // Update player info.
+        let matching_key: string = this.getMacthingKey(mode);
         let player_infos: MatchingPlayerInfo[] = [];
         for (let i: number = 0; i < num_players; ++i) {
             const user_id: string = user_ids[i];
             names.push(matching_player_infos[user_id].name);
             player_infos.push(matching_player_infos[user_id]);
-            delete matching_player_infos[user_id];
+            promises.push(this.storage.deleteWithPromise(`${matching_key}/${user_id}`));
         }
-        // TODO: Transaction.
-        this.storage.setWithPromise(this.getMacthingKey(mode), matching_player_infos);
 
         // TODO: session_id should be exactly unique.
         const session_id = new Date().getTime();  // Msec.
         let session = this.createSession(session_id, mode, player_infos);
         const session_key: string = this.getSessionKey(session_id);
         const session_string: string = JSON.stringify(session.toJSON());
-        this.storage.setWithPromise(session_key, session_string);
+        promises.push(this.storage.setWithPromise(session_key, session_string));
 
         const matching_info: MatchingInfo = <MatchingInfo>{
             mode: mode,
@@ -265,11 +272,15 @@ export class SessionHandler {
             if (player.isAuto()) {
                 continue;
             }
-            this.storage.setWithPromise(`matched/${player.user_id}`, matching_info);
+            promises.push(this.storage.setWithPromise(`matched/${player.user_id}`, matching_info));
         }
 
         // Set live/ data.
-        return this.storage.setWithPromise(`live/session_${session_id}`, matching_info);
+        promises.push(this.storage.setWithPromise(`live/session_${session_id}`, matching_info));
+        return Promise.all(promises).then((data) => {
+            // Return the last item (key: live/session_${session_id}).
+            return data[data.length - 1];
+        });
     }
 
     public addNewPlayer(session: Session, user_id: string, name: string,
