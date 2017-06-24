@@ -668,6 +668,12 @@ export class HtmlView {
     }
 
     public updateView(session: Session, player_id: PlayerId): void {
+        if (this.scene === Scene.Matching) {
+            this.session = session;
+            this.switchScene(Scene.Game);
+            return;
+        }
+
         if (this.scene !== Scene.Game) {
             return;
         }
