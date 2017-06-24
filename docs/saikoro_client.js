@@ -3346,6 +3346,7 @@ var HtmlView = (function () {
     HtmlView.prototype.updateView = function (session, player_id) {
         if (this.scene === Scene.Matching) {
             this.session = session;
+            this.prev_step = session.getStep();
             this.switchScene(Scene.Game);
             return;
         }
@@ -3354,6 +3355,7 @@ var HtmlView = (function () {
         }
         this.session = session;
         if (this.prev_session == null) {
+            this.prev_step = session.getStep();
             this.drawSession(session);
             return;
         }
