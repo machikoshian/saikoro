@@ -670,6 +670,7 @@ export class HtmlView {
     public updateView(session: Session, player_id: PlayerId): void {
         if (this.scene === Scene.Matching) {
             this.session = session;
+            this.prev_step = session.getStep();
             this.switchScene(Scene.Game);
             return;
         }
@@ -679,6 +680,7 @@ export class HtmlView {
         }
         this.session = session;
         if (this.prev_session == null) {
+            this.prev_step = session.getStep();
             this.drawSession(session);
             return;
         }
