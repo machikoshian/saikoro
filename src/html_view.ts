@@ -9,7 +9,8 @@ import { DeckMaker } from "./deck_maker";
 import { GameMode, Protocol, MatchingInfo } from "./protocol";
 import { HtmlViewObject, HtmlCardsView, HtmlCardView, HtmlPlayersView,
          HtmlMessageView, HtmlButtonsView,
-         HtmlDeckCharView, HtmlBoardView, HtmlDiceView } from "./html_view_parts";
+         HtmlDeckCharView, HtmlBoardView, HtmlDiceView,
+         HtmlChatButtonView } from "./html_view_parts";
 
 const COLOR_FIELD: string = "#FFF8E1";
 const COLOR_LANDMARK: string = "#B0BEC5";
@@ -98,6 +99,7 @@ export class HtmlView {
     private dice_widget_view: HtmlDiceView = null;
     private money_motion_view: HtmlViewObject = null;
     private message_view: HtmlMessageView = null;
+    private chat_button_view: HtmlChatButtonView = null;
     private buttons_view: HtmlButtonsView = null;
     private watchers_view: HtmlViewObject = null;
     private scene: Scene = Scene.None;
@@ -173,6 +175,9 @@ export class HtmlView {
         // Widgets
         this.card_widget_view = new HtmlCardView("card_widget");
         this.dice_widget_view = new HtmlDiceView("dice_widget");
+
+        // Chat
+        this.chat_button_view = new HtmlChatButtonView("chat", "stamp_box");
 
         // watchers.
         this.watchers_view = new HtmlViewObject(document.getElementById("watchers"));
@@ -269,6 +274,7 @@ export class HtmlView {
         this.message_view.none();
         this.board_view.none();
         this.deck_char_view.none();
+        this.chat_button_view.none();
         this.watchers_view.none();
         this.buttons_view.none();
         this.landmarks_view.none();
@@ -318,6 +324,8 @@ export class HtmlView {
             if (Protocol.getPlayerCount(this.client.mode) < 2) {
                 this.reset_button_view.show();
             }
+            this.chat_button_view.hide();
+            // this.chat_button_view.show();
             return;
         }
     }
@@ -519,7 +527,7 @@ export class HtmlView {
         if (index >= this.live_session_ids.length) {
             return;
         }
-        this.switchScene(Scene.Game);
+        this.switchScene(Scene.Matching);
         this.message_view.drawMessage("通信中です", this.getPlayerColor(this.client.player_id));
         this.client.watchGame(this.live_session_ids[index]);
     }
@@ -670,7 +678,8 @@ export class HtmlView {
     public updateView(session: Session, player_id: PlayerId): void {
         if (this.scene === Scene.Matching) {
             this.session = session;
-            this.prev_step = session.getStep();
+            this.prev_step = session.getStep() - 1;
+            this.prev_session = session;
             this.switchScene(Scene.Game);
             return;
         }
@@ -679,11 +688,6 @@ export class HtmlView {
             return;
         }
         this.session = session;
-        if (this.prev_session == null) {
-            this.prev_step = session.getStep();
-            this.drawSession(session);
-            return;
-        }
         // Show event animations.
         this.drawEvents();
     }
@@ -869,7 +873,7 @@ export class HtmlView {
             this.watchers_view.hide();
             return;
         }
-        this.watchers_view.element.innerText = `${watchers_length}人が観戦中`;
+        this.watchers_view.element.innerText = `${watchers_length}人観戦中`;
         this.watchers_view.show();
     }
 

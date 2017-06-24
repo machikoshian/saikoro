@@ -17,13 +17,26 @@ export interface MatchingPlayerInfo {
     deck: number[],
 }
 
-// TODO: Unify MatchingInfo and MatchedInfo.
-
 export interface MatchingInfo {
     mode: GameMode,
     session_id: number,
     player_names: string[],
     is_matched: boolean,
+}
+
+export enum StampId {
+    None,
+    Hello,
+    Doki,
+    Sugoi,
+    Otsukare,
+}
+
+export interface ChatMessage {
+    session_id: number,
+    user_id: string,
+    stamp_id: StampId,
+    timestamp: number,
 }
 
 export class Protocol {

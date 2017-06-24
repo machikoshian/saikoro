@@ -658,3 +658,39 @@ export class HtmlDiceView extends HtmlViewObject {
         super(document.getElementById(element_id));
     }
 }
+
+export class HtmlChatButtonView extends HtmlViewObject {
+    public stamp_box: HtmlViewObject;
+    public is_visibile: boolean = false;
+    public callback: (index: number) => void = null;
+
+    constructor(readonly element_id: string, readonly stamp_box_id: string) {
+        super(document.getElementById(element_id));
+        this.stamp_box = new HtmlViewObject(document.getElementById(stamp_box_id));
+        this.stamp_box.none();
+
+        this.addClickListener(this.toggleStampBox);
+
+        let stamp_elements = this.stamp_box.element.getElementsByClassName("stamp");
+        for (let i: number = 0; i < stamp_elements.length; ++i) {
+            let stamp = stamp_elements[i];
+            stamp.addEventListener("click", () => {
+                if (this.callback) {
+                    this.callback(i);
+                }
+            });
+        }
+    }
+
+    private toggleStampBox(): void {
+        if (this.is_visibile) {
+            this.is_visibile = false;
+            this.stamp_box.none();
+            return;
+        }
+
+        this.is_visibile = true;
+        this.stamp_box.show();
+        this.stamp_box.showAt(this.stamp_box.getPositionAlignedWithElementId("board"));
+    }
+}
