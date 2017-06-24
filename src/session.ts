@@ -952,6 +952,15 @@ export class Session {
         return true;
     }
 
+    public quitGame(user_id: string): boolean {
+        this.removeWatcher(user_id);
+        const player_id: number = this.getPlayerId(user_id);
+        if (player_id === -1) {
+            return false;
+        }
+        return this.quit(player_id);
+    }
+
     public getEvents(): Event[] {
         return this.events;
     }

@@ -10,6 +10,8 @@ export abstract class Storage {
     abstract delete(key: string): void;
     abstract getWithPromise(key: string): Promise<KeyValue>;
     abstract setWithPromise(key: string, value: any): Promise<KeyValue>;
+    abstract deleteWithPromise(key: string): Promise<KeyValue>;
+
     public getKeysForDebug(): string[] {
         return [];
     }
@@ -96,6 +98,14 @@ export class LocalStorage extends Storage {
 
     public delete(key: string): void {
         this.deleteValue(key);
+    }
+
+    public deleteWithPromise(key: string): Promise<KeyValue> {
+        this.deleteValue(key);
+        return new Promise<KeyValue>((resolve, reject) => {
+            let data: KeyValue = new KeyValue(key, null);
+            resolve(data);
+        });
     }
 
     public getKeys(): string[] {

@@ -96,15 +96,9 @@ export class SessionHandler {
         }
 
         else if (query.command === "quit") {
-            const player_id: PlayerId = Number(query.player_id);
-            if (player_id !== -1) {
-                if (session.quit(player_id)) {
-                    this.doNext(session);
-                }
-            }
-            else {
-                const user_id: string = String(query.user_id);
-                session.removeWatcher(user_id);
+            const user_id: string = String(query.user_id);
+            if (session.quitGame(user_id)) {
+                this.doNext(session);
             }
         }
 
@@ -122,7 +116,12 @@ export class SessionHandler {
 
     public handleCommand(query: any): Promise<KeyValue> {
         if (query.session_id == undefined) {
-            return;
+            // Quit from matching.
+            if (query.command === "quit") {
+                // TODO: rename "memcache" and check the permission.
+                let matching_key: string = `memcache/matching_${query.mode}`;
+                return this.storage.deleteWithPromise(`${matching_key}/${query.user_id}`);
+            }
         }
 
         let session_key: string = this.getSessionKey(query.session_id);
@@ -162,7 +161,7 @@ export class SessionHandler {
         }
 
         // Add NPC.
-        const NPC_NAMES = ["ごましお", "グラ", "ヂータ", "エル", "茜", "ベリー", "兼石"];
+        const NPC_NAMES = ["ごましお", "グラ", "ヂータ", "エル", "茜", "ベリー", "兼石", "ハルカ"];
         const num_npc: number = Protocol.getNpcCount(mode);
         for (let i: number = 0; i < num_npc; ++i) {
             let npc_name: string = NPC_NAMES[Math.floor(Math.random() * NPC_NAMES.length)];

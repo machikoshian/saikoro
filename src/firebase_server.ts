@@ -44,6 +44,13 @@ export class FirebaseStorage extends Storage {
         let db = firebase_admin.database();
         db.ref(key).set(null);
     }
+
+    public deleteWithPromise(key: string): Promise<KeyValue> {
+        let db = firebase_admin.database();
+        return db.ref(key).set(null).then((snapshot) => {
+            return new KeyValue(key, null);
+        });
+    }
 }
 
 export class FirebaseServer {

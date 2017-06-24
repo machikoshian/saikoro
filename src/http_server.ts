@@ -51,6 +51,14 @@ export class MemcacheStorage extends Storage {
     public delete(key: string): void {
         this.memcache.delete(key, null);
     }
+
+    public deleteWithPromise(key: string): Promise<KeyValue> {
+        return new Promise<KeyValue>((resolve, reject) => {
+            this.memcache.delete(key, (err, value) => {
+                resolve(new KeyValue(key, null));
+            }, 600);
+        });
+    }
 }
 
 export class GameInformation {

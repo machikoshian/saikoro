@@ -51,6 +51,7 @@ export abstract class Client {
         query.user_id = this.user_id;
         this.mode = query["mode"];
         this.connection.stopCheckMatching();
+        this.connection.setQueryOnDisconnect(this.fillRequest(Request.quit()));
         this.connection.matching(query, this.callbackMatching.bind(this));
     }
 
