@@ -1919,9 +1919,6 @@ var WebClient = (function (_super) {
         }
         this.no_update_count = 0;
         var session = session_1.Session.fromJSON(JSON.parse(response));
-        if (session.getPhase() === session_1.Phase.EndGame) {
-            this.connection.stopCheckUpdate();
-        }
         var step = session.getStep();
         console.log(step);
         if (step === this.step) {
@@ -2915,6 +2912,9 @@ var HtmlView = (function () {
         if (row === void 0) { row = 5; }
         if (column === void 0) { column = 12; }
         document.getElementById("widgets").style.display = "none";
+        var NAMES = ["コロまる", "ごましお", "グラ", "ヂータ", "エル", "茜", "ベリー", "兼石", "ハルカ"];
+        var name_index = Math.floor(Math.random() * NAMES.length);
+        document.getElementById("matching_name").value = NAMES[name_index];
         // Add click listeners.
         // Matching.
         document.getElementById("matching_button_deck").addEventListener("click", function () { _this.switchScene(Scene.Deck); });
