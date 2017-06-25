@@ -48,11 +48,6 @@ export class WebClient extends Client {
         this.no_update_count = 0;
 
         let session: Session = Session.fromJSON(JSON.parse(response));
-
-        if (session.getPhase() === Phase.EndGame) {
-            this.connection.stopCheckUpdate();
-        }
-
         let step: number = session.getStep();
         console.log(step);
         if (step === this.step) {
