@@ -49,7 +49,7 @@ export class FirebaseConnection extends Connection {
             if (!value) {
                 return;
             }
-            client.callback(value);
+            client.callbackSession(value);
         });
     }
     public stopCheckUpdate(): void {

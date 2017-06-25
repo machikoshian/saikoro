@@ -695,7 +695,7 @@ export class HtmlChatButtonView extends HtmlViewObject {
                 delete this.prev_stamps[element_id];
             }
             stamp.remove();
-        }, 2000);
+        }, 3000);
 
         let prev_stamp: HtmlViewObject = this.prev_stamps[element_id];
         if (prev_stamp) {

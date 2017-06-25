@@ -117,6 +117,19 @@ export class HttpServer {
         }
 
         if (pathname === "/data") {
+            if (query.command === "set") {
+                let value: any = JSON.parse(query.value);
+                this.session_handler.storage.setWithPromise(query.key, value).then((data: KeyValue) => {
+                    if (data.value == undefined) {
+                        response.end("null");
+                        return;
+                    }
+                    response.end(JSON.stringify(data.value));
+                });
+                return;
+            }
+
+            // Get.
             this.session_handler.storage.getWithPromise(query.key).then((data: KeyValue) => {
                 if (data.value == undefined) {
                     response.end("null");

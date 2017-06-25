@@ -30,12 +30,14 @@ export abstract class Client {
     // TODO: user_id should be unique. 0 - 9 is reserved for NPCs.
     public user_id: string = String(Math.floor(Math.random() * 1000000) + 10);
     public step: number = -1;
-    public callback: RequestCallback;
     public live_sessions: number[] = [];
 
     constructor(connection: Connection) {
         this.connection = connection;
     }
+
+    abstract callbackSession(response: string): void;
+    abstract callbackChat(response: string): void;
 
     public reset(): void {
         this.session_id = -1;
@@ -97,7 +99,9 @@ export abstract class Client {
     }
 
     public sendRequest(request: any): void {
-        this.connection.sendRequest(this.fillRequest(request), this.callback);
+        this.connection.sendRequest(this.fillRequest(request), (response) => {
+            this.callbackSession(response);
+        });
     }
 
     public fillRequest(request: any): any {
@@ -119,6 +123,14 @@ export class Request {
             name: name,
             mode: mode,
             deck: deck,
+        };
+    }
+
+    static chat(stamp_id: number): Object {
+        return {
+            command: "chat",
+            stamp_id: stamp_id,
+            timestamp: new Date().getTime(),
         };
     }
 

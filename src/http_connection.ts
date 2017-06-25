@@ -10,8 +10,7 @@ class HttpRequest {
         xhr.open("GET", url, true);
     }
 
-    static onReadyStateChange(xhr: XMLHttpRequest,
-        callback: (response: string) => void): void {
+    static onReadyStateChange(xhr: XMLHttpRequest, callback: RequestCallback): void {
         switch (xhr.readyState) {
             case XMLHttpRequest.OPENED:
                 xhr.send();
@@ -22,7 +21,9 @@ class HttpRequest {
             case XMLHttpRequest.LOADING:
                 break;
             case XMLHttpRequest.DONE:
-                callback(xhr.responseText);
+                if (callback != null) {
+                    callback(xhr.responseText);
+                }
                 break;
         }
     }
@@ -37,7 +38,12 @@ export class HttpConnection extends Connection {
         if (this.check_update_timer != null) {
             return;
         }
-        this.check_update_timer = window.setInterval(() => { client.checkUpdate(); }, 2000);
+        this.check_update_timer = window.setInterval(() => {
+            client.checkUpdate();
+            this.getData(`chat/${client.session_id}`, (value) => {
+                client.callbackChat(value);
+            });
+        }, 2000);
     }
     public stopCheckUpdate(): void {
         window.clearInterval(this.check_update_timer);
@@ -50,7 +56,7 @@ export class HttpConnection extends Connection {
         }).join("&");
 
         this.check_matched_timer = window.setInterval(() => {
-            HttpRequest.send(`/data?key=matched/${query.user_id}`, callback);
+            this.getData(`matched/${query.user_id}`, callback);
         }, 2000);
         HttpRequest.send("/matching?" + params, callback);
     }
@@ -78,7 +84,32 @@ export class HttpConnection extends Connection {
         this.check_live_timer = null;
     }
 
+    private getData(key: string, callback: RequestCallback): void {
+        const ekey: string = encodeURIComponent(key);
+        HttpRequest.send(`/data?command=get&key=${ekey}`, callback);
+    }
+
+    private setData(key: string, value: string, callback: RequestCallback): void {
+        const ekey: string = encodeURIComponent(key);
+        const evalue: string = encodeURIComponent(value);
+        HttpRequest.send(`/data?command=set&key=${ekey}&value=${evalue}`, callback);
+    }
+
+    private sendChat(query: any): void {
+        if (query.session_id === -1 || query.user_id == null) {
+            return;
+        }
+        const key: string = `chat/${query.session_id}/${query.user_id}`;
+        const value: string = JSON.stringify(query);
+        this.setData(key, value, null);
+    }
+
     public sendRequest(query: any, callback: RequestCallback): void {
+        if (query.command === "chat") {
+            this.sendChat(query);
+            return;
+        }
+
         let params: string = Object.keys(query).map((key) => {
             return encodeURIComponent(key) + "=" + encodeURIComponent(query[key]);
         }).join("&");

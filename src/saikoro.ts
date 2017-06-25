@@ -7,11 +7,10 @@ import { GameMode } from "./protocol";
 export class WebClient extends Client {
     private no_update_count: number = 0;
     private view: HtmlView;
-    public callback: RequestCallback;
+    private chat_timestamps: { [user_id: string]: number } = {};
 
     constructor(connection: Connection) {
         super(connection);
-        this.callback =  this.callbackSession.bind(this);
         this.view = new HtmlView(this);
     }
 
@@ -24,9 +23,7 @@ export class WebClient extends Client {
         this.view.initView();
     }
 
-    // Do not directly call this method.
-    // Use this.callback.bind(this) as a wrapper of this method.
-    private callbackSession(response: string): void {
+    public callbackSession(response: string): void {
         if (this.mode === GameMode.None) {
             return;
         }
@@ -66,5 +63,23 @@ export class WebClient extends Client {
         this.step = step;
 
         this.view.updateView(session, this.player_id);
+    }
+
+    public callbackChat(response: string): void {
+        let data: {[user_id: string]: {}} = JSON.parse(response);
+        if (data == null) {
+            return;
+        }
+        const user_ids: string[] = Object.keys(data);
+
+        for (let user_id of user_ids) {
+            const chat: any = data[user_id];
+            const prev_timestamp: number = this.chat_timestamps[user_id];
+            if (chat.timestamp == undefined || chat.timestamp === prev_timestamp) {
+                continue;
+            }
+            this.view.updateChat(chat);
+            this.chat_timestamps[user_id] = chat.timestamp;
+        }
     }
 }

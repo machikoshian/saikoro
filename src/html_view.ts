@@ -433,6 +433,21 @@ export class HtmlView {
     private onClickStamp(index: number): void {
         const element_id: string = this.players_view.players[this.client.player_id].element.id;
         this.chat_button_view.showStampAt(index, element_id);
+        this.client.sendRequest(Request.chat(index));
+    }
+
+    // The format of chat is same with fillRequest(Request.chat(stamp_id)).
+    public updateChat(chat: any): void {
+        if (chat.user_id === this.client.user_id) {
+            return;
+        }
+
+        const player_id: number = this.session.getPlayerId(chat.user_id);
+        let element_id: string = "watchers";
+        if (player_id !== -1) {
+            element_id = this.players_view.players[player_id].element.id;
+        }
+        this.chat_button_view.showStampAt(chat.stamp_id, element_id);
     }
 
     private isRequestReady(): boolean {
