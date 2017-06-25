@@ -133,6 +133,10 @@ export class HtmlView {
     public initView(row: number = 5, column: number = 12): void {
         document.getElementById("widgets").style.display = "none";
 
+        const NAMES = ["コロまる", "ごましお", "グラ", "ヂータ", "エル", "茜", "ベリー", "兼石", "ハルカ"];
+        const name_index = Math.floor(Math.random() * NAMES.length);
+         (<HTMLInputElement>document.getElementById("matching_name")).value = NAMES[name_index];
+
         // Add click listeners.
         // Matching.
         document.getElementById("matching_button_deck").addEventListener(
