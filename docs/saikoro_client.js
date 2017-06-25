@@ -1447,7 +1447,10 @@ var Client = (function () {
         this.connection.stopCheckLive();
     };
     Client.prototype.sendRequest = function (request) {
-        this.connection.sendRequest(this.fillRequest(request), this.callback);
+        var _this = this;
+        this.connection.sendRequest(this.fillRequest(request), function (response) {
+            _this.callbackSession(response);
+        });
     };
     Client.prototype.fillRequest = function (request) {
         request.user_id = this.user_id;
@@ -1469,6 +1472,13 @@ var Request = (function () {
             name: name,
             mode: mode,
             deck: deck,
+        };
+    };
+    Request.chat = function (stamp_id) {
+        return {
+            command: "chat",
+            stamp_id: stamp_id,
+            timestamp: new Date().getTime(),
         };
     };
     Request.buildFacility = function (x, y, card_id) {
@@ -1877,7 +1887,7 @@ var WebClient = (function (_super) {
     function WebClient(connection) {
         var _this = _super.call(this, connection) || this;
         _this.no_update_count = 0;
-        _this.callback = _this.callbackSession.bind(_this);
+        _this.chat_timestamps = {};
         _this.view = new html_view_1.HtmlView(_this);
         return _this;
     }
@@ -1888,8 +1898,6 @@ var WebClient = (function (_super) {
     WebClient.prototype.initBoard = function () {
         this.view.initView();
     };
-    // Do not directly call this method.
-    // Use this.callback.bind(this) as a wrapper of this method.
     WebClient.prototype.callbackSession = function (response) {
         if (this.mode === protocol_1.GameMode.None) {
             return;
@@ -1923,6 +1931,22 @@ var WebClient = (function (_super) {
         this.player_id = session.getPlayerId(this.user_id);
         this.step = step;
         this.view.updateView(session, this.player_id);
+    };
+    WebClient.prototype.callbackChat = function (data) {
+        if (data == null) {
+            return;
+        }
+        var user_ids = Object.keys(data);
+        for (var _i = 0, user_ids_1 = user_ids; _i < user_ids_1.length; _i++) {
+            var user_id = user_ids_1[_i];
+            var chat = data[user_id];
+            var prev_timestamp = this.chat_timestamps[user_id];
+            if (chat.timestamp == undefined || chat.timestamp === prev_timestamp) {
+                continue;
+            }
+            this.view.updateChat(chat);
+            this.chat_timestamps[user_id] = chat.timestamp;
+        }
     };
     return WebClient;
 }(client_1.Client));
@@ -2917,6 +2941,9 @@ var HtmlView = (function () {
         this.dice_widget_view = new html_view_parts_1.HtmlDiceView("dice_widget");
         // Chat
         this.chat_button_view = new html_view_parts_1.HtmlChatButtonView("chat", "stamp_box");
+        this.chat_button_view.callback = function (index) {
+            _this.onClickStamp(index);
+        };
         // watchers.
         this.watchers_view = new html_view_parts_1.HtmlViewObject(document.getElementById("watchers"));
         // buttons.
@@ -3052,8 +3079,8 @@ var HtmlView = (function () {
             if (protocol_1.Protocol.getPlayerCount(this.client.mode) < 2) {
                 this.reset_button_view.show();
             }
-            this.chat_button_view.hide();
-            // this.chat_button_view.show();
+            // this.chat_button_view.hide();
+            this.chat_button_view.show();
             return;
         }
     };
@@ -3143,6 +3170,25 @@ var HtmlView = (function () {
             return true;
         }, 1000);
     };
+    HtmlView.prototype.showStamp = function (stamp_id, player_id) {
+        var element_id = "watchers";
+        if (player_id !== -1) {
+            element_id = this.players_view.players[player_id].element.id;
+        }
+        this.chat_button_view.showStampAt(stamp_id, element_id);
+    };
+    HtmlView.prototype.onClickStamp = function (index) {
+        this.showStamp(index, this.client.player_id);
+        this.client.sendRequest(client_1.Request.chat(index));
+    };
+    // The format of chat is same with fillRequest(Request.chat(stamp_id)).
+    HtmlView.prototype.updateChat = function (chat) {
+        if (chat.user_id === this.client.user_id) {
+            return;
+        }
+        var player_id = this.session.getPlayerId(chat.user_id);
+        this.showStamp(chat.stamp_id, player_id);
+    };
     HtmlView.prototype.isRequestReady = function () {
         // TODO: Create a function in Session.
         return (this.session.getStep() === this.prev_session.getStep() &&
@@ -3191,7 +3237,19 @@ var HtmlView = (function () {
         }
         var deck = document.getElementById("deck").value;
         this.client.matching(client_1.Request.matching(name, mode, deck));
-        this.message_view.drawMessage("通信中です", this.getPlayerColor(this.client.player_id));
+        var message;
+        if (protocol_1.Protocol.isOnlineMode(mode)) {
+            if (protocol_1.Protocol.getPlayerCount(mode) > 1) {
+                message = "対戦相手を待っています";
+            }
+            else {
+                message = "通信中です";
+            }
+        }
+        else {
+            message = "準備中です";
+        }
+        this.message_view.drawMessage(message, this.getPlayerColor(this.client.player_id));
         this.switchScene(Scene.Matching);
     };
     HtmlView.prototype.onLiveSessionsUpdated = function (response) {
@@ -4435,34 +4493,60 @@ var HtmlChatButtonView = (function (_super) {
         var _this = _super.call(this, document.getElementById(element_id)) || this;
         _this.element_id = element_id;
         _this.stamp_box_id = stamp_box_id;
-        _this.is_visibile = false;
+        _this.stamps = [];
+        _this.prev_stamps = {};
+        _this.is_visible = false;
         _this.callback = null;
         _this.stamp_box = new HtmlViewObject(document.getElementById(stamp_box_id));
         _this.stamp_box.none();
-        _this.addClickListener(_this.toggleStampBox);
+        _this.addClickListener(function () { _this.toggleStampBox(); });
         var stamp_elements = _this.stamp_box.element.getElementsByClassName("stamp");
         var _loop_5 = function (i) {
-            var stamp = stamp_elements[i];
-            stamp.addEventListener("click", function () {
+            var stamp = new HtmlViewObject(stamp_elements[i]);
+            stamp.addClickListener(function () {
                 if (_this.callback) {
                     _this.callback(i);
                 }
+                _this.showStampBox(false);
             });
+            this_4.stamps.push(stamp);
         };
+        var this_4 = this;
         for (var i = 0; i < stamp_elements.length; ++i) {
             _loop_5(i);
         }
         return _this;
     }
-    HtmlChatButtonView.prototype.toggleStampBox = function () {
-        if (this.is_visibile) {
-            this.is_visibile = false;
-            this.stamp_box.none();
-            return;
+    HtmlChatButtonView.prototype.showStampAt = function (index, element_id) {
+        var _this = this;
+        var stamp = this.stamps[index].clone();
+        stamp.show();
+        stamp.showAt(stamp.getPositionAlignedWithElementId(element_id));
+        window.setTimeout(function () {
+            if (_this.prev_stamps[element_id] === stamp) {
+                delete _this.prev_stamps[element_id];
+            }
+            stamp.remove();
+        }, 3000);
+        var prev_stamp = this.prev_stamps[element_id];
+        if (prev_stamp) {
+            prev_stamp.none();
         }
-        this.is_visibile = true;
-        this.stamp_box.show();
-        this.stamp_box.showAt(this.stamp_box.getPositionAlignedWithElementId("board"));
+        this.prev_stamps[element_id] = stamp;
+    };
+    HtmlChatButtonView.prototype.toggleStampBox = function () {
+        this.showStampBox(!this.is_visible);
+    };
+    HtmlChatButtonView.prototype.showStampBox = function (is_visible) {
+        if (is_visible) {
+            this.is_visible = true;
+            this.stamp_box.show();
+            this.stamp_box.showAt(this.stamp_box.getPositionAlignedWithElementId("board"));
+        }
+        else {
+            this.is_visible = false;
+            this.stamp_box.none();
+        }
     };
     return HtmlChatButtonView;
 }(HtmlViewObject));
