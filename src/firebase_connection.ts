@@ -22,7 +22,7 @@ export class FirebaseConnection extends Connection {
     private ref_matched: any = null;
     private ref_live: any = null;
     private ref_map: {} = {};
-    private session_key: string;
+    private key_chat: string = null;
 
     constructor() {
         super();
@@ -39,6 +39,7 @@ export class FirebaseConnection extends Connection {
     public stopCheckValue(key: string): void {
         if (this.ref_map[key]) {
             this.ref_map[key].off();
+            delete this.ref_map[key];
         }
     }
 
@@ -51,12 +52,17 @@ export class FirebaseConnection extends Connection {
             }
             client.callbackSession(value);
         });
+        this.key_chat = `chat/${client.session_id}`;
+        this.startCheckValue(this.key_chat, (snapshot) => {
+            client.callbackChat(snapshot.val());
+        });
     }
     public stopCheckUpdate(): void {
         if (this.ref_session) {
             this.ref_session.off();
         }
         this.ref_session = null;
+        this.stopCheckValue(this.key_chat);
     }
 
     public matching(query: any, callback: RequestCallback): void {
@@ -84,7 +90,20 @@ export class FirebaseConnection extends Connection {
         this.ref_command.child(query.user_id).onDisconnect().set(query);
     }
 
+    private sendChat(query: any): void {
+        if (query.session_id === -1 || query.user_id == null) {
+            return;
+        }
+        const key: string = `chat/${query.session_id}/${query.user_id}`;
+        firebase.database().ref(key).set(query);
+    }
+
     public sendRequest(query: any, callback: RequestCallback): void {
+        if (query.command === "chat") {
+            this.sendChat(query);
+            return;
+        }
+
         this.ref_command.child(query.user_id).set(query);
     }
 

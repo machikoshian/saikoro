@@ -37,7 +37,7 @@ export abstract class Client {
     }
 
     abstract callbackSession(response: string): void;
-    abstract callbackChat(response: string): void;
+    abstract callbackChat(response: any): void;
 
     public reset(): void {
         this.session_id = -1;

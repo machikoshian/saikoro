@@ -27,7 +27,7 @@
     "chat": {
       ".read": true,
       ".write": true
-    }
+    },
     "public_resource": {
       ".read": true,
       ".write": true

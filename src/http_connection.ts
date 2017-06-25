@@ -40,8 +40,8 @@ export class HttpConnection extends Connection {
         }
         this.check_update_timer = window.setInterval(() => {
             client.checkUpdate();
-            this.getData(`chat/${client.session_id}`, (value) => {
-                client.callbackChat(value);
+            this.getData(`chat/${client.session_id}`, (response) => {
+                client.callbackChat(JSON.parse(response));
             });
         }, 2000);
     }

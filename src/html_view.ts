@@ -430,9 +430,16 @@ export class HtmlView {
         }, 1000);
     }
 
+    private showStamp(stamp_id: number, player_id: number): void {
+        let element_id: string = "watchers";
+        if (player_id !== -1) {
+            element_id = this.players_view.players[player_id].element.id;
+        }
+        this.chat_button_view.showStampAt(stamp_id, element_id);
+    }
+
     private onClickStamp(index: number): void {
-        const element_id: string = this.players_view.players[this.client.player_id].element.id;
-        this.chat_button_view.showStampAt(index, element_id);
+        this.showStamp(index, this.client.player_id);
         this.client.sendRequest(Request.chat(index));
     }
 
@@ -443,11 +450,7 @@ export class HtmlView {
         }
 
         const player_id: number = this.session.getPlayerId(chat.user_id);
-        let element_id: string = "watchers";
-        if (player_id !== -1) {
-            element_id = this.players_view.players[player_id].element.id;
-        }
-        this.chat_button_view.showStampAt(chat.stamp_id, element_id);
+        this.showStamp(chat.stamp_id, player_id);
     }
 
     private isRequestReady(): boolean {
@@ -506,7 +509,19 @@ export class HtmlView {
         let deck: string = (<HTMLInputElement>document.getElementById("deck")).value;
 
         this.client.matching(Request.matching(name, mode, deck));
-        this.message_view.drawMessage("通信中です", this.getPlayerColor(this.client.player_id));
+        let message: string;
+        if (Protocol.isOnlineMode(mode)) {
+            if (Protocol.getPlayerCount(mode) > 1) {
+                message = "対戦相手を待っています";
+            }
+            else {
+                message = "通信中です";
+            }
+        }
+        else {
+            message = "準備中です";
+        }
+        this.message_view.drawMessage(message, this.getPlayerColor(this.client.player_id));
         this.switchScene(Scene.Matching);
     }
 

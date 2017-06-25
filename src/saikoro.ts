@@ -65,8 +65,7 @@ export class WebClient extends Client {
         this.view.updateView(session, this.player_id);
     }
 
-    public callbackChat(response: string): void {
-        let data: {[user_id: string]: {}} = JSON.parse(response);
+    public callbackChat(data: any): void {  // Request.chat
         if (data == null) {
             return;
         }
