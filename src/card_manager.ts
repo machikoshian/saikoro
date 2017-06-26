@@ -498,8 +498,9 @@ export class EffectManager {
         let new_cards: CardEffect[] = [];
         const round_factor: number = 10;  // Any number >= 4.
         for (let card of this.cards) {
-            if ((card.round + card.character.round) * round_factor + card.turn >
-                round * round_factor + turn) {
+            const expiration: number = (card.round + card.character.round) * round_factor + card.turn;
+            const current: number = round * round_factor + turn;
+            if (expiration > current) {
                 new_cards.push(card);
             }
         }
@@ -514,5 +515,18 @@ export class EffectManager {
             }
         }
         return delta;
+    }
+
+    public getCharacterTypes(): CharacterType[] {
+        let types: CharacterType[] = [];
+        let even_odd: CharacterType = null;
+        for (let card of this.cards) {
+            if (card.character.type === CharacterType.DiceEven ||
+                card.character.type === CharacterType.DiceOdd) {
+                even_odd = card.character.type;
+            }
+        }
+        types.push(even_odd);
+        return types;
     }
 }

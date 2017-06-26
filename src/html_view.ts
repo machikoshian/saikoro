@@ -1044,6 +1044,16 @@ export class HtmlView {
                 this.effectCardDeals(event.player_id, event.target_card_ids);
                 handled = true;
             }
+            if (type === CharacterType.DiceEven) {
+                const color: string = this.getPlayerColor(event.player_id);
+                this.message_view.drawMessage("次のサイコロの合計値が偶数になります", color);
+                handled = true;
+            }
+            if (type === CharacterType.DiceOdd) {
+                const color: string = this.getPlayerColor(event.player_id);
+                this.message_view.drawMessage("次のサイコロの合計値が奇数になります", color);
+                handled = true;
+            }
             if (type === CharacterType.MoveMoney) {
                 for (let pid = 0; pid < event.moneys.length; pid++) {
                     const money: number = event.moneys[pid];

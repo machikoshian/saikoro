@@ -1,6 +1,8 @@
 export enum CharacterType {
     None,
     DiceDelta,  // Add N to dice results.
+    DiceEven,   // Dice result will be even.
+    DiceOdd,    // Dice result will be odd.
     DrawCards,  // Draw cards from talon.
     MoveMoney,  // Move money from other players.
     SalaryFactor,  // Multiply the salary.
@@ -22,6 +24,8 @@ const CHARACTER_DATA: CharacterData[] = [
     new CharacterData(1001, "幼稚園児", CharacterType.DiceDelta, 2, {"delta": -2}),
     new CharacterData(1002, "執事",    CharacterType.DrawCards, 0, {"value": 2}),
     new CharacterData(1003, "有能秘書", CharacterType.MoveMoney, 0, {"money": 300}),
+    new CharacterData(1004, "白奴", CharacterType.DiceEven, 0, {"money": 300}),  // even
+    new CharacterData(1005, "黒奴", CharacterType.DiceOdd, 0, {"money": 300}),  // odd
 ];
 
 export type CardDataId = number;
@@ -253,6 +257,12 @@ export class Character {
                 const delta: number = this.property["delta"];
                 const delta_str: string = ((delta > 0) ? "+" : "") + delta;
                 return `サイコロの目を${delta_str}する\n${this.round}ラウンド`;
+            }
+            case CharacterType.DiceEven: {
+                return "次のサイコロの合計値が偶数になる";
+            }
+            case CharacterType.DiceOdd: {
+                return "次のサイコロの合計値が奇数になる";
             }
             case CharacterType.DrawCards: {
                 const value: number = this.property["value"];

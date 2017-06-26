@@ -1,4 +1,4 @@
-import { Dice, DiceResult } from "./dice";
+import { Dice, DiceResult, DiceEvenOdd } from "./dice";
 import { Player, Board, PlayerId } from "./board";
 import { CardId, CardDataId, FacilityType, Facility,
          Character, CharacterData, CharacterType } from "./facility";
@@ -345,8 +345,18 @@ export class Session {
         if (!this.isValid(player_id, Phase.DiceRoll)) {
             return false;
         }
-        let delta: number = this.effect_manager.getDiceDelta();
-        this.dice_result = Dice.roll(dice_num, aim, delta);
+        const delta: number = this.effect_manager.getDiceDelta();
+        const types: CharacterType[] = this.effect_manager.getCharacterTypes();
+        let even_odd: DiceEvenOdd = DiceEvenOdd.None;
+        if (types.indexOf(CharacterType.DiceEven) !== -1) {
+            even_odd = DiceEvenOdd.Even;
+        }
+        else if (types.indexOf(CharacterType.DiceOdd) !== -1) {
+            even_odd = DiceEvenOdd.Odd;
+        }
+
+        this.dice_result = Dice.roll(dice_num, aim, delta, even_odd);
+        if (types.indexOf(CharacterType.DiceEven))
 
         // TODO: Move this to other place?
         this.target_facilities = this.getFacilitiesInArea(this.dice_result.result());
@@ -706,18 +716,26 @@ export class Session {
         event.valid = true;
         this.events.push(event);
 
-        if (character.type === CharacterType.DrawCards) {
-            event.target_card_ids = this.drawCards(player_id, character.getPropertyValue());
-            event.player_id = player_id;
-        }
-        else if (character.type === CharacterType.MoveMoney) {
-            const money: number = this.moveMoney(target_player_id, player_id, character.property["money"])
-            event.target_player_id = target_player_id;
-            event.moneys[player_id] += money;
-            event.moneys[target_player_id] -= money;
-        }
-        else {  // === CharacterType.DiceDelta
-            this.effect_manager.addCard(character.data_id, this.round, this.turn);
+        switch(character.type) {
+            case CharacterType.DrawCards: {
+                event.target_card_ids = this.drawCards(player_id, character.getPropertyValue());
+                event.player_id = player_id;
+                break;
+            }
+            case CharacterType.MoveMoney: {
+                const money: number =
+                    this.moveMoney(target_player_id, player_id, character.property["money"]);
+                event.target_player_id = target_player_id;
+                event.moneys[player_id] += money;
+                event.moneys[target_player_id] -= money;
+                break;
+            }
+            case CharacterType.DiceDelta:
+            case CharacterType.DiceEven:
+            case CharacterType.DiceOdd: {
+                this.effect_manager.addCard(character.data_id, this.round, this.turn);
+                break;
+            }
         }
 
         // Move the card to discard.
