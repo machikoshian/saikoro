@@ -46,7 +46,7 @@ export class SessionHandler {
 
     public processCommand(session: Session, query): boolean {
         if (query.command === "board") {
-            let step: number = Number(query.step);
+            const step: number = Number(query.step);
             if (step >= session.getStep()) {
                 // No update.
                 return false;
@@ -54,18 +54,20 @@ export class SessionHandler {
         }
 
         else if (query.command === "character") {
-            let player_id: PlayerId = Number(query.player_id);
-            let card_id: CardId = Number(query.card_id);
-            if (session.useCharacter(player_id, card_id)) {
+            const player_id: PlayerId = Number(query.player_id);
+            const card_id: CardId = Number(query.card_id);
+            // TODO: Enable to accept other additional values.
+            const target_player_id: PlayerId = Number(query.target_player_id);
+            if (session.useCharacter(player_id, card_id, target_player_id)) {
                 // TODO: integrate buildFacility and doNext.
                 this.doNext(session);
             }
         }
 
         else if (query.command === "dice") {
-            let player_id: PlayerId = Number(query.player_id);
-            let dice_num = Number(query.dice_num);
-            let aim = Number(query.aim);
+            const player_id: PlayerId = Number(query.player_id);
+            const dice_num = Number(query.dice_num);
+            const aim = Number(query.aim);
             if (session.diceRoll(player_id, dice_num, aim)) {
                 // TODO: integrate diceRoll and doNext.
                 this.doNext(session);
@@ -73,10 +75,10 @@ export class SessionHandler {
         }
 
         else if (query.command === "build") {
-            let player_id: PlayerId = Number(query.player_id);
-            let x: number = Number(query.x);
-            let y: number = Number(query.y);
-            let card_id: CardId = Number(query.card_id);
+            const player_id: PlayerId = Number(query.player_id);
+            const x: number = Number(query.x);
+            const y: number = Number(query.y);
+            const card_id: CardId = Number(query.card_id);
             if (x != null && y != null && player_id != null && card_id != null) {
                 if (session.buildFacility(player_id, x, y, card_id)) {
                     // TODO: integrate buildFacility and doNext.
@@ -86,9 +88,9 @@ export class SessionHandler {
         }
 
         else if (query.command === "interact") {
-            let player_id: PlayerId = Number(query.player_id);
-            let card_id: CardId = Number(query.card_id);
-            let target_player_id: PlayerId = Number(query.target_player_id);
+            const player_id: PlayerId = Number(query.player_id);
+            const card_id: CardId = Number(query.card_id);
+            const target_player_id: PlayerId = Number(query.target_player_id);
             if (session.interactFacilityAction(player_id, card_id, target_player_id)) {
                 // TODO: integrate interactFacilityAction and doNext.
                 this.doNext(session);

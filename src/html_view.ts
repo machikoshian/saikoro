@@ -208,9 +208,6 @@ export class HtmlView {
 
         // HtmlPlayersView
         this.players_view = new HtmlPlayersView("players");
-        this.players_view.callback = (player_id: PlayerId) => {
-            this.onClickPlayer(player_id);
-        }
 
         // Board
         this.board_view = new HtmlBoardView("board", row, column);
@@ -489,12 +486,26 @@ export class HtmlView {
         }
 
         const card_id: CardId = this.clicked_card_view.getCardId();
-        this.client.sendRequest(Request.characterCard(card_id));
+        const character: Character = this.session.getCharacter(card_id);
+        if (character.type === CharacterType.MoveMoney) {
+            this.dialogSelectPlayer((selected_pid: PlayerId) => {
+                const query: any = Request.characterCard(card_id, selected_pid);
+                this.client.sendRequest(query);
 
-        this.event_queue.addEvent(() => {
-            this.effectCharacter(this.client.player_id, card_id);
-            return true;
-        }, 2000);
+                this.event_queue.addEvent(() => {
+                    this.effectCharacter(this.client.player_id, card_id);
+                    return true;
+                }, 2000);
+            });
+        }
+        else {
+            this.client.sendRequest(Request.characterCard(card_id));
+
+            this.event_queue.addEvent(() => {
+                this.effectCharacter(this.client.player_id, card_id);
+                return true;
+            }, 2000);
+        }
     }
 
     private onClickEndTurn(): void {
@@ -1029,8 +1040,22 @@ export class HtmlView {
                 this.effectCharacter(event.player_id, event.card_id);
                 handled = true;
             }
-            if (this.session.getCharacter(event.card_id).type === CharacterType.DrawCards) {
+            const type: CharacterType = this.session.getCharacter(event.card_id).type;
+            if (type === CharacterType.DrawCards) {
                 this.effectCardDeals(event.player_id, event.target_card_ids);
+                handled = true;
+            }
+            if (type === CharacterType.MoveMoney) {
+                for (let pid = 0; pid < event.moneys.length; pid++) {
+                    const money: number = event.moneys[pid];
+                    if (money === 0) {
+                        continue;
+                    }
+                    const delay: number = (money > 0) ? 1500 : 500;
+                    window.setTimeout(() => {
+                        this.drawMoneyMotion(money, pid, 5, 0);
+                    }, delay);
+                }
                 handled = true;
             }
             return handled;
@@ -1106,19 +1131,27 @@ export class HtmlView {
         }
 
         if (event.type === EventType.Interaction) {
-            const color: string = this.getPlayerColor(event.player_id);
             const position: [number, number] = this.session.getPosition(event.card_id);
             this.board_view.setHighlight(position, COLOR_CLICKABLE);
 
             if (event.player_id === this.client.player_id) {
-                this.message_view.drawMessage("対象プレイヤーを選択してください", color);
-                this.players_view.setClickableForPlayer(event.player_id);
+                this.dialogSelectPlayer((selected_pid: PlayerId) => {
+                    const query: any = Request.interactFacilityAction(event.card_id, selected_pid);
+                    this.client.sendRequest(query);
+                });
             }
             else {
+                const color: string = this.getPlayerColor(event.player_id);
                 this.message_view.drawMessage("対象プレイヤーを選択中です", color);
             }
         }
         return true;
+    }
+
+    private dialogSelectPlayer(callback): void {
+        const color: string = this.getPlayerColor(this.client.player_id);
+        this.message_view.drawMessage("対象プレイヤーを選択してください", color);
+        this.players_view.setClickableForPlayer(this.client.player_id, callback);
     }
 
     private drawMoneyMotion(money: number, player_id: PlayerId, x: number, y: number): void {

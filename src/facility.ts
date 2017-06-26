@@ -2,6 +2,7 @@ export enum CharacterType {
     None,
     DiceDelta,  // Add N to dice results.
     DrawCards,  // Draw cards from talon.
+    MoveMoney,  // Move money from other players.
     SalaryFactor,  // Multiply the salary.
 }
 
@@ -19,7 +20,8 @@ const CHARACTER_DATA_BASE: number = 1000;
 const CHARACTER_DATA: CharacterData[] = [
     new CharacterData(1000, "大学生",  CharacterType.DiceDelta, 1, {"delta": 3}),
     new CharacterData(1001, "幼稚園児", CharacterType.DiceDelta, 2, {"delta": -2}),
-    new CharacterData(1002, "執事",   CharacterType.DrawCards, 0, {"value": 2}),
+    new CharacterData(1002, "執事",    CharacterType.DrawCards, 0, {"value": 2}),
+    new CharacterData(1003, "有能秘書", CharacterType.MoveMoney, 0, {"money": 300}),
 ];
 
 export type CardDataId = number;
@@ -244,15 +246,22 @@ export class Character {
     }
     public getDescription(): string {
         switch (this.type) {
-            case CharacterType.None:
+            case CharacterType.None: {
                 return "";
-            case CharacterType.DiceDelta:
-                let delta: number = this.property["delta"];
-                let delta_str: string = ((delta > 0) ? "+" : "") + delta;
+            }
+            case CharacterType.DiceDelta: {
+                const delta: number = this.property["delta"];
+                const delta_str: string = ((delta > 0) ? "+" : "") + delta;
                 return `サイコロの目を${delta_str}する\n${this.round}ラウンド`;
-            case CharacterType.DrawCards:
-                let value: number = this.property["value"];
+            }
+            case CharacterType.DrawCards: {
+                const value: number = this.property["value"];
                 return `山札からカードを${value}枚引く`;
+            }
+            case CharacterType.MoveMoney: {
+                const money: number = this.property["money"];
+                return `選んだプレイヤーから${money}コインを奪う`;
+            }
         }
         return "";
     }

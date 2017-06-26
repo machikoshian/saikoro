@@ -151,10 +151,12 @@ export class Request {
         };
     }
 
-    static characterCard(card_id: CardId): Object {
+    // TODO: Enable to accept other additional values.
+    static characterCard(card_id: CardId, target_player_id: PlayerId = -1): Object {
         return {
             command: "character",
             card_id: card_id,
+            target_player_id: target_player_id,
         };
     }
 

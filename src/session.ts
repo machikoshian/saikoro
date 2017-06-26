@@ -48,6 +48,7 @@ export class Event {
     public player_id: PlayerId = -1;
     public moneys: number[] = [0, 0, 0, 0];
     public card_id: CardId = null;
+    public target_player_id: PlayerId = -1;
     public target_card_ids: CardId[] = [];
     public dice: DiceResult = null;
     public valid: boolean = false;
@@ -60,6 +61,7 @@ export class Event {
             player_id: this.player_id,
             moneys: this.moneys,
             card_id: this.card_id,
+            target_player_id: this.target_player_id,
             target_card_ids: this.target_card_ids,
             dice: this.dice ? this.dice.toJSON() : null,
             valid: this.valid,
@@ -73,6 +75,7 @@ export class Event {
         event.player_id = json.player_id;
         event.moneys = json.moneys;
         event.card_id = json.card_id;
+        event.target_player_id = json.target_player_id;
         event.target_card_ids = json.target_card_ids;
         event.dice = json.dice ? DiceResult.fromJSON(json.dice) : null;
         event.valid = json.valid;
@@ -668,7 +671,9 @@ export class Session {
         return card_ids;
     }
 
-    public useCharacter(player_id: PlayerId, card_id: CardId): boolean {
+    // TODO: Support other additional arguments.
+    public useCharacter(player_id: PlayerId, card_id: CardId,
+                        target_player_id: PlayerId = null): boolean {
         if (!this.isValid(player_id, Phase.CharacterCard)) {
             return false;
         }
@@ -690,11 +695,18 @@ export class Session {
         event.card_id = card_id;
         event.step = this.step;
         event.player_id = player_id;
+        event.valid = true;
         this.events.push(event);
 
         if (character.type === CharacterType.DrawCards) {
             event.target_card_ids = this.drawCards(player_id, character.getPropertyValue());
             event.player_id = player_id;
+        }
+        else if (character.type === CharacterType.MoveMoney) {
+            const money: number = this.moveMoney(target_player_id, player_id, character.property["money"])
+            event.target_player_id = target_player_id;
+            event.moneys[player_id] += money;
+            event.moneys[target_player_id] -= money;
         }
         else {  // === CharacterType.DiceDelta
             this.effect_manager.addCard(character.data_id, this.round, this.turn);

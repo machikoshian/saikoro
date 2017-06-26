@@ -18,6 +18,8 @@ const COLOR_GREEN: string = "#A5D6A7";
 const COLOR_RED: string = "#EF9A9A";
 const COLOR_PURPLE: string = "#B39DDB";
 
+type PlayerIdCallback = (player_id: PlayerId) => void;
+
 function getFacilityColor(facility: Facility): string {
     if (!facility) {
         return COLOR_FIELD;
@@ -293,7 +295,7 @@ export class HtmlCardView extends HtmlViewObject {
 export class HtmlPlayersView extends HtmlViewObject {
     readonly players: HtmlPlayerView[] = [];
     private players_length: number = 0;
-    public callback: (player_id: PlayerId) => void;
+    private callback: PlayerIdCallback;
 
     constructor(readonly element_id: string) {
         super(document.getElementById(element_id));
@@ -310,7 +312,6 @@ export class HtmlPlayersView extends HtmlViewObject {
         for (let player of this.players) {
             player.setClickable(false);
         }
-
         this.callback(player_id);
     }
 
@@ -326,10 +327,11 @@ export class HtmlPlayersView extends HtmlViewObject {
         this.show();
     }
 
-    public setClickableForPlayer(player_id: PlayerId): void {
+    public setClickableForPlayer(player_id: PlayerId, callback: PlayerIdCallback): void {
         for (let i: number = 0; i < this.players_length; ++i) {
             this.players[i].setClickable(player_id !== i);
         }
+        this.callback = callback;
     }
 }
 
