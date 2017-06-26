@@ -211,7 +211,8 @@ table.player { width: 160px; }
     position: relative;
     width: 120px; height: 80px; padding: 0px;
     font-size: 40px;
-    border-radius: 10px; background-color: #EEEEEE;
+    border-radius: 10px;
+    background-color: #FFCA28;
 }
 
 #buttons_dice1_1 {
@@ -233,12 +234,14 @@ table.player { width: 160px; }
 #buttons_char_card {
     width: 80px; height: 55px; padding: 10px; padding-top: 15px;
     text-align: center;
-    border-radius: 10px; background-color: #EFF0D1;
+    border-radius: 10px;
+    background-color: #FFCA28;
 }
 #buttons_end_turn {
     width: 70px; height: 55px; padding: 10px; padding-top: 15px;
     text-align: center;
-    border-radius: 10px; background-color: #FFCA28;
+    border-radius: 10px;
+    background-color: #FFCA28;
 }
 
 /* Motion elements should have width and height. */

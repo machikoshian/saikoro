@@ -19,6 +19,7 @@ const COLOR_RED: string = "#EF9A9A";
 const COLOR_PURPLE: string = "#B39DDB";
 
 type PlayerIdCallback = (player_id: PlayerId) => void;
+type CardIdCallback = (card_id: CardId) => void;
 
 function getFacilityColor(facility: Facility): string {
     if (!facility) {
@@ -149,7 +150,7 @@ export class HtmlViewObject {
 
 export class HtmlCardsView extends HtmlViewObject {
     readonly cards: HtmlCardView[] = [];
-    private card_ids: CardId[] = [];
+    private callback: CardIdCallback = null;
 
     constructor(readonly element_id: string, readonly max_size: number) {
         super(document.getElementById(element_id));
@@ -161,9 +162,25 @@ export class HtmlCardsView extends HtmlViewObject {
             let new_element: HTMLElement = <HTMLElement>this.element.appendChild(new_node);
             new_element.id = `${element_id}_${i}`;
             let card_view: HtmlCardView = new HtmlCardView(new_element.id);
+            card_view.addClickListener(() => { this.onClick(i); });
             this.cards.push(card_view);
             card_view.none();
         }
+    }
+
+    private onClick(index: number) {
+        let card_view: HtmlCardView = this.cards[index];
+        if (card_view.is_highlight === false) {
+            return;
+        }
+        for (let i: number = 0; i < this.cards.length; ++i) {
+            this.cards[i].setHighlight(false);
+        }
+        if (this.callback == null) {
+            return;
+        }
+        this.callback(card_view.getCardId());
+        this.callback = null;
     }
 
     public draw(session: Session, card_ids: CardId[]): void {
@@ -181,16 +198,24 @@ export class HtmlCardsView extends HtmlViewObject {
         return null;
     }
 
-    // TODO: Not necessary?
-    public setCardIds(card_ids: CardId[]): void {
-        this.card_ids = card_ids;
-        let i: number = 0;
-        for (; i < card_ids.length; ++i) {
-            this.cards[i].setCardId(card_ids[i]);
+    public resetClickable(): void {
+        for (let i: number = 0; i < this.cards.length; ++i) {
+            this.cards[i].setHighlight(false);
         }
-        for (; i < this.max_size; ++i) {
-            this.cards[i].setCardId(-1);
+        this.callback = null;
+    }
+
+    // TODO: remove session.
+    public setCharCardsClickable(session: Session, callback: CardIdCallback): void {
+        for (let i: number = 0; i < this.cards.length; ++i) {
+            let card: HtmlCardView = this.cards[i];
+            if (!session.isCharacter(card.getCardId())) {
+                continue;
+            }
+
+            card.setHighlight(true);
         }
+        this.callback = callback;
     }
 }
 
@@ -199,6 +224,7 @@ export class HtmlCardView extends HtmlViewObject {
     private element_name: HTMLElement;
     private element_cost: HTMLElement;
     private element_description: HTMLElement;
+    public is_highlight: boolean = false;
 
     constructor(readonly element_id: string) {
         super(document.getElementById(element_id));
@@ -274,6 +300,7 @@ export class HtmlCardView extends HtmlViewObject {
     }
 
     public setHighlight(is_highlight: boolean): void {
+        this.is_highlight = is_highlight;
         this.element.style.borderColor = is_highlight ? COLOR_HIGHTLIGHT_CARD : "#EEEEEE";
     }
 
@@ -549,6 +576,12 @@ export class HtmlButtonsView extends HtmlViewObject {
         this.end_turn = new HtmlButtonView(element_id + "_end_turn");
     }
 
+    // TODO: move this function to other place/class.
+    private hasCharacterCard(session: Session, player_id: PlayerId): boolean {
+        let cards: CardId[] = session.getSortedHand(player_id);
+        return session.isCharacter(cards[cards.length - 1]);
+    }
+
     public draw(session: Session, player_id: PlayerId): void {
         if (session.getCurrentPlayerId() !== player_id) {
             this.hide();
@@ -568,7 +601,12 @@ export class HtmlButtonsView extends HtmlViewObject {
 
         if (phase === Phase.CharacterCard) {
             this.char_card.show();
-            this.char_card.setClickable(false);
+            if (this.hasCharacterCard(session, player_id)) {
+                this.char_card.element.classList.remove("inactive");
+            }
+            else {
+                this.char_card.element.classList.add("inactive");
+            }
         }
 
         if (phase === Phase.BuildFacility) {

@@ -17,7 +17,6 @@ const COLOR_FIELD: string = "#FFF8E1";
 const COLOR_LANDMARK: string = "#B0BEC5";
 const COLOR_CLICKABLE: string = "#FFCA28";
 const COLOR_HIGHTLIGHT_CARD: string = "#FFE082";
-const COLOR_CHARACTER: string = "#FFF9C4";
 const COLOR_PLAYERS: string[] = ["#909CC2", "#D9BDC5", "#90C290", "#9D8189"];
 const COLOR_GRAY: string = "#B0BEC5";
 const COLOR_BLUE: string = "#90CAF9";
@@ -465,10 +464,12 @@ export class HtmlView {
             return;
         }
 
+        // Reset character cards.
+        this.cards_views[this.client.player_id].resetClickable();
+
         this.client.sendRequest(this.client.createDiceQuery(dice_num, aim));
 
         this.event_queue.addEvent(() => {
-            console.log("dice roll.");
             let dice_view: HtmlViewObject =
                 (dice_num === 1) ? this.buttons_view.dice1 : this.buttons_view.dice2;
             dice_view.hide();
@@ -481,30 +482,27 @@ export class HtmlView {
     }
 
     private onClickCharacter(): void {
-        if (this.clicked_card_view == null) {
-            return;
-        }
+        this.dialogSelectCharCard((card_id: CardId) => {
+            const character: Character = this.session.getCharacter(card_id);
+            if (character.type === CharacterType.MoveMoney) {
+                this.dialogSelectPlayer((selected_pid: PlayerId) => {
+                    this.client.sendRequest(this.client.createCharacterQuery(card_id, selected_pid));
 
-        const card_id: CardId = this.clicked_card_view.getCardId();
-        const character: Character = this.session.getCharacter(card_id);
-        if (character.type === CharacterType.MoveMoney) {
-            this.dialogSelectPlayer((selected_pid: PlayerId) => {
-                this.client.sendRequest(this.client.createCharacterQuery(card_id, selected_pid));
+                    this.event_queue.addEvent(() => {
+                        this.effectCharacter(this.client.player_id, card_id);
+                        return true;
+                    }, 2000);
+                });
+            }
+            else {
+                this.client.sendRequest(this.client.createCharacterQuery(card_id));
 
                 this.event_queue.addEvent(() => {
                     this.effectCharacter(this.client.player_id, card_id);
                     return true;
                 }, 2000);
-            });
-        }
-        else {
-            this.client.sendRequest(this.client.createCharacterQuery(card_id));
-
-            this.event_queue.addEvent(() => {
-                this.effectCharacter(this.client.player_id, card_id);
-                return true;
-            }, 2000);
-        }
+            }
+        });
     }
 
     private onClickEndTurn(): void {
@@ -607,13 +605,16 @@ export class HtmlView {
             return;
         }
 
+        const phase: Phase = this.session.getPhase();
+        if (phase === Phase.CharacterCard) {
+            return;
+        }
+
         // Event on game (this.scene === Scene.Game).
         let clicked_card_id: CardId = this.cards_views[player].cards[card].getCardId();
-        let phase: Phase = this.session.getPhase();
         let is_char: boolean = this.session.isCharacter(clicked_card_id);
 
-        let is_valid: boolean = ((phase === Phase.CharacterCard) && is_char ||
-                                 (phase === Phase.BuildFacility) && !is_char);
+        let is_valid: boolean = ((phase === Phase.BuildFacility) && !is_char);
         if (!is_valid) {
             return;
         }
@@ -631,9 +632,9 @@ export class HtmlView {
 
         this.drawBoard(this.session);
 
-        if (phase === Phase.CharacterCard) {
-            this.buttons_view.char_card.setClickable(true);
-        }
+        // if (phase === Phase.CharacterCard) {
+        //     this.buttons_view.char_card.setClickable(true);
+        // }
 
         if (phase === Phase.BuildFacility) {
             for (let area of this.session.getFacility(clicked_card_id).getArea()) {
@@ -860,12 +861,6 @@ export class HtmlView {
         field.style.borderColor = this.getFacilityColor(facility);
 
         (<HTMLTableCellElement>field).colSpan = facility.size;
-    }
-
-    // TODO: move this function to other place/class.
-    private hasCharacterCard(session: Session, player_id: PlayerId): boolean {
-        let cards: CardId[] = session.getSortedHand(player_id);
-        return session.isCharacter(cards[cards.length - 1]);
     }
 
     public drawStatusMessage(session: Session): boolean {  // TODO: rename it.
@@ -1160,6 +1155,13 @@ export class HtmlView {
         const color: string = this.getPlayerColor(this.client.player_id);
         this.message_view.drawMessage("対象プレイヤーを選択してください", color);
         this.players_view.setClickableForPlayer(this.client.player_id, callback);
+    }
+
+    private dialogSelectCharCard(callback: (card_id: CardId) => void): void {
+        const color: string = this.getPlayerColor(this.client.player_id);
+        this.message_view.drawMessage("キャラカードを選択してください", color);
+        let cards_view: HtmlCardsView = this.cards_views[this.client.player_id];
+        cards_view.setCharCardsClickable(this.session, callback);
     }
 
     private drawMoneyMotion(money: number, player_id: PlayerId, element_id: string): void {
