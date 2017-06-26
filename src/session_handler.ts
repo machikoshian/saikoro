@@ -5,6 +5,7 @@ import { CardId, CardDataId, FacilityType, Facility, CardData } from "./facility
 import { AutoPlay } from "./auto_play";
 import { GameMode, MatchingInfo, MatchingPlayerInfo, Protocol } from "./protocol";
 import { KeyValue, Storage } from "./storage";
+import * as Query from "./query";
 
 export class MatchedData {
     constructor(
@@ -44,69 +45,54 @@ export class SessionHandler {
         return false;
     }
 
-    public processCommand(session: Session, query): boolean {
+    private processUpdateCommand(session: Session, query: Query.UpdateQuery): boolean {
+        if (query.step >= session.getStep()) {
+            // No update.
+            return false;
+        }
+        return true;
+    }
+
+    public processCommand(session: Session, query: Query.Query): boolean {
         if (query.command === "board") {
-            const step: number = Number(query.step);
-            if (step >= session.getStep()) {
-                // No update.
-                return false;
-            }
+            return this.processUpdateCommand(session, <Query.UpdateQuery>query);
         }
 
         else if (query.command === "character") {
-            const player_id: PlayerId = Number(query.player_id);
-            const card_id: CardId = Number(query.card_id);
-            // TODO: Enable to accept other additional values.
-            const target_player_id: PlayerId = Number(query.target_player_id);
-            if (session.useCharacter(player_id, card_id, target_player_id)) {
-                // TODO: integrate buildFacility and doNext.
+            if (session.processCharacterCommand(<Query.CharacterQuery>query)) {
                 this.doNext(session);
             }
         }
 
         else if (query.command === "dice") {
-            const player_id: PlayerId = Number(query.player_id);
-            const dice_num = Number(query.dice_num);
-            const aim = Number(query.aim);
-            if (session.diceRoll(player_id, dice_num, aim)) {
+            if (session.processDiceCommand(<Query.DiceQuery>query)) {
                 // TODO: integrate diceRoll and doNext.
                 this.doNext(session);
             }
         }
 
         else if (query.command === "build") {
-            const player_id: PlayerId = Number(query.player_id);
-            const x: number = Number(query.x);
-            const y: number = Number(query.y);
-            const card_id: CardId = Number(query.card_id);
-            if (x != null && y != null && player_id != null && card_id != null) {
-                if (session.buildFacility(player_id, x, y, card_id)) {
-                    // TODO: integrate buildFacility and doNext.
-                    this.doNext(session);
-                }
+            if (session.processBuildCommand(<Query.BuildQuery>query)) {
+                // TODO: integrate buildFacility and doNext.
+                this.doNext(session);
             }
         }
 
         else if (query.command === "interact") {
-            const player_id: PlayerId = Number(query.player_id);
-            const card_id: CardId = Number(query.card_id);
-            const target_player_id: PlayerId = Number(query.target_player_id);
-            if (session.interactFacilityAction(player_id, card_id, target_player_id)) {
+            if (session.processInteractCommand(<Query.InteractQuery>query)) {
                 // TODO: integrate interactFacilityAction and doNext.
                 this.doNext(session);
             }
         }
 
         else if (query.command === "quit") {
-            const user_id: string = String(query.user_id);
-            if (session.quitGame(user_id)) {
+            if (session.processQuitCommand(<Query.QuitQuery>query)) {
                 this.doNext(session);
             }
         }
 
         else if (query.command === "watch") {
-            const user_id: string = String(query.user_id);
-            session.addWatcher(user_id);
+            session.processWatchCommand(<Query.WatchQuery>query);
         }
 
         return true;

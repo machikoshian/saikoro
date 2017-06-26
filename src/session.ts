@@ -4,6 +4,7 @@ import { CardId, CardDataId, FacilityType, Facility,
          Character, CharacterData, CharacterType } from "./facility";
 import { shuffle } from "./utils";
 import { CardManager, EffectManager, PlayerCards } from "./card_manager";
+import * as Query from "./query";
 
 export enum Phase {
     StartGame,
@@ -337,7 +338,10 @@ export class Session {
         return true;
     }
 
-    public diceRoll(player_id: PlayerId, dice_num: number, aim: number): boolean {
+    public processDiceCommand(query: Query.DiceQuery): boolean {
+        const player_id: PlayerId = query.player_id;
+        const dice_num: number = query.dice_num;
+        const aim: number = query.aim;
         if (!this.isValid(player_id, Phase.DiceRoll)) {
             return false;
         }
@@ -357,8 +361,10 @@ export class Session {
         return true;
     }
 
-    public interactFacilityAction(player_id: PlayerId, card_id: CardId,
-                                  target_id: PlayerId): boolean {
+    public processInteractCommand(query: Query.InteractQuery): boolean {
+        const player_id: PlayerId = query.player_id;
+        const card_id: CardId = query.card_id;
+        const target_id: PlayerId = query.target_player_id;
         if (!this.isValid(player_id, Phase.FacilityActionWithInteraction)) {
             return false;
         }
@@ -672,8 +678,10 @@ export class Session {
     }
 
     // TODO: Support other additional arguments.
-    public useCharacter(player_id: PlayerId, card_id: CardId,
-                        target_player_id: PlayerId = null): boolean {
+    public processCharacterCommand(query: Query.CharacterQuery): boolean {
+        const player_id: PlayerId = query.player_id;
+        const card_id: CardId = query.card_id;
+        const target_player_id: PlayerId = query.target_player_id;
         if (!this.isValid(player_id, Phase.CharacterCard)) {
             return false;
         }
@@ -738,8 +746,16 @@ export class Session {
         return card_ids;
     }
 
-    public buildFacility(player_id: PlayerId, x: number, y: number,
-                         card_id: CardId): boolean {
+    public processBuildCommand(query: Query.BuildQuery): boolean {
+        const player_id: PlayerId = query.player_id;
+        const x: number = query.x;
+        const y: number = query.y;
+        const card_id: CardId = query.card_id;
+
+        if (x == null || y == null && player_id == null && card_id == null) {
+            return false;
+        }
+
         // Facility is a landmark?
         if (this.card_manager.isLandmark(card_id)) {
             return this.buildLandmark(player_id, card_id);
@@ -964,7 +980,8 @@ export class Session {
         return true;
     }
 
-    public quitGame(user_id: string): boolean {
+    public processQuitCommand(query: Query.QuitQuery): boolean {
+        const user_id: string = query.user_id;
         this.removeWatcher(user_id);
         const player_id: number = this.getPlayerId(user_id);
         if (player_id === -1) {
@@ -1069,10 +1086,12 @@ export class Session {
     public getWatchers(): string[] {
         return this.watcher_user_ids;
     }
-    public addWatcher(user_id: string): void {
+    public processWatchCommand(query: Query.WatchQuery): boolean {
+        const user_id: string = query.user_id;
         if (this.watcher_user_ids.indexOf(user_id) === -1) {
             this.watcher_user_ids.push(user_id);
         }
+        return true;
     }
     public removeWatcher(user_id: string): void {
         const index: number = this.watcher_user_ids.indexOf(user_id);

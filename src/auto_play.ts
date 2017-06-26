@@ -2,6 +2,7 @@ import { Session, Phase } from "./session";
 import { Player, PlayerId } from "./board";
 import { CardId, Facility } from "./facility";
 import { shuffle } from "./utils";
+import * as Query from "./query";
 
 export class AutoPlay {
     static play(session: Session): boolean {
@@ -9,13 +10,27 @@ export class AutoPlay {
         switch (session.getPhase()) {
             case Phase.CharacterCard:
             case Phase.DiceRoll:
-                return session.diceRoll(player_id, 2, 0);
+                return AutoPlay.playDiceRoll(session);
             case Phase.BuildFacility:
                 return AutoPlay.playBuildFacility(session);
             case Phase.FacilityActionWithInteraction:
                 return AutoPlay.playInteractFacilityAction(session);
         }
         return false;
+    }
+
+    static playDiceRoll(session: Session): boolean {
+        const player_id: PlayerId = session.getCurrentPlayerId();
+        const query: Query.DiceQuery = {
+            command: "dice",
+            user_id: session.getPlayer(player_id).user_id,
+            session_id: session.session_id,
+            player_id: player_id,
+            mode: -1,  // TODO: Fill a valid value.
+            dice_num: 2,
+            aim: 0,
+        };
+        return session.processDiceCommand(query);
     }
 
     static playInteractFacilityAction(session: Session): boolean {
@@ -27,7 +42,16 @@ export class AutoPlay {
             return false;
         }
 
-        return session.interactFacilityAction(player_id, target_facilities[0], target_id);
+        const query: Query.InteractQuery = {
+            command: "interact",
+            user_id: session.getPlayer(player_id).user_id,
+            session_id: session.session_id,
+            player_id: player_id,
+            mode: -1,  // TODO: Fill a valid value.
+            card_id: target_facilities[0],
+            target_player_id: target_id,
+        };
+        return session.processInteractCommand(query);
     }
 
     static playBuildFacility(session: Session): boolean {
@@ -48,6 +72,17 @@ export class AutoPlay {
 
         let card_ids: CardId[] = session.getPlayerCards(player_id).getHand();
 
+        let query: Query.BuildQuery = {
+            command: "build",
+            user_id: session.getPlayer(player_id).user_id,
+            session_id: session.session_id,
+            player_id: player_id,
+            mode: -1,  // TODO: Fill a valid value.
+            x: -1,
+            y: -1,
+            card_id: -1,
+        };
+
         for (let card_id of card_ids) {
             if (session.isCharacter(card_id)) {
                 continue;
@@ -65,8 +100,11 @@ export class AutoPlay {
             }
 
             let [x, y] = positions[0];
-            return session.buildFacility(player_id, x, y, card_id);
+            query.x = x;
+            query.y = y;
+            query.card_id = card_id;
+            return session.processBuildCommand(query);
         }
-        return session.buildFacility(player_id, -1, -1, -1);
+        return session.processBuildCommand(query);
     }
 }
