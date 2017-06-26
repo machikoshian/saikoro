@@ -1,4 +1,5 @@
 import { RequestCallback, Connection, Client } from "./client";
+import * as Query from "./query";
 
 let firebase = require("firebase/app");
 require("firebase/auth");
@@ -65,7 +66,7 @@ export class FirebaseConnection extends Connection {
         this.stopCheckValue(this.key_chat);
     }
 
-    public matching(query: any, callback: RequestCallback): void {
+    public matching(query: Query.MatchingQuery, callback: RequestCallback): void {
         if (!query.user_id) {
             return;
         }
@@ -86,11 +87,11 @@ export class FirebaseConnection extends Connection {
         this.ref_matched = null;
     }
 
-    public setQueryOnDisconnect(query: any): void {
+    public setQueryOnDisconnect(query: Query.Query): void {
         this.ref_command.child(query.user_id).onDisconnect().set(query);
     }
 
-    private sendChat(query: any): void {
+    private sendChat(query: Query.ChatQuery): void {
         if (query.session_id === -1 || query.user_id == null) {
             return;
         }
@@ -98,9 +99,9 @@ export class FirebaseConnection extends Connection {
         firebase.database().ref(key).set(query);
     }
 
-    public sendRequest(query: any, callback: RequestCallback): void {
+    public sendRequest(query: Query.Query, callback: RequestCallback): void {
         if (query.command === "chat") {
-            this.sendChat(query);
+            this.sendChat(<Query.ChatQuery>query);
             return;
         }
 

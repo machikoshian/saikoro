@@ -2,6 +2,7 @@ import { RequestCallback, Connection, Client } from "./client";
 import { MatchedData, SessionHandler } from "./session_handler";
 import { KeyValue, Storage, LocalStorage } from "./storage";
 import { GameMode, Protocol, MatchingInfo } from "./protocol";
+import * as Query from "./query";
 
 const storage = new LocalStorage();
 let session_handler: SessionHandler = new SessionHandler(storage);
@@ -14,7 +15,7 @@ export class StandaloneConnection extends Connection {
     public startCheckUpdate(client: Client): void {}
     public stopCheckUpdate(): void {}
 
-    public matching(query: any, callback: RequestCallback): void {
+    public matching(query: Query.MatchingQuery, callback: RequestCallback): void {
         session_handler.handleMatching(query).then((data: KeyValue) => {
             let matching_info: MatchingInfo = data.value;
             setTimeout(() => {
@@ -26,11 +27,11 @@ export class StandaloneConnection extends Connection {
         // Do nothing.
     }
 
-    public setQueryOnDisconnect(query: any): void {
+    public setQueryOnDisconnect(query: Query.Query): void {
         // Do nothing.
     }
 
-    public sendRequest(query: any, callback: RequestCallback): void {
+    public sendRequest(query: Query.Query, callback: RequestCallback): void {
         session_handler.handleCommand(query).then((data: KeyValue) => {
             setTimeout(() => {
                 callback(data.value);
@@ -74,7 +75,7 @@ export class HybridConnection extends Connection {
         this.connection.stopCheckUpdate();
     }
 
-    public matching(query: any, callback: RequestCallback): void {
+    public matching(query: Query.MatchingQuery, callback: RequestCallback): void {
         this.connection.stopCheckUpdate();
         this.connection = this.getConnection(query.mode);
         this.connection.matching(query, callback);
@@ -87,7 +88,7 @@ export class HybridConnection extends Connection {
         this.offline_connection.stopCheckMatching();
     }
 
-    public setQueryOnDisconnect(query: any): void {
+    public setQueryOnDisconnect(query: Query.Query): void {
         // Online connection is used if available.
         if (this.online_connection) {
             this.online_connection.setQueryOnDisconnect(query);
@@ -120,7 +121,7 @@ export class HybridConnection extends Connection {
         return this.offline_connection;
     }
 
-    public sendRequest(query: any, callback: RequestCallback): void {
+    public sendRequest(query: Query.Query, callback: RequestCallback): void {
         this.getConnection(query.mode).sendRequest(query, callback);
     }
 }

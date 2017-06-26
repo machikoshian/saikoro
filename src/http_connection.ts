@@ -1,6 +1,7 @@
 import { RequestCallback, Connection, Client } from "./client";
 import { StandaloneConnection } from "./standalone_connection";
 import { MatchingInfo } from "./protocol";
+import * as Query from "./query";
 
 class HttpRequest {
     static send(url: string, callback: RequestCallback) {
@@ -50,7 +51,7 @@ export class HttpConnection extends Connection {
         this.check_update_timer = null;
     }
 
-    public matching(query: any, callback: RequestCallback): void {
+    public matching(query: Query.MatchingQuery, callback: RequestCallback): void {
         let params: string = Object.keys(query).map((key) => {
             return encodeURIComponent(key) + "=" + encodeURIComponent(query[key]);
         }).join("&");
@@ -66,7 +67,7 @@ export class HttpConnection extends Connection {
         this.check_matched_timer = null;
     }
 
-    public setQueryOnDisconnect(query: any): void {
+    public setQueryOnDisconnect(query: Query.Query): void {
         // Do nothing.  Nice to have a way to do something if possible.
     }
 
@@ -95,7 +96,7 @@ export class HttpConnection extends Connection {
         HttpRequest.send(`/data?command=set&key=${ekey}&value=${evalue}`, callback);
     }
 
-    private sendChat(query: any): void {
+    private sendChat(query: Query.ChatQuery): void {
         if (query.session_id === -1 || query.user_id == null) {
             return;
         }
@@ -104,9 +105,9 @@ export class HttpConnection extends Connection {
         this.setData(key, value, null);
     }
 
-    public sendRequest(query: any, callback: RequestCallback): void {
+    public sendRequest(query: Query.Query, callback: RequestCallback): void {
         if (query.command === "chat") {
-            this.sendChat(query);
+            this.sendChat(<Query.ChatQuery>query);
             return;
         }
 

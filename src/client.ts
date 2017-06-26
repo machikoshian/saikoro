@@ -14,12 +14,12 @@ export abstract class Connection {
     abstract stopCheckLive(): void;
 
     // Senders from client.
-    abstract sendRequest(query: any, callback: RequestCallback): void;
-    abstract matching(query: any, callback: RequestCallback): void;
+    abstract sendRequest(query: Query.Query, callback: RequestCallback): void;
+    abstract matching(query: Query.MatchingQuery, callback: RequestCallback): void;
     abstract stopCheckMatching(): void;
 
     // This is for Firebase.onDisconnect only so far.
-    abstract setQueryOnDisconnect(query: any): void;
+    abstract setQueryOnDisconnect(query: Query.Query): void;
 }
 
 export abstract class Client {
@@ -38,7 +38,7 @@ export abstract class Client {
     }
 
     abstract callbackSession(response: string): void;
-    abstract callbackChat(response: any): void;  // Request.chat
+    abstract callbackChat(response: { [user_id: string]: Query.ChatQuery }): void;
 
     public reset(): void {
         this.session_id = -1;
@@ -49,7 +49,7 @@ export abstract class Client {
         this.connection.stopCheckLive();
     }
 
-    public matching(query: any): void {
+    public matching(query: Query.MatchingQuery): void {
         query.command = "matching";
         query.user_id = this.user_id;
         this.mode = query["mode"];
@@ -94,17 +94,9 @@ export abstract class Client {
     }
 
     public sendRequest(request: Query.Query): void {
-        this.connection.sendRequest(this.fillRequest(request), (response) => {
+        this.connection.sendRequest(request, (response) => {
             this.callbackSession(response);
         });
-    }
-
-    public fillRequest(request: any): any {
-        request.user_id = this.user_id;
-        request.session_id = this.session_id;
-        request.player_id = this.player_id;
-        request.mode = this.mode;
-        return request;
     }
 
     abstract initBoard(): void;

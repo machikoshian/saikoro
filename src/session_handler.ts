@@ -106,7 +106,7 @@ export class SessionHandler {
         return `memcache/matching_${mode}`;
     }
 
-    public handleCommand(query: any): Promise<KeyValue> {
+    public handleCommand(query: Query.Query): Promise<KeyValue> {
         const session_id = (query.session_id != undefined) ? Number(query.session_id) : -1;
         const mode = Number(query.mode);
         if (session_id === -1) {
@@ -172,7 +172,7 @@ export class SessionHandler {
     }
 
     // TODO: This is a quite hacky way for testing w/o considering any race conditions.
-    public handleMatching(query: any): Promise<KeyValue> {
+    public handleMatching(query: Query.MatchingQuery): Promise<KeyValue> {
         let name: string = query.name;
         let mode: GameMode = Number(query.mode);
         let user_id: string = query.user_id;
