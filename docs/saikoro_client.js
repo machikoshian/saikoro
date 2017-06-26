@@ -77,9 +77,11 @@ var CharacterType;
 (function (CharacterType) {
     CharacterType[CharacterType["None"] = 0] = "None";
     CharacterType[CharacterType["DiceDelta"] = 1] = "DiceDelta";
-    CharacterType[CharacterType["DrawCards"] = 2] = "DrawCards";
-    CharacterType[CharacterType["MoveMoney"] = 3] = "MoveMoney";
-    CharacterType[CharacterType["SalaryFactor"] = 4] = "SalaryFactor";
+    CharacterType[CharacterType["DiceEven"] = 2] = "DiceEven";
+    CharacterType[CharacterType["DiceOdd"] = 3] = "DiceOdd";
+    CharacterType[CharacterType["DrawCards"] = 4] = "DrawCards";
+    CharacterType[CharacterType["MoveMoney"] = 5] = "MoveMoney";
+    CharacterType[CharacterType["SalaryFactor"] = 6] = "SalaryFactor";
 })(CharacterType = exports.CharacterType || (exports.CharacterType = {}));
 var CharacterData = (function () {
     function CharacterData(id, // Unique number.
@@ -99,6 +101,8 @@ var CHARACTER_DATA = [
     new CharacterData(1001, "幼稚園児", CharacterType.DiceDelta, 2, { "delta": -2 }),
     new CharacterData(1002, "執事", CharacterType.DrawCards, 0, { "value": 2 }),
     new CharacterData(1003, "有能秘書", CharacterType.MoveMoney, 0, { "money": 300 }),
+    new CharacterData(1004, "白奴", CharacterType.DiceEven, 0, { "money": 300 }),
+    new CharacterData(1005, "黒奴", CharacterType.DiceOdd, 0, { "money": 300 }),
 ];
 var FacilityType;
 (function (FacilityType) {
@@ -304,6 +308,12 @@ var Character = (function () {
                 var delta = this.property["delta"];
                 var delta_str = ((delta > 0) ? "+" : "") + delta;
                 return "\u30B5\u30A4\u30B3\u30ED\u306E\u76EE\u3092" + delta_str + "\u3059\u308B\n" + this.round + "\u30E9\u30A6\u30F3\u30C9";
+            }
+            case CharacterType.DiceEven: {
+                return "次のサイコロの合計値が偶数になる";
+            }
+            case CharacterType.DiceOdd: {
+                return "次のサイコロの合計値が奇数になる";
             }
             case CharacterType.DrawCards: {
                 var value = this.property["value"];
@@ -724,14 +734,26 @@ var Session = (function () {
         this.done(Phase.StartTurn);
         return true;
     };
-    Session.prototype.diceRoll = function (player_id, dice_num, aim) {
+    Session.prototype.processDiceCommand = function (query) {
+        var player_id = query.player_id;
+        var dice_num = query.dice_num;
+        var aim = query.aim;
         if (!this.isValid(player_id, Phase.DiceRoll)) {
             return false;
         }
         var delta = this.effect_manager.getDiceDelta();
-        this.dice_result = dice_1.Dice.roll(dice_num, aim, delta);
-        // TODO: Move this to other place?
-        this.target_facilities = this.getFacilitiesInArea(this.dice_result.result());
+        var types = this.effect_manager.getCharacterTypes();
+        var even_odd = dice_1.DiceEvenOdd.None;
+        if (types.indexOf(facility_1.CharacterType.DiceEven) !== -1) {
+            even_odd = dice_1.DiceEvenOdd.Even;
+        }
+        else if (types.indexOf(facility_1.CharacterType.DiceOdd) !== -1) {
+            even_odd = dice_1.DiceEvenOdd.Odd;
+        }
+        this.dice_result = dice_1.Dice.roll(dice_num, aim, delta, even_odd);
+        if (types.indexOf(facility_1.CharacterType.DiceEven))
+            // TODO: Move this to other place?
+            this.target_facilities = this.getFacilitiesInArea(this.dice_result.result());
         var event = new Event();
         this.events.push(event);
         event.type = EventType.Dice;
@@ -741,7 +763,10 @@ var Session = (function () {
         this.done(Phase.DiceRoll);
         return true;
     };
-    Session.prototype.interactFacilityAction = function (player_id, card_id, target_id) {
+    Session.prototype.processInteractCommand = function (query) {
+        var player_id = query.player_id;
+        var card_id = query.card_id;
+        var target_id = query.target_player_id;
         if (!this.isValid(player_id, Phase.FacilityActionWithInteraction)) {
             return false;
         }
@@ -1022,8 +1047,10 @@ var Session = (function () {
         return card_ids;
     };
     // TODO: Support other additional arguments.
-    Session.prototype.useCharacter = function (player_id, card_id, target_player_id) {
-        if (target_player_id === void 0) { target_player_id = null; }
+    Session.prototype.processCharacterCommand = function (query) {
+        var player_id = query.player_id;
+        var card_id = query.card_id;
+        var target_player_id = query.target_player_id;
         if (!this.isValid(player_id, Phase.CharacterCard)) {
             return false;
         }
@@ -1044,18 +1071,25 @@ var Session = (function () {
         event.player_id = player_id;
         event.valid = true;
         this.events.push(event);
-        if (character.type === facility_1.CharacterType.DrawCards) {
-            event.target_card_ids = this.drawCards(player_id, character.getPropertyValue());
-            event.player_id = player_id;
-        }
-        else if (character.type === facility_1.CharacterType.MoveMoney) {
-            var money = this.moveMoney(target_player_id, player_id, character.property["money"]);
-            event.target_player_id = target_player_id;
-            event.moneys[player_id] += money;
-            event.moneys[target_player_id] -= money;
-        }
-        else {
-            this.effect_manager.addCard(character.data_id, this.round, this.turn);
+        switch (character.type) {
+            case facility_1.CharacterType.DrawCards: {
+                event.target_card_ids = this.drawCards(player_id, character.getPropertyValue());
+                event.player_id = player_id;
+                break;
+            }
+            case facility_1.CharacterType.MoveMoney: {
+                var money = this.moveMoney(target_player_id, player_id, character.property["money"]);
+                event.target_player_id = target_player_id;
+                event.moneys[player_id] += money;
+                event.moneys[target_player_id] -= money;
+                break;
+            }
+            case facility_1.CharacterType.DiceDelta:
+            case facility_1.CharacterType.DiceEven:
+            case facility_1.CharacterType.DiceOdd: {
+                this.effect_manager.addCard(character.data_id, this.round, this.turn);
+                break;
+            }
         }
         // Move the card to discard.
         if (!this.card_manager.moveHandToDiscard(card_id)) {
@@ -1080,7 +1114,14 @@ var Session = (function () {
         }
         return card_ids;
     };
-    Session.prototype.buildFacility = function (player_id, x, y, card_id) {
+    Session.prototype.processBuildCommand = function (query) {
+        var player_id = query.player_id;
+        var x = query.x;
+        var y = query.y;
+        var card_id = query.card_id;
+        if (x == null || y == null && player_id == null && card_id == null) {
+            return false;
+        }
         // Facility is a landmark?
         if (this.card_manager.isLandmark(card_id)) {
             return this.buildLandmark(player_id, card_id);
@@ -1266,7 +1307,8 @@ var Session = (function () {
         this.step++;
         return true;
     };
-    Session.prototype.quitGame = function (user_id) {
+    Session.prototype.processQuitCommand = function (query) {
+        var user_id = query.user_id;
         this.removeWatcher(user_id);
         var player_id = this.getPlayerId(user_id);
         if (player_id === -1) {
@@ -1369,10 +1411,12 @@ var Session = (function () {
     Session.prototype.getWatchers = function () {
         return this.watcher_user_ids;
     };
-    Session.prototype.addWatcher = function (user_id) {
+    Session.prototype.processWatchCommand = function (query) {
+        var user_id = query.user_id;
         if (this.watcher_user_ids.indexOf(user_id) === -1) {
             this.watcher_user_ids.push(user_id);
         }
+        return true;
     };
     Session.prototype.removeWatcher = function (user_id) {
         var index = this.watcher_user_ids.indexOf(user_id);
@@ -1620,16 +1664,9 @@ var Client = (function () {
     };
     Client.prototype.sendRequest = function (request) {
         var _this = this;
-        this.connection.sendRequest(this.fillRequest(request), function (response) {
+        this.connection.sendRequest(request, function (response) {
             _this.callbackSession(response);
         });
-    };
-    Client.prototype.fillRequest = function (request) {
-        request.user_id = this.user_id;
-        request.session_id = this.session_id;
-        request.player_id = this.player_id;
-        request.mode = this.mode;
-        return request;
     };
     Client.prototype.createQuery = function () {
         return {
@@ -2139,13 +2176,26 @@ var AutoPlay = (function () {
         switch (session.getPhase()) {
             case session_1.Phase.CharacterCard:
             case session_1.Phase.DiceRoll:
-                return session.diceRoll(player_id, 2, 0);
+                return AutoPlay.playDiceRoll(session);
             case session_1.Phase.BuildFacility:
                 return AutoPlay.playBuildFacility(session);
             case session_1.Phase.FacilityActionWithInteraction:
                 return AutoPlay.playInteractFacilityAction(session);
         }
         return false;
+    };
+    AutoPlay.playDiceRoll = function (session) {
+        var player_id = session.getCurrentPlayerId();
+        var query = {
+            command: "dice",
+            user_id: session.getPlayer(player_id).user_id,
+            session_id: session.session_id,
+            player_id: player_id,
+            mode: -1,
+            dice_num: 2,
+            aim: 0,
+        };
+        return session.processDiceCommand(query);
     };
     AutoPlay.playInteractFacilityAction = function (session) {
         var player_id = session.getCurrentPlayerId();
@@ -2154,7 +2204,16 @@ var AutoPlay = (function () {
         if (target_facilities.length === 0) {
             return false;
         }
-        return session.interactFacilityAction(player_id, target_facilities[0], target_id);
+        var query = {
+            command: "interact",
+            user_id: session.getPlayer(player_id).user_id,
+            session_id: session.session_id,
+            player_id: player_id,
+            mode: -1,
+            card_id: target_facilities[0],
+            target_player_id: target_id,
+        };
+        return session.processInteractCommand(query);
     };
     AutoPlay.playBuildFacility = function (session) {
         var landmarks = session.getLandmarks();
@@ -2171,6 +2230,16 @@ var AutoPlay = (function () {
             }
         }
         var card_ids = session.getPlayerCards(player_id).getHand();
+        var query = {
+            command: "build",
+            user_id: session.getPlayer(player_id).user_id,
+            session_id: session.session_id,
+            player_id: player_id,
+            mode: -1,
+            x: -1,
+            y: -1,
+            card_id: -1,
+        };
         for (var _a = 0, card_ids_1 = card_ids; _a < card_ids_1.length; _a++) {
             var card_id = card_ids_1[_a];
             if (session.isCharacter(card_id)) {
@@ -2187,9 +2256,12 @@ var AutoPlay = (function () {
                 continue;
             }
             var _b = positions[0], x = _b[0], y = _b[1];
-            return session.buildFacility(player_id, x, y, card_id);
+            query.x = x;
+            query.y = y;
+            query.card_id = card_id;
+            return session.processBuildCommand(query);
         }
-        return session.buildFacility(player_id, -1, -1, -1);
+        return session.processBuildCommand(query);
     };
     return AutoPlay;
 }());
@@ -2634,8 +2706,9 @@ var EffectManager = (function () {
         var round_factor = 10; // Any number >= 4.
         for (var _i = 0, _a = this.cards; _i < _a.length; _i++) {
             var card = _a[_i];
-            if ((card.round + card.character.round) * round_factor + card.turn >
-                round * round_factor + turn) {
+            var expiration = (card.round + card.character.round) * round_factor + card.turn;
+            var current = round * round_factor + turn;
+            if (expiration > current) {
                 new_cards.push(card);
             }
         }
@@ -2650,6 +2723,19 @@ var EffectManager = (function () {
             }
         }
         return delta;
+    };
+    EffectManager.prototype.getCharacterTypes = function () {
+        var types = [];
+        var even_odd = null;
+        for (var _i = 0, _a = this.cards; _i < _a.length; _i++) {
+            var card = _a[_i];
+            if (card.character.type === facility_1.CharacterType.DiceEven ||
+                card.character.type === facility_1.CharacterType.DiceOdd) {
+                even_odd = card.character.type;
+            }
+        }
+        types.push(even_odd);
+        return types;
     };
     return EffectManager;
 }());
@@ -2789,26 +2875,49 @@ var DiceResult = (function () {
     return DiceResult;
 }());
 exports.DiceResult = DiceResult;
+var DiceEvenOdd;
+(function (DiceEvenOdd) {
+    DiceEvenOdd[DiceEvenOdd["None"] = 0] = "None";
+    DiceEvenOdd[DiceEvenOdd["Even"] = 1] = "Even";
+    DiceEvenOdd[DiceEvenOdd["Odd"] = 2] = "Odd";
+})(DiceEvenOdd = exports.DiceEvenOdd || (exports.DiceEvenOdd = {}));
 var Dice = (function () {
     function Dice() {
     }
-    Dice.roll = function (dice_num, aim, delta) {
+    Dice.roll = function (dice_num, aim, delta, even_odd) {
         if (aim === void 0) { aim = 0; }
         if (delta === void 0) { delta = 0; }
+        if (even_odd === void 0) { even_odd = DiceEvenOdd.None; }
         var dice2_factor = (dice_num === 2) ? 1 : 0;
-        var dice1 = Dice.roll1();
-        var dice2 = Dice.roll1() * dice2_factor;
+        var _a = Dice.rollDices(dice_num, even_odd), dice1 = _a[0], dice2 = _a[1];
         if (dice1 + dice2 === aim) {
             // Lucky, but not miracle lucky.
             return new DiceResult(dice1, dice2, delta, false);
         }
         // Try again for miracle.
-        var miracle_dice1 = Dice.roll1();
-        var miracle_dice2 = Dice.roll1() * dice2_factor;
+        var _b = Dice.rollDices(dice_num, even_odd), miracle_dice1 = _b[0], miracle_dice2 = _b[1];
         if (miracle_dice1 + miracle_dice2 === aim) {
             return new DiceResult(dice1, dice2, delta, true, miracle_dice1, miracle_dice2);
         }
         return new DiceResult(dice1, dice2, delta, false);
+    };
+    Dice.rollDices = function (dice_num, even_odd) {
+        var dice2_factor = (dice_num === 2) ? 1 : 0;
+        var dice1 = Dice.roll1();
+        var dice2 = Dice.roll1() * dice2_factor;
+        if (even_odd === DiceEvenOdd.Even) {
+            while ((dice1 + dice2) % 2 !== 0) {
+                dice1 = Dice.roll1();
+                dice2 = Dice.roll1() * dice2_factor;
+            }
+        }
+        if (even_odd === DiceEvenOdd.Odd) {
+            while ((dice1 + dice2) % 2 !== 1) {
+                dice1 = Dice.roll1();
+                dice2 = Dice.roll1() * dice2_factor;
+            }
+        }
+        return [dice1, dice2];
     };
     Dice.roll1 = function () {
         return Math.floor(Math.random() * 6) + 1;
@@ -2834,7 +2943,6 @@ var COLOR_FIELD = "#FFF8E1";
 var COLOR_LANDMARK = "#B0BEC5";
 var COLOR_CLICKABLE = "#FFCA28";
 var COLOR_HIGHTLIGHT_CARD = "#FFE082";
-var COLOR_CHARACTER = "#FFF9C4";
 var COLOR_PLAYERS = ["#909CC2", "#D9BDC5", "#90C290", "#9D8189"];
 var COLOR_GRAY = "#B0BEC5";
 var COLOR_BLUE = "#90CAF9";
@@ -3225,9 +3333,10 @@ var HtmlView = (function () {
         if (!this.isRequestReady()) {
             return;
         }
+        // Reset character cards.
+        this.cards_views[this.client.player_id].resetClickable();
         this.client.sendRequest(this.client.createDiceQuery(dice_num, aim));
         this.event_queue.addEvent(function () {
-            console.log("dice roll.");
             var dice_view = (dice_num === 1) ? _this.buttons_view.dice1 : _this.buttons_view.dice2;
             dice_view.hide();
             _this.buttons_view.hide();
@@ -3238,27 +3347,25 @@ var HtmlView = (function () {
     };
     HtmlView.prototype.onClickCharacter = function () {
         var _this = this;
-        if (this.clicked_card_view == null) {
-            return;
-        }
-        var card_id = this.clicked_card_view.getCardId();
-        var character = this.session.getCharacter(card_id);
-        if (character.type === facility_1.CharacterType.MoveMoney) {
-            this.dialogSelectPlayer(function (selected_pid) {
-                _this.client.sendRequest(_this.client.createCharacterQuery(card_id, selected_pid));
+        this.dialogSelectCharCard(function (card_id) {
+            var character = _this.session.getCharacter(card_id);
+            if (character.type === facility_1.CharacterType.MoveMoney) {
+                _this.dialogSelectPlayer(function (selected_pid) {
+                    _this.client.sendRequest(_this.client.createCharacterQuery(card_id, selected_pid));
+                    _this.event_queue.addEvent(function () {
+                        _this.effectCharacter(_this.client.player_id, card_id);
+                        return true;
+                    }, 2000);
+                });
+            }
+            else {
+                _this.client.sendRequest(_this.client.createCharacterQuery(card_id));
                 _this.event_queue.addEvent(function () {
                     _this.effectCharacter(_this.client.player_id, card_id);
                     return true;
                 }, 2000);
-            });
-        }
-        else {
-            this.client.sendRequest(this.client.createCharacterQuery(card_id));
-            this.event_queue.addEvent(function () {
-                _this.effectCharacter(_this.client.player_id, card_id);
-                return true;
-            }, 2000);
-        }
+            }
+        });
     };
     HtmlView.prototype.onClickEndTurn = function () {
         var _this = this;
@@ -3353,12 +3460,14 @@ var HtmlView = (function () {
             this.drawDeckBoard();
             return;
         }
+        var phase = this.session.getPhase();
+        if (phase === session_1.Phase.CharacterCard) {
+            return;
+        }
         // Event on game (this.scene === Scene.Game).
         var clicked_card_id = this.cards_views[player].cards[card].getCardId();
-        var phase = this.session.getPhase();
         var is_char = this.session.isCharacter(clicked_card_id);
-        var is_valid = ((phase === session_1.Phase.CharacterCard) && is_char ||
-            (phase === session_1.Phase.BuildFacility) && !is_char);
+        var is_valid = ((phase === session_1.Phase.BuildFacility) && !is_char);
         if (!is_valid) {
             return;
         }
@@ -3372,9 +3481,9 @@ var HtmlView = (function () {
         this.clicked_card_view = this.cards_views[player].cards[card];
         this.clicked_card_view.setHighlight(true);
         this.drawBoard(this.session);
-        if (phase === session_1.Phase.CharacterCard) {
-            this.buttons_view.char_card.setClickable(true);
-        }
+        // if (phase === Phase.CharacterCard) {
+        //     this.buttons_view.char_card.setClickable(true);
+        // }
         if (phase === session_1.Phase.BuildFacility) {
             for (var _i = 0, _b = this.session.getFacility(clicked_card_id).getArea(); _i < _b.length; _i++) {
                 var area = _b[_i];
@@ -3564,11 +3673,6 @@ var HtmlView = (function () {
         field.style.borderColor = this.getFacilityColor(facility);
         field.colSpan = facility.size;
     };
-    // TODO: move this function to other place/class.
-    HtmlView.prototype.hasCharacterCard = function (session, player_id) {
-        var cards = session.getSortedHand(player_id);
-        return session.isCharacter(cards[cards.length - 1]);
-    };
     HtmlView.prototype.drawStatusMessage = function (session) {
         var players = session.getPlayers();
         var player_id = session.getCurrentPlayerId();
@@ -3735,6 +3839,16 @@ var HtmlView = (function () {
                 this.effectCardDeals(event.player_id, event.target_card_ids);
                 handled = true;
             }
+            if (type === facility_1.CharacterType.DiceEven) {
+                var color = this.getPlayerColor(event.player_id);
+                this.message_view.drawMessage("次のサイコロの合計値が偶数になります", color);
+                handled = true;
+            }
+            if (type === facility_1.CharacterType.DiceOdd) {
+                var color = this.getPlayerColor(event.player_id);
+                this.message_view.drawMessage("次のサイコロの合計値が奇数になります", color);
+                handled = true;
+            }
             if (type === facility_1.CharacterType.MoveMoney) {
                 var _loop_5 = function (pid) {
                     var money = event.moneys[pid];
@@ -3743,7 +3857,7 @@ var HtmlView = (function () {
                     }
                     var delay = (money > 0) ? 1500 : 500;
                     window.setTimeout(function () {
-                        _this.drawMoneyMotion(money, pid, 5, 0);
+                        _this.drawMoneyMotion(money, pid, "message");
                     }, delay);
                 };
                 for (var pid = 0; pid < event.moneys.length; pid++) {
@@ -3809,7 +3923,7 @@ var HtmlView = (function () {
                     delay = 1000;
                 }
                 window.setTimeout(function () {
-                    _this.drawMoneyMotion(money, pid, x_3, y_2);
+                    _this.drawMoneyMotion(money, pid, "field_" + x_3 + "_" + y_2);
                     _this.board_view.setHighlight([x_3, y_2], COLOR_CLICKABLE);
                     window.setTimeout(function () {
                         _this.board_view.setHighlight([x_3, y_2], "transparent");
@@ -3840,12 +3954,18 @@ var HtmlView = (function () {
         this.message_view.drawMessage("対象プレイヤーを選択してください", color);
         this.players_view.setClickableForPlayer(this.client.player_id, callback);
     };
-    HtmlView.prototype.drawMoneyMotion = function (money, player_id, x, y) {
+    HtmlView.prototype.dialogSelectCharCard = function (callback) {
+        var color = this.getPlayerColor(this.client.player_id);
+        this.message_view.drawMessage("キャラカードを選択してください", color);
+        var cards_view = this.cards_views[this.client.player_id];
+        cards_view.setCharCardsClickable(this.session, callback);
+    };
+    HtmlView.prototype.drawMoneyMotion = function (money, player_id, element_id) {
         if (money > 0) {
-            this.effectMoneyMotion("field_" + x + "_" + y, "player_" + player_id, money);
+            this.effectMoneyMotion(element_id, "player_" + player_id, money);
         }
         else if (money < 0) {
-            this.effectMoneyMotion("player_" + player_id, "field_" + x + "_" + y, money);
+            this.effectMoneyMotion("player_" + player_id, element_id, money);
         }
         this.players_view.players[player_id].addMoney(money);
     };
@@ -4069,18 +4189,37 @@ var HtmlCardsView = (function (_super) {
         _this.element_id = element_id;
         _this.max_size = max_size;
         _this.cards = [];
-        _this.card_ids = [];
+        _this.callback = null;
         var base = document.getElementById("card_widget");
-        for (var i = 0; i < _this.max_size; ++i) {
+        var _loop_1 = function (i) {
             var new_node = base.cloneNode(true);
-            var new_element = _this.element.appendChild(new_node);
+            var new_element = this_1.element.appendChild(new_node);
             new_element.id = element_id + "_" + i;
             var card_view = new HtmlCardView(new_element.id);
-            _this.cards.push(card_view);
+            card_view.addClickListener(function () { _this.onClick(i); });
+            this_1.cards.push(card_view);
             card_view.none();
+        };
+        var this_1 = this;
+        for (var i = 0; i < _this.max_size; ++i) {
+            _loop_1(i);
         }
         return _this;
     }
+    HtmlCardsView.prototype.onClick = function (index) {
+        var card_view = this.cards[index];
+        if (card_view.is_highlight === false) {
+            return;
+        }
+        for (var i = 0; i < this.cards.length; ++i) {
+            this.cards[i].setHighlight(false);
+        }
+        if (this.callback == null) {
+            return;
+        }
+        this.callback(card_view.getCardId());
+        this.callback = null;
+    };
     HtmlCardsView.prototype.draw = function (session, card_ids) {
         for (var i = 0; i < this.max_size; ++i) {
             this.cards[i].draw(session, (i < card_ids.length) ? card_ids[i] : -1);
@@ -4095,16 +4234,22 @@ var HtmlCardsView = (function (_super) {
         }
         return null;
     };
-    // TODO: Not necessary?
-    HtmlCardsView.prototype.setCardIds = function (card_ids) {
-        this.card_ids = card_ids;
-        var i = 0;
-        for (; i < card_ids.length; ++i) {
-            this.cards[i].setCardId(card_ids[i]);
+    HtmlCardsView.prototype.resetClickable = function () {
+        for (var i = 0; i < this.cards.length; ++i) {
+            this.cards[i].setHighlight(false);
         }
-        for (; i < this.max_size; ++i) {
-            this.cards[i].setCardId(-1);
+        this.callback = null;
+    };
+    // TODO: remove session.
+    HtmlCardsView.prototype.setCharCardsClickable = function (session, callback) {
+        for (var i = 0; i < this.cards.length; ++i) {
+            var card = this.cards[i];
+            if (!session.isCharacter(card.getCardId())) {
+                continue;
+            }
+            card.setHighlight(true);
         }
+        this.callback = callback;
     };
     return HtmlCardsView;
 }(HtmlViewObject));
@@ -4115,6 +4260,7 @@ var HtmlCardView = (function (_super) {
         var _this = _super.call(this, document.getElementById(element_id)) || this;
         _this.element_id = element_id;
         _this.card_id = -1;
+        _this.is_highlight = false;
         _this.element_name = _this.element.getElementsByClassName("card_name")[0];
         _this.element_cost = _this.element.getElementsByClassName("card_cost")[0];
         _this.element_description = _this.element.getElementsByClassName("card_description")[0];
@@ -4178,6 +4324,7 @@ var HtmlCardView = (function (_super) {
         this.show();
     };
     HtmlCardView.prototype.setHighlight = function (is_highlight) {
+        this.is_highlight = is_highlight;
         this.element.style.borderColor = is_highlight ? COLOR_HIGHTLIGHT_CARD : "#EEEEEE";
     };
     HtmlCardView.prototype.getFacilityAreaString = function (facility) {
@@ -4335,17 +4482,17 @@ var HtmlBoardView = (function (_super) {
     function HtmlBoardView(element_id, row, column) {
         var _this = _super.call(this, document.getElementById(element_id)) || this;
         _this.clickable_fields = new HtmlClickableFieldsView("click", row, column);
-        var _loop_1 = function (y) {
-            var _loop_2 = function (x) {
-                this_1.clickable_fields.fields[x][y].addClickListener(function () { _this.onClick(x, y); });
+        var _loop_2 = function (y) {
+            var _loop_3 = function (x) {
+                this_2.clickable_fields.fields[x][y].addClickListener(function () { _this.onClick(x, y); });
             };
             for (var x = 0; x < column; ++x) {
-                _loop_2(x);
+                _loop_3(x);
             }
         };
-        var this_1 = this;
+        var this_2 = this;
         for (var y = 0; y < row; ++y) {
-            _loop_1(y);
+            _loop_2(y);
         }
         return _this;
     }
@@ -4373,16 +4520,16 @@ var HtmlDeckCharView = (function (_super) {
         var _this = _super.call(this, document.getElementById(element_id)) || this;
         _this.fields = [];
         _this.clickables = [];
-        var _loop_3 = function (i) {
+        var _loop_4 = function (i) {
             var field = new HtmlViewObject(document.getElementById(element_id + "_" + i));
-            this_2.fields.push(field);
+            this_3.fields.push(field);
             var clickable = new HtmlClickableFieldView("clickable_" + element_id + "_" + i);
-            this_2.clickables.push(clickable);
+            this_3.clickables.push(clickable);
             clickable.addClickListener(function () { _this.onClick(i); });
         };
-        var this_2 = this;
+        var this_3 = this;
         for (var i = 0; i < 5; ++i) {
-            _loop_3(i);
+            _loop_4(i);
         }
         return _this;
     }
@@ -4434,6 +4581,11 @@ var HtmlButtonsView = (function (_super) {
         _this.end_turn = new HtmlButtonView(element_id + "_end_turn");
         return _this;
     }
+    // TODO: move this function to other place/class.
+    HtmlButtonsView.prototype.hasCharacterCard = function (session, player_id) {
+        var cards = session.getSortedHand(player_id);
+        return session.isCharacter(cards[cards.length - 1]);
+    };
     HtmlButtonsView.prototype.draw = function (session, player_id) {
         if (session.getCurrentPlayerId() !== player_id) {
             this.hide();
@@ -4450,7 +4602,12 @@ var HtmlButtonsView = (function (_super) {
         }
         if (phase === session_1.Phase.CharacterCard) {
             this.char_card.show();
-            this.char_card.setClickable(false);
+            if (this.hasCharacterCard(session, player_id)) {
+                this.char_card.element.classList.remove("inactive");
+            }
+            else {
+                this.char_card.element.classList.add("inactive");
+            }
         }
         if (phase === session_1.Phase.BuildFacility) {
             this.end_turn.show();
@@ -4521,8 +4678,8 @@ var HtmlClickableFieldsView = (function (_super) {
         var _this = this;
         var x = pip - 1;
         var delay = 0;
-        var _loop_4 = function (i) {
-            var y = this_3.row - 1 - i;
+        var _loop_5 = function (i) {
+            var y = this_4.row - 1 - i;
             window.setTimeout(function () {
                 _this.fields[x][y].setColor(color);
                 window.setTimeout(function () {
@@ -4531,9 +4688,9 @@ var HtmlClickableFieldsView = (function (_super) {
             }, delay);
             delay = delay + 10 * i; // 0, 10, 30, 60, 100, ...
         };
-        var this_3 = this;
+        var this_4 = this;
         for (var i = 0; i < this.row; ++i) {
-            _loop_4(i);
+            _loop_5(i);
         }
     };
     return HtmlClickableFieldsView;
@@ -4563,7 +4720,7 @@ var HtmlChatButtonView = (function (_super) {
         _this.stamp_box.none();
         _this.addClickListener(function () { _this.toggleStampBox(); });
         var stamp_elements = _this.stamp_box.element.getElementsByClassName("stamp");
-        var _loop_5 = function (i) {
+        var _loop_6 = function (i) {
             var stamp = new HtmlViewObject(stamp_elements[i]);
             stamp.addClickListener(function () {
                 if (_this.callback) {
@@ -4571,11 +4728,11 @@ var HtmlChatButtonView = (function (_super) {
                 }
                 _this.showStampBox(false);
             });
-            this_4.stamps.push(stamp);
+            this_5.stamps.push(stamp);
         };
-        var this_4 = this;
+        var this_5 = this;
         for (var i = 0; i < stamp_elements.length; ++i) {
-            _loop_5(i);
+            _loop_6(i);
         }
         return _this;
     }
@@ -4682,63 +4839,47 @@ var SessionHandler = (function () {
         }
         return false;
     };
+    SessionHandler.prototype.processUpdateCommand = function (session, query) {
+        if (query.step >= session.getStep()) {
+            // No update.
+            return false;
+        }
+        return true;
+    };
     SessionHandler.prototype.processCommand = function (session, query) {
         if (query.command === "board") {
-            var step = Number(query.step);
-            if (step >= session.getStep()) {
-                // No update.
-                return false;
-            }
+            return this.processUpdateCommand(session, query);
         }
         else if (query.command === "character") {
-            var player_id = Number(query.player_id);
-            var card_id = Number(query.card_id);
-            // TODO: Enable to accept other additional values.
-            var target_player_id = Number(query.target_player_id);
-            if (session.useCharacter(player_id, card_id, target_player_id)) {
-                // TODO: integrate buildFacility and doNext.
+            if (session.processCharacterCommand(query)) {
                 this.doNext(session);
             }
         }
         else if (query.command === "dice") {
-            var player_id = Number(query.player_id);
-            var dice_num = Number(query.dice_num);
-            var aim = Number(query.aim);
-            if (session.diceRoll(player_id, dice_num, aim)) {
+            if (session.processDiceCommand(query)) {
                 // TODO: integrate diceRoll and doNext.
                 this.doNext(session);
             }
         }
         else if (query.command === "build") {
-            var player_id = Number(query.player_id);
-            var x = Number(query.x);
-            var y = Number(query.y);
-            var card_id = Number(query.card_id);
-            if (x != null && y != null && player_id != null && card_id != null) {
-                if (session.buildFacility(player_id, x, y, card_id)) {
-                    // TODO: integrate buildFacility and doNext.
-                    this.doNext(session);
-                }
+            if (session.processBuildCommand(query)) {
+                // TODO: integrate buildFacility and doNext.
+                this.doNext(session);
             }
         }
         else if (query.command === "interact") {
-            var player_id = Number(query.player_id);
-            var card_id = Number(query.card_id);
-            var target_player_id = Number(query.target_player_id);
-            if (session.interactFacilityAction(player_id, card_id, target_player_id)) {
+            if (session.processInteractCommand(query)) {
                 // TODO: integrate interactFacilityAction and doNext.
                 this.doNext(session);
             }
         }
         else if (query.command === "quit") {
-            var user_id = String(query.user_id);
-            if (session.quitGame(user_id)) {
+            if (session.processQuitCommand(query)) {
                 this.doNext(session);
             }
         }
         else if (query.command === "watch") {
-            var user_id = String(query.user_id);
-            session.addWatcher(user_id);
+            session.processWatchCommand(query);
         }
         return true;
     };
