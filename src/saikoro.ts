@@ -2,6 +2,7 @@ import { RequestCallback, Connection, Client } from "./client";
 import { Phase, Session } from "./session";
 import { HtmlView } from "./html_view";
 import { GameMode } from "./protocol";
+import * as Query from "./query";
 
 // TODO: can be merged with Client?
 export class WebClient extends Client {
@@ -60,16 +61,19 @@ export class WebClient extends Client {
         this.view.updateView(session, this.player_id);
     }
 
-    public callbackChat(data: any): void {  // Request.chat
+    public callbackChat(data: { [user_id: string]: Query.ChatQuery }): void {
         if (data == null) {
             return;
         }
         const user_ids: string[] = Object.keys(data);
 
         for (let user_id of user_ids) {
-            const chat: any = data[user_id];
+            const chat: Query.ChatQuery = data[user_id];
             const prev_timestamp: number = this.chat_timestamps[user_id];
             if (chat.timestamp == undefined || chat.timestamp === prev_timestamp) {
+                continue;
+            }
+            if (chat.step < this.step) {
                 continue;
             }
             this.view.updateChat(chat);

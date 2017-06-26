@@ -141,6 +141,7 @@ export abstract class Client {
         let query: Query.ChatQuery = <Query.ChatQuery>this.createQuery();
         query.command = "chat";
         query.stamp_id = stamp_id;
+        query.step = this.step;
         query.timestamp = new Date().getTime();
         return query;
     }

@@ -11,6 +11,7 @@ import { HtmlViewObject, HtmlCardsView, HtmlCardView, HtmlPlayersView,
          HtmlMessageView, HtmlButtonsView,
          HtmlDeckCharView, HtmlBoardView, HtmlDiceView,
          HtmlChatButtonView } from "./html_view_parts";
+import * as Query from "./query";
 
 const COLOR_FIELD: string = "#FFF8E1";
 const COLOR_LANDMARK: string = "#B0BEC5";
@@ -444,8 +445,7 @@ export class HtmlView {
         this.client.sendRequest(this.client.createChatQuery(index));
     }
 
-    // The format of chat is same with fillRequest(Request.chat(stamp_id)).
-    public updateChat(chat: any): void {
+    public updateChat(chat: Query.ChatQuery): void {
         if (chat.user_id === this.client.user_id) {
             return;
         }

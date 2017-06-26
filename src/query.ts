@@ -25,6 +25,7 @@ export interface MatchingQuery extends Query {
 
 export interface ChatQuery extends Query {
     stamp_id: number,
+    step: number,
     timestamp: number,
 }
 
