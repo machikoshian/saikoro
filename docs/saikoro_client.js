@@ -78,7 +78,8 @@ var CharacterType;
     CharacterType[CharacterType["None"] = 0] = "None";
     CharacterType[CharacterType["DiceDelta"] = 1] = "DiceDelta";
     CharacterType[CharacterType["DrawCards"] = 2] = "DrawCards";
-    CharacterType[CharacterType["SalaryFactor"] = 3] = "SalaryFactor";
+    CharacterType[CharacterType["MoveMoney"] = 3] = "MoveMoney";
+    CharacterType[CharacterType["SalaryFactor"] = 4] = "SalaryFactor";
 })(CharacterType = exports.CharacterType || (exports.CharacterType = {}));
 var CharacterData = (function () {
     function CharacterData(id, // Unique number.
@@ -97,6 +98,7 @@ var CHARACTER_DATA = [
     new CharacterData(1000, "大学生", CharacterType.DiceDelta, 1, { "delta": 3 }),
     new CharacterData(1001, "幼稚園児", CharacterType.DiceDelta, 2, { "delta": -2 }),
     new CharacterData(1002, "執事", CharacterType.DrawCards, 0, { "value": 2 }),
+    new CharacterData(1003, "有能秘書", CharacterType.MoveMoney, 0, { "money": 300 }),
 ];
 var FacilityType;
 (function (FacilityType) {
@@ -295,15 +297,22 @@ var Character = (function () {
     };
     Character.prototype.getDescription = function () {
         switch (this.type) {
-            case CharacterType.None:
+            case CharacterType.None: {
                 return "";
-            case CharacterType.DiceDelta:
+            }
+            case CharacterType.DiceDelta: {
                 var delta = this.property["delta"];
                 var delta_str = ((delta > 0) ? "+" : "") + delta;
                 return "\u30B5\u30A4\u30B3\u30ED\u306E\u76EE\u3092" + delta_str + "\u3059\u308B\n" + this.round + "\u30E9\u30A6\u30F3\u30C9";
-            case CharacterType.DrawCards:
+            }
+            case CharacterType.DrawCards: {
                 var value = this.property["value"];
                 return "\u5C71\u672D\u304B\u3089\u30AB\u30FC\u30C9\u3092" + value + "\u679A\u5F15\u304F";
+            }
+            case CharacterType.MoveMoney: {
+                var money = this.property["money"];
+                return "\u9078\u3093\u3060\u30D7\u30EC\u30A4\u30E4\u30FC\u304B\u3089" + money + "\u30B3\u30A4\u30F3\u3092\u596A\u3046";
+            }
         }
         return "";
     };
@@ -332,14 +341,6 @@ var GameMode;
     GameMode[GameMode["OnLineWatch"] = 8] = "OnLineWatch";
 })(GameMode = exports.GameMode || (exports.GameMode = {}));
 ;
-var StampId;
-(function (StampId) {
-    StampId[StampId["None"] = 0] = "None";
-    StampId[StampId["Hello"] = 1] = "Hello";
-    StampId[StampId["Doki"] = 2] = "Doki";
-    StampId[StampId["Sugoi"] = 3] = "Sugoi";
-    StampId[StampId["Otsukare"] = 4] = "Otsukare";
-})(StampId = exports.StampId || (exports.StampId = {}));
 var Protocol = (function () {
     function Protocol() {
     }
@@ -424,7 +425,7 @@ exports.Protocol = Protocol;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var dice_1 = __webpack_require__(12);
-var board_1 = __webpack_require__(4);
+var board_1 = __webpack_require__(3);
 var facility_1 = __webpack_require__(0);
 var utils_1 = __webpack_require__(6);
 var card_manager_1 = __webpack_require__(10);
@@ -472,6 +473,7 @@ var Event = (function () {
         this.player_id = -1;
         this.moneys = [0, 0, 0, 0];
         this.card_id = null;
+        this.target_player_id = -1;
         this.target_card_ids = [];
         this.dice = null;
         this.valid = false;
@@ -484,6 +486,7 @@ var Event = (function () {
             player_id: this.player_id,
             moneys: this.moneys,
             card_id: this.card_id,
+            target_player_id: this.target_player_id,
             target_card_ids: this.target_card_ids,
             dice: this.dice ? this.dice.toJSON() : null,
             valid: this.valid,
@@ -496,6 +499,7 @@ var Event = (function () {
         event.player_id = json.player_id;
         event.moneys = json.moneys;
         event.card_id = json.card_id;
+        event.target_player_id = json.target_player_id;
         event.target_card_ids = json.target_card_ids;
         event.dice = json.dice ? dice_1.DiceResult.fromJSON(json.dice) : null;
         event.valid = json.valid;
@@ -1017,7 +1021,9 @@ var Session = (function () {
         }
         return card_ids;
     };
-    Session.prototype.useCharacter = function (player_id, card_id) {
+    // TODO: Support other additional arguments.
+    Session.prototype.useCharacter = function (player_id, card_id, target_player_id) {
+        if (target_player_id === void 0) { target_player_id = null; }
         if (!this.isValid(player_id, Phase.CharacterCard)) {
             return false;
         }
@@ -1036,10 +1042,17 @@ var Session = (function () {
         event.card_id = card_id;
         event.step = this.step;
         event.player_id = player_id;
+        event.valid = true;
         this.events.push(event);
         if (character.type === facility_1.CharacterType.DrawCards) {
             event.target_card_ids = this.drawCards(player_id, character.getPropertyValue());
             event.player_id = player_id;
+        }
+        else if (character.type === facility_1.CharacterType.MoveMoney) {
+            var money = this.moveMoney(target_player_id, player_id, character.property["money"]);
+            event.target_player_id = target_player_id;
+            event.moneys[player_id] += money;
+            event.moneys[target_player_id] -= money;
         }
         else {
             this.effect_manager.addCard(character.data_id, this.round, this.turn);
@@ -1379,166 +1392,6 @@ exports.Session = Session;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var protocol_1 = __webpack_require__(1);
-var Connection = (function () {
-    function Connection() {
-    }
-    return Connection;
-}());
-exports.Connection = Connection;
-var Client = (function () {
-    function Client(connection) {
-        this.session_id = -1;
-        this.mode = protocol_1.GameMode.None;
-        this.player_id = -1;
-        // TODO: user_id should be unique. 0 - 9 is reserved for NPCs.
-        this.user_id = String(Math.floor(Math.random() * 1000000) + 10);
-        this.step = -1;
-        this.live_sessions = [];
-        this.connection = connection;
-    }
-    Client.prototype.reset = function () {
-        this.session_id = -1;
-        this.mode = protocol_1.GameMode.None;
-        this.player_id = -1;
-        this.step = -1;
-        this.connection.stopCheckUpdate();
-        this.connection.stopCheckLive();
-    };
-    Client.prototype.matching = function (query) {
-        query.command = "matching";
-        query.user_id = this.user_id;
-        this.mode = query["mode"];
-        this.connection.stopCheckMatching();
-        this.connection.setQueryOnDisconnect(this.fillRequest(Request.quit()));
-        this.connection.matching(query, this.callbackMatching.bind(this));
-    };
-    Client.prototype.checkUpdate = function () {
-        var query = {
-            command: "board",
-            session_id: this.session_id,
-            player_id: this.player_id,
-            step: this.step,
-        };
-        this.sendRequest(query);
-    };
-    Client.prototype.callbackMatching = function (response) {
-        var response_json = JSON.parse(response);
-        if (response_json == null || !response_json.is_matched) {
-            return;
-        }
-        this.session_id = response_json.session_id;
-        this.connection.setQueryOnDisconnect(this.fillRequest(Request.quit()));
-        this.checkUpdate();
-        this.connection.stopCheckMatching();
-        this.connection.startCheckUpdate(this);
-        this.connection.stopCheckLive();
-    };
-    Client.prototype.startCheckLive = function (callback) {
-        this.connection.startCheckLive(callback);
-    };
-    Client.prototype.watchGame = function (session_id) {
-        this.reset();
-        this.session_id = session_id;
-        this.mode = protocol_1.GameMode.OnLineWatch;
-        this.sendRequest(Request.watch());
-        this.connection.setQueryOnDisconnect(this.fillRequest(Request.quit()));
-        this.connection.startCheckUpdate(this);
-        this.connection.stopCheckLive();
-    };
-    Client.prototype.sendRequest = function (request) {
-        var _this = this;
-        this.connection.sendRequest(this.fillRequest(request), function (response) {
-            _this.callbackSession(response);
-        });
-    };
-    Client.prototype.fillRequest = function (request) {
-        request.user_id = this.user_id;
-        request.session_id = this.session_id;
-        request.player_id = this.player_id;
-        request.mode = this.mode;
-        return request;
-    };
-    return Client;
-}());
-exports.Client = Client;
-// Move this class to a Saikoro specific file.
-var Request = (function () {
-    function Request() {
-    }
-    Request.matching = function (name, mode, deck) {
-        return {
-            command: "matching",
-            name: name,
-            mode: mode,
-            deck: deck,
-        };
-    };
-    Request.chat = function (stamp_id) {
-        return {
-            command: "chat",
-            stamp_id: stamp_id,
-            timestamp: new Date().getTime(),
-        };
-    };
-    Request.buildFacility = function (x, y, card_id) {
-        return {
-            command: "build",
-            x: x,
-            y: y,
-            card_id: card_id,
-        };
-    };
-    Request.rollDice = function (dice_num, aim) {
-        return {
-            command: "dice",
-            dice_num: dice_num,
-            aim: aim,
-        };
-    };
-    Request.characterCard = function (card_id) {
-        return {
-            command: "character",
-            card_id: card_id,
-        };
-    };
-    Request.interactFacilityAction = function (card_id, target_player_id) {
-        return {
-            command: "interact",
-            card_id: card_id,
-            target_player_id: target_player_id,
-        };
-    };
-    Request.endTurn = function () {
-        return {
-            command: "build",
-            x: -1,
-            y: -1,
-            card_id: -1,
-        };
-    };
-    Request.quit = function () {
-        return {
-            command: "quit",
-        };
-    };
-    Request.watch = function () {
-        return {
-            command: "watch",
-        };
-    };
-    return Request;
-}());
-exports.Request = Request;
-
-
-/***/ }),
-/* 4 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
 var Player = (function () {
     function Player(user_id, id, name, money, salary, team, is_auto) {
         if (is_auto === void 0) { is_auto = false; }
@@ -1695,6 +1548,181 @@ var Board = (function () {
     return Board;
 }());
 exports.Board = Board;
+
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var protocol_1 = __webpack_require__(1);
+var Connection = (function () {
+    function Connection() {
+    }
+    return Connection;
+}());
+exports.Connection = Connection;
+var Client = (function () {
+    function Client(connection) {
+        this.session_id = -1;
+        this.mode = protocol_1.GameMode.None;
+        this.player_id = -1;
+        // TODO: user_id should be unique. 0 - 9 is reserved for NPCs.
+        this.user_id = String(Math.floor(Math.random() * 1000000) + 10);
+        this.step = -1;
+        this.live_sessions = [];
+        this.connection = connection;
+    }
+    Client.prototype.reset = function () {
+        this.session_id = -1;
+        this.mode = protocol_1.GameMode.None;
+        this.player_id = -1;
+        this.step = -1;
+        this.connection.stopCheckUpdate();
+        this.connection.stopCheckLive();
+    };
+    Client.prototype.matching = function (query) {
+        query.command = "matching";
+        query.user_id = this.user_id;
+        this.mode = query["mode"];
+        this.connection.stopCheckMatching();
+        this.connection.setQueryOnDisconnect(this.createQuitQuery());
+        this.connection.matching(query, this.callbackMatching.bind(this));
+    };
+    Client.prototype.checkUpdate = function () {
+        this.sendRequest(this.createUpdateQuery(this.step));
+    };
+    Client.prototype.callbackMatching = function (response) {
+        var response_json = JSON.parse(response);
+        if (response_json == null || !response_json.is_matched) {
+            return;
+        }
+        this.session_id = response_json.session_id;
+        this.connection.setQueryOnDisconnect(this.createQuitQuery());
+        this.checkUpdate();
+        this.connection.stopCheckMatching();
+        this.connection.startCheckUpdate(this);
+        this.connection.stopCheckLive();
+    };
+    Client.prototype.startCheckLive = function (callback) {
+        this.connection.startCheckLive(callback);
+    };
+    Client.prototype.watchGame = function (session_id) {
+        this.reset();
+        this.session_id = session_id;
+        this.mode = protocol_1.GameMode.OnLineWatch;
+        this.sendRequest(this.createWatchQuery());
+        this.connection.setQueryOnDisconnect(this.createQuitQuery());
+        this.connection.startCheckUpdate(this);
+        this.connection.stopCheckLive();
+    };
+    Client.prototype.sendRequest = function (request) {
+        var _this = this;
+        this.connection.sendRequest(this.fillRequest(request), function (response) {
+            _this.callbackSession(response);
+        });
+    };
+    Client.prototype.fillRequest = function (request) {
+        request.user_id = this.user_id;
+        request.session_id = this.session_id;
+        request.player_id = this.player_id;
+        request.mode = this.mode;
+        return request;
+    };
+    Client.prototype.createQuery = function () {
+        return {
+            command: "",
+            user_id: this.user_id,
+            session_id: this.session_id,
+            player_id: this.player_id,
+            mode: this.mode,
+        };
+    };
+    Client.prototype.fillQuery = function (query) {
+        query.user_id = this.user_id;
+        query.session_id = this.session_id;
+        query.player_id = this.player_id;
+        query.mode = this.mode;
+        return query;
+    };
+    Client.prototype.createMatchingQuery = function (name, mode, deck) {
+        var query = this.createQuery();
+        query.command = "matching";
+        // mode is intentionally overwriten here, because this query decides the game mode.
+        query.mode = mode;
+        query.name = name;
+        query.deck = deck;
+        return query;
+    };
+    Client.prototype.createChatQuery = function (stamp_id) {
+        var query = this.createQuery();
+        query.command = "chat";
+        query.stamp_id = stamp_id;
+        query.step = this.step;
+        query.timestamp = new Date().getTime();
+        return query;
+    };
+    Client.prototype.createUpdateQuery = function (step) {
+        var query = this.createQuery();
+        query.command = "board"; // TODO: rename it to "update".
+        query.step = step;
+        return query;
+    };
+    Client.prototype.createBuildQuery = function (x, y, card_id) {
+        var query = this.createQuery();
+        query.command = "build";
+        query.x = x;
+        query.y = y;
+        query.card_id = card_id;
+        return query;
+    };
+    Client.prototype.createDiceQuery = function (dice_num, aim) {
+        var query = this.createQuery();
+        query.command = "dice";
+        query.dice_num = dice_num;
+        query.aim = aim;
+        return query;
+    };
+    // TODO: Enable to accept other additional values.
+    Client.prototype.createCharacterQuery = function (card_id, target_player_id) {
+        if (target_player_id === void 0) { target_player_id = -1; }
+        var query = this.createQuery();
+        query.command = "character";
+        query.card_id = card_id;
+        query.target_player_id = target_player_id;
+        return query;
+    };
+    Client.prototype.createInteractQuery = function (card_id, target_player_id) {
+        var query = this.createQuery();
+        query.command = "interact";
+        query.card_id = card_id;
+        query.target_player_id = target_player_id;
+        return query;
+    };
+    // TODO: Use EndTurnQuery instead.
+    Client.prototype.createEndTurnQuery = function () {
+        var query = this.createQuery();
+        query.command = "build";
+        query.x = -1;
+        query.y = -1;
+        query.card_id = -1;
+        return query;
+    };
+    Client.prototype.createQuitQuery = function () {
+        var query = this.createQuery();
+        query.command = "quit";
+        return query;
+    };
+    Client.prototype.createWatchQuery = function () {
+        var query = this.createQuery();
+        query.command = "watch";
+        return query;
+    };
+    return Client;
+}());
+exports.Client = Client;
 
 
 /***/ }),
@@ -1877,7 +1905,7 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-var client_1 = __webpack_require__(3);
+var client_1 = __webpack_require__(4);
 var session_1 = __webpack_require__(2);
 var html_view_1 = __webpack_require__(13);
 var protocol_1 = __webpack_require__(1);
@@ -1941,6 +1969,9 @@ var WebClient = (function (_super) {
             if (chat.timestamp == undefined || chat.timestamp === prev_timestamp) {
                 continue;
             }
+            if (chat.step < this.step) {
+                continue;
+            }
             this.view.updateChat(chat);
             this.chat_timestamps[user_id] = chat.timestamp;
         }
@@ -1967,7 +1998,7 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-var client_1 = __webpack_require__(3);
+var client_1 = __webpack_require__(4);
 var session_handler_1 = __webpack_require__(16);
 var storage_1 = __webpack_require__(5);
 var protocol_1 = __webpack_require__(1);
@@ -2633,7 +2664,7 @@ exports.EffectManager = EffectManager;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var facility_1 = __webpack_require__(0);
-var board_1 = __webpack_require__(4);
+var board_1 = __webpack_require__(3);
 var DeckMaker = (function () {
     function DeckMaker() {
         this.cards = {}; // key is CardId.
@@ -2796,7 +2827,6 @@ exports.Dice = Dice;
 Object.defineProperty(exports, "__esModule", { value: true });
 var session_1 = __webpack_require__(2);
 var facility_1 = __webpack_require__(0);
-var client_1 = __webpack_require__(3);
 var deck_maker_1 = __webpack_require__(11);
 var protocol_1 = __webpack_require__(1);
 var html_view_parts_1 = __webpack_require__(14);
@@ -2960,9 +2990,6 @@ var HtmlView = (function () {
         this.message_view = new html_view_parts_1.HtmlMessageView("message");
         // HtmlPlayersView
         this.players_view = new html_view_parts_1.HtmlPlayersView("players");
-        this.players_view.callback = function (player_id) {
-            _this.onClickPlayer(player_id);
-        };
         // Board
         this.board_view = new html_view_parts_1.HtmlBoardView("board", row, column);
         this.board_view.callback = function (x, y) {
@@ -3085,7 +3112,7 @@ var HtmlView = (function () {
         }
     };
     HtmlView.prototype.onResetGame = function () {
-        this.client.sendRequest(client_1.Request.quit());
+        this.client.sendRequest(this.client.createQuitQuery());
         this.reset();
         this.switchScene(Scene.Home);
     };
@@ -3098,7 +3125,7 @@ var HtmlView = (function () {
             return;
         }
         var card_id = target_facilities[0];
-        this.client.sendRequest(client_1.Request.interactFacilityAction(card_id, target_player_id));
+        this.client.sendRequest(this.client.createInteractQuery(card_id, target_player_id));
     };
     HtmlView.prototype.onClickDeckField = function (x, y) {
         var _a = this.clicked_field, px = _a[0], py = _a[1];
@@ -3163,7 +3190,7 @@ var HtmlView = (function () {
         if (event == null || !event.valid) {
             return;
         }
-        this.client.sendRequest(client_1.Request.buildFacility(x, y, card_id));
+        this.client.sendRequest(this.client.createBuildQuery(x, y, card_id));
         this.event_queue.addEvent(function () {
             _this.buttons_view.hide(); // for the turn end button.
             _this.effectClonedObjectMove(_this.clicked_card_view, _this.clicked_card_view.element_id, "field_" + x + "_" + y);
@@ -3179,9 +3206,8 @@ var HtmlView = (function () {
     };
     HtmlView.prototype.onClickStamp = function (index) {
         this.showStamp(index, this.client.player_id);
-        this.client.sendRequest(client_1.Request.chat(index));
+        this.client.sendRequest(this.client.createChatQuery(index));
     };
-    // The format of chat is same with fillRequest(Request.chat(stamp_id)).
     HtmlView.prototype.updateChat = function (chat) {
         if (chat.user_id === this.client.user_id) {
             return;
@@ -3199,7 +3225,7 @@ var HtmlView = (function () {
         if (!this.isRequestReady()) {
             return;
         }
-        this.client.sendRequest(client_1.Request.rollDice(dice_num, aim));
+        this.client.sendRequest(this.client.createDiceQuery(dice_num, aim));
         this.event_queue.addEvent(function () {
             console.log("dice roll.");
             var dice_view = (dice_num === 1) ? _this.buttons_view.dice1 : _this.buttons_view.dice2;
@@ -3216,15 +3242,27 @@ var HtmlView = (function () {
             return;
         }
         var card_id = this.clicked_card_view.getCardId();
-        this.client.sendRequest(client_1.Request.characterCard(card_id));
-        this.event_queue.addEvent(function () {
-            _this.effectCharacter(_this.client.player_id, card_id);
-            return true;
-        }, 2000);
+        var character = this.session.getCharacter(card_id);
+        if (character.type === facility_1.CharacterType.MoveMoney) {
+            this.dialogSelectPlayer(function (selected_pid) {
+                _this.client.sendRequest(_this.client.createCharacterQuery(card_id, selected_pid));
+                _this.event_queue.addEvent(function () {
+                    _this.effectCharacter(_this.client.player_id, card_id);
+                    return true;
+                }, 2000);
+            });
+        }
+        else {
+            this.client.sendRequest(this.client.createCharacterQuery(card_id));
+            this.event_queue.addEvent(function () {
+                _this.effectCharacter(_this.client.player_id, card_id);
+                return true;
+            }, 2000);
+        }
     };
     HtmlView.prototype.onClickEndTurn = function () {
         var _this = this;
-        this.client.sendRequest(client_1.Request.endTurn());
+        this.client.sendRequest(this.client.createEndTurnQuery());
         this.event_queue.addEvent(function () {
             _this.buttons_view.hide();
             return true;
@@ -3236,7 +3274,7 @@ var HtmlView = (function () {
             return;
         }
         var deck = document.getElementById("deck").value;
-        this.client.matching(client_1.Request.matching(name, mode, deck));
+        this.client.matching(this.client.createMatchingQuery(name, mode, deck));
         var message;
         if (protocol_1.Protocol.isOnlineMode(mode)) {
             if (protocol_1.Protocol.getPlayerCount(mode) > 1) {
@@ -3692,8 +3730,25 @@ var HtmlView = (function () {
                 this.effectCharacter(event.player_id, event.card_id);
                 handled = true;
             }
-            if (this.session.getCharacter(event.card_id).type === facility_1.CharacterType.DrawCards) {
+            var type = this.session.getCharacter(event.card_id).type;
+            if (type === facility_1.CharacterType.DrawCards) {
                 this.effectCardDeals(event.player_id, event.target_card_ids);
+                handled = true;
+            }
+            if (type === facility_1.CharacterType.MoveMoney) {
+                var _loop_5 = function (pid) {
+                    var money = event.moneys[pid];
+                    if (money === 0) {
+                        return "continue";
+                    }
+                    var delay = (money > 0) ? 1500 : 500;
+                    window.setTimeout(function () {
+                        _this.drawMoneyMotion(money, pid, 5, 0);
+                    }, delay);
+                };
+                for (var pid = 0; pid < event.moneys.length; pid++) {
+                    _loop_5(pid);
+                }
                 handled = true;
             }
             return handled;
@@ -3743,7 +3798,7 @@ var HtmlView = (function () {
         if (money_motion.indexOf(event.type) !== -1) {
             // Money motion
             var _b = this.session.getPosition(event.card_id), x_3 = _b[0], y_2 = _b[1];
-            var _loop_5 = function (pid) {
+            var _loop_6 = function (pid) {
                 var money = event.moneys[pid];
                 if (money === 0) {
                     return "continue";
@@ -3762,22 +3817,28 @@ var HtmlView = (function () {
                 }, delay);
             };
             for (var pid = 0; pid < event.moneys.length; pid++) {
-                _loop_5(pid);
+                _loop_6(pid);
             }
         }
         if (event.type === session_1.EventType.Interaction) {
-            var color = this.getPlayerColor(event.player_id);
             var position = this.session.getPosition(event.card_id);
             this.board_view.setHighlight(position, COLOR_CLICKABLE);
             if (event.player_id === this.client.player_id) {
-                this.message_view.drawMessage("対象プレイヤーを選択してください", color);
-                this.players_view.setClickableForPlayer(event.player_id);
+                this.dialogSelectPlayer(function (selected_pid) {
+                    _this.client.sendRequest(_this.client.createInteractQuery(event.card_id, selected_pid));
+                });
             }
             else {
+                var color = this.getPlayerColor(event.player_id);
                 this.message_view.drawMessage("対象プレイヤーを選択中です", color);
             }
         }
         return true;
+    };
+    HtmlView.prototype.dialogSelectPlayer = function (callback) {
+        var color = this.getPlayerColor(this.client.player_id);
+        this.message_view.drawMessage("対象プレイヤーを選択してください", color);
+        this.players_view.setClickableForPlayer(this.client.player_id, callback);
     };
     HtmlView.prototype.drawMoneyMotion = function (money, player_id, x, y) {
         if (money > 0) {
@@ -3834,7 +3895,7 @@ var HtmlView = (function () {
             return;
         }
         var timeout = 1000;
-        var _loop_6 = function (card_id) {
+        var _loop_7 = function (card_id) {
             window.setTimeout(function () {
                 _this.effectCardDeal(player_id, card_id);
             }, timeout);
@@ -3842,7 +3903,7 @@ var HtmlView = (function () {
         };
         for (var _i = 0, card_ids_1 = card_ids; _i < card_ids_1.length; _i++) {
             var card_id = card_ids_1[_i];
-            _loop_6(card_id);
+            _loop_7(card_id);
         }
     };
     HtmlView.prototype.effectMoneyMotion = function (element_from, element_to, money) {
@@ -4166,10 +4227,11 @@ var HtmlPlayersView = (function (_super) {
         }
         this.show();
     };
-    HtmlPlayersView.prototype.setClickableForPlayer = function (player_id) {
+    HtmlPlayersView.prototype.setClickableForPlayer = function (player_id, callback) {
         for (var i = 0; i < this.players_length; ++i) {
             this.players[i].setClickable(player_id !== i);
         }
+        this.callback = callback;
     };
     return HtmlPlayersView;
 }(HtmlViewObject));
@@ -4631,7 +4693,9 @@ var SessionHandler = (function () {
         else if (query.command === "character") {
             var player_id = Number(query.player_id);
             var card_id = Number(query.card_id);
-            if (session.useCharacter(player_id, card_id)) {
+            // TODO: Enable to accept other additional values.
+            var target_player_id = Number(query.target_player_id);
+            if (session.useCharacter(player_id, card_id, target_player_id)) {
                 // TODO: integrate buildFacility and doNext.
                 this.doNext(session);
             }
