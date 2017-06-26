@@ -141,7 +141,7 @@ export class HttpServer {
         }
 
         if (pathname === "/command") {
-            this.session_handler.handleCommand(query).then((data: KeyValue) => {
+            this.session_handler.handleCommand(JSON.parse(query.query)).then((data: KeyValue) => {
                 response.setHeader("Content-Type", "application/json; charset=utf-8");
                 response.end(data.value);
             });

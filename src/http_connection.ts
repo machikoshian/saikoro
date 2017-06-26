@@ -110,9 +110,7 @@ export class HttpConnection extends Connection {
             return;
         }
 
-        let params: string = Object.keys(query).map((key) => {
-            return encodeURIComponent(key) + "=" + encodeURIComponent(query[key]);
-        }).join("&");
-        HttpRequest.send("/command?" + params, callback);
+        const equery: string = encodeURIComponent(JSON.stringify(query));
+        HttpRequest.send("/command?query=" + equery, callback);
     }
 }
