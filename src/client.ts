@@ -1,6 +1,7 @@
 import { CardId } from "./facility";
 import { PlayerId } from "./board";
 import { GameMode, MatchingInfo } from "./protocol";
+import * as Query from "./query";
 
 export type RequestCallback = (response: string) => void;
 
@@ -53,18 +54,12 @@ export abstract class Client {
         query.user_id = this.user_id;
         this.mode = query["mode"];
         this.connection.stopCheckMatching();
-        this.connection.setQueryOnDisconnect(this.fillRequest(Request.quit()));
+        this.connection.setQueryOnDisconnect(this.createQuitQuery());
         this.connection.matching(query, this.callbackMatching.bind(this));
     }
 
     public checkUpdate(): void {
-        let query = {
-            command: "board",
-            session_id: this.session_id,
-            player_id: this.player_id,
-            step: this.step,
-        };
-        this.sendRequest(query);
+        this.sendRequest(this.createUpdateQuery(this.step));
     }
 
     private callbackMatching(response: string): void {
@@ -75,7 +70,7 @@ export abstract class Client {
 
         this.session_id = response_json.session_id;
 
-        this.connection.setQueryOnDisconnect(this.fillRequest(Request.quit()));
+        this.connection.setQueryOnDisconnect(this.createQuitQuery());
 
         this.checkUpdate();
         this.connection.stopCheckMatching();
@@ -92,13 +87,13 @@ export abstract class Client {
         this.session_id = session_id;
         this.mode = GameMode.OnLineWatch;
 
-        this.sendRequest(Request.watch());
-        this.connection.setQueryOnDisconnect(this.fillRequest(Request.quit()));
+        this.sendRequest(this.createWatchQuery());
+        this.connection.setQueryOnDisconnect(this.createQuitQuery());
         this.connection.startCheckUpdate(this);
         this.connection.stopCheckLive();
     }
 
-    public sendRequest(request: any): void {
+    public sendRequest(request: Query.Query): void {
         this.connection.sendRequest(this.fillRequest(request), (response) => {
             this.callbackSession(response);
         });
@@ -113,79 +108,103 @@ export abstract class Client {
     }
 
     abstract initBoard(): void;
-}
 
-// Move this class to a Saikoro specific file.
-export class Request {
-    static matching(name: string, mode: GameMode, deck: string): Object {
+    public createQuery(): Query.Query {
         return {
-            command: "matching",
-            name: name,
-            mode: mode,
-            deck: deck,
+            command: "",
+            user_id: this.user_id,
+            session_id: this.session_id,
+            player_id: this.player_id,
+            mode: this.mode,
         };
     }
 
-    static chat(stamp_id: number): Object {
-        return {
-            command: "chat",
-            stamp_id: stamp_id,
-            timestamp: new Date().getTime(),
-        };
+    public fillQuery(query: Query.Query): Query.Query {
+        query.user_id = this.user_id;
+        query.session_id = this.session_id;
+        query.player_id = this.player_id;
+        query.mode = this.mode;
+        return query;
     }
 
-    static buildFacility(x: number, y: number, card_id: CardId): Object {
-        return {
-            command: "build",
-            x: x,
-            y: y,
-            card_id: card_id,
-        };
+    public createMatchingQuery(name: string, mode: GameMode, deck: string): Query.MatchingQuery {
+        let query: Query.MatchingQuery = <Query.MatchingQuery>this.createQuery();
+        query.command = "matching";
+        // mode is intentionally overwriten here, because this query decides the game mode.
+        query.mode = mode;
+        query.name = name;
+        query.deck = deck;
+        return query;
     }
 
-    static rollDice(dice_num: number, aim: number): Object {
-        return {
-            command: "dice",
-            dice_num: dice_num,
-            aim: aim,
-        };
+    public createChatQuery(stamp_id: number): Query.ChatQuery {
+        let query: Query.ChatQuery = <Query.ChatQuery>this.createQuery();
+        query.command = "chat";
+        query.stamp_id = stamp_id;
+        query.timestamp = new Date().getTime();
+        return query;
+    }
+
+    public createUpdateQuery(step: number): Query.UpdateQuery {
+        let query: Query.UpdateQuery = <Query.UpdateQuery>this.createQuery();
+        query.command = "board";  // TODO: rename it to "update".
+        query.step = step;
+        return query;
+    }
+
+    public createBuildQuery(x: number, y: number, card_id: CardId): Query.BuildQuery {
+        let query: Query.BuildQuery = <Query.BuildQuery>this.createQuery();
+        query.command = "build";
+        query.x = x;
+        query.y = y;
+        query.card_id = card_id;
+        return query;
+    }
+
+    public createDiceQuery(dice_num: number, aim: number): Query.DiceQuery {
+        let query: Query.DiceQuery = <Query.DiceQuery>this.createQuery();
+        query.command = "dice";
+        query.dice_num = dice_num;
+        query.aim = aim;
+        return query;
     }
 
     // TODO: Enable to accept other additional values.
-    static characterCard(card_id: CardId, target_player_id: PlayerId = -1): Object {
-        return {
-            command: "character",
-            card_id: card_id,
-            target_player_id: target_player_id,
-        };
+    public createCharacterQuery(card_id: CardId, target_player_id: PlayerId = -1): Query.CharacterQuery {
+        let query: Query.CharacterQuery = <Query.CharacterQuery>this.createQuery();
+        query.command = "character";
+        query.card_id = card_id;
+        query.target_player_id = target_player_id;
+        return query;
     }
 
-    static interactFacilityAction(card_id: CardId, target_player_id: PlayerId): Object {
-        return {
-            command: "interact",
-            card_id: card_id,
-            target_player_id: target_player_id,
-        };
+    public createInteractQuery(card_id: CardId, target_player_id: PlayerId): Query.InteractQuery {
+        let query: Query.InteractQuery = <Query.InteractQuery>this.createQuery();
+        query.command = "interact";
+        query.card_id = card_id;
+        query.target_player_id = target_player_id;
+        return query;
     }
 
-    static endTurn(): Object {
-        return {
-            command: "build",
-            x: -1,
-            y: -1,
-            card_id: -1,
-        };
+    // TODO: Use EndTurnQuery instead.
+    public createEndTurnQuery(): Query.BuildQuery {
+        let query: Query.BuildQuery = <Query.BuildQuery>this.createQuery();
+        query.command = "build";
+        query.x = -1;
+        query.y = -1;
+        query.card_id = -1;
+        return query;
     }
 
-    static quit(): Object {
-        return {
-            command: "quit",
-        };
+    public createQuitQuery(): Query.QuitQuery {
+        let query: Query.QuitQuery = <Query.QuitQuery>this.createQuery();
+        query.command = "quit";
+        return query;
     }
 
-    static watch(): Object {
-        return {
-            command: "watch",
-        };
+    public createWatchQuery(): Query.WatchQuery {
+        let query: Query.WatchQuery = <Query.WatchQuery>this.createQuery();
+        query.command = "watch";
+        return query;
     }
 }

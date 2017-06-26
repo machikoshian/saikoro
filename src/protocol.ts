@@ -24,21 +24,6 @@ export interface MatchingInfo {
     is_matched: boolean,
 }
 
-export enum StampId {
-    None,
-    Hello,
-    Doki,
-    Sugoi,
-    Otsukare,
-}
-
-export interface ChatMessage {
-    session_id: number,
-    user_id: string,
-    stamp_id: StampId,
-    timestamp: number,
-}
-
 export class Protocol {
     static isOnlineMode(mode: GameMode): boolean {
         const onlines: GameMode[] = [

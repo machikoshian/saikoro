@@ -4,7 +4,7 @@ import { Player, Board, PlayerId } from "./board";
 import { CardId, FacilityType, Facility, CharacterType, Character,
          CardData, CardDataId } from "./facility";
 import { Dice, DiceResult } from "./dice";
-import { Client, Request } from "./client";
+import { Client } from "./client";
 import { DeckMaker } from "./deck_maker";
 import { GameMode, Protocol, MatchingInfo } from "./protocol";
 import { HtmlViewObject, HtmlCardsView, HtmlCardView, HtmlPlayersView,
@@ -335,7 +335,7 @@ export class HtmlView {
     }
 
     private onResetGame(): void {
-        this.client.sendRequest(Request.quit());
+        this.client.sendRequest(this.client.createQuitQuery());
         this.reset();
         this.switchScene(Scene.Home);
     }
@@ -349,7 +349,7 @@ export class HtmlView {
             return;
         }
         const card_id: CardId = target_facilities[0];
-        this.client.sendRequest(Request.interactFacilityAction(card_id, target_player_id));
+        this.client.sendRequest(this.client.createInteractQuery(card_id, target_player_id));
     }
 
     private onClickDeckField(x: number, y: number): void {
@@ -421,7 +421,7 @@ export class HtmlView {
             return;
         }
 
-        this.client.sendRequest(Request.buildFacility(x, y, card_id));
+        this.client.sendRequest(this.client.createBuildQuery(x, y, card_id));
 
         this.event_queue.addEvent(() => {
             this.buttons_view.hide();  // for the turn end button.
@@ -441,7 +441,7 @@ export class HtmlView {
 
     private onClickStamp(index: number): void {
         this.showStamp(index, this.client.player_id);
-        this.client.sendRequest(Request.chat(index));
+        this.client.sendRequest(this.client.createChatQuery(index));
     }
 
     // The format of chat is same with fillRequest(Request.chat(stamp_id)).
@@ -465,7 +465,7 @@ export class HtmlView {
             return;
         }
 
-        this.client.sendRequest(Request.rollDice(dice_num, aim));
+        this.client.sendRequest(this.client.createDiceQuery(dice_num, aim));
 
         this.event_queue.addEvent(() => {
             console.log("dice roll.");
@@ -489,8 +489,7 @@ export class HtmlView {
         const character: Character = this.session.getCharacter(card_id);
         if (character.type === CharacterType.MoveMoney) {
             this.dialogSelectPlayer((selected_pid: PlayerId) => {
-                const query: any = Request.characterCard(card_id, selected_pid);
-                this.client.sendRequest(query);
+                this.client.sendRequest(this.client.createCharacterQuery(card_id, selected_pid));
 
                 this.event_queue.addEvent(() => {
                     this.effectCharacter(this.client.player_id, card_id);
@@ -499,7 +498,7 @@ export class HtmlView {
             });
         }
         else {
-            this.client.sendRequest(Request.characterCard(card_id));
+            this.client.sendRequest(this.client.createCharacterQuery(card_id));
 
             this.event_queue.addEvent(() => {
                 this.effectCharacter(this.client.player_id, card_id);
@@ -509,7 +508,7 @@ export class HtmlView {
     }
 
     private onClickEndTurn(): void {
-        this.client.sendRequest(Request.endTurn());
+        this.client.sendRequest(this.client.createEndTurnQuery());
         this.event_queue.addEvent(() => {
             this.buttons_view.hide();
             return true;
@@ -523,7 +522,7 @@ export class HtmlView {
         }
         let deck: string = (<HTMLInputElement>document.getElementById("deck")).value;
 
-        this.client.matching(Request.matching(name, mode, deck));
+        this.client.matching(this.client.createMatchingQuery(name, mode, deck));
         let message: string;
         if (Protocol.isOnlineMode(mode)) {
             if (Protocol.getPlayerCount(mode) > 1) {
@@ -1136,8 +1135,7 @@ export class HtmlView {
 
             if (event.player_id === this.client.player_id) {
                 this.dialogSelectPlayer((selected_pid: PlayerId) => {
-                    const query: any = Request.interactFacilityAction(event.card_id, selected_pid);
-                    this.client.sendRequest(query);
+                    this.client.sendRequest(this.client.createInteractQuery(event.card_id, selected_pid));
                 });
             }
             else {
