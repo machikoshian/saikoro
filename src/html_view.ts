@@ -1052,7 +1052,7 @@ export class HtmlView {
                     }
                     const delay: number = (money > 0) ? 1500 : 500;
                     window.setTimeout(() => {
-                        this.drawMoneyMotion(money, pid, 5, 0);
+                        this.drawMoneyMotion(money, pid, "message");
                     }, delay);
                 }
                 handled = true;
@@ -1120,7 +1120,7 @@ export class HtmlView {
                     delay = 1000;
                 }
                 window.setTimeout(() => {
-                    this.drawMoneyMotion(money, pid, x, y);
+                    this.drawMoneyMotion(money, pid, `field_${x}_${y}`);
                     this.board_view.setHighlight([x, y], COLOR_CLICKABLE);
                     window.setTimeout(() => {
                         this.board_view.setHighlight([x, y], "transparent");
@@ -1152,12 +1152,12 @@ export class HtmlView {
         this.players_view.setClickableForPlayer(this.client.player_id, callback);
     }
 
-    private drawMoneyMotion(money: number, player_id: PlayerId, x: number, y: number): void {
+    private drawMoneyMotion(money: number, player_id: PlayerId, element_id: string): void {
         if (money > 0) {
-            this.effectMoneyMotion(`field_${x}_${y}`, `player_${player_id}`, money);
+            this.effectMoneyMotion(element_id, `player_${player_id}`, money);
         }
         else if (money < 0) {
-            this.effectMoneyMotion(`player_${player_id}`, `field_${x}_${y}`, money);
+            this.effectMoneyMotion(`player_${player_id}`, element_id, money);
         }
         this.players_view.players[player_id].addMoney(money);
     }
