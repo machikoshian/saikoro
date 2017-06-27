@@ -97,6 +97,10 @@ export class HtmlViewObject {
         document.body.removeChild(this.element);
     }
 
+    public width(): number {
+        return this.element.getBoundingClientRect().width;
+    }
+
     public getPosition(): [number, number] {
         let rect: ClientRect = this.element.getBoundingClientRect();
         return [rect.left, rect.top];
@@ -184,8 +188,21 @@ export class HtmlCardsView extends HtmlViewObject {
     }
 
     public draw(session: Session, card_ids: CardId[]): void {
+        const num_cards: number = card_ids.length;
         for (let i: number = 0; i < this.max_size; ++i) {
-            this.cards[i].draw(session, (i < card_ids.length) ? card_ids[i] : -1);
+            const card_id: CardId = (i < num_cards) ? card_ids[i] : -1;
+            this.cards[i].draw(session, card_id);
+        }
+        if (num_cards === 0) {
+            return;
+        }
+
+        const base_width: number = this.width();
+        const card_width: number = this.cards[0].width();
+        let x_delta: number = (base_width - card_width) / (num_cards - 1);
+        x_delta = Math.min(x_delta, card_width);
+        for (let i: number = 0; i < card_ids.length; ++i) {
+            this.cards[i].showAt([x_delta * i, 0]);
         }
     }
 

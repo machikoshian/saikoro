@@ -755,8 +755,9 @@ export class HtmlView {
                 continue;
             }
             let card_ids: CardId[] = session.getSortedHand(i);
-            this.cards_views[i].draw(session, card_ids);
+            // show should be before draw to initialize the rect.
             this.cards_views[i].show();
+            this.cards_views[i].draw(session, card_ids);
         }
         for (let i: number = players.length; i < 4; ++i) {
             this.cards_views[i].none();
