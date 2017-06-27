@@ -3586,8 +3586,9 @@ var HtmlView = (function () {
                 continue;
             }
             var card_ids = session.getSortedHand(i);
-            this.cards_views[i].draw(session, card_ids);
+            // show should be before draw to initialize the rect.
             this.cards_views[i].show();
+            this.cards_views[i].draw(session, card_ids);
         }
         for (var i = players.length; i < 4; ++i) {
             this.cards_views[i].none();
@@ -4134,6 +4135,9 @@ var HtmlViewObject = (function () {
     HtmlViewObject.prototype.remove = function () {
         document.body.removeChild(this.element);
     };
+    HtmlViewObject.prototype.width = function () {
+        return this.element.getBoundingClientRect().width;
+    };
     HtmlViewObject.prototype.getPosition = function () {
         var rect = this.element.getBoundingClientRect();
         return [rect.left, rect.top];
@@ -4221,8 +4225,20 @@ var HtmlCardsView = (function (_super) {
         this.callback = null;
     };
     HtmlCardsView.prototype.draw = function (session, card_ids) {
+        var num_cards = card_ids.length;
         for (var i = 0; i < this.max_size; ++i) {
-            this.cards[i].draw(session, (i < card_ids.length) ? card_ids[i] : -1);
+            var card_id = (i < num_cards) ? card_ids[i] : -1;
+            this.cards[i].draw(session, card_id);
+        }
+        if (num_cards === 0) {
+            return;
+        }
+        var base_width = this.width();
+        var card_width = this.cards[0].width();
+        var x_delta = (base_width - card_width) / (num_cards - 1);
+        x_delta = Math.min(x_delta, card_width);
+        for (var i = 0; i < card_ids.length; ++i) {
+            this.cards[i].showAt([x_delta * i, 0]);
         }
     };
     HtmlCardsView.prototype.getCardView = function (card_id) {
