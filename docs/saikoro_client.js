@@ -3045,6 +3045,13 @@ var HtmlView = (function () {
             _this.onLiveSessionsUpdated(response);
         });
     };
+    HtmlView.prototype.resetViews = function () {
+        this.buttons_view.reset();
+        for (var _i = 0, _a = this.cards_views; _i < _a.length; _i++) {
+            var card_view = _a[_i];
+            card_view.reset();
+        }
+    };
     HtmlView.prototype.initView = function (row, column) {
         var _this = this;
         if (row === void 0) { row = 5; }
@@ -3092,7 +3099,9 @@ var HtmlView = (function () {
         this.buttons_view = new html_view_parts_1.HtmlButtonsView("buttons", this.dice_widget_view);
         this.buttons_view.dice1.addClickListener(function () { _this.onClickDice(1, 0); });
         this.buttons_view.dice2.addClickListener(function () { _this.onClickDice(2, 0); });
-        this.buttons_view.char_card.addClickListener(function () { _this.onClickCharacter(); });
+        this.buttons_view.char_card.callback = function (is_open) {
+            _this.onClickCharCardButton(is_open);
+        };
         this.buttons_view.end_turn.addClickListener(function () { _this.onClickEndTurn(); });
         // Message view.
         this.message_view = new html_view_parts_1.HtmlMessageView("message");
@@ -3179,6 +3188,7 @@ var HtmlView = (function () {
             cards_view.none();
         }
         this.field_card_view.none();
+        this.resetViews();
         if (scene === Scene.Home) {
             document.getElementById("home").style.display = "";
             this.client.startCheckLive(function (response) {
@@ -3188,10 +3198,10 @@ var HtmlView = (function () {
         }
         if (scene === Scene.Deck) {
             this.back_button_view.show();
-            this.cards_views[0].show();
             this.board_view.show();
             this.deck_char_view.show();
             this.drawDeckBoard();
+            this.cards_views[0].show();
             for (var _b = 0, _c = this.cards_views[0].cards; _b < _c.length; _b++) {
                 var card_view = _c[_b];
                 card_view.none();
@@ -3301,6 +3311,7 @@ var HtmlView = (function () {
         this.client.sendRequest(this.client.createBuildQuery(x, y, card_id));
         this.event_queue.addEvent(function () {
             _this.buttons_view.hide(); // for the turn end button.
+            _this.clicked_card_view.hide();
             _this.effectClonedObjectMove(_this.clicked_card_view, _this.clicked_card_view.element_id, "field_" + x + "_" + y);
             return true;
         }, 1000);
@@ -3345,27 +3356,40 @@ var HtmlView = (function () {
             return true;
         }, 1000);
     };
-    HtmlView.prototype.onClickCharacter = function () {
+    HtmlView.prototype.onClickCharCardButton = function (is_open) {
         var _this = this;
-        this.dialogSelectCharCard(function (card_id) {
-            var character = _this.session.getCharacter(card_id);
-            if (character.type === facility_1.CharacterType.MoveMoney) {
-                _this.dialogSelectPlayer(function (selected_pid) {
-                    _this.client.sendRequest(_this.client.createCharacterQuery(card_id, selected_pid));
-                    _this.event_queue.addEvent(function () {
-                        _this.effectCharacter(_this.client.player_id, card_id);
-                        return true;
-                    }, 2000);
-                });
-            }
-            else {
-                _this.client.sendRequest(_this.client.createCharacterQuery(card_id));
-                _this.event_queue.addEvent(function () {
-                    _this.effectCharacter(_this.client.player_id, card_id);
-                    return true;
-                }, 2000);
-            }
+        if (is_open) {
+            this.buttons_view.dice1.hide();
+            this.buttons_view.dice2.hide();
+        }
+        else {
+            this.buttons_view.dice1.show();
+            this.buttons_view.dice2.show();
+        }
+        this.dialogSelectCharCard(is_open, function (card_id) {
+            _this.processCharCard(card_id);
         });
+    };
+    HtmlView.prototype.processCharCard = function (card_id) {
+        var _this = this;
+        var character = this.session.getCharacter(card_id);
+        if (character.type === facility_1.CharacterType.MoveMoney) {
+            this.event_queue.addEvent(function () {
+                // TODO: Hide the card after its event.
+                _this.effectCharacter(_this.client.player_id, card_id);
+                return true;
+            }, 2000);
+            this.dialogSelectPlayer(function (selected_pid) {
+                _this.client.sendRequest(_this.client.createCharacterQuery(card_id, selected_pid));
+            });
+        }
+        else {
+            this.client.sendRequest(this.client.createCharacterQuery(card_id));
+            this.event_queue.addEvent(function () {
+                _this.effectCharacter(_this.client.player_id, card_id);
+                return true;
+            }, 2000);
+        }
     };
     HtmlView.prototype.onClickEndTurn = function () {
         var _this = this;
@@ -3481,9 +3505,6 @@ var HtmlView = (function () {
         this.clicked_card_view = this.cards_views[player].cards[card];
         this.clicked_card_view.setHighlight(true);
         this.drawBoard(this.session);
-        // if (phase === Phase.CharacterCard) {
-        //     this.buttons_view.char_card.setClickable(true);
-        // }
         if (phase === session_1.Phase.BuildFacility) {
             for (var _i = 0, _b = this.session.getFacility(clicked_card_id).getArea(); _i < _b.length; _i++) {
                 var area = _b[_i];
@@ -3595,8 +3616,8 @@ var HtmlView = (function () {
         }
         // Update landmarks.
         var landmark_ids = session.getLandmarks();
-        this.landmarks_view.draw(session, landmark_ids);
         this.landmarks_view.show();
+        this.landmarks_view.draw(session, landmark_ids);
         this.resetCards(); // Nice to check if built or not?
     };
     HtmlView.prototype.drawFieldInfo = function (x, y) {
@@ -3736,10 +3757,10 @@ var HtmlView = (function () {
         this.drawStatusMessage(session);
         this.players_view.draw(session);
         this.drawBoard(session);
-        this.drawCards(session);
         this.drawWatchers(session);
         // Update buttons.
         this.buttons_view.draw(session, this.client.player_id);
+        this.drawCards(session);
         this.prev_session = session;
     };
     HtmlView.prototype.drawEvents = function () {
@@ -3955,11 +3976,17 @@ var HtmlView = (function () {
         this.message_view.drawMessage("対象プレイヤーを選択してください", color);
         this.players_view.setClickableForPlayer(this.client.player_id, callback);
     };
-    HtmlView.prototype.dialogSelectCharCard = function (callback) {
-        var color = this.getPlayerColor(this.client.player_id);
-        this.message_view.drawMessage("キャラカードを選択してください", color);
+    HtmlView.prototype.dialogSelectCharCard = function (is_open, callback) {
         var cards_view = this.cards_views[this.client.player_id];
-        cards_view.setCharCardsClickable(this.session, callback);
+        if (is_open) {
+            var color = this.getPlayerColor(this.client.player_id);
+            this.message_view.drawMessage("キャラカードを選択してください", color);
+            cards_view.setCharCardsClickable(this.session, callback);
+        }
+        else {
+            this.message_view.revertMessage();
+            cards_view.resetClickable();
+        }
     };
     HtmlView.prototype.drawMoneyMotion = function (money, player_id, element_id) {
         if (money > 0) {
@@ -3977,12 +4004,12 @@ var HtmlView = (function () {
     HtmlView.prototype.effectCharacter = function (pid, card_id) {
         var effect_view = null;
         if (this.client.player_id === pid) {
-            var card_view = this.cards_views[pid].getCardView(card_id);
-            if (card_view == null) {
+            var card_view_1 = this.cards_views[pid].getCardView(card_id);
+            if (card_view_1 == null) {
                 return; // Something is wrong.
             }
-            card_view.hide();
-            this.effectClonedObjectMove(card_view, card_view.element_id, "board");
+            card_view_1.moveTo(card_view_1.getPositionAlignedWithElementId("board"));
+            window.setTimeout(function () { card_view_1.hide(); }, 1500);
         }
         else {
             this.card_widget_view.draw(this.session, card_id);
@@ -4118,6 +4145,7 @@ var HtmlViewObject = (function () {
             return;
         }
     };
+    HtmlViewObject.prototype.reset = function () { };
     HtmlViewObject.prototype.show = function () {
         this.setVisibility(Visibility.Visible);
     };
@@ -4140,7 +4168,13 @@ var HtmlViewObject = (function () {
     };
     HtmlViewObject.prototype.getPosition = function () {
         var rect = this.element.getBoundingClientRect();
-        return [rect.left, rect.top];
+        return [rect.left + window.pageXOffset, rect.top + window.pageYOffset];
+    };
+    HtmlViewObject.prototype.getZIndex = function () {
+        return Number(this.element.style.zIndex);
+    };
+    HtmlViewObject.prototype.setZIndex = function (z) {
+        this.element.style.zIndex = String(z);
     };
     HtmlViewObject.prototype.addClickListener = function (callback) {
         this.element.addEventListener("click", callback);
@@ -4152,12 +4186,27 @@ var HtmlViewObject = (function () {
         this.element.style.position = "absolute";
         this.element.style.left = x + "px";
         this.element.style.top = y + "px";
+        this.element.style.transitionDuration = "0s";
+        this.element.style.transitionTimingFunction = "none";
+        this.element.style.transform = "none";
+        this.show();
+    };
+    HtmlViewObject.prototype.moveTo = function (_a) {
+        var x = _a[0], y = _a[1];
+        // The parent element should be relative.
+        this.element.style.zIndex = "2";
+        this.element.style.position = "absolute";
+        this.element.style.left = x + "px";
+        this.element.style.top = y + "px";
+        this.element.style.transitionDuration = "1s";
+        this.element.style.transitionTimingFunction = "ease";
+        this.element.style.transform = "none";
         this.show();
     };
     HtmlViewObject.prototype.getPositionAligned = function (dst) {
         var src = this.element.getBoundingClientRect();
-        var x = dst.left + (dst.width - src.width) / 2;
-        var y = dst.top + (dst.height - src.height) / 2;
+        var x = dst.left + window.pageXOffset + (dst.width - src.width) / 2;
+        var y = dst.top + window.pageYOffset + (dst.height - src.height) / 2;
         return [x, y];
     };
     HtmlViewObject.prototype.getPositionAlignedWithElementId = function (element_id) {
@@ -4171,14 +4220,14 @@ var HtmlViewObject = (function () {
     HtmlViewObject.prototype.animateMoveTo = function (_a, duration) {
         var x = _a[0], y = _a[1];
         if (duration === void 0) { duration = 1000; }
-        var rect_from = this.element.getBoundingClientRect();
-        var diff_x = x - rect_from.left;
-        var diff_y = y - rect_from.top;
+        var _b = this.getPosition(), from_x = _b[0], from_y = _b[1];
+        var diff_x = x - from_x;
+        var diff_y = y - from_y;
         this.element.style.visibility = "visible";
-        this.element.style.zIndex = "2";
+        this.element.style.zIndex = "200";
         this.element.style.position = "absolute";
-        this.element.style.top = rect_from.top + "px";
-        this.element.style.left = rect_from.left + "px";
+        this.element.style.left = from_x + "px";
+        this.element.style.top = from_y + "px";
         this.element.style.transitionDuration = duration / 1000 + "s";
         this.element.style.transitionTimingFunction = "ease";
         this.element.style.transform = "translate(" + diff_x + "px, " + diff_y + "px)";
@@ -4193,7 +4242,10 @@ var HtmlCardsView = (function (_super) {
         _this.element_id = element_id;
         _this.max_size = max_size;
         _this.cards = [];
+        _this.num_cards = 0;
         _this.callback = null;
+        _this.base_z_index = 10;
+        _this.setZIndex(_this.base_z_index);
         var base = document.getElementById("card_widget");
         var _loop_1 = function (i) {
             var new_node = base.cloneNode(true);
@@ -4203,6 +4255,7 @@ var HtmlCardsView = (function (_super) {
             card_view.addClickListener(function () { _this.onClick(i); });
             this_1.cards.push(card_view);
             card_view.none();
+            card_view.setZIndex(this_1.base_z_index + i);
         };
         var this_1 = this;
         for (var i = 0; i < _this.max_size; ++i) {
@@ -4210,8 +4263,17 @@ var HtmlCardsView = (function (_super) {
         }
         return _this;
     }
+    HtmlCardsView.prototype.reset = function () {
+        this.resetClickable();
+        this.num_cards = 0;
+        _super.prototype.reset.call(this);
+    };
     HtmlCardsView.prototype.onClick = function (index) {
+        for (var i = 0; i < this.max_size; ++i) {
+            this.cards[i].setZIndex(this.base_z_index + i);
+        }
         var card_view = this.cards[index];
+        card_view.setZIndex(this.base_z_index + this.max_size + 1);
         if (card_view.is_highlight === false) {
             return;
         }
@@ -4221,24 +4283,35 @@ var HtmlCardsView = (function (_super) {
         if (this.callback == null) {
             return;
         }
+        this.resetPosition(true);
         this.callback(card_view.getCardId());
         this.callback = null;
     };
     HtmlCardsView.prototype.draw = function (session, card_ids) {
-        var num_cards = card_ids.length;
+        this.num_cards = card_ids.length;
         for (var i = 0; i < this.max_size; ++i) {
-            var card_id = (i < num_cards) ? card_ids[i] : -1;
+            var card_id = (i < this.num_cards) ? card_ids[i] : -1;
             this.cards[i].draw(session, card_id);
         }
-        if (num_cards === 0) {
+        this.resetPosition();
+    };
+    HtmlCardsView.prototype.resetPosition = function (is_move) {
+        if (is_move === void 0) { is_move = false; }
+        if (this.num_cards === 0) {
             return;
         }
+        var _a = this.getPosition(), base_x = _a[0], base_y = _a[1];
         var base_width = this.width();
         var card_width = this.cards[0].width();
-        var x_delta = (base_width - card_width) / (num_cards - 1);
+        var x_delta = (base_width - card_width) / (this.num_cards - 1);
         x_delta = Math.min(x_delta, card_width);
-        for (var i = 0; i < card_ids.length; ++i) {
-            this.cards[i].showAt([x_delta * i, 0]);
+        for (var i = 0; i < this.num_cards; ++i) {
+            if (is_move) {
+                this.cards[i].moveTo([base_x + x_delta * i, base_y]);
+            }
+            else {
+                this.cards[i].showAt([base_x + x_delta * i, base_y]);
+            }
         }
     };
     HtmlCardsView.prototype.getCardView = function (card_id) {
@@ -4254,16 +4327,29 @@ var HtmlCardsView = (function (_super) {
         for (var i = 0; i < this.cards.length; ++i) {
             this.cards[i].setHighlight(false);
         }
+        this.resetPosition(true);
         this.callback = null;
     };
     // TODO: remove session.
     HtmlCardsView.prototype.setCharCardsClickable = function (session, callback) {
-        for (var i = 0; i < this.cards.length; ++i) {
-            var card = this.cards[i];
+        var delay = 0;
+        var _loop_2 = function (i) {
+            var card = this_2.cards[i];
             if (!session.isCharacter(card.getCardId())) {
-                continue;
+                return "continue";
             }
+            var _a = card.getPosition(), x = _a[0], y = _a[1];
+            var delta_y = -250;
+            window.setTimeout(function () {
+                card.moveTo([x, y + delta_y]);
+                //card.animateMoveTo([x, y + delta_y]);
+            }, delay);
+            delay += 200;
             card.setHighlight(true);
+        };
+        var this_2 = this;
+        for (var i = 0; i < this.cards.length; ++i) {
+            _loop_2(i);
         }
         this.callback = callback;
     };
@@ -4483,12 +4569,25 @@ exports.HtmlPlayerView = HtmlPlayerView;
 var HtmlMessageView = (function (_super) {
     __extends(HtmlMessageView, _super);
     function HtmlMessageView(element_id) {
-        return _super.call(this, document.getElementById(element_id)) || this;
+        var _this = _super.call(this, document.getElementById(element_id)) || this;
+        _this.messages = [];
+        return _this;
     }
     HtmlMessageView.prototype.drawMessage = function (message, color) {
         if (color === void 0) { color = COLOR_FIELD; }
+        this.messages.push([message, color]);
         this.element.innerText = "\uD83C\uDFB2 " + message + " \uD83C\uDFB2";
         this.element.style.backgroundColor = color;
+    };
+    HtmlMessageView.prototype.revertMessage = function () {
+        if (this.messages.length < 2) {
+            this.messages = [];
+            this.drawMessage("");
+            return;
+        }
+        this.messages.pop();
+        var _a = this.messages.pop(), message = _a[0], color = _a[1];
+        this.drawMessage(message, color);
     };
     return HtmlMessageView;
 }(HtmlViewObject));
@@ -4498,17 +4597,17 @@ var HtmlBoardView = (function (_super) {
     function HtmlBoardView(element_id, row, column) {
         var _this = _super.call(this, document.getElementById(element_id)) || this;
         _this.clickable_fields = new HtmlClickableFieldsView("click", row, column);
-        var _loop_2 = function (y) {
-            var _loop_3 = function (x) {
-                this_2.clickable_fields.fields[x][y].addClickListener(function () { _this.onClick(x, y); });
+        var _loop_3 = function (y) {
+            var _loop_4 = function (x) {
+                this_3.clickable_fields.fields[x][y].addClickListener(function () { _this.onClick(x, y); });
             };
             for (var x = 0; x < column; ++x) {
-                _loop_3(x);
+                _loop_4(x);
             }
         };
-        var this_2 = this;
+        var this_3 = this;
         for (var y = 0; y < row; ++y) {
-            _loop_2(y);
+            _loop_3(y);
         }
         return _this;
     }
@@ -4536,16 +4635,16 @@ var HtmlDeckCharView = (function (_super) {
         var _this = _super.call(this, document.getElementById(element_id)) || this;
         _this.fields = [];
         _this.clickables = [];
-        var _loop_4 = function (i) {
+        var _loop_5 = function (i) {
             var field = new HtmlViewObject(document.getElementById(element_id + "_" + i));
-            this_3.fields.push(field);
+            this_4.fields.push(field);
             var clickable = new HtmlClickableFieldView("clickable_" + element_id + "_" + i);
-            this_3.clickables.push(clickable);
+            this_4.clickables.push(clickable);
             clickable.addClickListener(function () { _this.onClick(i); });
         };
-        var this_3 = this;
+        var this_4 = this;
         for (var i = 0; i < 5; ++i) {
-            _loop_4(i);
+            _loop_5(i);
         }
         return _this;
     }
@@ -4577,6 +4676,43 @@ var HtmlButtonView = (function (_super) {
     return HtmlButtonView;
 }(HtmlViewObject));
 exports.HtmlButtonView = HtmlButtonView;
+var HtmlCharCardButtonView = (function (_super) {
+    __extends(HtmlCharCardButtonView, _super);
+    function HtmlCharCardButtonView(element_id) {
+        var _this = _super.call(this, element_id) || this;
+        _this.is_open = false;
+        _this.callback = null;
+        // TODO: Move this to HtmlButtonView.
+        _this.addClickListener(function () { _this.onClick(); });
+        return _this;
+    }
+    HtmlCharCardButtonView.prototype.reset = function () {
+        this.is_open = false;
+    };
+    HtmlCharCardButtonView.prototype.onClick = function () {
+        if (this.callback == null) {
+            return;
+        }
+        this.is_open = !this.is_open;
+        this.callback(this.is_open);
+    };
+    // TODO: move this function to other place/class.
+    HtmlCharCardButtonView.prototype.hasCharacterCard = function (session, player_id) {
+        var cards = session.getSortedHand(player_id);
+        return session.isCharacter(cards[cards.length - 1]);
+    };
+    HtmlCharCardButtonView.prototype.draw = function (session, player_id) {
+        this.show();
+        if (this.hasCharacterCard(session, player_id)) {
+            this.element.classList.remove("inactive");
+        }
+        else {
+            this.element.classList.add("inactive");
+        }
+    };
+    return HtmlCharCardButtonView;
+}(HtmlButtonView));
+exports.HtmlCharCardButtonView = HtmlCharCardButtonView;
 var HtmlButtonsView = (function (_super) {
     __extends(HtmlButtonsView, _super);
     function HtmlButtonsView(element_id, dice_widget) {
@@ -4593,14 +4729,16 @@ var HtmlButtonsView = (function (_super) {
         _this.dice1.element.appendChild(dice1_1.element);
         _this.dice2.element.appendChild(dice2_1.element);
         _this.dice2.element.appendChild(dice2_2.element);
-        _this.char_card = new HtmlButtonView(element_id + "_char_card");
+        _this.char_card = new HtmlCharCardButtonView(element_id + "_char_card");
         _this.end_turn = new HtmlButtonView(element_id + "_end_turn");
         return _this;
     }
-    // TODO: move this function to other place/class.
-    HtmlButtonsView.prototype.hasCharacterCard = function (session, player_id) {
-        var cards = session.getSortedHand(player_id);
-        return session.isCharacter(cards[cards.length - 1]);
+    HtmlButtonsView.prototype.reset = function () {
+        this.dice1.reset();
+        this.dice2.reset();
+        this.char_card.reset();
+        this.end_turn.reset();
+        _super.prototype.reset.call(this);
     };
     HtmlButtonsView.prototype.draw = function (session, player_id) {
         if (session.getCurrentPlayerId() !== player_id) {
@@ -4617,13 +4755,7 @@ var HtmlButtonsView = (function (_super) {
             this.dice2.show();
         }
         if (phase === session_1.Phase.CharacterCard) {
-            this.char_card.show();
-            if (this.hasCharacterCard(session, player_id)) {
-                this.char_card.element.classList.remove("inactive");
-            }
-            else {
-                this.char_card.element.classList.add("inactive");
-            }
+            this.char_card.draw(session, player_id);
         }
         if (phase === session_1.Phase.BuildFacility) {
             this.end_turn.show();
@@ -4694,8 +4826,8 @@ var HtmlClickableFieldsView = (function (_super) {
         var _this = this;
         var x = pip - 1;
         var delay = 0;
-        var _loop_5 = function (i) {
-            var y = this_4.row - 1 - i;
+        var _loop_6 = function (i) {
+            var y = this_5.row - 1 - i;
             window.setTimeout(function () {
                 _this.fields[x][y].setColor(color);
                 window.setTimeout(function () {
@@ -4704,9 +4836,9 @@ var HtmlClickableFieldsView = (function (_super) {
             }, delay);
             delay = delay + 10 * i; // 0, 10, 30, 60, 100, ...
         };
-        var this_4 = this;
+        var this_5 = this;
         for (var i = 0; i < this.row; ++i) {
-            _loop_5(i);
+            _loop_6(i);
         }
     };
     return HtmlClickableFieldsView;
@@ -4736,7 +4868,7 @@ var HtmlChatButtonView = (function (_super) {
         _this.stamp_box.none();
         _this.addClickListener(function () { _this.toggleStampBox(); });
         var stamp_elements = _this.stamp_box.element.getElementsByClassName("stamp");
-        var _loop_6 = function (i) {
+        var _loop_7 = function (i) {
             var stamp = new HtmlViewObject(stamp_elements[i]);
             stamp.addClickListener(function () {
                 if (_this.callback) {
@@ -4744,11 +4876,11 @@ var HtmlChatButtonView = (function (_super) {
                 }
                 _this.showStampBox(false);
             });
-            this_5.stamps.push(stamp);
+            this_6.stamps.push(stamp);
         };
-        var this_5 = this;
+        var this_6 = this;
         for (var i = 0; i < stamp_elements.length; ++i) {
-            _loop_6(i);
+            _loop_7(i);
         }
         return _this;
     }
@@ -5084,7 +5216,7 @@ var SessionHandler = (function () {
         for (var i = num_facilities; i < 10; ++i) {
             session.addFacility(player_id, facility_1.CardData.getRandomFacilityDataId());
         }
-        for (var i = num_chars; i < 2; ++i) {
+        for (var i = num_chars; i < 5; ++i) {
             session.addCharacter(player_id, facility_1.CardData.getRandomCharacterDataId());
         }
         return player_id;
