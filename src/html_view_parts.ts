@@ -75,6 +75,8 @@ export class HtmlViewObject {
         }
     }
 
+    public reset() {}
+
     public show(): void {
         this.setVisibility(Visibility.Visible);
     }
@@ -103,7 +105,7 @@ export class HtmlViewObject {
 
     public getPosition(): [number, number] {
         let rect: ClientRect = this.element.getBoundingClientRect();
-        return [rect.left, rect.top];
+        return [rect.left + window.pageXOffset, rect.top + window.pageYOffset];
     }
 
     public getZIndex(): number {
@@ -124,13 +126,28 @@ export class HtmlViewObject {
         this.element.style.position = "absolute";
         this.element.style.left = x + "px";
         this.element.style.top = y + "px";
+        this.element.style.transitionDuration = "0s";
+        this.element.style.transitionTimingFunction = "none";
+        this.element.style.transform = "none";
+        this.show();
+    }
+
+    public moveTo([x, y]: [number, number]): void {
+        // The parent element should be relative.
+        this.element.style.zIndex = "2";
+        this.element.style.position = "absolute";
+        this.element.style.left = x + "px";
+        this.element.style.top = y + "px";
+        this.element.style.transitionDuration = "1s";
+        this.element.style.transitionTimingFunction = "ease";
+        this.element.style.transform = "none";
         this.show();
     }
 
     public getPositionAligned(dst: ClientRect): [number, number] {
         const src: ClientRect = this.element.getBoundingClientRect();
-        const x: number = dst.left + (dst.width  - src.width)  / 2;
-        const y: number = dst.top  + (dst.height - src.height) / 2;
+        const x: number = dst.left + window.pageXOffset + (dst.width  - src.width)  / 2;
+        const y: number = dst.top  + window.pageYOffset + (dst.height - src.height) / 2;
         return [x, y];
     }
 
@@ -144,15 +161,15 @@ export class HtmlViewObject {
     }
 
     public animateMoveTo([x, y]: [number, number], duration: number = 1000): void {
-        let rect_from = this.element.getBoundingClientRect();
-        let diff_x: number = x - rect_from.left;
-        let diff_y: number = y - rect_from.top;
+        let [from_x, from_y] = this.getPosition();
+        let diff_x: number = x - from_x;
+        let diff_y: number = y - from_y;
 
         this.element.style.visibility = "visible";
-        this.element.style.zIndex = "2";
+        this.element.style.zIndex = "200";
         this.element.style.position = "absolute";
-        this.element.style.top = rect_from.top + "px";
-        this.element.style.left = rect_from.left + "px";
+        this.element.style.left = from_x + "px";
+        this.element.style.top = from_y + "px";
 
         this.element.style.transitionDuration = `${duration / 1000}s`;
         this.element.style.transitionTimingFunction = "ease";
@@ -162,6 +179,7 @@ export class HtmlViewObject {
 
 export class HtmlCardsView extends HtmlViewObject {
     readonly cards: HtmlCardView[] = [];
+    private num_cards: number = 0;
     private callback: CardIdCallback = null;
     readonly base_z_index = 10;
 
@@ -183,6 +201,12 @@ export class HtmlCardsView extends HtmlViewObject {
         }
     }
 
+    public reset(): void {
+        this.resetClickable();
+        this.num_cards = 0;
+        super.reset();
+    }
+
     private onClick(index: number) {
         for (let i: number = 0; i < this.max_size; ++i) {
             this.cards[i].setZIndex(this.base_z_index + i);
@@ -200,26 +224,37 @@ export class HtmlCardsView extends HtmlViewObject {
         if (this.callback == null) {
             return;
         }
+        this.resetPosition(true);
         this.callback(card_view.getCardId());
         this.callback = null;
     }
 
     public draw(session: Session, card_ids: CardId[]): void {
-        const num_cards: number = card_ids.length;
+        this.num_cards = card_ids.length;
         for (let i: number = 0; i < this.max_size; ++i) {
-            const card_id: CardId = (i < num_cards) ? card_ids[i] : -1;
+            const card_id: CardId = (i < this.num_cards) ? card_ids[i] : -1;
             this.cards[i].draw(session, card_id);
         }
-        if (num_cards === 0) {
+        this.resetPosition();
+    }
+
+    public resetPosition(is_move: boolean = false): void {
+        if (this.num_cards === 0) {
             return;
         }
 
+        const [base_x, base_y]: [number ,number] = this.getPosition();
         const base_width: number = this.width();
         const card_width: number = this.cards[0].width();
-        let x_delta: number = (base_width - card_width) / (num_cards - 1);
+        let x_delta: number = (base_width - card_width) / (this.num_cards - 1);
         x_delta = Math.min(x_delta, card_width);
-        for (let i: number = 0; i < card_ids.length; ++i) {
-            this.cards[i].showAt([x_delta * i, 0]);
+        for (let i: number = 0; i < this.num_cards; ++i) {
+            if (is_move) {
+                this.cards[i].moveTo([base_x + x_delta * i, base_y]);
+            }
+            else {
+                this.cards[i].showAt([base_x + x_delta * i, base_y]);
+            }
         }
     }
 
@@ -236,17 +271,25 @@ export class HtmlCardsView extends HtmlViewObject {
         for (let i: number = 0; i < this.cards.length; ++i) {
             this.cards[i].setHighlight(false);
         }
+        this.resetPosition(true);
         this.callback = null;
     }
 
     // TODO: remove session.
     public setCharCardsClickable(session: Session, callback: CardIdCallback): void {
+        let delay: number = 0;
         for (let i: number = 0; i < this.cards.length; ++i) {
             let card: HtmlCardView = this.cards[i];
             if (!session.isCharacter(card.getCardId())) {
                 continue;
             }
-
+            let [x, y] = card.getPosition();
+            const delta_y: number = -250;
+            window.setTimeout(() => {
+                card.moveTo([x, y + delta_y]);
+                //card.animateMoveTo([x, y + delta_y]);
+            }, delay);
+            delay += 200;
             card.setHighlight(true);
         }
         this.callback = callback;
@@ -493,13 +536,27 @@ export class HtmlPlayerView extends HtmlViewObject {
 }
 
 export class HtmlMessageView extends HtmlViewObject {
+    private messages: [string, string][] = [];
+
     constructor(element_id: string) {
         super(document.getElementById(element_id));
     }
 
     public drawMessage(message: string, color: string = COLOR_FIELD): void {
+        this.messages.push([message, color]);
         this.element.innerText = `🎲 ${message} 🎲`;
         this.element.style.backgroundColor = color;
+    }
+
+    public revertMessage(): void {
+        if (this.messages.length < 2) {
+            this.messages = [];
+            this.drawMessage("");
+            return;
+        }
+        this.messages.pop();
+        const [message, color]: [string, string] = this.messages.pop();
+        this.drawMessage(message, color);
     }
 }
 
@@ -586,10 +643,49 @@ export class HtmlButtonView extends HtmlViewObject {
     }
 }
 
+export class HtmlCharCardButtonView extends HtmlButtonView {
+    private is_open: boolean = false;
+    public callback: (is_open: boolean) => void = null;
+
+    constructor(element_id: string) {
+        super(element_id);
+        // TODO: Move this to HtmlButtonView.
+        this.addClickListener(() => { this.onClick(); });
+    }
+
+    public reset(): void {
+        this.is_open = false;
+    }
+
+    private onClick(): void {
+        if (this.callback == null) {
+            return;
+        }
+        this.is_open = !this.is_open;
+        this.callback(this.is_open);
+    }
+
+    // TODO: move this function to other place/class.
+    private hasCharacterCard(session: Session, player_id: PlayerId): boolean {
+        let cards: CardId[] = session.getSortedHand(player_id);
+        return session.isCharacter(cards[cards.length - 1]);
+    }
+
+    public draw(session: Session, player_id: PlayerId): void {
+        this.show();
+        if (this.hasCharacterCard(session, player_id)) {
+            this.element.classList.remove("inactive");
+        }
+        else {
+            this.element.classList.add("inactive");
+        }
+    }
+}
+
 export class HtmlButtonsView extends HtmlViewObject {
     readonly dice1: HtmlButtonView;
     readonly dice2: HtmlButtonView;
-    readonly char_card: HtmlButtonView;
+    readonly char_card: HtmlCharCardButtonView;
     readonly end_turn: HtmlButtonView;
 
     constructor(readonly element_id: string, dice_widget: HtmlDiceView) {
@@ -606,14 +702,16 @@ export class HtmlButtonsView extends HtmlViewObject {
         this.dice1.element.appendChild(dice1_1.element);
         this.dice2.element.appendChild(dice2_1.element);
         this.dice2.element.appendChild(dice2_2.element);
-        this.char_card = new HtmlButtonView(element_id + "_char_card");
+        this.char_card = new HtmlCharCardButtonView(element_id + "_char_card");
         this.end_turn = new HtmlButtonView(element_id + "_end_turn");
     }
 
-    // TODO: move this function to other place/class.
-    private hasCharacterCard(session: Session, player_id: PlayerId): boolean {
-        let cards: CardId[] = session.getSortedHand(player_id);
-        return session.isCharacter(cards[cards.length - 1]);
+    public reset(): void {
+        this.dice1.reset();
+        this.dice2.reset();
+        this.char_card.reset();
+        this.end_turn.reset();
+        super.reset();
     }
 
     public draw(session: Session, player_id: PlayerId): void {
@@ -634,13 +732,7 @@ export class HtmlButtonsView extends HtmlViewObject {
         }
 
         if (phase === Phase.CharacterCard) {
-            this.char_card.show();
-            if (this.hasCharacterCard(session, player_id)) {
-                this.char_card.element.classList.remove("inactive");
-            }
-            else {
-                this.char_card.element.classList.add("inactive");
-            }
+            this.char_card.draw(session, player_id);
         }
 
         if (phase === Phase.BuildFacility) {
