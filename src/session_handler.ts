@@ -305,7 +305,7 @@ export class SessionHandler {
             session.addFacility(player_id, CardData.getRandomFacilityDataId());
         }
 
-        for (let i: number = num_chars; i < 2; ++i) {
+        for (let i: number = num_chars; i < 5; ++i) {
             session.addCharacter(player_id, CardData.getRandomCharacterDataId());
         }
 
