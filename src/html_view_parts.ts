@@ -106,6 +106,14 @@ export class HtmlViewObject {
         return [rect.left, rect.top];
     }
 
+    public getZIndex(): number {
+        return Number(this.element.style.zIndex);
+    }
+
+    public setZIndex(z: number): void {
+        this.element.style.zIndex = String(z);
+    }
+
     public addClickListener(callback: () => void) {
         this.element.addEventListener("click", callback);
     }
@@ -155,9 +163,11 @@ export class HtmlViewObject {
 export class HtmlCardsView extends HtmlViewObject {
     readonly cards: HtmlCardView[] = [];
     private callback: CardIdCallback = null;
+    readonly base_z_index = 10;
 
     constructor(readonly element_id: string, readonly max_size: number) {
         super(document.getElementById(element_id));
+        this.setZIndex(this.base_z_index);
 
         let base: HTMLElement = document.getElementById("card_widget");
 
@@ -169,11 +179,18 @@ export class HtmlCardsView extends HtmlViewObject {
             card_view.addClickListener(() => { this.onClick(i); });
             this.cards.push(card_view);
             card_view.none();
+            card_view.setZIndex(this.base_z_index + i);
         }
     }
 
     private onClick(index: number) {
+        for (let i: number = 0; i < this.max_size; ++i) {
+            this.cards[i].setZIndex(this.base_z_index + i);
+        }
+
         let card_view: HtmlCardView = this.cards[index];
+        card_view.setZIndex(this.base_z_index + this.max_size + 1);
+
         if (card_view.is_highlight === false) {
             return;
         }
