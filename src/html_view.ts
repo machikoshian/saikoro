@@ -87,6 +87,7 @@ export class HtmlView {
     private clicked_card_view: HtmlCardView = null;
     private deck_maker: DeckMaker = new DeckMaker();
     private deck_char_view: HtmlDeckCharView = null;
+    private deck_cards_view: HtmlCardsView = null;
     private clicked_field: [number, number] = [-1, -1];
     private cards_views: HtmlCardsView[] = [];
     private players_view: HtmlPlayersView;
@@ -229,6 +230,11 @@ export class HtmlView {
         this.deck_char_view.callback = (x: number) => {
             this.onClickDeckField(x, -1);
         }
+        const deck_cards_size: number = 10;
+        this.deck_cards_view = new HtmlCardsView("deck_cards", deck_cards_size);
+        for (let c: number = 0; c < deck_cards_size; ++c) {
+            this.deck_cards_view.cards[c].addClickListener(() => { this.onClickDeckCard(c); });
+        }
 
         // HtmlCardsView
         let card_size: number = 10;
@@ -287,6 +293,7 @@ export class HtmlView {
         this.message_view.none();
         this.board_view.none();
         this.deck_char_view.none();
+        this.deck_cards_view.none();
         this.chat_button_view.none();
         this.watchers_view.none();
         this.buttons_view.none();
@@ -314,8 +321,8 @@ export class HtmlView {
             this.deck_char_view.show();
 
             this.drawDeckBoard();
-            this.cards_views[0].show();
-            for (let card_view of this.cards_views[0].cards) {
+            this.deck_cards_view.show();
+            for (let card_view of this.deck_cards_view.cards) {
                 card_view.none();
             }
             return;
@@ -392,7 +399,7 @@ export class HtmlView {
             let data_ids: CardDataId[] = CardData.getAvailableCharacters();
             for (; i < data_ids.length; ++i) {
                 let character: Character = new Character(data_ids[i]);
-                this.cards_views[0].cards[i].drawCharacterCard(character);
+                this.deck_cards_view.cards[i].drawCharacterCard(character);
             }
         }
         else {
@@ -400,12 +407,12 @@ export class HtmlView {
             let data_ids: CardDataId[] = this.deck_maker.getAvailableFacilities(x);
             for (; i < data_ids.length; ++i) {
                 let facility: Facility = new Facility(data_ids[i]);
-                this.cards_views[0].cards[i].drawFacilityCard(facility);
+                this.deck_cards_view.cards[i].drawFacilityCard(facility);
             }
         }
 
         for (; i < 10; ++i) {
-            this.cards_views[0].cards[i].none();
+            this.deck_cards_view.cards[i].none();
         }
     }
 
@@ -608,24 +615,7 @@ export class HtmlView {
 
     private onClickCard(player: number, card: number): void {
         // Event on matching.
-        if (this.scene === Scene.Home || this.scene === Scene.Matching) {
-            return;
-        }
-        if (this.scene === Scene.Deck) {
-            let [x, y]: [number, number] = this.clicked_field;
-            if (x === -1) {
-                // this.clicked_field was not used. Do nothing.
-            }
-            else if (y === -1) {
-                // Char
-                let data_id: CardDataId = CardData.getAvailableCharacters()[card];
-                this.deck_maker.setCharacter(x, data_id);
-            }
-            else {
-                let data_id: CardDataId = this.deck_maker.getAvailableFacilities(x)[card];
-                this.deck_maker.setFacility(x, y, data_id);
-            }
-            this.drawDeckBoard();
+        if (this.scene !== Scene.Game) {
             return;
         }
 
@@ -668,6 +658,28 @@ export class HtmlView {
                 }
             }
         }
+    }
+
+    private onClickDeckCard(index: number): void {
+        // Event on matching.
+        if (this.scene !== Scene.Deck) {
+            return;
+        }
+
+        let [x, y]: [number, number] = this.clicked_field;
+        if (x === -1) {
+            // this.clicked_field was not used. Do nothing.
+        }
+        else if (y === -1) {
+            // Char
+            let data_id: CardDataId = CardData.getAvailableCharacters()[index];
+            this.deck_maker.setCharacter(x, data_id);
+        }
+        else {
+            let data_id: CardDataId = this.deck_maker.getAvailableFacilities(x)[index];
+            this.deck_maker.setFacility(x, y, data_id);
+        }
+        this.drawDeckBoard();
     }
 
     private onClickLandmark(card: number): void {
