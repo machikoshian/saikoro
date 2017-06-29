@@ -75,6 +75,13 @@ export class HtmlViewObject {
         }
     }
 
+    public isVisible(): boolean {
+        if (this.element.offsetParent == null) {
+            return false;
+        }
+        return true;
+    }
+
     public reset() {}
 
     public show(): void {
@@ -133,6 +140,16 @@ export class HtmlViewObject {
     }
 
     public moveTo([x, y]: [number, number]): void {
+        if (!this.isVisible()) {
+            this.showAt([x, y]);
+            return;
+        }
+        const [src_x, src_y] = this.getPosition();
+        if (src_x === 0 && src_y === 0) {
+            this.showAt([x, y]);
+            return;
+        }
+
         // The parent element should be relative.
         this.element.style.zIndex = "2";
         this.element.style.position = "absolute";
@@ -224,7 +241,7 @@ export class HtmlCardsView extends HtmlViewObject {
         if (this.callback == null) {
             return;
         }
-        this.resetPosition(true);
+        this.resetPosition();
         this.callback(card_view.getCardId());
         this.callback = null;
     }
@@ -238,7 +255,7 @@ export class HtmlCardsView extends HtmlViewObject {
         this.resetPosition();
     }
 
-    public resetPosition(is_move: boolean = false): void {
+    public resetPosition(): void {
         if (this.num_cards === 0) {
             return;
         }
@@ -249,12 +266,7 @@ export class HtmlCardsView extends HtmlViewObject {
         let x_delta: number = (base_width - card_width) / (this.num_cards - 1);
         x_delta = Math.min(x_delta, card_width);
         for (let i: number = 0; i < this.num_cards; ++i) {
-            if (is_move) {
-                this.cards[i].moveTo([base_x + x_delta * i, base_y]);
-            }
-            else {
-                this.cards[i].showAt([base_x + x_delta * i, base_y]);
-            }
+            this.cards[i].moveTo([base_x + x_delta * i, base_y]);
         }
     }
 
@@ -271,7 +283,7 @@ export class HtmlCardsView extends HtmlViewObject {
         for (let i: number = 0; i < this.cards.length; ++i) {
             this.cards[i].setHighlight(false);
         }
-        this.resetPosition(true);
+        this.resetPosition();
         this.callback = null;
     }
 
