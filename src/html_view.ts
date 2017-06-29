@@ -320,9 +320,6 @@ export class HtmlView {
 
             this.drawDeckBoard();
             this.deck_cards_view.show();
-            for (let card_view of this.deck_cards_view.cards) {
-                card_view.none();
-            }
             return;
         }
 

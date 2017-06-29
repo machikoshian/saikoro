@@ -310,53 +310,59 @@ export class HtmlCardsView extends HtmlViewObject {
 }
 
 export class HtmlDeckCardsView extends HtmlViewObject {
-    readonly cards: HtmlCardDataView[] = [];
+    private cards_pool: { [data_id: number]: HtmlCardDataView } = {};
     private data_ids: CardDataId[] = [];
     public callback: CardDataIdCallback = null;
     readonly base_z_index = 10;
-    readonly max_size = 10;
 
     constructor(readonly element_id: string) {
         super(document.getElementById(element_id));
         this.setZIndex(this.base_z_index);
-
-        let base: HTMLElement = document.getElementById("card_widget");
-
-        for (let i: number = 0; i < this.max_size; ++i) {
-            let new_node: Node = base.cloneNode(true);
-            let new_element: HTMLElement = <HTMLElement>this.element.appendChild(new_node);
-            new_element.id = `${element_id}_${i}`;
-            let card_view: HtmlCardDataView = new HtmlCardDataView(new_element.id);
-            card_view.addClickListener(() => { this.onClick(i); });
-            this.cards.push(card_view);
-            card_view.none();
-            card_view.setZIndex(this.base_z_index + i);
-        }
     }
 
-    private onClick(index: number) {
-        for (let i: number = 0; i < this.max_size; ++i) {
-            this.cards[i].setZIndex(this.base_z_index + i);
+    private onClick(data_id: CardDataId) {
+        for (let i: number = 0; i < this.data_ids.length; ++i) {
+            this.getCardView(this.data_ids[i]).setZIndex(this.base_z_index + i);
         }
 
-        let card_view: HtmlCardDataView = this.cards[index];
-        card_view.setZIndex(this.base_z_index + this.max_size + 1);
+        let card_view: HtmlCardDataView = this.getCardView(data_id);
+        card_view.setZIndex(this.base_z_index + this.data_ids.length + 1);
 
         if (this.callback == null) {
             return;
         }
         this.resetPosition();
-        this.callback(card_view.getDataId());
+        this.callback(data_id);
+    }
+
+    private getCardView(data_id: CardDataId): HtmlCardDataView {
+        let card_view: HtmlCardDataView = this.cards_pool[data_id];
+        if (card_view != undefined) {
+            return card_view;
+        }
+
+        let base: HTMLElement = document.getElementById("card_widget");
+        let new_node: Node = base.cloneNode(true);
+        let new_element: HTMLElement = <HTMLElement>this.element.appendChild(new_node);
+        new_element.id = `card_data_id_${data_id}`;
+        card_view = new HtmlCardDataView(new_element.id, data_id);
+        card_view.addClickListener(() => { this.onClick(data_id); });
+        card_view.none();
+        card_view.setZIndex(this.base_z_index);
+        this.cards_pool[data_id] = card_view;
+        return card_view;
     }
 
     public draw(data_ids: CardDataId[]): void {
-        this.data_ids = data_ids;
-        let i: number = 0;
-        for (; i < data_ids.length; ++i) {
-            this.cards[i].draw(data_ids[i]);
+        for (let data_id of this.data_ids) {
+            if (data_ids.indexOf(data_id) === -1) {
+                this.getCardView(data_id).none();
+            }
         }
-        for (; i < 10; ++i) {
-            this.cards[i].none();
+
+        this.data_ids = data_ids;
+        for (let data_id of data_ids) {
+            this.getCardView(data_id).draw();
         }
         this.resetPosition();
     }
@@ -369,11 +375,11 @@ export class HtmlDeckCardsView extends HtmlViewObject {
 
         const [base_x, base_y]: [number ,number] = this.getPosition();
         const base_width: number = this.width();
-        const card_width: number = this.cards[0].width();
+        const card_width: number = this.getCardView(this.data_ids[0]).width();
         let x_delta: number = (base_width - card_width) / (num_cards - 1);
         x_delta = Math.min(x_delta, card_width);
         for (let i: number = 0; i < num_cards; ++i) {
-            this.cards[i].moveTo([base_x + x_delta * i, base_y]);
+            this.getCardView(this.data_ids[i]).moveTo([base_x + x_delta * i, base_y]);
         }
     }
 }
@@ -482,38 +488,34 @@ export class HtmlCardView extends HtmlCardBaseView {
 }
 
 export class HtmlCardDataView extends HtmlCardBaseView {
-    private data_id: CardDataId = -1;
-
-    public getDataId(): CardId {
-        return this.data_id;
+    constructor(readonly element_id: string, readonly data_id: CardDataId) {
+        super(element_id);
     }
 
-    public draw(data_id: CardDataId): void {
-        this.data_id = data_id;
-
+    public draw(): void {
         // No card
-        if (data_id === -1) {
+        if (this.data_id === -1) {
             this.none();
             return;
         }
 
         // Character
-        if (CardData.isCharacter(data_id)) {
-            let character: Character = new Character(data_id);
+        if (CardData.isCharacter(this.data_id)) {
+            let character: Character = new Character(this.data_id);
             this.drawCharacterCard(character);
             return;
         }
 
         // Landmark
-        if (CardData.isLandmark(data_id)) {
-            let landmark: Facility = new Facility(data_id);
+        if (CardData.isLandmark(this.data_id)) {
+            let landmark: Facility = new Facility(this.data_id);
             let owner_id: PlayerId = -1;
             this.drawLandmarkCard(landmark, owner_id);
             return;
         }
 
         // Facility
-        let facility: Facility = new Facility(data_id);
+        let facility: Facility = new Facility(this.data_id);
         this.drawFacilityCard(facility);
     }
 }
