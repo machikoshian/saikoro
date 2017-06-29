@@ -110,6 +110,11 @@ export class CardData {
         return facilities;
     }
 
+    static isLandmark(data_id: number): boolean {
+        return ((LANDMARK_DATA_BASE <= data_id) &&
+                (data_id < LANDMARK_DATA_BASE + LANDMARK_DATA.length));
+    }
+
     static isCharacter(data_id: number): boolean {
         return ((CHARACTER_DATA_BASE <= data_id) &&
                 (data_id < CHARACTER_DATA_BASE + CHARACTER_DATA.length));

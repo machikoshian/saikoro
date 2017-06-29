@@ -1,5 +1,5 @@
 import { PlayerId, Player } from "./board";
-import { CardId, Facility, FacilityType, Character } from "./facility";
+import { CardId, CardDataId, CardData, Facility, FacilityType, Character } from "./facility";
 import { Phase, Event, EventType, Session } from "./session";
 import { PlayerCards } from "./card_manager";
 import { DiceResult } from "./dice";
@@ -20,6 +20,7 @@ const COLOR_PURPLE: string = "#B39DDB";
 
 type PlayerIdCallback = (player_id: PlayerId) => void;
 type CardIdCallback = (card_id: CardId) => void;
+type CardDataIdCallback = (card_data_id: CardDataId) => void;
 
 function getFacilityColor(facility: Facility): string {
     if (!facility) {
@@ -308,8 +309,76 @@ export class HtmlCardsView extends HtmlViewObject {
     }
 }
 
-export class HtmlCardView extends HtmlViewObject {
-    private card_id: CardId = -1;
+export class HtmlDeckCardsView extends HtmlViewObject {
+    readonly cards: HtmlCardDataView[] = [];
+    private data_ids: CardDataId[] = [];
+    public callback: CardDataIdCallback = null;
+    readonly base_z_index = 10;
+    readonly max_size = 10;
+
+    constructor(readonly element_id: string) {
+        super(document.getElementById(element_id));
+        this.setZIndex(this.base_z_index);
+
+        let base: HTMLElement = document.getElementById("card_widget");
+
+        for (let i: number = 0; i < this.max_size; ++i) {
+            let new_node: Node = base.cloneNode(true);
+            let new_element: HTMLElement = <HTMLElement>this.element.appendChild(new_node);
+            new_element.id = `${element_id}_${i}`;
+            let card_view: HtmlCardDataView = new HtmlCardDataView(new_element.id);
+            card_view.addClickListener(() => { this.onClick(i); });
+            this.cards.push(card_view);
+            card_view.none();
+            card_view.setZIndex(this.base_z_index + i);
+        }
+    }
+
+    private onClick(index: number) {
+        for (let i: number = 0; i < this.max_size; ++i) {
+            this.cards[i].setZIndex(this.base_z_index + i);
+        }
+
+        let card_view: HtmlCardDataView = this.cards[index];
+        card_view.setZIndex(this.base_z_index + this.max_size + 1);
+
+        if (this.callback == null) {
+            return;
+        }
+        this.resetPosition();
+        this.callback(card_view.getDataId());
+    }
+
+    public draw(data_ids: CardDataId[]): void {
+        this.data_ids = data_ids;
+        let i: number = 0;
+        for (; i < data_ids.length; ++i) {
+            this.cards[i].draw(data_ids[i]);
+        }
+        for (; i < 10; ++i) {
+            this.cards[i].none();
+        }
+        this.resetPosition();
+    }
+
+    public resetPosition(): void {
+        const num_cards: number = this.data_ids.length;
+        if (num_cards === 0) {
+            return;
+        }
+
+        const [base_x, base_y]: [number ,number] = this.getPosition();
+        const base_width: number = this.width();
+        const card_width: number = this.cards[0].width();
+        let x_delta: number = (base_width - card_width) / (num_cards - 1);
+        x_delta = Math.min(x_delta, card_width);
+        for (let i: number = 0; i < num_cards; ++i) {
+            this.cards[i].moveTo([base_x + x_delta * i, base_y]);
+        }
+    }
+}
+
+export class HtmlCardBaseView extends HtmlViewObject {
     private element_name: HTMLElement;
     private element_cost: HTMLElement;
     private element_description: HTMLElement;
@@ -320,43 +389,6 @@ export class HtmlCardView extends HtmlViewObject {
         this.element_name = <HTMLElement>this.element.getElementsByClassName("card_name")[0];
         this.element_cost = <HTMLElement>this.element.getElementsByClassName("card_cost")[0];
         this.element_description = <HTMLElement>this.element.getElementsByClassName("card_description")[0];
-    }
-
-    public setCardId(card_id: CardId): void {
-        this.card_id = card_id;
-    }
-
-    public getCardId(): CardId {
-        return this.card_id;
-    }
-
-    public draw(session: Session, card_id: CardId): void {
-        this.card_id = card_id;
-
-        // No card
-        if (card_id === -1) {
-            this.none();
-            return;
-        }
-
-        // Character
-        if (session.isCharacter(card_id)) {
-            let character: Character = session.getCharacter(card_id);
-            this.drawCharacterCard(character);
-            return;
-        }
-
-        // Landmark
-        if (session.isLandmark(card_id)) {
-            let landmark: Facility = session.getFacility(card_id);
-            let owner_id: PlayerId = session.getOwnerId(card_id);
-            this.drawLandmarkCard(landmark, owner_id);
-            return;
-        }
-
-        // Facility
-        let facility: Facility = session.getFacility(card_id);
-        this.drawFacilityCard(facility);
     }
 
     public drawFacilityCard(facility: Facility): void {
@@ -405,6 +437,84 @@ export class HtmlCardView extends HtmlViewObject {
         }).join(",");
 
         return area;
+    }
+}
+
+export class HtmlCardView extends HtmlCardBaseView {
+    private card_id: CardId = -1;
+
+    public setCardId(card_id: CardId): void {
+        this.card_id = card_id;
+    }
+
+    public getCardId(): CardId {
+        return this.card_id;
+    }
+
+    public draw(session: Session, card_id: CardId): void {
+        this.card_id = card_id;
+
+        // No card
+        if (card_id === -1) {
+            this.none();
+            return;
+        }
+
+        // Character
+        if (session.isCharacter(card_id)) {
+            let character: Character = session.getCharacter(card_id);
+            this.drawCharacterCard(character);
+            return;
+        }
+
+        // Landmark
+        if (session.isLandmark(card_id)) {
+            let landmark: Facility = session.getFacility(card_id);
+            let owner_id: PlayerId = session.getOwnerId(card_id);
+            this.drawLandmarkCard(landmark, owner_id);
+            return;
+        }
+
+        // Facility
+        let facility: Facility = session.getFacility(card_id);
+        this.drawFacilityCard(facility);
+    }
+}
+
+export class HtmlCardDataView extends HtmlCardBaseView {
+    private data_id: CardDataId = -1;
+
+    public getDataId(): CardId {
+        return this.data_id;
+    }
+
+    public draw(data_id: CardDataId): void {
+        this.data_id = data_id;
+
+        // No card
+        if (data_id === -1) {
+            this.none();
+            return;
+        }
+
+        // Character
+        if (CardData.isCharacter(data_id)) {
+            let character: Character = new Character(data_id);
+            this.drawCharacterCard(character);
+            return;
+        }
+
+        // Landmark
+        if (CardData.isLandmark(data_id)) {
+            let landmark: Facility = new Facility(data_id);
+            let owner_id: PlayerId = -1;
+            this.drawLandmarkCard(landmark, owner_id);
+            return;
+        }
+
+        // Facility
+        let facility: Facility = new Facility(data_id);
+        this.drawFacilityCard(facility);
     }
 }
 
