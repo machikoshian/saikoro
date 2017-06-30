@@ -440,6 +440,17 @@ export class CardManager {
         }
         return true;
     }
+
+    public getCardDataId(card_id: CardId): CardDataId {
+        if (this.isCharacter(card_id)) {
+            return this.characters[card_id].data_id;
+        }
+        const facility: Facility = this.facilities[card_id];
+        if (facility == undefined) {
+            return -1;
+        }
+        return facility.data_id;
+    }
 }
 
 export class CardEffect {

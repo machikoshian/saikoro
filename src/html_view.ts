@@ -8,7 +8,7 @@ import { Client } from "./client";
 import { DeckMaker } from "./deck_maker";
 import { GameMode, Protocol, MatchingInfo } from "./protocol";
 import { HtmlViewObject, HtmlCardsView, HtmlCardView, HtmlPlayersView,
-         HtmlMessageView, HtmlButtonsView,
+         HtmlMessageView, HtmlButtonsView, HtmlCardWidgetView,
          HtmlDeckCharView, HtmlBoardView, HtmlDiceView,
          HtmlChatButtonView, HtmlDeckCardsView } from "./html_view_parts";
 import * as Query from "./query";
@@ -95,8 +95,8 @@ export class HtmlView {
     private reset_button_view: HtmlViewObject = null;
     private board_view: HtmlBoardView = null;
     private landmarks_view: HtmlCardsView = null;
-    private field_card_view: HtmlCardView = null;
-    private card_widget_view: HtmlCardView = null;
+    private field_card_view: HtmlCardWidgetView = null;
+    private card_widget_view: HtmlCardWidgetView = null;
     private dice_widget_view: HtmlDiceView = null;
     private money_motion_view: HtmlViewObject = null;
     private message_view: HtmlMessageView = null;
@@ -185,7 +185,7 @@ export class HtmlView {
         });
 
         // Widgets
-        this.card_widget_view = new HtmlCardView("card_widget");
+        this.card_widget_view = new HtmlCardWidgetView("card_widget");
         this.dice_widget_view = new HtmlDiceView("dice_widget");
 
         // Chat
@@ -252,7 +252,7 @@ export class HtmlView {
         }
 
         // Field card
-        this.field_card_view = new HtmlCardView("field_card");
+        this.field_card_view = new HtmlCardWidgetView("field_card");
 
         // Money motion
         this.money_motion_view = new HtmlViewObject(document.getElementById("money_motion"));
@@ -786,14 +786,21 @@ export class HtmlView {
     }
 
     public drawFieldInfo(x, y): void {
-        let card_id: CardId = this.session.getCardIdOnBoard(x, y);
-        if (card_id === -1 || card_id === this.field_card_view.getCardId()) {
+        const card_id: CardId = this.session.getCardIdOnBoard(x, y);
+        if (card_id === -1) {
+            this.field_card_view.setDataId(-1);
             this.field_card_view.none();
-            this.field_card_view.setCardId(-1);
             return;
         }
 
-        this.field_card_view.draw(this.session, card_id);
+        const data_id: CardDataId = this.session.getCardDataId(card_id);
+        if (data_id === -1 || data_id === this.field_card_view.getDataId()) {
+            this.field_card_view.setDataId(-1);
+            this.field_card_view.none();
+            return;
+        }
+
+        this.field_card_view.setDataId(data_id);
         this.field_card_view.showAt(this.getPosition((x < 6) ? "click_10_1" : "click_0_1"));
     }
 
@@ -1211,7 +1218,7 @@ export class HtmlView {
             window.setTimeout(() => { card_view.hide(); }, 1500);
         }
         else {
-            this.card_widget_view.draw(this.session, card_id);
+            this.card_widget_view.setDataId(this.session.getCardDataId(card_id));
             this.effectClonedObjectMove(this.card_widget_view, `player_${pid}`, "board");
         }
     }
@@ -1236,7 +1243,7 @@ export class HtmlView {
     }
 
     private effectCardDeal(pid: PlayerId, card_id: CardId): void {
-        this.card_widget_view.draw(this.session, card_id);
+        this.card_widget_view.setDataId(this.session.getCardDataId(card_id));
         this.effectClonedObjectMove(this.card_widget_view, `player_${pid}`, `card_${pid}_0`);
     }
 

@@ -491,6 +491,42 @@ export class HtmlCardView extends HtmlCardBaseView {
     }
 }
 
+export class HtmlCardWidgetView extends HtmlCardBaseView {
+    private data_id: CardDataId = -1;
+
+    public getDataId(): CardDataId {
+        return this.data_id;
+    }
+
+    public setDataId(data_id: CardDataId): void {
+        this.data_id = data_id;
+        // No card
+        if (this.data_id === -1) {
+            this.none();
+            return;
+        }
+
+        // Character
+        if (CardData.isCharacter(data_id)) {
+            let character: Character = new Character(this.data_id);
+            this.setCharacterCard(character);
+            return;
+        }
+
+        // Landmark
+        if (CardData.isLandmark(this.data_id)) {
+            let landmark: Facility = new Facility(this.data_id);
+            let owner_id: PlayerId = -1;
+            this.setLandmarkCard(landmark, owner_id);
+            return;
+        }
+
+        // Facility
+        let facility: Facility = new Facility(this.data_id);
+        this.setFacilityCard(facility);
+    }
+}
+
 export class HtmlCardDataView extends HtmlCardBaseView {
     constructor(readonly element_id: string, readonly data_id: CardDataId) {
         super(element_id);

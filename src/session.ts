@@ -1117,4 +1117,7 @@ export class Session {
             this.watcher_user_ids.splice(index, 1);
         }
     }
+    public getCardDataId(card_id: CardId): CardDataId {
+        return this.card_manager.getCardDataId(card_id);
+    }
 }
