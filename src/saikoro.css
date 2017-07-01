@@ -268,10 +268,9 @@ table.card {
 /* ---- Stamps ---- */
 
 .stamp_box {
-    width: 310px;
-    height: 150px;
-    background-color: #607D8B;
-    opacity: 0.9;
+    width: 470px;
+    height: 230px;
+    background-color: rgba(0, 0, 0, 0.1);
     padding: 10px;
     border-radius: 10px;
     border-style: solid;
@@ -280,16 +279,16 @@ table.card {
 }
 
 .stamp_box .stamp {
-    vertical-align: top;
     display: inline-block;
 }
 
 .stamp {
     width: 140px;
-    height: 45px;
-    font-size: 20px;
-    padding-top: 15px;
+    height: 60px;
+    font-size: 18px;
+    padding-top: 5px;
     text-align: center;
+    color: #222;
     background-color: rgba(255, 255, 255, 0.8);
     border-radius: 10px;
     font-weight: bold;
@@ -331,6 +330,53 @@ table.card {
     -1px 1px 1px green,
     1px -1px 1px green,
    -1px -1px 1px green;
+}
+
+.ureshii {
+    font-size: 20px;
+    color: white;
+    text-shadow:
+     1px 1px 1px red,
+    -1px 1px 1px red,
+    1px -1px 1px red,
+   -1px -1px 1px red;
+}
+
+.iina {
+    color: yellow;
+    text-shadow:
+     1px 1px 1px orange,
+    -1px 1px 1px orange,
+    1px -1px 1px orange,
+   -1px -1px 1px orange;
+}
+
+.omedetou {
+    font-size: 17px;
+    color: white;
+    text-shadow:
+     1px 1px 1px red,
+    -1px 1px 1px red,
+    1px -1px 1px red,
+   -1px -1px 1px red;
+}
+
+.mouichido {
+    color: red;
+    text-shadow:
+     1px 1px 1px white,
+    -1px 1px 1px white,
+    1px -1px 1px white,
+   -1px -1px 1px white;
+}
+
+.hanaremasu {
+    color: white;
+    text-shadow:
+     1px 1px 1px blue,
+    -1px 1px 1px blue,
+    1px -1px 1px blue,
+   -1px -1px 1px blue;
 }
 
 /* ---- Dice ---- */
