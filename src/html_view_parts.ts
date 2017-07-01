@@ -48,7 +48,6 @@ function getPlayerColor(player_id: PlayerId): string {
     return COLOR_PLAYERS[player_id];
 }
 
-
 export enum Visibility {
     Visible,
     Invisible,
@@ -104,7 +103,7 @@ export class HtmlViewObject {
     }
 
     public remove(): void {
-        document.body.removeChild(this.element);
+        this.element.parentElement.removeChild(this.element);
     }
 
     public width(): number {
@@ -130,7 +129,6 @@ export class HtmlViewObject {
 
     public showAt([x, y]: [number, number]): void {
         // The parent element should be relative.
-        this.element.style.zIndex = "2";
         this.element.style.position = "absolute";
         this.element.style.left = x + "px";
         this.element.style.top = y + "px";
@@ -138,6 +136,11 @@ export class HtmlViewObject {
         this.element.style.transitionTimingFunction = "none";
         this.element.style.transform = "none";
         this.show();
+    }
+
+    public showAtElementId(element_id: string): void {
+        this.show();
+        this.showAt(this.getPositionAlignedWithElementId(element_id));
     }
 
     public moveTo([x, y]: [number, number]): void {
@@ -152,7 +155,6 @@ export class HtmlViewObject {
         }
 
         // The parent element should be relative.
-        this.element.style.zIndex = "2";
         this.element.style.position = "absolute";
         this.element.style.left = x + "px";
         this.element.style.top = y + "px";
@@ -160,6 +162,10 @@ export class HtmlViewObject {
         this.element.style.transitionTimingFunction = "ease";
         this.element.style.transform = "none";
         this.show();
+    }
+
+    public moveToElementId(element_id: string): void {
+        this.moveTo(this.getPositionAlignedWithElementId(element_id));
     }
 
     public getPositionAligned(dst: ClientRect): [number, number] {
@@ -196,113 +202,170 @@ export class HtmlViewObject {
 }
 
 export class HtmlCardsView extends HtmlViewObject {
-    readonly cards: HtmlCardView[] = [];
-    private num_cards: number = 0;
+    private card_id_map: { [card_id: number]: number } = {};  // CardId -> CardDataId
+    private card_ids: CardId[] = [];
+    private cards_pool: { [data_id: number]: HtmlCardView } = {};
+
     private callback: CardIdCallback = null;
     readonly base_z_index = 10;
 
-    constructor(readonly element_id: string, readonly max_size: number) {
+    constructor(readonly element_id: string) {
         super(document.getElementById(element_id));
         this.setZIndex(this.base_z_index);
-
-        let base: HTMLElement = document.getElementById("card_widget");
-
-        for (let i: number = 0; i < this.max_size; ++i) {
-            let new_node: Node = base.cloneNode(true);
-            let new_element: HTMLElement = <HTMLElement>this.element.appendChild(new_node);
-            new_element.id = `${element_id}_${i}`;
-            let card_view: HtmlCardView = new HtmlCardView(new_element.id);
-            card_view.addClickListener(() => { this.onClick(i); });
-            this.cards.push(card_view);
-            card_view.none();
-            card_view.setZIndex(this.base_z_index + i);
-        }
     }
 
     public reset(): void {
         this.resetClickable();
-        this.num_cards = 0;
+        this.card_id_map = {};
+        this.card_ids = [];
+        const keys: string[] = Object.keys(this.cards_pool);
+        for (let key of keys) {
+            this.cards_pool[Number(key)].remove();
+        }
+        this.cards_pool = {};
         super.reset();
     }
 
-    private onClick(index: number) {
-        for (let i: number = 0; i < this.max_size; ++i) {
-            this.cards[i].setZIndex(this.base_z_index + i);
+    private onClick(card_id: CardId, data_id: CardDataId) {
+        for (let i: number = 0; i < this.card_ids.length; ++i) {
+            this.getCardView(this.card_ids[i]).setZIndex(this.base_z_index + i);
         }
 
-        let card_view: HtmlCardView = this.cards[index];
-        card_view.setZIndex(this.base_z_index + this.max_size + 1);
+        let card_view: HtmlCardView = this.getCardView(card_id);
+        card_view.setZIndex(this.base_z_index + this.card_ids.length + 1);
 
-        if (card_view.is_highlight === false) {
-            return;
-        }
-        for (let i: number = 0; i < this.cards.length; ++i) {
-            this.cards[i].setHighlight(false);
-        }
         if (this.callback == null) {
             return;
         }
         this.resetPosition();
-        this.callback(card_view.getCardId());
-        this.callback = null;
+        this.callback(card_view.card_id);
     }
 
     public draw(session: Session, card_ids: CardId[]): void {
-        this.num_cards = card_ids.length;
-        for (let i: number = 0; i < this.max_size; ++i) {
-            const card_id: CardId = (i < this.num_cards) ? card_ids[i] : -1;
-            this.cards[i].draw(session, card_id);
+        this.show();
+
+        const [base_x, base_y]: [number ,number] = this.getPosition();
+
+        // Update card_id_map.
+        // TODO: move this to other.
+        for (let card_id of card_ids) {
+            this.card_id_map[card_id] = session.getCardDataId(card_id);
         }
+
+        // Removed cards
+        for (let card_id of this.card_ids) {
+            if (card_ids.indexOf(card_id) === -1) {
+                this.getCardView(card_id).none();
+            }
+        }
+
+        // Added cards
+        for (let card_id of card_ids) {
+            if (this.card_ids.indexOf(card_id) === -1) {
+                this.getCardView(card_id).showAt([-200, base_y]);
+            }
+        }
+        this.card_ids = card_ids.slice();  // Shallow copy.
         this.resetPosition();
     }
 
     public resetPosition(): void {
-        if (this.num_cards === 0) {
+        const num_cards: number = this.card_ids.length;
+        if (num_cards === 0) {
             return;
         }
 
         const [base_x, base_y]: [number ,number] = this.getPosition();
         const base_width: number = this.width();
-        const card_width: number = this.cards[0].width();
-        let x_delta: number = (base_width - card_width) / (this.num_cards - 1);
+        const card_width: number = this.getCardView(this.card_ids[0]).width();
+        let x_delta: number = (base_width - card_width) / (num_cards - 1);
         x_delta = Math.min(x_delta, card_width);
-        for (let i: number = 0; i < this.num_cards; ++i) {
-            this.cards[i].moveTo([base_x + x_delta * i, base_y]);
+        for (let i: number = 0; i < num_cards; ++i) {
+            let card_view: HtmlCardView = this.getCardView(this.card_ids[i]);
+            card_view.setZIndex(this.base_z_index + i);
+            card_view.moveTo([base_x + x_delta * i, base_y]);
         }
     }
 
     public getCardView(card_id: CardId): HtmlCardView {
-        for (let card of this.cards) {
-            if (card.getCardId() === card_id) {
-                return card;
-            }
+        let card_view: HtmlCardView = this.cards_pool[card_id];
+        if (card_view != undefined) {
+            return card_view;
         }
-        return null;
+
+        let base: HTMLElement = document.getElementById("card_widget");
+        let new_node: Node = base.cloneNode(true);
+        let new_element: HTMLElement = <HTMLElement>this.element.appendChild(new_node);
+        new_element.id = `card_id_${card_id}`;
+        const data_id: CardDataId = this.card_id_map[card_id];
+        card_view = new HtmlCardView(new_element.id, data_id, card_id);
+        card_view.addClickListener(() => { this.onClick(card_id, data_id); });
+        card_view.none();
+        card_view.setZIndex(this.base_z_index);
+        this.cards_pool[card_id] = card_view;
+        return card_view;
+    }
+
+    public addCard(data_id: CardDataId, card_id: CardId, element_id: string): void {
+        this.card_id_map[card_id] = data_id;
+        this.card_ids.unshift(card_id);
+        this.getCardView(card_id).showAtElementId(element_id);
+        this.resetPosition();
+    }
+
+    public useCard(card_id: CardId, element_id: string): void {
+        const index: number = this.card_ids.indexOf(card_id);
+        if (index === -1) {
+            return;
+        }
+
+        if (!CardData.isLandmark(this.card_id_map[card_id])) {
+            this.card_ids.splice(index, 1);
+        }
+
+        let card_view: HtmlCardView = this.getCardView(card_id);
+        card_view.moveToElementId(element_id);
+        window.setTimeout(() => {
+            if (!CardData.isLandmark(this.card_id_map[card_id])) {
+                card_view.none();
+            }
+            this.resetPosition();
+        }, 1000);
     }
 
     public resetClickable(): void {
-        for (let i: number = 0; i < this.cards.length; ++i) {
-            this.cards[i].setHighlight(false);
+        for (let i: number = 0; i < this.card_ids.length; ++i) {
+            this.getCardView(this.card_ids[i]).setHighlight(false);
         }
         this.resetPosition();
         this.callback = null;
     }
 
-    // TODO: remove session.
-    public setCharCardsClickable(session: Session, callback: CardIdCallback): void {
+    public setCharCardsClickable(callback: CardIdCallback): void {
         let delay: number = 0;
-        for (let i: number = 0; i < this.cards.length; ++i) {
-            let card: HtmlCardView = this.cards[i];
-            if (!session.isCharacter(card.getCardId())) {
+        for (let i: number = 0; i < this.card_ids.length; ++i) {
+            let card: HtmlCardView = this.getCardView(this.card_ids[i]);
+            if (!CardData.isCharacter(card.data_id)) {
                 continue;
             }
             let [x, y] = card.getPosition();
             const delta_y: number = -250;
             window.setTimeout(() => {
                 card.moveTo([x, y + delta_y]);
-                //card.animateMoveTo([x, y + delta_y]);
             }, delay);
             delay += 200;
+            card.setHighlight(true);
+        }
+        this.callback = callback;
+    }
+
+    public setFacilityCardsClickable(callback: CardIdCallback): void {
+        let delay: number = 0;
+        for (let i: number = 0; i < this.card_ids.length; ++i) {
+            let card: HtmlCardView = this.getCardView(this.card_ids[i]);
+            if (CardData.isCharacter(card.data_id)) {
+                continue;
+            }
             card.setHighlight(true);
         }
         this.callback = callback;
@@ -401,6 +464,33 @@ export class HtmlCardBaseView extends HtmlViewObject {
         this.element_description = <HTMLElement>this.element.getElementsByClassName("card_description")[0];
     }
 
+    protected setData(data_id: CardDataId): void {
+        // No card
+        if (data_id === -1) {
+            this.none();
+            return;
+        }
+
+        // Character
+        if (CardData.isCharacter(data_id)) {
+            let character: Character = new Character(data_id);
+            this.setCharacterCard(character);
+            return;
+        }
+
+        // Landmark
+        if (CardData.isLandmark(data_id)) {
+            let landmark: Facility = new Facility(data_id);
+            let owner_id: PlayerId = -1;
+            this.setLandmarkCard(landmark, owner_id);
+            return;
+        }
+
+        // Facility
+        let facility: Facility = new Facility(data_id);
+        this.setFacilityCard(facility);
+    }
+
     public setFacilityCard(facility: Facility): void {
         let area: string = this.getFacilityAreaString(facility);
         this.element_name.innerText = `${area} ${facility.getName()}`;
@@ -448,46 +538,11 @@ export class HtmlCardBaseView extends HtmlViewObject {
 }
 
 export class HtmlCardView extends HtmlCardBaseView {
-    private card_id: CardId = -1;
-
-    public setCardId(card_id: CardId): void {
-        this.card_id = card_id;
-    }
-
-    public getCardId(): CardId {
-        return this.card_id;
-    }
-
-    public draw(session: Session, card_id: CardId): void {
-        this.card_id = card_id;
-
-        // No card
-        if (card_id === -1) {
-            this.none();
-            return;
-        }
-
-        // Character
-        if (session.isCharacter(card_id)) {
-            let character: Character = session.getCharacter(card_id);
-            this.setCharacterCard(character);
-            this.show();
-            return;
-        }
-
-        // Landmark
-        if (session.isLandmark(card_id)) {
-            let landmark: Facility = session.getFacility(card_id);
-            let owner_id: PlayerId = session.getOwnerId(card_id);
-            this.setLandmarkCard(landmark, owner_id);
-            this.show();
-            return;
-        }
-
-        // Facility
-        let facility: Facility = session.getFacility(card_id);
-        this.setFacilityCard(facility);
-        this.show();
+    constructor(readonly element_id: string,
+                readonly data_id: CardDataId,
+                readonly card_id: CardId) {
+        super(element_id);
+        this.setData(data_id);
     }
 }
 
@@ -530,34 +585,7 @@ export class HtmlCardWidgetView extends HtmlCardBaseView {
 export class HtmlCardDataView extends HtmlCardBaseView {
     constructor(readonly element_id: string, readonly data_id: CardDataId) {
         super(element_id);
-        this.setData();
-    }
-
-    private setData(): void {
-        // No card
-        if (this.data_id === -1) {
-            this.none();
-            return;
-        }
-
-        // Character
-        if (CardData.isCharacter(this.data_id)) {
-            let character: Character = new Character(this.data_id);
-            this.setCharacterCard(character);
-            return;
-        }
-
-        // Landmark
-        if (CardData.isLandmark(this.data_id)) {
-            let landmark: Facility = new Facility(this.data_id);
-            let owner_id: PlayerId = -1;
-            this.setLandmarkCard(landmark, owner_id);
-            return;
-        }
-
-        // Facility
-        let facility: Facility = new Facility(this.data_id);
-        this.setFacilityCard(facility);
+        this.setData(data_id);
     }
 }
 

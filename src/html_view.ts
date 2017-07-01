@@ -84,7 +84,7 @@ export class HtmlView {
     private session: Session = null;
     private prev_session: Session = null;
     private prev_step: number = -1;
-    private clicked_card_view: HtmlCardView = null;
+    private clicked_card_id: CardId = -1;
     private deck_maker: DeckMaker = new DeckMaker();
     private deck_char_view: HtmlDeckCharView = null;
     private deck_cards_view: HtmlDeckCardsView = null;
@@ -235,21 +235,13 @@ export class HtmlView {
         this.deck_cards_view.callback = (data_id) => { this.onClickDeckCard(data_id); };
 
         // HtmlCardsView
-        let card_size: number = 10;
         for (let pid = 0; pid < 4; ++pid) {
-            let cards_view: HtmlCardsView = new HtmlCardsView(`card_${pid}`, card_size);
-            for (let c: number = 0; c < card_size; ++c) {
-                cards_view.cards[c].addClickListener(() => { this.onClickCard(pid, c); });
-            }
+            let cards_view: HtmlCardsView = new HtmlCardsView(`card_${pid}`);
             this.cards_views.push(cards_view);
         }
 
         // Landmark cards
-        let landmark_size: number = 5;
-        this.landmarks_view = new HtmlCardsView("landmark", landmark_size);
-        for (let i: number = 0; i < landmark_size; ++i) {
-            this.landmarks_view.cards[i].addClickListener(() => { this.onClickLandmark(i); });
-        }
+        this.landmarks_view = new HtmlCardsView("landmark");
 
         // Field card
         this.field_card_view = new HtmlCardWidgetView("field_card");
@@ -340,7 +332,6 @@ export class HtmlView {
             if (Protocol.getPlayerCount(this.client.mode) < 2) {
                 this.reset_button_view.show();
             }
-            // this.chat_button_view.hide();
             this.chat_button_view.show();
             return;
         }
@@ -412,23 +403,27 @@ export class HtmlView {
         }
 
         // Event on game (this.scene === Scene.Game).
-        if (this.clicked_card_view == null) {
+        if (this.clicked_card_id === -1) {
             this.drawFieldInfo(x, y);
             return;
         }
-        let card_id: CardId = this.clicked_card_view.getCardId();
-        let event: Event = this.session.getEventBuildFacility(this.client.player_id, x, y, card_id);
+        let event: Event = this.session.getEventBuildFacility(this.client.player_id, x, y, this.clicked_card_id);
         if (event == null || !event.valid) {
             return;
         }
 
-        this.client.sendRequest(this.client.createBuildQuery(x, y, card_id));
+        this.client.sendRequest(this.client.createBuildQuery(x, y, this.clicked_card_id));
 
         this.event_queue.addEvent(() => {
             this.buttons_view.hide();  // for the turn end button.
-            this.clicked_card_view.hide();
-            this.effectClonedObjectMove(this.clicked_card_view,
-                                        this.clicked_card_view.element_id, `field_${x}_${y}`);
+            const field: string = `field_${x}_${y}`;
+            if (this.session.isLandmark(this.clicked_card_id)) {
+                this.landmarks_view.useCard(this.clicked_card_id, field);
+            }
+            else {
+                this.cards_views[this.client.player_id].useCard(this.clicked_card_id, field);
+            }
+            this.resetCardsClickable();
             return true;
         }, 1000);
     }
@@ -498,6 +493,42 @@ export class HtmlView {
         });
     }
 
+    private processFacilityCard(card_id: CardId): void {
+        this.clicked_card_id = card_id;
+        const facility: Facility = this.session.getFacility(card_id);
+        if (facility.type === FacilityType.Gray) {
+            this.processLandmark(card_id);
+            return;
+        }
+
+        this.drawBoard(this.session);
+
+        if (this.session.getPhase() === Phase.BuildFacility) {
+            for (let area of facility.getArea()) {
+                let x: number = area - 1;
+                for (let y: number = 0; y < 5; ++y) {  // TODO: y can be other than 5.
+                    let event: Event =
+                        this.session.getEventBuildFacility(this.client.player_id, x, y, card_id);
+                    if (event && event.valid) {
+                        this.board_view.setClickable([x, y], true);
+                    }
+                }
+            }
+        }
+    }
+
+    private processLandmark(card_id: CardId): void {
+        if (this.session.getPhase() !== Phase.BuildFacility) {
+            return;
+        }
+        if (this.session.getOwnerId(card_id) !== -1) {
+            return;
+        }
+
+        this.drawBoard(this.session);
+        this.board_view.setClickable(this.session.getPosition(card_id), true);
+    }
+
     private processCharCard(card_id: CardId): void {
         const character: Character = this.session.getCharacter(card_id);
         if (character.type === CharacterType.MoveMoney) {
@@ -523,6 +554,8 @@ export class HtmlView {
     private onClickEndTurn(): void {
         this.client.sendRequest(this.client.createEndTurnQuery());
         this.event_queue.addEvent(() => {
+            this.drawBoard(this.session);
+            this.resetCardsClickable();
             this.buttons_view.hide();
             return true;
         }, 500);
@@ -597,53 +630,6 @@ export class HtmlView {
         this.client.watchGame(this.live_session_ids[index]);
     }
 
-    private onClickCard(player: number, card: number): void {
-        // Event on matching.
-        if (this.scene !== Scene.Game) {
-            return;
-        }
-
-        const phase: Phase = this.session.getPhase();
-        if (phase === Phase.CharacterCard) {
-            return;
-        }
-
-        // Event on game (this.scene === Scene.Game).
-        let clicked_card_id: CardId = this.cards_views[player].cards[card].getCardId();
-        let is_char: boolean = this.session.isCharacter(clicked_card_id);
-
-        let is_valid: boolean = ((phase === Phase.BuildFacility) && !is_char);
-        if (!is_valid) {
-            return;
-        }
-
-        console.log(`clicked: card_${player}_${card}`);
-        if (this.clicked_card_view && clicked_card_id === this.clicked_card_view.getCardId()) {
-            this.resetCards();
-            this.drawBoard(this.session);  // TODO: draw click fields only.
-            return;
-        }
-
-        this.resetCards();
-        this.clicked_card_view = this.cards_views[player].cards[card];
-        this.clicked_card_view.setHighlight(true);
-
-        this.drawBoard(this.session);
-
-        if (phase === Phase.BuildFacility) {
-            for (let area of this.session.getFacility(clicked_card_id).getArea()) {
-                let x: number = area - 1;
-                for (let y: number = 0; y < 5; ++y) {  // TODO: y can be other than 5.
-                    let event: Event =
-                        this.session.getEventBuildFacility(player, x, y, clicked_card_id);
-                    if (event && event.valid) {
-                        this.board_view.setClickable([x, y], true);
-                    }
-                }
-            }
-        }
-    }
-
     private onClickDeckCard(data_id: CardDataId): void {
         // Event on matching.
         if (this.scene !== Scene.Deck) {
@@ -662,33 +648,6 @@ export class HtmlView {
             this.deck_maker.setFacility(x, y, data_id);
         }
         this.drawDeckBoard();
-    }
-
-    private onClickLandmark(card: number): void {
-        if (this.session.getPhase() !== Phase.BuildFacility) {
-            return;
-        }
-
-        console.log(`clicked: landmark_${card}`);
-
-        let clicked_card_id: CardId = this.session.getLandmarks()[card];
-        if (this.clicked_card_view && clicked_card_id === this.clicked_card_view.getCardId()) {
-            this.resetCards();
-            this.drawBoard(this.session);  // TODO: draw click fields only.
-            return;
-        }
-
-        if (this.session.getOwnerId(clicked_card_id) !== -1) {
-            return;
-        }
-
-        this.resetCards();
-        this.clicked_card_view = this.landmarks_view.cards[card];
-        this.clicked_card_view.setHighlight(true);
-
-        this.drawBoard(this.session);
-
-        this.board_view.setClickable(this.session.getPosition(clicked_card_id), true);
     }
 
     private getPlayerColor(player_id: PlayerId): string {
@@ -735,11 +694,12 @@ export class HtmlView {
         return `${name} のサイコロは ${faces[d1]} ${faces[d2]} ${delta}: ${dice.result()} でした。`;
     }
 
-    private resetCards(): void {
-        if (this.clicked_card_view) {
-            this.clicked_card_view.setHighlight(false);
-            this.clicked_card_view = null;
+    private resetCardsClickable(): void {
+        this.clicked_card_id = -1;
+        for (let i: number = 0; i < this.cards_views.length; ++i) {
+            this.cards_views[i].resetClickable();
         }
+        this.landmarks_view.resetClickable();
     }
 
     public updateView(session: Session, player_id: PlayerId): void {
@@ -769,8 +729,6 @@ export class HtmlView {
                 continue;
             }
             let card_ids: CardId[] = session.getSortedHand(i);
-            // show should be before draw to initialize the rect.
-            this.cards_views[i].show();
             this.cards_views[i].draw(session, card_ids);
         }
         for (let i: number = players.length; i < 4; ++i) {
@@ -782,7 +740,17 @@ export class HtmlView {
         this.landmarks_view.show();
         this.landmarks_view.draw(session, landmark_ids);
 
-        this.resetCards();  // Nice to check if built or not?
+        this.resetCardsClickable();  // Nice to check if built or not?
+
+        if (session.getCurrentPlayerId() !== this.client.player_id) {
+            return;
+        }
+
+        if (session.getPhase() === Phase.BuildFacility) {
+            this.dialogSelectFacilityCard(true, (card_id: CardId) => {
+                this.processFacilityCard(card_id);
+            });
+        }
     }
 
     public drawFieldInfo(x, y): void {
@@ -1015,10 +983,8 @@ export class HtmlView {
             let message = `${current_player.name} のターンです`;
             let color: string = this.getPlayerColor(event.player_id);
             this.message_view.drawMessage(message, color);
+            this.effectCardDeals(event.player_id, event.target_card_ids);
 
-            if (event.player_id === this.client.player_id) {
-                this.effectCardDeals(event.player_id, event.target_card_ids);
-            }
             return true;
         }
 
@@ -1058,6 +1024,9 @@ export class HtmlView {
             }
             const type: CharacterType = this.session.getCharacter(event.card_id).type;
             if (type === CharacterType.DrawCards) {
+                const message: string = `山札から${event.target_card_ids.length}枚カードを引きました。`;
+                const color: string = this.getPlayerColor(event.player_id);
+                this.message_view.drawMessage(message, color);
                 this.effectCardDeals(event.player_id, event.target_card_ids);
                 handled = true;
             }
@@ -1121,7 +1090,6 @@ export class HtmlView {
             // Draw the board after money motion.
             window.setTimeout(() => {
                 this.drawBoard(this.prev_session);
-                this.drawCards(this.prev_session);
             }, 1000);
         }
 
@@ -1184,11 +1152,26 @@ export class HtmlView {
         if (is_open) {
             const color: string = this.getPlayerColor(this.client.player_id);
             this.message_view.drawMessage("キャラカードを選択してください", color);
-            cards_view.setCharCardsClickable(this.session, callback);
+            cards_view.setCharCardsClickable((card_id: CardId) => {
+                cards_view.useCard(card_id, "board");
+                callback(card_id);
+                cards_view.resetClickable();
+            });
         }
         else {
             this.message_view.revertMessage();
             cards_view.resetClickable();
+        }
+    }
+
+    private dialogSelectFacilityCard(is_open: boolean, callback: (card_id: CardId) => void): void {
+        let cards_view: HtmlCardsView = this.cards_views[this.client.player_id];
+        if (is_open) {
+            cards_view.setFacilityCardsClickable(callback);
+            this.landmarks_view.setFacilityCardsClickable(callback);
+        }
+        else {
+            this.resetCardsClickable();
         }
     }
 
@@ -1209,15 +1192,7 @@ export class HtmlView {
 
     private effectCharacter(pid: PlayerId, card_id: CardId): void {
         let effect_view: HtmlViewObject = null;
-        if (this.client.player_id === pid) {
-            let card_view: HtmlCardView = this.cards_views[pid].getCardView(card_id);
-            if (card_view == null) {
-                return;  // Something is wrong.
-            }
-            card_view.moveTo(card_view.getPositionAlignedWithElementId("board"));
-            window.setTimeout(() => { card_view.hide(); }, 1500);
-        }
-        else {
+        if (this.client.player_id !== pid) {
             this.card_widget_view.setDataId(this.session.getCardDataId(card_id));
             this.effectClonedObjectMove(this.card_widget_view, `player_${pid}`, "board");
         }
@@ -1251,10 +1226,11 @@ export class HtmlView {
         if (this.client.player_id !== player_id) {
             return;
         }
-        let timeout: number = 1000;
+        let timeout: number = 0;
         for (let card_id of card_ids) {
             window.setTimeout(() => {
-                this.effectCardDeal(player_id, card_id);
+                const data_id: CardDataId = this.session.getCardDataId(card_id);
+                this.cards_views[player_id].addCard(data_id, card_id, `player_${player_id}`);
             }, timeout);
             timeout += 500;
         }
