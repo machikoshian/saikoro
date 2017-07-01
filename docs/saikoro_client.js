@@ -183,6 +183,10 @@ var CardData = (function () {
         }
         return facilities;
     };
+    CardData.isLandmark = function (data_id) {
+        return ((LANDMARK_DATA_BASE <= data_id) &&
+            (data_id < LANDMARK_DATA_BASE + LANDMARK_DATA.length));
+    };
     CardData.isCharacter = function (data_id) {
         return ((CHARACTER_DATA_BASE <= data_id) &&
             (data_id < CHARACTER_DATA_BASE + CHARACTER_DATA.length));
@@ -1424,6 +1428,9 @@ var Session = (function () {
             this.watcher_user_ids.splice(index, 1);
         }
     };
+    Session.prototype.getCardDataId = function (card_id) {
+        return this.card_manager.getCardDataId(card_id);
+    };
     return Session;
 }());
 exports.Session = Session;
@@ -2656,6 +2663,16 @@ var CardManager = (function () {
         }
         return true;
     };
+    CardManager.prototype.getCardDataId = function (card_id) {
+        if (this.isCharacter(card_id)) {
+            return this.characters[card_id].data_id;
+        }
+        var facility = this.facilities[card_id];
+        if (facility == undefined) {
+            return -1;
+        }
+        return facility.data_id;
+    };
     return CardManager;
 }());
 exports.CardManager = CardManager;
@@ -3006,9 +3023,10 @@ var HtmlView = (function () {
         this.session = null;
         this.prev_session = null;
         this.prev_step = -1;
-        this.clicked_card_view = null;
+        this.clicked_card_id = -1;
         this.deck_maker = new deck_maker_1.DeckMaker();
         this.deck_char_view = null;
+        this.deck_cards_view = null;
         this.clicked_field = [-1, -1];
         this.cards_views = [];
         this.back_button_view = null;
@@ -3082,7 +3100,7 @@ var HtmlView = (function () {
             _this.onLiveSessionsUpdated(response);
         });
         // Widgets
-        this.card_widget_view = new html_view_parts_1.HtmlCardView("card_widget");
+        this.card_widget_view = new html_view_parts_1.HtmlCardWidgetView("card_widget");
         this.dice_widget_view = new html_view_parts_1.HtmlDiceView("dice_widget");
         // Chat
         this.chat_button_view = new html_view_parts_1.HtmlChatButtonView("chat", "stamp_box");
@@ -3117,34 +3135,18 @@ var HtmlView = (function () {
         this.deck_char_view.callback = function (x) {
             _this.onClickDeckField(x, -1);
         };
+        var deck_cards_size = 10;
+        this.deck_cards_view = new html_view_parts_1.HtmlDeckCardsView("deck_cards");
+        this.deck_cards_view.callback = function (data_id) { _this.onClickDeckCard(data_id); };
         // HtmlCardsView
-        var card_size = 10;
-        var _loop_1 = function (pid) {
-            var cards_view = new html_view_parts_1.HtmlCardsView("card_" + pid, card_size);
-            var _loop_2 = function (c) {
-                cards_view.cards[c].addClickListener(function () { _this.onClickCard(pid, c); });
-            };
-            for (var c = 0; c < card_size; ++c) {
-                _loop_2(c);
-            }
-            this_1.cards_views.push(cards_view);
-        };
-        var this_1 = this;
         for (var pid = 0; pid < 4; ++pid) {
-            _loop_1(pid);
+            var cards_view = new html_view_parts_1.HtmlCardsView("card_" + pid);
+            this.cards_views.push(cards_view);
         }
         // Landmark cards
-        var landmark_size = 5;
-        this.landmarks_view = new html_view_parts_1.HtmlCardsView("landmark", landmark_size);
-        var _loop_3 = function (i) {
-            this_2.landmarks_view.cards[i].addClickListener(function () { _this.onClickLandmark(i); });
-        };
-        var this_2 = this;
-        for (var i = 0; i < landmark_size; ++i) {
-            _loop_3(i);
-        }
+        this.landmarks_view = new html_view_parts_1.HtmlCardsView("landmark");
         // Field card
-        this.field_card_view = new html_view_parts_1.HtmlCardView("field_card");
+        this.field_card_view = new html_view_parts_1.HtmlCardWidgetView("field_card");
         // Money motion
         this.money_motion_view = new html_view_parts_1.HtmlViewObject(document.getElementById("money_motion"));
         this.switchScene(Scene.Home);
@@ -3178,6 +3180,7 @@ var HtmlView = (function () {
         this.message_view.none();
         this.board_view.none();
         this.deck_char_view.none();
+        this.deck_cards_view.none();
         this.chat_button_view.none();
         this.watchers_view.none();
         this.buttons_view.none();
@@ -3201,11 +3204,7 @@ var HtmlView = (function () {
             this.board_view.show();
             this.deck_char_view.show();
             this.drawDeckBoard();
-            this.cards_views[0].show();
-            for (var _b = 0, _c = this.cards_views[0].cards; _b < _c.length; _b++) {
-                var card_view = _c[_b];
-                card_view.none();
-            }
+            this.deck_cards_view.show();
             return;
         }
         if (scene === Scene.Matching) {
@@ -3224,7 +3223,6 @@ var HtmlView = (function () {
             if (protocol_1.Protocol.getPlayerCount(this.client.mode) < 2) {
                 this.reset_button_view.show();
             }
-            // this.chat_button_view.hide();
             this.chat_button_view.show();
             return;
         }
@@ -3267,25 +3265,15 @@ var HtmlView = (function () {
             this.drawDeckBoard();
             return;
         }
-        var i = 0;
         if (y === -1) {
             this.deck_char_view.setHighlight(x, true);
             var data_ids = facility_1.CardData.getAvailableCharacters();
-            for (; i < data_ids.length; ++i) {
-                var character = new facility_1.Character(data_ids[i]);
-                this.cards_views[0].cards[i].drawCharacterCard(character);
-            }
+            this.deck_cards_view.draw(data_ids);
         }
         else {
             this.board_view.setClickable(this.clicked_field, true);
             var data_ids = this.deck_maker.getAvailableFacilities(x);
-            for (; i < data_ids.length; ++i) {
-                var facility = new facility_1.Facility(data_ids[i]);
-                this.cards_views[0].cards[i].drawFacilityCard(facility);
-            }
-        }
-        for (; i < 10; ++i) {
-            this.cards_views[0].cards[i].none();
+            this.deck_cards_view.draw(data_ids);
         }
     };
     HtmlView.prototype.onClickField = function (x, y) {
@@ -3299,20 +3287,25 @@ var HtmlView = (function () {
             return;
         }
         // Event on game (this.scene === Scene.Game).
-        if (this.clicked_card_view == null) {
+        if (this.clicked_card_id === -1) {
             this.drawFieldInfo(x, y);
             return;
         }
-        var card_id = this.clicked_card_view.getCardId();
-        var event = this.session.getEventBuildFacility(this.client.player_id, x, y, card_id);
+        var event = this.session.getEventBuildFacility(this.client.player_id, x, y, this.clicked_card_id);
         if (event == null || !event.valid) {
             return;
         }
-        this.client.sendRequest(this.client.createBuildQuery(x, y, card_id));
+        this.client.sendRequest(this.client.createBuildQuery(x, y, this.clicked_card_id));
         this.event_queue.addEvent(function () {
             _this.buttons_view.hide(); // for the turn end button.
-            _this.clicked_card_view.hide();
-            _this.effectClonedObjectMove(_this.clicked_card_view, _this.clicked_card_view.element_id, "field_" + x + "_" + y);
+            var field = "field_" + x + "_" + y;
+            if (_this.session.isLandmark(_this.clicked_card_id)) {
+                _this.landmarks_view.useCard(_this.clicked_card_id, field);
+            }
+            else {
+                _this.cards_views[_this.client.player_id].useCard(_this.clicked_card_id, field);
+            }
+            _this.resetCardsClickable();
             return true;
         }, 1000);
     };
@@ -3370,6 +3363,37 @@ var HtmlView = (function () {
             _this.processCharCard(card_id);
         });
     };
+    HtmlView.prototype.processFacilityCard = function (card_id) {
+        this.clicked_card_id = card_id;
+        var facility = this.session.getFacility(card_id);
+        if (facility.type === facility_1.FacilityType.Gray) {
+            this.processLandmark(card_id);
+            return;
+        }
+        this.drawBoard(this.session);
+        if (this.session.getPhase() === session_1.Phase.BuildFacility) {
+            for (var _i = 0, _a = facility.getArea(); _i < _a.length; _i++) {
+                var area = _a[_i];
+                var x = area - 1;
+                for (var y = 0; y < 5; ++y) {
+                    var event_1 = this.session.getEventBuildFacility(this.client.player_id, x, y, card_id);
+                    if (event_1 && event_1.valid) {
+                        this.board_view.setClickable([x, y], true);
+                    }
+                }
+            }
+        }
+    };
+    HtmlView.prototype.processLandmark = function (card_id) {
+        if (this.session.getPhase() !== session_1.Phase.BuildFacility) {
+            return;
+        }
+        if (this.session.getOwnerId(card_id) !== -1) {
+            return;
+        }
+        this.drawBoard(this.session);
+        this.board_view.setClickable(this.session.getPosition(card_id), true);
+    };
     HtmlView.prototype.processCharCard = function (card_id) {
         var _this = this;
         var character = this.session.getCharacter(card_id);
@@ -3395,6 +3419,8 @@ var HtmlView = (function () {
         var _this = this;
         this.client.sendRequest(this.client.createEndTurnQuery());
         this.event_queue.addEvent(function () {
+            _this.drawBoard(_this.session);
+            _this.resetCardsClickable();
             _this.buttons_view.hide();
             return true;
         }, 500);
@@ -3462,81 +3488,23 @@ var HtmlView = (function () {
         this.message_view.drawMessage("通信中です", this.getPlayerColor(this.client.player_id));
         this.client.watchGame(this.live_session_ids[index]);
     };
-    HtmlView.prototype.onClickCard = function (player, card) {
+    HtmlView.prototype.onClickDeckCard = function (data_id) {
         // Event on matching.
-        if (this.scene === Scene.Home || this.scene === Scene.Matching) {
+        if (this.scene !== Scene.Deck) {
             return;
         }
-        if (this.scene === Scene.Deck) {
-            var _a = this.clicked_field, x = _a[0], y = _a[1];
-            if (x === -1) {
-                // this.clicked_field was not used. Do nothing.
-            }
-            else if (y === -1) {
-                // Char
-                var data_id = facility_1.CardData.getAvailableCharacters()[card];
-                this.deck_maker.setCharacter(x, data_id);
-            }
-            else {
-                var data_id = this.deck_maker.getAvailableFacilities(x)[card];
-                this.deck_maker.setFacility(x, y, data_id);
-            }
-            this.drawDeckBoard();
-            return;
+        var _a = this.clicked_field, x = _a[0], y = _a[1];
+        if (x === -1) {
+            // this.clicked_field was not used. Do nothing.
         }
-        var phase = this.session.getPhase();
-        if (phase === session_1.Phase.CharacterCard) {
-            return;
+        else if (y === -1) {
+            // Char
+            this.deck_maker.setCharacter(x, data_id);
         }
-        // Event on game (this.scene === Scene.Game).
-        var clicked_card_id = this.cards_views[player].cards[card].getCardId();
-        var is_char = this.session.isCharacter(clicked_card_id);
-        var is_valid = ((phase === session_1.Phase.BuildFacility) && !is_char);
-        if (!is_valid) {
-            return;
+        else {
+            this.deck_maker.setFacility(x, y, data_id);
         }
-        console.log("clicked: card_" + player + "_" + card);
-        if (this.clicked_card_view && clicked_card_id === this.clicked_card_view.getCardId()) {
-            this.resetCards();
-            this.drawBoard(this.session); // TODO: draw click fields only.
-            return;
-        }
-        this.resetCards();
-        this.clicked_card_view = this.cards_views[player].cards[card];
-        this.clicked_card_view.setHighlight(true);
-        this.drawBoard(this.session);
-        if (phase === session_1.Phase.BuildFacility) {
-            for (var _i = 0, _b = this.session.getFacility(clicked_card_id).getArea(); _i < _b.length; _i++) {
-                var area = _b[_i];
-                var x = area - 1;
-                for (var y = 0; y < 5; ++y) {
-                    var event_1 = this.session.getEventBuildFacility(player, x, y, clicked_card_id);
-                    if (event_1 && event_1.valid) {
-                        this.board_view.setClickable([x, y], true);
-                    }
-                }
-            }
-        }
-    };
-    HtmlView.prototype.onClickLandmark = function (card) {
-        if (this.session.getPhase() !== session_1.Phase.BuildFacility) {
-            return;
-        }
-        console.log("clicked: landmark_" + card);
-        var clicked_card_id = this.session.getLandmarks()[card];
-        if (this.clicked_card_view && clicked_card_id === this.clicked_card_view.getCardId()) {
-            this.resetCards();
-            this.drawBoard(this.session); // TODO: draw click fields only.
-            return;
-        }
-        if (this.session.getOwnerId(clicked_card_id) !== -1) {
-            return;
-        }
-        this.resetCards();
-        this.clicked_card_view = this.landmarks_view.cards[card];
-        this.clicked_card_view.setHighlight(true);
-        this.drawBoard(this.session);
-        this.board_view.setClickable(this.session.getPosition(clicked_card_id), true);
+        this.drawDeckBoard();
     };
     HtmlView.prototype.getPlayerColor = function (player_id) {
         if (player_id === -1 || player_id > COLOR_PLAYERS.length) {
@@ -3577,11 +3545,12 @@ var HtmlView = (function () {
         var name = this.session.getPlayer(pid).name;
         return name + " \u306E\u30B5\u30A4\u30B3\u30ED\u306F " + faces[d1] + " " + faces[d2] + " " + delta + ": " + dice.result() + " \u3067\u3057\u305F\u3002";
     };
-    HtmlView.prototype.resetCards = function () {
-        if (this.clicked_card_view) {
-            this.clicked_card_view.setHighlight(false);
-            this.clicked_card_view = null;
+    HtmlView.prototype.resetCardsClickable = function () {
+        this.clicked_card_id = -1;
+        for (var i = 0; i < this.cards_views.length; ++i) {
+            this.cards_views[i].resetClickable();
         }
+        this.landmarks_view.resetClickable();
     };
     HtmlView.prototype.updateView = function (session, player_id) {
         if (this.scene === Scene.Matching) {
@@ -3599,6 +3568,7 @@ var HtmlView = (function () {
         this.drawEvents();
     };
     HtmlView.prototype.drawCards = function (session) {
+        var _this = this;
         var players = session.getPlayers();
         // Update cards.
         for (var i = 0; i < players.length; ++i) {
@@ -3607,8 +3577,6 @@ var HtmlView = (function () {
                 continue;
             }
             var card_ids = session.getSortedHand(i);
-            // show should be before draw to initialize the rect.
-            this.cards_views[i].show();
             this.cards_views[i].draw(session, card_ids);
         }
         for (var i = players.length; i < 4; ++i) {
@@ -3618,16 +3586,30 @@ var HtmlView = (function () {
         var landmark_ids = session.getLandmarks();
         this.landmarks_view.show();
         this.landmarks_view.draw(session, landmark_ids);
-        this.resetCards(); // Nice to check if built or not?
+        this.resetCardsClickable(); // Nice to check if built or not?
+        if (session.getCurrentPlayerId() !== this.client.player_id) {
+            return;
+        }
+        if (session.getPhase() === session_1.Phase.BuildFacility) {
+            this.dialogSelectFacilityCard(true, function (card_id) {
+                _this.processFacilityCard(card_id);
+            });
+        }
     };
     HtmlView.prototype.drawFieldInfo = function (x, y) {
         var card_id = this.session.getCardIdOnBoard(x, y);
-        if (card_id === -1 || card_id === this.field_card_view.getCardId()) {
+        if (card_id === -1) {
+            this.field_card_view.setDataId(-1);
             this.field_card_view.none();
-            this.field_card_view.setCardId(-1);
             return;
         }
-        this.field_card_view.draw(this.session, card_id);
+        var data_id = this.session.getCardDataId(card_id);
+        if (data_id === -1 || data_id === this.field_card_view.getDataId()) {
+            this.field_card_view.setDataId(-1);
+            this.field_card_view.none();
+            return;
+        }
+        this.field_card_view.setDataId(data_id);
         this.field_card_view.showAt(this.getPosition((x < 6) ? "click_10_1" : "click_0_1"));
     };
     HtmlView.prototype.resetBoard = function () {
@@ -3816,16 +3798,14 @@ var HtmlView = (function () {
             var message = current_player.name + " \u306E\u30BF\u30FC\u30F3\u3067\u3059";
             var color = this.getPlayerColor(event.player_id);
             this.message_view.drawMessage(message, color);
-            if (event.player_id === this.client.player_id) {
-                this.effectCardDeals(event.player_id, event.target_card_ids);
-            }
+            this.effectCardDeals(event.player_id, event.target_card_ids);
             return true;
         }
         // Dice
         if (event.type === session_1.EventType.Dice) {
             if (this.dice_roll_view) {
                 var dices = this.dice_roll_view.element.getElementsByClassName("dice");
-                var _loop_4 = function (i) {
+                var _loop_1 = function (i) {
                     var pip = (i === 0) ? event.dice.dice1 : event.dice.dice2;
                     var dice = dices[i];
                     dice.addEventListener("animationiteration", function () {
@@ -3833,7 +3813,7 @@ var HtmlView = (function () {
                     });
                 };
                 for (var i = 0; i < dices.length; ++i) {
-                    _loop_4(i);
+                    _loop_1(i);
                 }
                 window.setTimeout(function () {
                     _this.dice_roll_view.remove();
@@ -3858,6 +3838,9 @@ var HtmlView = (function () {
             }
             var type = this.session.getCharacter(event.card_id).type;
             if (type === facility_1.CharacterType.DrawCards) {
+                var message = "\u5C71\u672D\u304B\u3089" + event.target_card_ids.length + "\u679A\u30AB\u30FC\u30C9\u3092\u5F15\u304D\u307E\u3057\u305F\u3002";
+                var color = this.getPlayerColor(event.player_id);
+                this.message_view.drawMessage(message, color);
                 this.effectCardDeals(event.player_id, event.target_card_ids);
                 handled = true;
             }
@@ -3872,7 +3855,7 @@ var HtmlView = (function () {
                 handled = true;
             }
             if (type === facility_1.CharacterType.MoveMoney) {
-                var _loop_5 = function (pid) {
+                var _loop_2 = function (pid) {
                     var money = event.moneys[pid];
                     if (money === 0) {
                         return "continue";
@@ -3883,7 +3866,7 @@ var HtmlView = (function () {
                     }, delay);
                 };
                 for (var pid = 0; pid < event.moneys.length; pid++) {
-                    _loop_5(pid);
+                    _loop_2(pid);
                 }
                 handled = true;
             }
@@ -3921,7 +3904,6 @@ var HtmlView = (function () {
             // Draw the board after money motion.
             window.setTimeout(function () {
                 _this.drawBoard(_this.prev_session);
-                _this.drawCards(_this.prev_session);
             }, 1000);
         }
         var money_motion = [
@@ -3934,7 +3916,7 @@ var HtmlView = (function () {
         if (money_motion.indexOf(event.type) !== -1) {
             // Money motion
             var _b = this.session.getPosition(event.card_id), x_3 = _b[0], y_2 = _b[1];
-            var _loop_6 = function (pid) {
+            var _loop_3 = function (pid) {
                 var money = event.moneys[pid];
                 if (money === 0) {
                     return "continue";
@@ -3953,7 +3935,7 @@ var HtmlView = (function () {
                 }, delay);
             };
             for (var pid = 0; pid < event.moneys.length; pid++) {
-                _loop_6(pid);
+                _loop_3(pid);
             }
         }
         if (event.type === session_1.EventType.Interaction) {
@@ -3981,11 +3963,25 @@ var HtmlView = (function () {
         if (is_open) {
             var color = this.getPlayerColor(this.client.player_id);
             this.message_view.drawMessage("キャラカードを選択してください", color);
-            cards_view.setCharCardsClickable(this.session, callback);
+            cards_view.setCharCardsClickable(function (card_id) {
+                cards_view.useCard(card_id, "board");
+                callback(card_id);
+                cards_view.resetClickable();
+            });
         }
         else {
             this.message_view.revertMessage();
             cards_view.resetClickable();
+        }
+    };
+    HtmlView.prototype.dialogSelectFacilityCard = function (is_open, callback) {
+        var cards_view = this.cards_views[this.client.player_id];
+        if (is_open) {
+            cards_view.setFacilityCardsClickable(callback);
+            this.landmarks_view.setFacilityCardsClickable(callback);
+        }
+        else {
+            this.resetCardsClickable();
         }
     };
     HtmlView.prototype.drawMoneyMotion = function (money, player_id, element_id) {
@@ -4003,16 +3999,8 @@ var HtmlView = (function () {
     };
     HtmlView.prototype.effectCharacter = function (pid, card_id) {
         var effect_view = null;
-        if (this.client.player_id === pid) {
-            var card_view_1 = this.cards_views[pid].getCardView(card_id);
-            if (card_view_1 == null) {
-                return; // Something is wrong.
-            }
-            card_view_1.moveTo(card_view_1.getPositionAlignedWithElementId("board"));
-            window.setTimeout(function () { card_view_1.hide(); }, 1500);
-        }
-        else {
-            this.card_widget_view.draw(this.session, card_id);
+        if (this.client.player_id !== pid) {
+            this.card_widget_view.setDataId(this.session.getCardDataId(card_id));
             this.effectClonedObjectMove(this.card_widget_view, "player_" + pid, "board");
         }
     };
@@ -4034,7 +4022,7 @@ var HtmlView = (function () {
         window.setTimeout(function () { new_view.remove(); }, 1500);
     };
     HtmlView.prototype.effectCardDeal = function (pid, card_id) {
-        this.card_widget_view.draw(this.session, card_id);
+        this.card_widget_view.setDataId(this.session.getCardDataId(card_id));
         this.effectClonedObjectMove(this.card_widget_view, "player_" + pid, "card_" + pid + "_0");
     };
     HtmlView.prototype.effectCardDeals = function (player_id, card_ids) {
@@ -4042,16 +4030,17 @@ var HtmlView = (function () {
         if (this.client.player_id !== player_id) {
             return;
         }
-        var timeout = 1000;
-        var _loop_7 = function (card_id) {
+        var timeout = 0;
+        var _loop_4 = function (card_id) {
             window.setTimeout(function () {
-                _this.effectCardDeal(player_id, card_id);
+                var data_id = _this.session.getCardDataId(card_id);
+                _this.cards_views[player_id].addCard(data_id, card_id, "player_" + player_id);
             }, timeout);
             timeout += 500;
         };
         for (var _i = 0, card_ids_1 = card_ids; _i < card_ids_1.length; _i++) {
             var card_id = card_ids_1[_i];
-            _loop_7(card_id);
+            _loop_4(card_id);
         }
     };
     HtmlView.prototype.effectMoneyMotion = function (element_from, element_to, money) {
@@ -4145,6 +4134,12 @@ var HtmlViewObject = (function () {
             return;
         }
     };
+    HtmlViewObject.prototype.isVisible = function () {
+        if (this.element.offsetParent == null) {
+            return false;
+        }
+        return true;
+    };
     HtmlViewObject.prototype.reset = function () { };
     HtmlViewObject.prototype.show = function () {
         this.setVisibility(Visibility.Visible);
@@ -4161,7 +4156,7 @@ var HtmlViewObject = (function () {
         return new HtmlViewObject(new_element);
     };
     HtmlViewObject.prototype.remove = function () {
-        document.body.removeChild(this.element);
+        this.element.parentElement.removeChild(this.element);
     };
     HtmlViewObject.prototype.width = function () {
         return this.element.getBoundingClientRect().width;
@@ -4182,7 +4177,6 @@ var HtmlViewObject = (function () {
     HtmlViewObject.prototype.showAt = function (_a) {
         var x = _a[0], y = _a[1];
         // The parent element should be relative.
-        this.element.style.zIndex = "2";
         this.element.style.position = "absolute";
         this.element.style.left = x + "px";
         this.element.style.top = y + "px";
@@ -4191,10 +4185,22 @@ var HtmlViewObject = (function () {
         this.element.style.transform = "none";
         this.show();
     };
+    HtmlViewObject.prototype.showAtElementId = function (element_id) {
+        this.show();
+        this.showAt(this.getPositionAlignedWithElementId(element_id));
+    };
     HtmlViewObject.prototype.moveTo = function (_a) {
         var x = _a[0], y = _a[1];
+        if (!this.isVisible()) {
+            this.showAt([x, y]);
+            return;
+        }
+        var _b = this.getPosition(), src_x = _b[0], src_y = _b[1];
+        if (src_x === 0 && src_y === 0) {
+            this.showAt([x, y]);
+            return;
+        }
         // The parent element should be relative.
-        this.element.style.zIndex = "2";
         this.element.style.position = "absolute";
         this.element.style.left = x + "px";
         this.element.style.top = y + "px";
@@ -4202,6 +4208,9 @@ var HtmlViewObject = (function () {
         this.element.style.transitionTimingFunction = "ease";
         this.element.style.transform = "none";
         this.show();
+    };
+    HtmlViewObject.prototype.moveToElementId = function (element_id) {
+        this.moveTo(this.getPositionAlignedWithElementId(element_id));
     };
     HtmlViewObject.prototype.getPositionAligned = function (dst) {
         var src = this.element.getBoundingClientRect();
@@ -4237,183 +4246,291 @@ var HtmlViewObject = (function () {
 exports.HtmlViewObject = HtmlViewObject;
 var HtmlCardsView = (function (_super) {
     __extends(HtmlCardsView, _super);
-    function HtmlCardsView(element_id, max_size) {
+    function HtmlCardsView(element_id) {
         var _this = _super.call(this, document.getElementById(element_id)) || this;
         _this.element_id = element_id;
-        _this.max_size = max_size;
-        _this.cards = [];
-        _this.num_cards = 0;
+        _this.card_id_map = {}; // CardId -> CardDataId
+        _this.card_ids = [];
+        _this.cards_pool = {};
         _this.callback = null;
         _this.base_z_index = 10;
         _this.setZIndex(_this.base_z_index);
-        var base = document.getElementById("card_widget");
-        var _loop_1 = function (i) {
-            var new_node = base.cloneNode(true);
-            var new_element = this_1.element.appendChild(new_node);
-            new_element.id = element_id + "_" + i;
-            var card_view = new HtmlCardView(new_element.id);
-            card_view.addClickListener(function () { _this.onClick(i); });
-            this_1.cards.push(card_view);
-            card_view.none();
-            card_view.setZIndex(this_1.base_z_index + i);
-        };
-        var this_1 = this;
-        for (var i = 0; i < _this.max_size; ++i) {
-            _loop_1(i);
-        }
         return _this;
     }
     HtmlCardsView.prototype.reset = function () {
         this.resetClickable();
-        this.num_cards = 0;
+        this.card_id_map = {};
+        this.card_ids = [];
+        var keys = Object.keys(this.cards_pool);
+        for (var _i = 0, keys_1 = keys; _i < keys_1.length; _i++) {
+            var key = keys_1[_i];
+            this.cards_pool[Number(key)].remove();
+        }
+        this.cards_pool = {};
         _super.prototype.reset.call(this);
     };
-    HtmlCardsView.prototype.onClick = function (index) {
-        for (var i = 0; i < this.max_size; ++i) {
-            this.cards[i].setZIndex(this.base_z_index + i);
+    HtmlCardsView.prototype.onClick = function (card_id, data_id) {
+        for (var i = 0; i < this.card_ids.length; ++i) {
+            this.getCardView(this.card_ids[i]).setZIndex(this.base_z_index + i);
         }
-        var card_view = this.cards[index];
-        card_view.setZIndex(this.base_z_index + this.max_size + 1);
-        if (card_view.is_highlight === false) {
-            return;
-        }
-        for (var i = 0; i < this.cards.length; ++i) {
-            this.cards[i].setHighlight(false);
-        }
+        var card_view = this.getCardView(card_id);
+        card_view.setZIndex(this.base_z_index + this.card_ids.length + 1);
         if (this.callback == null) {
             return;
         }
-        this.resetPosition(true);
-        this.callback(card_view.getCardId());
-        this.callback = null;
+        this.resetPosition();
+        this.callback(card_view.card_id);
     };
     HtmlCardsView.prototype.draw = function (session, card_ids) {
-        this.num_cards = card_ids.length;
-        for (var i = 0; i < this.max_size; ++i) {
-            var card_id = (i < this.num_cards) ? card_ids[i] : -1;
-            this.cards[i].draw(session, card_id);
+        this.show();
+        var _a = this.getPosition(), base_x = _a[0], base_y = _a[1];
+        // Update card_id_map.
+        // TODO: move this to other.
+        for (var _i = 0, card_ids_1 = card_ids; _i < card_ids_1.length; _i++) {
+            var card_id = card_ids_1[_i];
+            this.card_id_map[card_id] = session.getCardDataId(card_id);
         }
+        // Removed cards
+        for (var _b = 0, _c = this.card_ids; _b < _c.length; _b++) {
+            var card_id = _c[_b];
+            if (card_ids.indexOf(card_id) === -1) {
+                this.getCardView(card_id).none();
+            }
+        }
+        // Added cards
+        for (var _d = 0, card_ids_2 = card_ids; _d < card_ids_2.length; _d++) {
+            var card_id = card_ids_2[_d];
+            if (this.card_ids.indexOf(card_id) === -1) {
+                this.getCardView(card_id).showAt([-200, base_y]);
+            }
+        }
+        this.card_ids = card_ids.slice(); // Shallow copy.
         this.resetPosition();
     };
-    HtmlCardsView.prototype.resetPosition = function (is_move) {
-        if (is_move === void 0) { is_move = false; }
-        if (this.num_cards === 0) {
+    HtmlCardsView.prototype.resetPosition = function () {
+        var num_cards = this.card_ids.length;
+        if (num_cards === 0) {
             return;
         }
         var _a = this.getPosition(), base_x = _a[0], base_y = _a[1];
         var base_width = this.width();
-        var card_width = this.cards[0].width();
-        var x_delta = (base_width - card_width) / (this.num_cards - 1);
+        var card_width = this.getCardView(this.card_ids[0]).width();
+        var x_delta = (base_width - card_width) / (num_cards - 1);
         x_delta = Math.min(x_delta, card_width);
-        for (var i = 0; i < this.num_cards; ++i) {
-            if (is_move) {
-                this.cards[i].moveTo([base_x + x_delta * i, base_y]);
-            }
-            else {
-                this.cards[i].showAt([base_x + x_delta * i, base_y]);
-            }
+        for (var i = 0; i < num_cards; ++i) {
+            var card_view = this.getCardView(this.card_ids[i]);
+            card_view.setZIndex(this.base_z_index + i);
+            card_view.moveTo([base_x + x_delta * i, base_y]);
         }
     };
     HtmlCardsView.prototype.getCardView = function (card_id) {
-        for (var _i = 0, _a = this.cards; _i < _a.length; _i++) {
-            var card = _a[_i];
-            if (card.getCardId() === card_id) {
-                return card;
-            }
+        var _this = this;
+        var card_view = this.cards_pool[card_id];
+        if (card_view != undefined) {
+            return card_view;
         }
-        return null;
+        var base = document.getElementById("card_widget");
+        var new_node = base.cloneNode(true);
+        var new_element = this.element.appendChild(new_node);
+        new_element.id = "card_id_" + card_id;
+        var data_id = this.card_id_map[card_id];
+        card_view = new HtmlCardView(new_element.id, data_id, card_id);
+        card_view.addClickListener(function () { _this.onClick(card_id, data_id); });
+        card_view.none();
+        card_view.setZIndex(this.base_z_index);
+        this.cards_pool[card_id] = card_view;
+        return card_view;
+    };
+    HtmlCardsView.prototype.addCard = function (data_id, card_id, element_id) {
+        this.card_id_map[card_id] = data_id;
+        this.card_ids.unshift(card_id);
+        this.getCardView(card_id).showAtElementId(element_id);
+        this.resetPosition();
+    };
+    HtmlCardsView.prototype.useCard = function (card_id, element_id) {
+        var _this = this;
+        var index = this.card_ids.indexOf(card_id);
+        if (index === -1) {
+            return;
+        }
+        if (!facility_1.CardData.isLandmark(this.card_id_map[card_id])) {
+            this.card_ids.splice(index, 1);
+        }
+        var card_view = this.getCardView(card_id);
+        card_view.moveToElementId(element_id);
+        window.setTimeout(function () {
+            if (!facility_1.CardData.isLandmark(_this.card_id_map[card_id])) {
+                card_view.none();
+            }
+            _this.resetPosition();
+        }, 1000);
     };
     HtmlCardsView.prototype.resetClickable = function () {
-        for (var i = 0; i < this.cards.length; ++i) {
-            this.cards[i].setHighlight(false);
+        for (var i = 0; i < this.card_ids.length; ++i) {
+            this.getCardView(this.card_ids[i]).setHighlight(false);
         }
-        this.resetPosition(true);
+        this.resetPosition();
         this.callback = null;
     };
-    // TODO: remove session.
-    HtmlCardsView.prototype.setCharCardsClickable = function (session, callback) {
+    HtmlCardsView.prototype.setCharCardsClickable = function (callback) {
         var delay = 0;
-        var _loop_2 = function (i) {
-            var card = this_2.cards[i];
-            if (!session.isCharacter(card.getCardId())) {
+        var _loop_1 = function (i) {
+            var card = this_1.getCardView(this_1.card_ids[i]);
+            if (!facility_1.CardData.isCharacter(card.data_id)) {
                 return "continue";
             }
             var _a = card.getPosition(), x = _a[0], y = _a[1];
             var delta_y = -250;
             window.setTimeout(function () {
                 card.moveTo([x, y + delta_y]);
-                //card.animateMoveTo([x, y + delta_y]);
             }, delay);
             delay += 200;
             card.setHighlight(true);
         };
-        var this_2 = this;
-        for (var i = 0; i < this.cards.length; ++i) {
-            _loop_2(i);
+        var this_1 = this;
+        for (var i = 0; i < this.card_ids.length; ++i) {
+            _loop_1(i);
+        }
+        this.callback = callback;
+    };
+    HtmlCardsView.prototype.setFacilityCardsClickable = function (callback) {
+        var delay = 0;
+        for (var i = 0; i < this.card_ids.length; ++i) {
+            var card = this.getCardView(this.card_ids[i]);
+            if (facility_1.CardData.isCharacter(card.data_id)) {
+                continue;
+            }
+            card.setHighlight(true);
         }
         this.callback = callback;
     };
     return HtmlCardsView;
 }(HtmlViewObject));
 exports.HtmlCardsView = HtmlCardsView;
-var HtmlCardView = (function (_super) {
-    __extends(HtmlCardView, _super);
-    function HtmlCardView(element_id) {
+var HtmlDeckCardsView = (function (_super) {
+    __extends(HtmlDeckCardsView, _super);
+    function HtmlDeckCardsView(element_id) {
         var _this = _super.call(this, document.getElementById(element_id)) || this;
         _this.element_id = element_id;
-        _this.card_id = -1;
+        _this.cards_pool = {};
+        _this.data_ids = [];
+        _this.callback = null;
+        _this.base_z_index = 10;
+        _this.setZIndex(_this.base_z_index);
+        return _this;
+    }
+    HtmlDeckCardsView.prototype.onClick = function (data_id) {
+        for (var i = 0; i < this.data_ids.length; ++i) {
+            this.getCardView(this.data_ids[i]).setZIndex(this.base_z_index + i);
+        }
+        var card_view = this.getCardView(data_id);
+        card_view.setZIndex(this.base_z_index + this.data_ids.length + 1);
+        if (this.callback == null) {
+            return;
+        }
+        this.resetPosition();
+        this.callback(data_id);
+    };
+    HtmlDeckCardsView.prototype.getCardView = function (data_id) {
+        var _this = this;
+        var card_view = this.cards_pool[data_id];
+        if (card_view != undefined) {
+            return card_view;
+        }
+        var base = document.getElementById("card_widget");
+        var new_node = base.cloneNode(true);
+        var new_element = this.element.appendChild(new_node);
+        new_element.id = "card_data_id_" + data_id;
+        card_view = new HtmlCardDataView(new_element.id, data_id);
+        card_view.addClickListener(function () { _this.onClick(data_id); });
+        card_view.none();
+        card_view.setZIndex(this.base_z_index);
+        this.cards_pool[data_id] = card_view;
+        return card_view;
+    };
+    HtmlDeckCardsView.prototype.draw = function (data_ids) {
+        var _a = this.getPosition(), base_x = _a[0], base_y = _a[1];
+        for (var _i = 0, _b = this.data_ids; _i < _b.length; _i++) {
+            var data_id = _b[_i];
+            if (data_ids.indexOf(data_id) === -1) {
+                this.getCardView(data_id).moveTo([-200, base_y]);
+            }
+        }
+        for (var _c = 0, data_ids_1 = data_ids; _c < data_ids_1.length; _c++) {
+            var data_id = data_ids_1[_c];
+            if (this.data_ids.indexOf(data_id) === -1) {
+                this.getCardView(data_id).showAt([-200, base_y]);
+            }
+        }
+        this.data_ids = data_ids;
+        this.resetPosition();
+    };
+    HtmlDeckCardsView.prototype.resetPosition = function () {
+        var num_cards = this.data_ids.length;
+        if (num_cards === 0) {
+            return;
+        }
+        var _a = this.getPosition(), base_x = _a[0], base_y = _a[1];
+        var base_width = this.width();
+        var card_width = this.getCardView(this.data_ids[0]).width();
+        var x_delta = (base_width - card_width) / (num_cards - 1);
+        x_delta = Math.min(x_delta, card_width);
+        for (var i = 0; i < num_cards; ++i) {
+            var card_view = this.getCardView(this.data_ids[i]);
+            card_view.moveTo([base_x + x_delta * i, base_y]);
+        }
+    };
+    return HtmlDeckCardsView;
+}(HtmlViewObject));
+exports.HtmlDeckCardsView = HtmlDeckCardsView;
+var HtmlCardBaseView = (function (_super) {
+    __extends(HtmlCardBaseView, _super);
+    function HtmlCardBaseView(element_id) {
+        var _this = _super.call(this, document.getElementById(element_id)) || this;
+        _this.element_id = element_id;
         _this.is_highlight = false;
         _this.element_name = _this.element.getElementsByClassName("card_name")[0];
         _this.element_cost = _this.element.getElementsByClassName("card_cost")[0];
         _this.element_description = _this.element.getElementsByClassName("card_description")[0];
         return _this;
     }
-    HtmlCardView.prototype.setCardId = function (card_id) {
-        this.card_id = card_id;
-    };
-    HtmlCardView.prototype.getCardId = function () {
-        return this.card_id;
-    };
-    HtmlCardView.prototype.draw = function (session, card_id) {
-        this.card_id = card_id;
+    HtmlCardBaseView.prototype.setData = function (data_id) {
         // No card
-        if (card_id === -1) {
+        if (data_id === -1) {
             this.none();
             return;
         }
         // Character
-        if (session.isCharacter(card_id)) {
-            var character = session.getCharacter(card_id);
-            this.drawCharacterCard(character);
+        if (facility_1.CardData.isCharacter(data_id)) {
+            var character = new facility_1.Character(data_id);
+            this.setCharacterCard(character);
             return;
         }
         // Landmark
-        if (session.isLandmark(card_id)) {
-            var landmark = session.getFacility(card_id);
-            var owner_id = session.getOwnerId(card_id);
-            this.drawLandmarkCard(landmark, owner_id);
+        if (facility_1.CardData.isLandmark(data_id)) {
+            var landmark = new facility_1.Facility(data_id);
+            var owner_id = -1;
+            this.setLandmarkCard(landmark, owner_id);
             return;
         }
         // Facility
-        var facility = session.getFacility(card_id);
-        this.drawFacilityCard(facility);
+        var facility = new facility_1.Facility(data_id);
+        this.setFacilityCard(facility);
     };
-    HtmlCardView.prototype.drawFacilityCard = function (facility) {
+    HtmlCardBaseView.prototype.setFacilityCard = function (facility) {
         var area = this.getFacilityAreaString(facility);
         this.element_name.innerText = area + " " + facility.getName();
         this.element_cost.innerText = String(facility.getCost());
         this.element_description.innerText = facility.getDescription();
         this.element.style.backgroundColor = getFacilityColor(facility);
-        this.show();
     };
-    HtmlCardView.prototype.drawCharacterCard = function (character) {
+    HtmlCardBaseView.prototype.setCharacterCard = function (character) {
         this.element_name.innerText = character.getName();
         this.element_cost.innerText = "";
         this.element_description.innerText = character.getDescription();
         this.element.style.backgroundColor = COLOR_CHARACTER;
-        this.show();
     };
-    HtmlCardView.prototype.drawLandmarkCard = function (landmark, owner_id) {
+    HtmlCardBaseView.prototype.setLandmarkCard = function (landmark, owner_id) {
         this.element_name.innerText = landmark.getName();
         this.element_cost.innerText = String(landmark.getCost());
         this.element_description.innerText = landmark.getDescription();
@@ -4423,13 +4540,12 @@ var HtmlCardView = (function (_super) {
         else {
             this.element.style.backgroundColor = getPlayerColor(owner_id);
         }
-        this.show();
     };
-    HtmlCardView.prototype.setHighlight = function (is_highlight) {
+    HtmlCardBaseView.prototype.setHighlight = function (is_highlight) {
         this.is_highlight = is_highlight;
         this.element.style.borderColor = is_highlight ? COLOR_HIGHTLIGHT_CARD : "#EEEEEE";
     };
-    HtmlCardView.prototype.getFacilityAreaString = function (facility) {
+    HtmlCardBaseView.prototype.getFacilityAreaString = function (facility) {
         var area_name = ["", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩", "⑪", "⑫", ""];
         var area = facility.getArea().map(function (i) {
             if (facility.size === 2) {
@@ -4439,9 +4555,71 @@ var HtmlCardView = (function (_super) {
         }).join(",");
         return area;
     };
-    return HtmlCardView;
+    return HtmlCardBaseView;
 }(HtmlViewObject));
+exports.HtmlCardBaseView = HtmlCardBaseView;
+var HtmlCardView = (function (_super) {
+    __extends(HtmlCardView, _super);
+    function HtmlCardView(element_id, data_id, card_id) {
+        var _this = _super.call(this, element_id) || this;
+        _this.element_id = element_id;
+        _this.data_id = data_id;
+        _this.card_id = card_id;
+        _this.setData(data_id);
+        return _this;
+    }
+    return HtmlCardView;
+}(HtmlCardBaseView));
 exports.HtmlCardView = HtmlCardView;
+var HtmlCardWidgetView = (function (_super) {
+    __extends(HtmlCardWidgetView, _super);
+    function HtmlCardWidgetView() {
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this.data_id = -1;
+        return _this;
+    }
+    HtmlCardWidgetView.prototype.getDataId = function () {
+        return this.data_id;
+    };
+    HtmlCardWidgetView.prototype.setDataId = function (data_id) {
+        this.data_id = data_id;
+        // No card
+        if (this.data_id === -1) {
+            this.none();
+            return;
+        }
+        // Character
+        if (facility_1.CardData.isCharacter(data_id)) {
+            var character = new facility_1.Character(this.data_id);
+            this.setCharacterCard(character);
+            return;
+        }
+        // Landmark
+        if (facility_1.CardData.isLandmark(this.data_id)) {
+            var landmark = new facility_1.Facility(this.data_id);
+            var owner_id = -1;
+            this.setLandmarkCard(landmark, owner_id);
+            return;
+        }
+        // Facility
+        var facility = new facility_1.Facility(this.data_id);
+        this.setFacilityCard(facility);
+    };
+    return HtmlCardWidgetView;
+}(HtmlCardBaseView));
+exports.HtmlCardWidgetView = HtmlCardWidgetView;
+var HtmlCardDataView = (function (_super) {
+    __extends(HtmlCardDataView, _super);
+    function HtmlCardDataView(element_id, data_id) {
+        var _this = _super.call(this, element_id) || this;
+        _this.element_id = element_id;
+        _this.data_id = data_id;
+        _this.setData(data_id);
+        return _this;
+    }
+    return HtmlCardDataView;
+}(HtmlCardBaseView));
+exports.HtmlCardDataView = HtmlCardDataView;
 var HtmlPlayersView = (function (_super) {
     __extends(HtmlPlayersView, _super);
     function HtmlPlayersView(element_id) {
@@ -4597,17 +4775,17 @@ var HtmlBoardView = (function (_super) {
     function HtmlBoardView(element_id, row, column) {
         var _this = _super.call(this, document.getElementById(element_id)) || this;
         _this.clickable_fields = new HtmlClickableFieldsView("click", row, column);
-        var _loop_3 = function (y) {
-            var _loop_4 = function (x) {
-                this_3.clickable_fields.fields[x][y].addClickListener(function () { _this.onClick(x, y); });
+        var _loop_2 = function (y) {
+            var _loop_3 = function (x) {
+                this_2.clickable_fields.fields[x][y].addClickListener(function () { _this.onClick(x, y); });
             };
             for (var x = 0; x < column; ++x) {
-                _loop_4(x);
+                _loop_3(x);
             }
         };
-        var this_3 = this;
+        var this_2 = this;
         for (var y = 0; y < row; ++y) {
-            _loop_3(y);
+            _loop_2(y);
         }
         return _this;
     }
@@ -4635,16 +4813,16 @@ var HtmlDeckCharView = (function (_super) {
         var _this = _super.call(this, document.getElementById(element_id)) || this;
         _this.fields = [];
         _this.clickables = [];
-        var _loop_5 = function (i) {
+        var _loop_4 = function (i) {
             var field = new HtmlViewObject(document.getElementById(element_id + "_" + i));
-            this_4.fields.push(field);
+            this_3.fields.push(field);
             var clickable = new HtmlClickableFieldView("clickable_" + element_id + "_" + i);
-            this_4.clickables.push(clickable);
+            this_3.clickables.push(clickable);
             clickable.addClickListener(function () { _this.onClick(i); });
         };
-        var this_4 = this;
+        var this_3 = this;
         for (var i = 0; i < 5; ++i) {
-            _loop_5(i);
+            _loop_4(i);
         }
         return _this;
     }
@@ -4826,8 +5004,8 @@ var HtmlClickableFieldsView = (function (_super) {
         var _this = this;
         var x = pip - 1;
         var delay = 0;
-        var _loop_6 = function (i) {
-            var y = this_5.row - 1 - i;
+        var _loop_5 = function (i) {
+            var y = this_4.row - 1 - i;
             window.setTimeout(function () {
                 _this.fields[x][y].setColor(color);
                 window.setTimeout(function () {
@@ -4836,9 +5014,9 @@ var HtmlClickableFieldsView = (function (_super) {
             }, delay);
             delay = delay + 10 * i; // 0, 10, 30, 60, 100, ...
         };
-        var this_5 = this;
+        var this_4 = this;
         for (var i = 0; i < this.row; ++i) {
-            _loop_6(i);
+            _loop_5(i);
         }
     };
     return HtmlClickableFieldsView;
@@ -4868,7 +5046,7 @@ var HtmlChatButtonView = (function (_super) {
         _this.stamp_box.none();
         _this.addClickListener(function () { _this.toggleStampBox(); });
         var stamp_elements = _this.stamp_box.element.getElementsByClassName("stamp");
-        var _loop_7 = function (i) {
+        var _loop_6 = function (i) {
             var stamp = new HtmlViewObject(stamp_elements[i]);
             stamp.addClickListener(function () {
                 if (_this.callback) {
@@ -4876,11 +5054,11 @@ var HtmlChatButtonView = (function (_super) {
                 }
                 _this.showStampBox(false);
             });
-            this_6.stamps.push(stamp);
+            this_5.stamps.push(stamp);
         };
-        var this_6 = this;
+        var this_5 = this;
         for (var i = 0; i < stamp_elements.length; ++i) {
-            _loop_7(i);
+            _loop_6(i);
         }
         return _this;
     }
