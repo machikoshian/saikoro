@@ -868,6 +868,9 @@ export class HtmlView {
             (owner_id === -1) ? COLOR_LANDMARK : this.getPlayerColor(owner_id);
 
         field.innerText = facility.getName();
+        if (!facility.is_open) {
+            field.innerText += "🚫";
+        }
         field.style.display = "";
         field.style.backgroundColor = owner_color;
         field.style.borderColor = this.getFacilityColor(facility);
@@ -1093,6 +1096,14 @@ export class HtmlView {
             return true;
         }
 
+        if (event.type === EventType.Open) {
+            const [x, y]: [number, number] = this.prev_session.getPosition(event.card_id);
+            let facility: Facility = this.prev_session.getFacility(event.card_id);
+            facility.is_open = true;
+            const owner_id: PlayerId = this.prev_session.getOwnerId(event.card_id);
+            this.drawField(x, y, event.card_id, facility, owner_id);
+        }
+
         if (event.type === EventType.Build) {
             if (event.card_id === -1) {  // Pass.
                 let name: string = this.session.getPlayer(event.player_id).name;
@@ -1115,24 +1126,46 @@ export class HtmlView {
             }, 1000);
         }
 
+        if (event.type === EventType.Build) {
+            // Money motion
+            const [x, y]: [number, number] = this.session.getPosition(event.card_id);
+
+            for (let pid = 0; pid < event.moneys.length; pid++) {
+                const money: number = event.moneys[pid];
+                if (money === 0) {
+                    continue;
+                }
+                let delay: number = 0;
+                if (money > 0) {
+                    delay = 1000;
+                }
+                window.setTimeout(() => {
+                    this.drawMoneyMotion(money, pid, `field_${x}_${y}`);
+                    this.board_view.setHighlight([x, y], COLOR_CLICKABLE);
+                    window.setTimeout(() => {
+                        this.board_view.setHighlight([x, y], "transparent");
+                    }, 1000);
+                }, delay);
+            }
+        }
+
         const money_motion: EventType[] = [
             EventType.Blue,
             EventType.Green,
             EventType.Red,
             EventType.Purple,
-            EventType.Build,
         ];
         if (money_motion.indexOf(event.type) !== -1) {
             // Money motion
-            let [x, y]: [number, number] = this.session.getPosition(event.card_id);
+            const [x, y]: [number, number] = this.session.getPosition(event.card_id);
 
             for (let pid = 0; pid < event.moneys.length; pid++) {
-                let money: number = event.moneys[pid];
+                const money: number = event.moneys[pid];
                 if (money === 0) {
                     continue;
                 }
                 let delay: number = 0;
-                if ([EventType.Red, EventType.Purple, EventType.Build].indexOf(event.type) !== -1 &&
+                if ([EventType.Red, EventType.Purple].indexOf(event.type) !== -1 &&
                     money > 0) {
                     delay = 1000;
                 }
@@ -1143,6 +1176,24 @@ export class HtmlView {
                         this.board_view.setHighlight([x, y], "transparent");
                     }, 1000);
                 }, delay);
+            }
+
+            // For open and close.
+            let facility: Facility = this.prev_session.getFacility(event.card_id);
+            if (facility.property["close"]) {
+                facility.is_open = false;
+
+                const owner_id: PlayerId = this.prev_session.getOwnerId(event.card_id);
+                if ([EventType.Blue, EventType.Green].indexOf(event.type) !== -1) {
+                    window.setTimeout(() => {
+                        this.drawField(x, y, event.card_id, facility, owner_id);
+                    }, 1000);
+                }
+                if ([EventType.Red, EventType.Purple].indexOf(event.type) !== -1) {
+                    window.setTimeout(() => {
+                        this.drawField(x, y, event.card_id, facility, owner_id);
+                    }, 2000);
+                }
             }
         }
 

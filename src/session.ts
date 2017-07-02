@@ -41,6 +41,7 @@ export enum EventType {
     Build,
     Salary,
     Interaction,
+    Open,  // 休業
     Quit,
 }
 
@@ -487,6 +488,10 @@ export class Session {
             return event;
         }
 
+        if (facility.property["close"] === true) {
+            facility.is_open = false;
+        }
+
         let owner: Player = this.getOwner(card_id);
         event.step = this.step;
         event.card_id = card_id;
@@ -512,56 +517,100 @@ export class Session {
         event.player_id = player_id;
 
         if (facility.getType() === FacilityType.Blue) {
+            if (!facility.is_open) {
+                facility.is_open = true;
+                event.type = EventType.Open;
+                return event;
+            }
+            if (facility.property["close"] === true) {
+                facility.is_open = false;
+            }
+
             let amount: number = owner.addMoney(facility.getPropertyValue());
             event.type = EventType.Blue;
             event.moneys[owner_id] += amount;
+            return event;
         }
-        else if (facility.getType() === FacilityType.Green) {
-            if (player_id === owner_id) {
-                let amount: number = owner.addMoney(facility.getPropertyValue());
-                event.type = EventType.Green;
-                event.moneys[owner_id] += amount;
-            }
-        }
-        else if (facility.getType() === FacilityType.Red) {
+        if (facility.getType() === FacilityType.Green) {
             if (player_id !== owner_id) {
-                let value: number = facility.getPropertyValue();
-                event.type = EventType.Red;
-                if (facility.property["all"]) {
-                    for (let pid: number = 0; pid < this.players.length; ++pid) {
-                        if (pid === owner_id) {
-                            continue;
-                        }
-                        let amount: number = this.moveMoney(pid, owner_id, value);
-                        event.moneys[pid] -= amount;
-                        event.moneys[owner_id] += amount;
+                return event;
+            }
+            if (!facility.is_open) {
+                facility.is_open = true;
+                event.type = EventType.Open;
+                return event;
+            }
+            if (facility.property["close"] === true) {
+                facility.is_open = false;
+            }
+
+            let amount: number = owner.addMoney(facility.getPropertyValue());
+            event.type = EventType.Green;
+            event.moneys[owner_id] += amount;
+            return event;
+        }
+        if (facility.getType() === FacilityType.Red) {
+            if (player_id === owner_id) {
+                return event;
+            }
+            if (!facility.is_open) {
+                facility.is_open = true;
+                event.type = EventType.Open;
+                return event;
+            }
+            if (facility.property["close"] === true) {
+                facility.is_open = false;
+            }
+
+            let value: number = facility.getPropertyValue();
+            event.type = EventType.Red;
+            if (facility.property["all"]) {
+                for (let pid: number = 0; pid < this.players.length; ++pid) {
+                    if (pid === owner_id) {
+                        continue;
                     }
-                }
-                else {
-                    let amount: number = this.moveMoney(player_id, owner_id, value);
-                    event.moneys[player_id] -= amount;
+                    let amount: number = this.moveMoney(pid, owner_id, value);
+                    event.moneys[pid] -= amount;
                     event.moneys[owner_id] += amount;
                 }
             }
+            else {
+                let amount: number = this.moveMoney(player_id, owner_id, value);
+                event.moneys[player_id] -= amount;
+                event.moneys[owner_id] += amount;
+            }
+            return event;
         }
-        else if (facility.getType() === FacilityType.Purple) {
-            if (player_id === owner_id) {
-                let value: number = facility.getPropertyValue();
-                if (facility.property["all"] !== true) {  // TODO: Update the logic.
-                    event.type = EventType.Interaction;
+        if (facility.getType() === FacilityType.Purple) {
+            if (player_id !== owner_id) {
+                return event;
+            }
+
+            if (!facility.is_open) {
+                facility.is_open = true;
+                event.type = EventType.Open;
+                return event;
+            }
+
+            let value: number = facility.getPropertyValue();
+            if (facility.property["all"] !== true) {  // TODO: Update the logic.
+                event.type = EventType.Interaction;
+            }
+            else {
+                if (facility.property["close"] === true) {
+                    facility.is_open = false;
                 }
-                else {
-                    event.type = EventType.Purple;
-                    for (let pid: number = 0; pid < this.players.length; ++pid) {
-                        if (pid === owner_id) {
-                            continue;
-                        }
-                        let amount: number = this.moveMoney(pid, owner_id, value);
-                        event.moneys[pid] -= amount;
-                        event.moneys[owner_id] += amount;
+                event.type = EventType.Purple;
+                for (let pid: number = 0; pid < this.players.length; ++pid) {
+                    if (pid === owner_id) {
+                        continue;
                     }
+                    let amount: number = this.moveMoney(pid, owner_id, value);
+                    event.moneys[pid] -= amount;
+                    event.moneys[owner_id] += amount;
                 }
             }
+            return event;
         }
         return event;
     }

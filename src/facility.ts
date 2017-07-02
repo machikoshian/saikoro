@@ -69,7 +69,7 @@ const FACILITY_DATA: FacilityData[] = [
     new FacilityData(7,  1, [8],    "🐔", 250, FacilityType.Red,    {"value": 200, "all": true}),
     new FacilityData(8,  1, [8,9],  "🌻", 200, FacilityType.Blue,   {"value": 400}),
     new FacilityData(9,  1, [10],   "🍣", 100, FacilityType.Red,    {"value": 400}),
-    new FacilityData(10, 2, [10],   "🗻", 300, FacilityType.Blue,   {"value": 500}),
+    new FacilityData(10, 2, [10],   "🗻", 300, FacilityType.Blue,   {"value": 1000, "close": true}),
     new FacilityData(11, 1, [12],   "🍍", 150, FacilityType.Blue,   {"value": 650}),
 
     new FacilityData(12, 1, [1],  "🍣", 200, FacilityType.Red,    {"value": 600}),
@@ -150,6 +150,7 @@ export class Facility {
     readonly cost: number;
     readonly type: FacilityType;
     readonly property: {};
+    public is_open: boolean = true;
 
     constructor(data_id: CardDataId) {
         let data: FacilityData;
@@ -166,17 +167,21 @@ export class Facility {
         this.cost = data.cost;
         this.type = data.type;
         this.property = data.property;
+        this.is_open = true;
     }
 
     public toJSON(): Object {
         return {
             class_name: "Facility",
             data_id: this.data_id,
+            is_open: this.is_open,
         }
     }
 
     static fromJSON(json) {
-        return new Facility(json.data_id);
+        let facility: Facility = new Facility(json.data_id);
+        facility.is_open = json.is_open;
+        return facility;
     }
 
     public getName(): string {
@@ -197,32 +202,45 @@ export class Facility {
     public getPropertyValue(): number {
         return this.property["value"] ? this.property["value"] : 0;
     }
+
     public getDescription(): string {
+        let descriptions: string[] = [];
         switch (this.type) {
             case FacilityType.Gray:
-                return "ランドマーク";
+                descriptions.push("ランドマーク");
+                break;
             case FacilityType.Blue:
-                return `${this.property["value"]}コイン稼ぐ\n誰のターンでも`;
+                descriptions.push(`${this.property["value"]}コイン稼ぐ`);
+                descriptions.push("誰のターンでも");
+                break;
             case FacilityType.Green:
-                return `${this.property["value"]}コイン稼ぐ\n自分のターンのみ`;
+                descriptions.push(`${this.property["value"]}コイン稼ぐ`);
+                descriptions.push("自分のターンのみ");
+                break;
             case FacilityType.Red:
                 if (this.property["all"]) {
-                    return `${this.property["value"]}コインを全員から奪う\n自分以外のターンのみ`;
+                    descriptions.push(`${this.property["value"]}コインを全員から奪う`);
                 }
                 else {
-                    return `${this.property["value"]}コイン奪う\n自分以外のターンのみ`;
+                    descriptions.push(`${this.property["value"]}コインを奪う`);
                 }
+                descriptions.push("自分以外のターンのみ");
+                break;
             case FacilityType.Purple:
                 if (this.property["all"]) {
-                    return `${this.property["value"]}コインを全員から奪う\n自分のターンのみ`;
+                    descriptions.push(`${this.property["value"]}コインを全員から奪う`);
                 }
                 else {
-                    return `${this.property["value"]}コイン奪う\n自分のターンのみ`;
+                    descriptions.push(`${this.property["value"]}コインを奪う`);
                 }
+                descriptions.push("自分のターンのみ");
+                break;
         }
-        return "";
+        if (this.property["close"] === true) {
+            descriptions.push("発動後休業する");
+        }
+        return descriptions.join("\n");
     }
-
 }
 
 export class Character {
