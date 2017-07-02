@@ -866,11 +866,12 @@ export class HtmlCharCardButtonView extends HtmlButtonView {
     }
 
     public draw(session: Session, player_id: PlayerId): void {
-        this.show();
         if (this.hasCharacterCard(session, player_id)) {
+            this.show();
             this.element.classList.remove("inactive");
         }
         else {
+            // TODO: show it but keep inactive.
             this.element.classList.add("inactive");
         }
     }
@@ -881,6 +882,7 @@ export class HtmlButtonsView extends HtmlViewObject {
     readonly dice2: HtmlButtonView;
     readonly char_card: HtmlCharCardButtonView;
     readonly end_turn: HtmlButtonView;
+    private dice_num: DiceNum = DiceNum.Any;
 
     constructor(readonly element_id: string, dice_widget: HtmlDiceView) {
         super(document.getElementById(element_id));
@@ -908,26 +910,40 @@ export class HtmlButtonsView extends HtmlViewObject {
         super.reset();
     }
 
+    public hide(): void {
+        super.hide();
+        this.char_card.reset();  // is_open -> false.
+    }
+
+    public hideDices(): void {
+        this.dice1.hide();
+        this.dice2.hide();
+    }
+
+    public showDices(): void {
+        if (this.dice_num !== DiceNum.Two) {
+            this.dice1.show();
+        }
+        if (this.dice_num !== DiceNum.One) {
+            this.dice2.show();
+        }
+    }
+
     public draw(session: Session, player_id: PlayerId): void {
         if (session.getCurrentPlayerId() !== player_id) {
             this.hide();
             return;
         }
 
-        this.dice1.hide();
-        this.dice2.hide();
+        this.dice_num = session.getDiceEffects().num;
+
+        this.hideDices();
         this.char_card.hide();
         this.end_turn.hide();
 
         let phase: Phase = session.getPhase();
         if (phase === Phase.CharacterCard || phase === Phase.DiceRoll) {
-            const effects: DiceEffects = session.getDiceEffects();
-            if (effects.num !== DiceNum.Two) {
-                this.dice1.show();
-            }
-            if (effects.num !== DiceNum.One) {
-                this.dice2.show();
-            }
+            this.showDices();
         }
 
         if (phase === Phase.CharacterCard) {

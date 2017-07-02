@@ -481,12 +481,10 @@ export class HtmlView {
 
     private onClickCharCardButton(is_open: boolean): void {
         if (is_open) {
-            this.buttons_view.dice1.hide();
-            this.buttons_view.dice2.hide();
+            this.buttons_view.hideDices();
         }
         else {
-            this.buttons_view.dice1.show();
-            this.buttons_view.dice2.show();
+            this.buttons_view.showDices();
         }
 
         this.dialogSelectCharCard(is_open, (card_id: CardId) => {

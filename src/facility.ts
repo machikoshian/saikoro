@@ -32,8 +32,8 @@ const CHARACTER_DATA: CharacterData[] = [
     new CharacterData(1007, "有能秘書", CharacterType.MoveMoney, 0, {"money": 300}),
     new CharacterData(1008, "白奴", CharacterType.DiceEven, 0, {}),  // even
     new CharacterData(1009, "黒奴", CharacterType.DiceOdd, 0, {}),  // odd
-//    new CharacterData(1010, "鉄道員", CharacterType.DiceOne, 2, {}),
-//    new CharacterData(1011, "CA",    CharacterType.DiceTwo, 2, {}),
+    new CharacterData(1010, "鉄道員", CharacterType.DiceOne, 2, {}),
+    new CharacterData(1011, "CA",    CharacterType.DiceTwo, 2, {}),
 ];
 
 export type CardDataId = number;
