@@ -20,12 +20,16 @@ export class CharacterData {
 
 const CHARACTER_DATA_BASE: number = 1000;
 const CHARACTER_DATA: CharacterData[] = [
-    new CharacterData(1000, "大学生",  CharacterType.DiceDelta, 1, {"delta": 3}),
-    new CharacterData(1001, "幼稚園児", CharacterType.DiceDelta, 2, {"delta": -2}),
-    new CharacterData(1002, "執事",    CharacterType.DrawCards, 0, {"value": 2}),
-    new CharacterData(1003, "有能秘書", CharacterType.MoveMoney, 0, {"money": 300}),
-    new CharacterData(1004, "白奴", CharacterType.DiceEven, 0, {"money": 300}),  // even
-    new CharacterData(1005, "黒奴", CharacterType.DiceOdd, 0, {"money": 300}),  // odd
+    new CharacterData(1000, "幼稚園児", CharacterType.DiceDelta, 2, {"delta": -2}),
+    new CharacterData(1001, "小学生",  CharacterType.DiceDelta, 2, {"delta": -1}),
+    new CharacterData(1002, "中学生",  CharacterType.DiceDelta, 2, {"delta": 1}),
+    new CharacterData(1003, "高校生",  CharacterType.DiceDelta, 2, {"delta": 2}),
+    new CharacterData(1004, "大学生",  CharacterType.DiceDelta, 1, {"delta": 3}),
+    new CharacterData(1005, "執事",    CharacterType.DrawCards, 0, {"value": 3}),
+    new CharacterData(1006, "市長秘書", CharacterType.DrawCards, 0, {"value": 3}),
+    new CharacterData(1007, "有能秘書", CharacterType.MoveMoney, 0, {"money": 300}),
+    new CharacterData(1008, "白奴", CharacterType.DiceEven, 0, {"money": 300}),  // even
+    new CharacterData(1009, "黒奴", CharacterType.DiceOdd, 0, {"money": 300}),  // odd
 ];
 
 export type CardDataId = number;
