@@ -11,6 +11,7 @@ import { HtmlViewObject, HtmlCardsView, HtmlCardView, HtmlPlayersView,
          HtmlMessageView, HtmlButtonsView, HtmlCardWidgetView,
          HtmlDeckCharView, HtmlBoardView, HtmlDiceView,
          HtmlChatButtonView, HtmlDeckCardsView } from "./html_view_parts";
+import { DiceEffects, DiceNum, DiceEvenOdd } from "./types";
 import * as Query from "./query";
 
 const COLOR_FIELD: string = "#FFF8E1";
@@ -676,6 +677,27 @@ export class HtmlView {
         }
     }
 
+    private getDiceEffectsMessage(effects: DiceEffects): string {
+        let messages: string[] = [];
+        if (effects.num !== DiceNum.Any) {
+            messages.push(`${effects.num}個限定`);
+        }
+
+        if (effects.delta !== 0) {
+            const unit: string = (effects.delta > 0) ? "+" : "";
+            messages.push(`${unit}${effects.delta}`);
+        }
+
+        if (effects.even_odd !== DiceEvenOdd.Any) {
+            messages.push((effects.even_odd === DiceEvenOdd.Even) ? "偶数のみ" : "奇数のみ");
+        }
+
+        if (messages.length === 0) {
+            return "";
+        }
+        return `(${messages.join(" ")})`;
+    }
+
     private getDiceDeltaMessage(delta: number): string {
         if (delta === 0) {
             return "";
@@ -869,14 +891,14 @@ export class HtmlView {
             return true;
         }
         if (phase === Phase.CharacterCard) {
-            let delta: string = this.getDiceDeltaMessage(session.getDiceDelta());
-            message = `${name} のキャラカードまたはサイコロ${delta}です`;
+            const effects: string = this.getDiceEffectsMessage(session.getDiceEffects());
+            message = `${name} のキャラカードまたはサイコロ${effects}です`;
             this.message_view.drawMessage(message, color);
             return true;
         }
         if (phase === Phase.DiceRoll) {
-            let delta: string = this.getDiceDeltaMessage(session.getDiceDelta());
-            message = `${name} のサイコロ${delta}です`;
+            const effects: string = this.getDiceEffectsMessage(session.getDiceEffects());
+            message = `${name} のサイコロ${effects}です`;
             this.message_view.drawMessage(message, color);
             return true;
         }

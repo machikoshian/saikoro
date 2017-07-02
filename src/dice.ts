@@ -45,6 +45,10 @@ export class DiceResult {
 
 export class Dice {
     static roll(dice_num: number, aim: number = 0, effects: DiceEffects): DiceResult {
+        if (effects.num !== DiceNum.Any) {
+            dice_num = effects.num;
+        }
+
         let dice2_factor: number = (dice_num === 2) ? 1 : 0;
 
         let [dice1, dice2]: [number, number] = Dice.rollDices(dice_num, effects);

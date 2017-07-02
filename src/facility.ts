@@ -30,8 +30,10 @@ const CHARACTER_DATA: CharacterData[] = [
     new CharacterData(1005, "執事",    CharacterType.DrawCards, 0, {"value": 3}),
     new CharacterData(1006, "市長秘書", CharacterType.DrawCards, 0, {"value": 3}),
     new CharacterData(1007, "有能秘書", CharacterType.MoveMoney, 0, {"money": 300}),
-    new CharacterData(1008, "白奴", CharacterType.DiceEven, 0, {"money": 300}),  // even
-    new CharacterData(1009, "黒奴", CharacterType.DiceOdd, 0, {"money": 300}),  // odd
+    new CharacterData(1008, "白奴", CharacterType.DiceEven, 0, {}),  // even
+    new CharacterData(1009, "黒奴", CharacterType.DiceOdd, 0, {}),  // odd
+//    new CharacterData(1010, "鉄道員", CharacterType.DiceOne, 2, {}),
+//    new CharacterData(1011, "CA",    CharacterType.DiceTwo, 2, {}),
 ];
 
 export type CardDataId = number;
@@ -274,6 +276,12 @@ export class Character {
             }
             case CharacterType.DiceOdd: {
                 return "次のサイコロの合計値が奇数になる";
+            }
+            case CharacterType.DiceOne: {
+                return `サイコロを1個振り限定にする\n${this.round}ラウンド`;
+            }
+            case CharacterType.DiceTwo: {
+                return `サイコロを2個振り限定にする\n${this.round}ラウンド`;
             }
             case CharacterType.DrawCards: {
                 const value: number = this.property["value"];

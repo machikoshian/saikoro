@@ -345,37 +345,8 @@ export class Session {
         if (!this.isValid(player_id, Phase.DiceRoll)) {
             return false;
         }
-        const delta: number = this.effect_manager.getDiceDelta();
-        const types: CharacterType[] = this.effect_manager.getCharacterTypes();
-
-        // Even or odd.
-        let even_odd: DiceEvenOdd = DiceEvenOdd.Any;
-        if (types.indexOf(CharacterType.DiceEven) !== -1) {
-            even_odd = DiceEvenOdd.Even;
-        }
-        else if (types.indexOf(CharacterType.DiceOdd) !== -1) {
-            even_odd = DiceEvenOdd.Odd;
-        }
-
-        // Num of dices.
-        let dice_num: number = query.dice_num;
-        const dice_one_index = types.indexOf(CharacterType.DiceOne);
-        const dice_two_index = types.indexOf(CharacterType.DiceTwo);
-        if (dice_one_index !== -1) {
-            dice_num = (dice_two_index > dice_one_index) ? 2 : 1;
-        }
-        else {
-            dice_num = (dice_two_index === -1) ? dice_num : 2;
-        }
-
-        let effects: DiceEffects = {
-            delta: delta,
-            even_odd: even_odd,
-            num: DiceNum.Any,
-        };
-
-        this.dice_result = Dice.roll(dice_num, aim, effects);
-        if (types.indexOf(CharacterType.DiceEven))
+        const effects: DiceEffects = this.effect_manager.getDiceEffects();
+        this.dice_result = Dice.roll(query.dice_num, aim, effects);
 
         // TODO: Move this to other place?
         this.target_facilities = this.getFacilitiesInArea(this.dice_result.result());
@@ -750,6 +721,8 @@ export class Session {
                 break;
             }
             case CharacterType.DiceDelta:
+            case CharacterType.DiceOne:
+            case CharacterType.DiceTwo:
             case CharacterType.DiceEven:
             case CharacterType.DiceOdd: {
                 this.effect_manager.addCard(character.data_id, this.round, this.turn);
@@ -1113,6 +1086,9 @@ export class Session {
     }
     public getDiceDelta(): number {
         return this.effect_manager.getDiceDelta();
+    }
+    public getDiceEffects(): DiceEffects {
+        return this.effect_manager.getDiceEffects();
     }
     public getTargetFacilities(): CardId[] {
         return this.target_facilities;

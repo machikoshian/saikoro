@@ -3,6 +3,7 @@ import { CardId, CardDataId, CardData, Facility, FacilityType, Character } from 
 import { Phase, Event, EventType, Session } from "./session";
 import { PlayerCards } from "./card_manager";
 import { DiceResult } from "./dice";
+import { DiceEffects, DiceNum } from "./types";
 
 // TODO: Move it to a new file for util.
 const COLOR_FIELD: string = "#FFE082";
@@ -920,8 +921,13 @@ export class HtmlButtonsView extends HtmlViewObject {
 
         let phase: Phase = session.getPhase();
         if (phase === Phase.CharacterCard || phase === Phase.DiceRoll) {
-            this.dice1.show();
-            this.dice2.show();
+            const effects: DiceEffects = session.getDiceEffects();
+            if (effects.num !== DiceNum.Two) {
+                this.dice1.show();
+            }
+            if (effects.num !== DiceNum.One) {
+                this.dice2.show();
+            }
         }
 
         if (phase === Phase.CharacterCard) {

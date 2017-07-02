@@ -1,6 +1,7 @@
 import { Player, Board, PlayerId } from "./board";
 import { CardId, CardDataId, FacilityType, Facility,
          Character, CharacterData, CharacterType } from "./facility";
+import { DiceEvenOdd, DiceNum, DiceEffects } from "./types";
 
 export class PlayerCards {
     private talon: CardId[];    // 山札
@@ -518,6 +519,38 @@ export class EffectManager {
         this.cards = new_cards;
     }
 
+    public getDiceEffects(): DiceEffects {
+        const delta: number = this.getDiceDelta();
+        const types: CharacterType[] = this.getCharacterTypes();
+
+        // Even or odd.
+        let even_odd: DiceEvenOdd = DiceEvenOdd.Any;
+        if (types.indexOf(CharacterType.DiceEven) !== -1) {
+            even_odd = DiceEvenOdd.Even;
+        }
+        else if (types.indexOf(CharacterType.DiceOdd) !== -1) {
+            even_odd = DiceEvenOdd.Odd;
+        }
+
+        // Num of dices.
+        let dice_num: DiceNum = DiceNum.Any;
+        const dice_one_index = types.indexOf(CharacterType.DiceOne);
+        const dice_two_index = types.indexOf(CharacterType.DiceTwo);
+        if (dice_one_index !== -1) {
+            dice_num = (dice_two_index > dice_one_index) ? DiceNum.Two : DiceNum.One;
+        }
+        else if (dice_two_index !== -1) {
+            dice_num = DiceNum.Two;
+        }
+
+        const effects: DiceEffects = {
+            delta: delta,
+            even_odd: even_odd,
+            num: dice_num
+        };
+        return effects;
+    }
+
     public getDiceDelta(): number {
         let delta: number = 0;
         for (let card of this.cards) {
@@ -528,16 +561,7 @@ export class EffectManager {
         return delta;
     }
 
-    public getCharacterTypes(): CharacterType[] {
-        let types: CharacterType[] = [];
-        let even_odd: CharacterType = null;
-        for (let card of this.cards) {
-            if (card.character.type === CharacterType.DiceEven ||
-                card.character.type === CharacterType.DiceOdd) {
-                even_odd = card.character.type;
-            }
-        }
-        types.push(even_odd);
-        return types;
+    private getCharacterTypes(): CharacterType[] {
+        return this.cards.map((card) => { return card.character.type; });
     }
 }
