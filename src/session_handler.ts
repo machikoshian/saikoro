@@ -5,6 +5,7 @@ import { CardId, CardDataId, FacilityType, Facility, CardData } from "./facility
 import { AutoPlay } from "./auto_play";
 import { GameMode, MatchingInfo, MatchingPlayerInfo, Protocol } from "./protocol";
 import { KeyValue, Storage } from "./storage";
+import * as Utils from "./utils";
 import * as Query from "./query";
 
 export class MatchedData {
@@ -280,35 +281,58 @@ export class SessionHandler {
     }
 
     public addNewPlayer(session: Session, user_id: string, name: string,
-                        deck: number[], is_auto: boolean): PlayerId {
+                        deck: CardDataId[], is_auto: boolean): PlayerId {
         const player_id: PlayerId = session.addPlayer(user_id, name, 1200, 250, is_auto);
 
-        let num_facilities: number = 0;
-        let num_chars: number = 0;
-        deck = deck ? deck : [];
+        // # of facility cards should be >= 10.
+        // # of character cards should be <= 5.
+        let num_facilities: number = 10;
+        let num_chars: number = 5;
+        const random_deck: boolean = (deck == null || deck.length === 0);
+        if (random_deck) {
+            num_facilities = 12;
+            deck = [];
+        }
+
+        let added_chars: CardDataId[] = [];
+
         for (let data_id of deck) {
             if (CardData.isFacility(data_id)) {
                 session.addFacility(player_id, data_id);
-                num_facilities++;
+                num_facilities--;
                 continue;
             }
             if (CardData.isCharacter(data_id)) {
-                if (num_chars <= 5) {
+                if (added_chars.indexOf(data_id) !== -1) {
+                    continue;
+                }
+                if (num_chars > 0) {
                     session.addCharacter(player_id, data_id);
-                    num_chars++;
+                    added_chars.push(data_id);
+                    num_chars--;
                 }
                 continue;
             }
         }
 
-        for (let i: number = num_facilities; i < 10; ++i) {
+        for (let i: number = 0; i < num_facilities; ++i) {
             session.addFacility(player_id, CardData.getRandomFacilityDataId());
         }
 
-        for (let i: number = num_chars; i < 5; ++i) {
-            session.addCharacter(player_id, CardData.getRandomCharacterDataId());
+        if (random_deck && num_chars > 0) {
+            let all_chars: CardDataId[] = Utils.shuffle(CardData.getAvailableCharacters());
+            for (let data_id of all_chars) {
+                if (added_chars.indexOf(data_id) !== -1) {
+                    continue;
+                }
+                session.addCharacter(player_id, data_id);
+                added_chars.push(data_id);
+                num_chars--;
+                if (num_chars === 0) {
+                    break;
+                }
+            }
         }
-
         return player_id;
     }
 }
