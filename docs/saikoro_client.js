@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 15);
+/******/ 	return __webpack_require__(__webpack_require__.s = 16);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -77,11 +77,13 @@ var CharacterType;
 (function (CharacterType) {
     CharacterType[CharacterType["None"] = 0] = "None";
     CharacterType[CharacterType["DiceDelta"] = 1] = "DiceDelta";
-    CharacterType[CharacterType["DiceEven"] = 2] = "DiceEven";
-    CharacterType[CharacterType["DiceOdd"] = 3] = "DiceOdd";
-    CharacterType[CharacterType["DrawCards"] = 4] = "DrawCards";
-    CharacterType[CharacterType["MoveMoney"] = 5] = "MoveMoney";
-    CharacterType[CharacterType["SalaryFactor"] = 6] = "SalaryFactor";
+    CharacterType[CharacterType["DiceOne"] = 2] = "DiceOne";
+    CharacterType[CharacterType["DiceTwo"] = 3] = "DiceTwo";
+    CharacterType[CharacterType["DiceEven"] = 4] = "DiceEven";
+    CharacterType[CharacterType["DiceOdd"] = 5] = "DiceOdd";
+    CharacterType[CharacterType["DrawCards"] = 6] = "DrawCards";
+    CharacterType[CharacterType["MoveMoney"] = 7] = "MoveMoney";
+    CharacterType[CharacterType["SalaryFactor"] = 8] = "SalaryFactor";
 })(CharacterType = exports.CharacterType || (exports.CharacterType = {}));
 var CharacterData = (function () {
     function CharacterData(id, // Unique number.
@@ -97,12 +99,18 @@ var CharacterData = (function () {
 exports.CharacterData = CharacterData;
 var CHARACTER_DATA_BASE = 1000;
 var CHARACTER_DATA = [
-    new CharacterData(1000, "大学生", CharacterType.DiceDelta, 1, { "delta": 3 }),
-    new CharacterData(1001, "幼稚園児", CharacterType.DiceDelta, 2, { "delta": -2 }),
-    new CharacterData(1002, "執事", CharacterType.DrawCards, 0, { "value": 2 }),
-    new CharacterData(1003, "有能秘書", CharacterType.MoveMoney, 0, { "money": 300 }),
-    new CharacterData(1004, "白奴", CharacterType.DiceEven, 0, { "money": 300 }),
-    new CharacterData(1005, "黒奴", CharacterType.DiceOdd, 0, { "money": 300 }),
+    new CharacterData(1000, "幼稚園児", CharacterType.DiceDelta, 2, { "delta": -2 }),
+    new CharacterData(1001, "小学生", CharacterType.DiceDelta, 2, { "delta": -1 }),
+    new CharacterData(1002, "中学生", CharacterType.DiceDelta, 2, { "delta": 1 }),
+    new CharacterData(1003, "高校生", CharacterType.DiceDelta, 2, { "delta": 2 }),
+    new CharacterData(1004, "大学生", CharacterType.DiceDelta, 1, { "delta": 3 }),
+    new CharacterData(1005, "執事", CharacterType.DrawCards, 0, { "value": 3 }),
+    new CharacterData(1006, "市長秘書", CharacterType.DrawCards, 0, { "value": 3 }),
+    new CharacterData(1007, "有能秘書", CharacterType.MoveMoney, 0, { "money": 300 }),
+    new CharacterData(1008, "白奴", CharacterType.DiceEven, 0, {}),
+    new CharacterData(1009, "黒奴", CharacterType.DiceOdd, 0, {}),
+    new CharacterData(1010, "鉄道員", CharacterType.DiceOne, 2, {}),
+    new CharacterData(1011, "CA", CharacterType.DiceTwo, 2, {}),
 ];
 var FacilityType;
 (function (FacilityType) {
@@ -138,7 +146,7 @@ var FACILITY_DATA = [
     new FacilityData(7, 1, [8], "🐔", 250, FacilityType.Red, { "value": 200, "all": true }),
     new FacilityData(8, 1, [8, 9], "🌻", 200, FacilityType.Blue, { "value": 400 }),
     new FacilityData(9, 1, [10], "🍣", 100, FacilityType.Red, { "value": 400 }),
-    new FacilityData(10, 2, [10], "🗻", 300, FacilityType.Blue, { "value": 500 }),
+    new FacilityData(10, 2, [10], "🗻", 300, FacilityType.Blue, { "value": 1000, "close": true }),
     new FacilityData(11, 1, [12], "🍍", 150, FacilityType.Blue, { "value": 650 }),
     new FacilityData(12, 1, [1], "🍣", 200, FacilityType.Red, { "value": 600 }),
     new FacilityData(13, 1, [2], "🐟", 100, FacilityType.Green, { "value": 550 }),
@@ -206,6 +214,7 @@ var CardData = (function () {
 exports.CardData = CardData;
 var Facility = (function () {
     function Facility(data_id) {
+        this.is_open = true;
         var data;
         if (data_id >= LANDMARK_DATA_BASE) {
             data = LANDMARK_DATA[data_id - LANDMARK_DATA_BASE];
@@ -220,15 +229,19 @@ var Facility = (function () {
         this.cost = data.cost;
         this.type = data.type;
         this.property = data.property;
+        this.is_open = true;
     }
     Facility.prototype.toJSON = function () {
         return {
             class_name: "Facility",
             data_id: this.data_id,
+            is_open: this.is_open,
         };
     };
     Facility.fromJSON = function (json) {
-        return new Facility(json.data_id);
+        var facility = new Facility(json.data_id);
+        facility.is_open = json.is_open;
+        return facility;
     };
     Facility.prototype.getName = function () {
         return this.name;
@@ -249,29 +262,42 @@ var Facility = (function () {
         return this.property["value"] ? this.property["value"] : 0;
     };
     Facility.prototype.getDescription = function () {
+        var descriptions = [];
         switch (this.type) {
             case FacilityType.Gray:
-                return "ランドマーク";
+                descriptions.push("ランドマーク");
+                break;
             case FacilityType.Blue:
-                return this.property["value"] + "\u30B3\u30A4\u30F3\u7A3C\u3050\n\u8AB0\u306E\u30BF\u30FC\u30F3\u3067\u3082";
+                descriptions.push(this.property["value"] + "\u30B3\u30A4\u30F3\u7A3C\u3050");
+                descriptions.push("誰のターンでも");
+                break;
             case FacilityType.Green:
-                return this.property["value"] + "\u30B3\u30A4\u30F3\u7A3C\u3050\n\u81EA\u5206\u306E\u30BF\u30FC\u30F3\u306E\u307F";
+                descriptions.push(this.property["value"] + "\u30B3\u30A4\u30F3\u7A3C\u3050");
+                descriptions.push("自分のターンのみ");
+                break;
             case FacilityType.Red:
                 if (this.property["all"]) {
-                    return this.property["value"] + "\u30B3\u30A4\u30F3\u3092\u5168\u54E1\u304B\u3089\u596A\u3046\n\u81EA\u5206\u4EE5\u5916\u306E\u30BF\u30FC\u30F3\u306E\u307F";
+                    descriptions.push(this.property["value"] + "\u30B3\u30A4\u30F3\u3092\u5168\u54E1\u304B\u3089\u596A\u3046");
                 }
                 else {
-                    return this.property["value"] + "\u30B3\u30A4\u30F3\u596A\u3046\n\u81EA\u5206\u4EE5\u5916\u306E\u30BF\u30FC\u30F3\u306E\u307F";
+                    descriptions.push(this.property["value"] + "\u30B3\u30A4\u30F3\u3092\u596A\u3046");
                 }
+                descriptions.push("自分以外のターンのみ");
+                break;
             case FacilityType.Purple:
                 if (this.property["all"]) {
-                    return this.property["value"] + "\u30B3\u30A4\u30F3\u3092\u5168\u54E1\u304B\u3089\u596A\u3046\n\u81EA\u5206\u306E\u30BF\u30FC\u30F3\u306E\u307F";
+                    descriptions.push(this.property["value"] + "\u30B3\u30A4\u30F3\u3092\u5168\u54E1\u304B\u3089\u596A\u3046");
                 }
                 else {
-                    return this.property["value"] + "\u30B3\u30A4\u30F3\u596A\u3046\n\u81EA\u5206\u306E\u30BF\u30FC\u30F3\u306E\u307F";
+                    descriptions.push(this.property["value"] + "\u30B3\u30A4\u30F3\u3092\u596A\u3046");
                 }
+                descriptions.push("自分のターンのみ");
+                break;
         }
-        return "";
+        if (this.property["close"] === true) {
+            descriptions.push("発動後休業する");
+        }
+        return descriptions.join("\n");
     };
     return Facility;
 }());
@@ -318,6 +344,12 @@ var Character = (function () {
             }
             case CharacterType.DiceOdd: {
                 return "次のサイコロの合計値が奇数になる";
+            }
+            case CharacterType.DiceOne: {
+                return "\u30B5\u30A4\u30B3\u30ED\u30921\u500B\u632F\u308A\u9650\u5B9A\u306B\u3059\u308B\n" + this.round + "\u30E9\u30A6\u30F3\u30C9";
+            }
+            case CharacterType.DiceTwo: {
+                return "\u30B5\u30A4\u30B3\u30ED\u30922\u500B\u632F\u308A\u9650\u5B9A\u306B\u3059\u308B\n" + this.round + "\u30E9\u30A6\u30F3\u30C9";
             }
             case CharacterType.DrawCards: {
                 var value = this.property["value"];
@@ -438,11 +470,11 @@ exports.Protocol = Protocol;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var dice_1 = __webpack_require__(12);
-var board_1 = __webpack_require__(3);
+var dice_1 = __webpack_require__(13);
+var board_1 = __webpack_require__(5);
 var facility_1 = __webpack_require__(0);
-var utils_1 = __webpack_require__(6);
-var card_manager_1 = __webpack_require__(10);
+var utils_1 = __webpack_require__(4);
+var card_manager_1 = __webpack_require__(11);
 var Phase;
 (function (Phase) {
     Phase[Phase["StartGame"] = 0] = "StartGame";
@@ -478,7 +510,8 @@ var EventType;
     EventType[EventType["Build"] = 8] = "Build";
     EventType[EventType["Salary"] = 9] = "Salary";
     EventType[EventType["Interaction"] = 10] = "Interaction";
-    EventType[EventType["Quit"] = 11] = "Quit";
+    EventType[EventType["Open"] = 11] = "Open";
+    EventType[EventType["Quit"] = 12] = "Quit";
 })(EventType = exports.EventType || (exports.EventType = {}));
 var Event = (function () {
     function Event() {
@@ -740,24 +773,14 @@ var Session = (function () {
     };
     Session.prototype.processDiceCommand = function (query) {
         var player_id = query.player_id;
-        var dice_num = query.dice_num;
         var aim = query.aim;
         if (!this.isValid(player_id, Phase.DiceRoll)) {
             return false;
         }
-        var delta = this.effect_manager.getDiceDelta();
-        var types = this.effect_manager.getCharacterTypes();
-        var even_odd = dice_1.DiceEvenOdd.None;
-        if (types.indexOf(facility_1.CharacterType.DiceEven) !== -1) {
-            even_odd = dice_1.DiceEvenOdd.Even;
-        }
-        else if (types.indexOf(facility_1.CharacterType.DiceOdd) !== -1) {
-            even_odd = dice_1.DiceEvenOdd.Odd;
-        }
-        this.dice_result = dice_1.Dice.roll(dice_num, aim, delta, even_odd);
-        if (types.indexOf(facility_1.CharacterType.DiceEven))
-            // TODO: Move this to other place?
-            this.target_facilities = this.getFacilitiesInArea(this.dice_result.result());
+        var effects = this.effect_manager.getDiceEffects();
+        this.dice_result = dice_1.Dice.roll(query.dice_num, aim, effects);
+        // TODO: Move this to other place?
+        this.target_facilities = this.getFacilitiesInArea(this.dice_result.result());
         var event = new Event();
         this.events.push(event);
         event.type = EventType.Dice;
@@ -875,6 +898,9 @@ var Session = (function () {
         if (player_id !== owner_id) {
             return event;
         }
+        if (facility.property["close"] === true) {
+            facility.is_open = false;
+        }
         var owner = this.getOwner(card_id);
         event.step = this.step;
         event.card_id = card_id;
@@ -896,56 +922,95 @@ var Session = (function () {
         event.card_id = card_id;
         event.player_id = player_id;
         if (facility.getType() === facility_1.FacilityType.Blue) {
+            if (!facility.is_open) {
+                facility.is_open = true;
+                event.type = EventType.Open;
+                return event;
+            }
+            if (facility.property["close"] === true) {
+                facility.is_open = false;
+            }
             var amount = owner.addMoney(facility.getPropertyValue());
             event.type = EventType.Blue;
             event.moneys[owner_id] += amount;
+            return event;
         }
-        else if (facility.getType() === facility_1.FacilityType.Green) {
-            if (player_id === owner_id) {
-                var amount = owner.addMoney(facility.getPropertyValue());
-                event.type = EventType.Green;
-                event.moneys[owner_id] += amount;
-            }
-        }
-        else if (facility.getType() === facility_1.FacilityType.Red) {
+        if (facility.getType() === facility_1.FacilityType.Green) {
             if (player_id !== owner_id) {
-                var value = facility.getPropertyValue();
-                event.type = EventType.Red;
-                if (facility.property["all"]) {
-                    for (var pid = 0; pid < this.players.length; ++pid) {
-                        if (pid === owner_id) {
-                            continue;
-                        }
-                        var amount = this.moveMoney(pid, owner_id, value);
-                        event.moneys[pid] -= amount;
-                        event.moneys[owner_id] += amount;
+                return event;
+            }
+            if (!facility.is_open) {
+                facility.is_open = true;
+                event.type = EventType.Open;
+                return event;
+            }
+            if (facility.property["close"] === true) {
+                facility.is_open = false;
+            }
+            var amount = owner.addMoney(facility.getPropertyValue());
+            event.type = EventType.Green;
+            event.moneys[owner_id] += amount;
+            return event;
+        }
+        if (facility.getType() === facility_1.FacilityType.Red) {
+            if (player_id === owner_id) {
+                return event;
+            }
+            if (!facility.is_open) {
+                facility.is_open = true;
+                event.type = EventType.Open;
+                return event;
+            }
+            if (facility.property["close"] === true) {
+                facility.is_open = false;
+            }
+            var value = facility.getPropertyValue();
+            event.type = EventType.Red;
+            if (facility.property["all"]) {
+                for (var pid = 0; pid < this.players.length; ++pid) {
+                    if (pid === owner_id) {
+                        continue;
                     }
-                }
-                else {
-                    var amount = this.moveMoney(player_id, owner_id, value);
-                    event.moneys[player_id] -= amount;
+                    var amount = this.moveMoney(pid, owner_id, value);
+                    event.moneys[pid] -= amount;
                     event.moneys[owner_id] += amount;
                 }
             }
+            else {
+                var amount = this.moveMoney(player_id, owner_id, value);
+                event.moneys[player_id] -= amount;
+                event.moneys[owner_id] += amount;
+            }
+            return event;
         }
-        else if (facility.getType() === facility_1.FacilityType.Purple) {
-            if (player_id === owner_id) {
-                var value = facility.getPropertyValue();
-                if (facility.property["all"] !== true) {
-                    event.type = EventType.Interaction;
+        if (facility.getType() === facility_1.FacilityType.Purple) {
+            if (player_id !== owner_id) {
+                return event;
+            }
+            if (!facility.is_open) {
+                facility.is_open = true;
+                event.type = EventType.Open;
+                return event;
+            }
+            var value = facility.getPropertyValue();
+            if (facility.property["all"] !== true) {
+                event.type = EventType.Interaction;
+            }
+            else {
+                if (facility.property["close"] === true) {
+                    facility.is_open = false;
                 }
-                else {
-                    event.type = EventType.Purple;
-                    for (var pid = 0; pid < this.players.length; ++pid) {
-                        if (pid === owner_id) {
-                            continue;
-                        }
-                        var amount = this.moveMoney(pid, owner_id, value);
-                        event.moneys[pid] -= amount;
-                        event.moneys[owner_id] += amount;
+                event.type = EventType.Purple;
+                for (var pid = 0; pid < this.players.length; ++pid) {
+                    if (pid === owner_id) {
+                        continue;
                     }
+                    var amount = this.moveMoney(pid, owner_id, value);
+                    event.moneys[pid] -= amount;
+                    event.moneys[owner_id] += amount;
                 }
             }
+            return event;
         }
         return event;
     };
@@ -1089,6 +1154,8 @@ var Session = (function () {
                 break;
             }
             case facility_1.CharacterType.DiceDelta:
+            case facility_1.CharacterType.DiceOne:
+            case facility_1.CharacterType.DiceTwo:
             case facility_1.CharacterType.DiceEven:
             case facility_1.CharacterType.DiceOdd: {
                 this.effect_manager.addCard(character.data_id, this.round, this.turn);
@@ -1406,6 +1473,9 @@ var Session = (function () {
     Session.prototype.getDiceDelta = function () {
         return this.effect_manager.getDiceDelta();
     };
+    Session.prototype.getDiceEffects = function () {
+        return this.effect_manager.getDiceEffects();
+    };
     Session.prototype.getTargetFacilities = function () {
         return this.target_facilities;
     };
@@ -1438,6 +1508,46 @@ exports.Session = Session;
 
 /***/ }),
 /* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var DiceEvenOdd;
+(function (DiceEvenOdd) {
+    DiceEvenOdd[DiceEvenOdd["Any"] = 0] = "Any";
+    DiceEvenOdd[DiceEvenOdd["Even"] = 1] = "Even";
+    DiceEvenOdd[DiceEvenOdd["Odd"] = 2] = "Odd";
+})(DiceEvenOdd = exports.DiceEvenOdd || (exports.DiceEvenOdd = {}));
+var DiceNum;
+(function (DiceNum) {
+    DiceNum[DiceNum["Any"] = 0] = "Any";
+    DiceNum[DiceNum["One"] = 1] = "One";
+    DiceNum[DiceNum["Two"] = 2] = "Two";
+})(DiceNum = exports.DiceNum || (exports.DiceNum = {}));
+
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+function shuffle(array) {
+    var shuffled_array = array.slice(0);
+    for (var l = shuffled_array.length; l > 0; --l) {
+        var i = Math.floor(Math.random() * l);
+        _a = [shuffled_array[l - 1], shuffled_array[i]], shuffled_array[i] = _a[0], shuffled_array[l - 1] = _a[1];
+    }
+    return shuffled_array;
+    var _a;
+}
+exports.shuffle = shuffle;
+
+
+/***/ }),
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1602,7 +1712,7 @@ exports.Board = Board;
 
 
 /***/ }),
-/* 4 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1770,7 +1880,7 @@ exports.Client = Client;
 
 
 /***/ }),
-/* 5 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1914,26 +2024,7 @@ exports.LocalStorage = LocalStorage;
 
 
 /***/ }),
-/* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-function shuffle(array) {
-    var shuffled_array = array.slice(0);
-    for (var l = shuffled_array.length; l > 0; --l) {
-        var i = Math.floor(Math.random() * l);
-        _a = [shuffled_array[l - 1], shuffled_array[i]], shuffled_array[i] = _a[0], shuffled_array[l - 1] = _a[1];
-    }
-    return shuffled_array;
-    var _a;
-}
-exports.shuffle = shuffle;
-
-
-/***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1949,9 +2040,9 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-var client_1 = __webpack_require__(4);
+var client_1 = __webpack_require__(6);
 var session_1 = __webpack_require__(2);
-var html_view_1 = __webpack_require__(13);
+var html_view_1 = __webpack_require__(14);
 var protocol_1 = __webpack_require__(1);
 // TODO: can be merged with Client?
 var WebClient = (function (_super) {
@@ -2026,7 +2117,7 @@ exports.WebClient = WebClient;
 
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2042,9 +2133,9 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-var client_1 = __webpack_require__(4);
-var session_handler_1 = __webpack_require__(16);
-var storage_1 = __webpack_require__(5);
+var client_1 = __webpack_require__(6);
+var session_handler_1 = __webpack_require__(17);
+var storage_1 = __webpack_require__(7);
 var protocol_1 = __webpack_require__(1);
 var storage = new storage_1.LocalStorage();
 var session_handler = new session_handler_1.SessionHandler(storage);
@@ -2167,14 +2258,14 @@ exports.HybridConnection = HybridConnection;
 
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var session_1 = __webpack_require__(2);
-var utils_1 = __webpack_require__(6);
+var utils_1 = __webpack_require__(4);
 var AutoPlay = (function () {
     function AutoPlay() {
     }
@@ -2276,13 +2367,14 @@ exports.AutoPlay = AutoPlay;
 
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var facility_1 = __webpack_require__(0);
+var types_1 = __webpack_require__(3);
 var PlayerCards = (function () {
     function PlayerCards(talon, hand, field, discard) {
         if (talon === void 0) { talon = []; }
@@ -2731,6 +2823,34 @@ var EffectManager = (function () {
         }
         this.cards = new_cards;
     };
+    EffectManager.prototype.getDiceEffects = function () {
+        var delta = this.getDiceDelta();
+        var types = this.getCharacterTypes();
+        // Even or odd.
+        var even_odd = types_1.DiceEvenOdd.Any;
+        if (types.indexOf(facility_1.CharacterType.DiceEven) !== -1) {
+            even_odd = types_1.DiceEvenOdd.Even;
+        }
+        else if (types.indexOf(facility_1.CharacterType.DiceOdd) !== -1) {
+            even_odd = types_1.DiceEvenOdd.Odd;
+        }
+        // Num of dices.
+        var dice_num = types_1.DiceNum.Any;
+        var dice_one_index = types.indexOf(facility_1.CharacterType.DiceOne);
+        var dice_two_index = types.indexOf(facility_1.CharacterType.DiceTwo);
+        if (dice_one_index !== -1) {
+            dice_num = (dice_two_index > dice_one_index) ? types_1.DiceNum.Two : types_1.DiceNum.One;
+        }
+        else if (dice_two_index !== -1) {
+            dice_num = types_1.DiceNum.Two;
+        }
+        var effects = {
+            delta: delta,
+            even_odd: even_odd,
+            num: dice_num
+        };
+        return effects;
+    };
     EffectManager.prototype.getDiceDelta = function () {
         var delta = 0;
         for (var _i = 0, _a = this.cards; _i < _a.length; _i++) {
@@ -2742,17 +2862,7 @@ var EffectManager = (function () {
         return delta;
     };
     EffectManager.prototype.getCharacterTypes = function () {
-        var types = [];
-        var even_odd = null;
-        for (var _i = 0, _a = this.cards; _i < _a.length; _i++) {
-            var card = _a[_i];
-            if (card.character.type === facility_1.CharacterType.DiceEven ||
-                card.character.type === facility_1.CharacterType.DiceOdd) {
-                even_odd = card.character.type;
-            }
-        }
-        types.push(even_odd);
-        return types;
+        return this.cards.map(function (card) { return card.character.type; });
     };
     return EffectManager;
 }());
@@ -2760,14 +2870,14 @@ exports.EffectManager = EffectManager;
 
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var facility_1 = __webpack_require__(0);
-var board_1 = __webpack_require__(3);
+var board_1 = __webpack_require__(5);
 var DeckMaker = (function () {
     function DeckMaker() {
         this.cards = {}; // key is CardId.
@@ -2847,12 +2957,13 @@ exports.DeckMaker = DeckMaker;
 
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+var types_1 = __webpack_require__(3);
 var DiceResult = (function () {
     function DiceResult(dice1, dice2, delta, is_miracle, miracle_dice1, miracle_dice2) {
         if (delta === void 0) { delta = 0; }
@@ -2892,43 +3003,38 @@ var DiceResult = (function () {
     return DiceResult;
 }());
 exports.DiceResult = DiceResult;
-var DiceEvenOdd;
-(function (DiceEvenOdd) {
-    DiceEvenOdd[DiceEvenOdd["None"] = 0] = "None";
-    DiceEvenOdd[DiceEvenOdd["Even"] = 1] = "Even";
-    DiceEvenOdd[DiceEvenOdd["Odd"] = 2] = "Odd";
-})(DiceEvenOdd = exports.DiceEvenOdd || (exports.DiceEvenOdd = {}));
 var Dice = (function () {
     function Dice() {
     }
-    Dice.roll = function (dice_num, aim, delta, even_odd) {
+    Dice.roll = function (dice_num, aim, effects) {
         if (aim === void 0) { aim = 0; }
-        if (delta === void 0) { delta = 0; }
-        if (even_odd === void 0) { even_odd = DiceEvenOdd.None; }
+        if (effects.num !== types_1.DiceNum.Any) {
+            dice_num = effects.num;
+        }
         var dice2_factor = (dice_num === 2) ? 1 : 0;
-        var _a = Dice.rollDices(dice_num, even_odd), dice1 = _a[0], dice2 = _a[1];
+        var _a = Dice.rollDices(dice_num, effects), dice1 = _a[0], dice2 = _a[1];
         if (dice1 + dice2 === aim) {
             // Lucky, but not miracle lucky.
-            return new DiceResult(dice1, dice2, delta, false);
+            return new DiceResult(dice1, dice2, effects.delta, false);
         }
         // Try again for miracle.
-        var _b = Dice.rollDices(dice_num, even_odd), miracle_dice1 = _b[0], miracle_dice2 = _b[1];
+        var _b = Dice.rollDices(dice_num, effects), miracle_dice1 = _b[0], miracle_dice2 = _b[1];
         if (miracle_dice1 + miracle_dice2 === aim) {
-            return new DiceResult(dice1, dice2, delta, true, miracle_dice1, miracle_dice2);
+            return new DiceResult(dice1, dice2, effects.delta, true, miracle_dice1, miracle_dice2);
         }
-        return new DiceResult(dice1, dice2, delta, false);
+        return new DiceResult(dice1, dice2, effects.delta, false);
     };
-    Dice.rollDices = function (dice_num, even_odd) {
+    Dice.rollDices = function (dice_num, effects) {
         var dice2_factor = (dice_num === 2) ? 1 : 0;
         var dice1 = Dice.roll1();
         var dice2 = Dice.roll1() * dice2_factor;
-        if (even_odd === DiceEvenOdd.Even) {
+        if (effects.even_odd === types_1.DiceEvenOdd.Even) {
             while ((dice1 + dice2) % 2 !== 0) {
                 dice1 = Dice.roll1();
                 dice2 = Dice.roll1() * dice2_factor;
             }
         }
-        if (even_odd === DiceEvenOdd.Odd) {
+        if (effects.even_odd === types_1.DiceEvenOdd.Odd) {
             while ((dice1 + dice2) % 2 !== 1) {
                 dice1 = Dice.roll1();
                 dice2 = Dice.roll1() * dice2_factor;
@@ -2945,7 +3051,7 @@ exports.Dice = Dice;
 
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2953,9 +3059,10 @@ exports.Dice = Dice;
 Object.defineProperty(exports, "__esModule", { value: true });
 var session_1 = __webpack_require__(2);
 var facility_1 = __webpack_require__(0);
-var deck_maker_1 = __webpack_require__(11);
+var deck_maker_1 = __webpack_require__(12);
 var protocol_1 = __webpack_require__(1);
-var html_view_parts_1 = __webpack_require__(14);
+var html_view_parts_1 = __webpack_require__(15);
+var types_1 = __webpack_require__(3);
 var COLOR_FIELD = "#FFF8E1";
 var COLOR_LANDMARK = "#B0BEC5";
 var COLOR_CLICKABLE = "#FFCA28";
@@ -3215,7 +3322,7 @@ var HtmlView = (function () {
             // Show components for game.
             this.message_view.show();
             this.board_view.show();
-            this.board_view.redraw();
+            this.board_view.clearEffects();
             if (this.session != null) {
                 this.drawSession(this.session);
             }
@@ -3352,12 +3459,10 @@ var HtmlView = (function () {
     HtmlView.prototype.onClickCharCardButton = function (is_open) {
         var _this = this;
         if (is_open) {
-            this.buttons_view.dice1.hide();
-            this.buttons_view.dice2.hide();
+            this.buttons_view.hideDices();
         }
         else {
-            this.buttons_view.dice1.show();
-            this.buttons_view.dice2.show();
+            this.buttons_view.showDices();
         }
         this.dialogSelectCharCard(is_open, function (card_id) {
             _this.processCharCard(card_id);
@@ -3379,6 +3484,7 @@ var HtmlView = (function () {
                     var event_1 = this.session.getEventBuildFacility(this.client.player_id, x, y, card_id);
                     if (event_1 && event_1.valid) {
                         this.board_view.setClickable([x, y], true);
+                        this.board_view.showCost([x, y], event_1.moneys[this.client.player_id]);
                     }
                 }
             }
@@ -3530,6 +3636,23 @@ var HtmlView = (function () {
                 return COLOR_PURPLE;
         }
     };
+    HtmlView.prototype.getDiceEffectsMessage = function (effects) {
+        var messages = [];
+        if (effects.num !== types_1.DiceNum.Any) {
+            messages.push(effects.num + "\u500B\u9650\u5B9A");
+        }
+        if (effects.delta !== 0) {
+            var unit = (effects.delta > 0) ? "+" : "";
+            messages.push("" + unit + effects.delta);
+        }
+        if (effects.even_odd !== types_1.DiceEvenOdd.Any) {
+            messages.push((effects.even_odd === types_1.DiceEvenOdd.Even) ? "偶数のみ" : "奇数のみ");
+        }
+        if (messages.length === 0) {
+            return "";
+        }
+        return "(" + messages.join(" ") + ")";
+    };
     HtmlView.prototype.getDiceDeltaMessage = function (delta) {
         if (delta === 0) {
             return "";
@@ -3617,6 +3740,7 @@ var HtmlView = (function () {
         this.drawBoard(new session_1.Session(-1));
     };
     HtmlView.prototype.drawBoard = function (session) {
+        this.board_view.clearEffects();
         var board = session.getBoard();
         for (var y = 0; y < board.row; ++y) {
             for (var x = 0; x < board.column; ++x) {
@@ -3635,6 +3759,7 @@ var HtmlView = (function () {
         }
     };
     HtmlView.prototype.drawDeckBoard = function () {
+        this.board_view.clearEffects();
         var board = this.deck_maker.board;
         for (var y_1 = 0; y_1 < board.row; ++y_1) {
             for (var x_1 = 0; x_1 < board.column; ++x_1) {
@@ -3656,7 +3781,6 @@ var HtmlView = (function () {
     };
     HtmlView.prototype.drawField = function (x, y, facility_id, facility, owner_id) {
         var field = document.getElementById("field_" + x + "_" + y);
-        this.board_view.setClickable([x, y], false);
         field.colSpan = 1;
         field.style.display = "";
         if (facility_id === -1) {
@@ -3672,6 +3796,9 @@ var HtmlView = (function () {
         // (ownder_id === -1) means a prebuild landmark.
         var owner_color = (owner_id === -1) ? COLOR_LANDMARK : this.getPlayerColor(owner_id);
         field.innerText = facility.getName();
+        if (!facility.is_open) {
+            field.innerText += "🚫";
+        }
         field.style.display = "";
         field.style.backgroundColor = owner_color;
         field.style.borderColor = this.getFacilityColor(facility);
@@ -3692,14 +3819,14 @@ var HtmlView = (function () {
             return true;
         }
         if (phase === session_1.Phase.CharacterCard) {
-            var delta = this.getDiceDeltaMessage(session.getDiceDelta());
-            message = name + " \u306E\u30AD\u30E3\u30E9\u30AB\u30FC\u30C9\u307E\u305F\u306F\u30B5\u30A4\u30B3\u30ED" + delta + "\u3067\u3059";
+            var effects = this.getDiceEffectsMessage(session.getDiceEffects());
+            message = name + " \u306E\u30AD\u30E3\u30E9\u30AB\u30FC\u30C9\u307E\u305F\u306F\u30B5\u30A4\u30B3\u30ED" + effects + "\u3067\u3059";
             this.message_view.drawMessage(message, color);
             return true;
         }
         if (phase === session_1.Phase.DiceRoll) {
-            var delta = this.getDiceDeltaMessage(session.getDiceDelta());
-            message = name + " \u306E\u30B5\u30A4\u30B3\u30ED" + delta + "\u3067\u3059";
+            var effects = this.getDiceEffectsMessage(session.getDiceEffects());
+            message = name + " \u306E\u30B5\u30A4\u30B3\u30ED" + effects + "\u3067\u3059";
             this.message_view.drawMessage(message, color);
             return true;
         }
@@ -3886,6 +4013,13 @@ var HtmlView = (function () {
             }
             return true;
         }
+        if (event.type === session_1.EventType.Open) {
+            var _a = this.prev_session.getPosition(event.card_id), x = _a[0], y = _a[1];
+            var facility = this.prev_session.getFacility(event.card_id);
+            facility.is_open = true;
+            var owner_id = this.prev_session.getOwnerId(event.card_id);
+            this.drawField(x, y, event.card_id, facility, owner_id);
+        }
         if (event.type === session_1.EventType.Build) {
             if (event.card_id === -1) {
                 var name_2 = this.session.getPlayer(event.player_id).name;
@@ -3894,7 +4028,7 @@ var HtmlView = (function () {
                 this.message_view.drawMessage(message, color);
                 return true;
             }
-            var _a = this.session.getPosition(event.card_id), x = _a[0], y = _a[1];
+            var _b = this.session.getPosition(event.card_id), x = _b[0], y = _b[1];
             var facility = this.session.getFacility(event.card_id);
             this.prev_session.getBoard().removeCards(x, y, facility.size);
             this.prev_session.getBoard().setCardId(x, y, event.card_id, facility.size);
@@ -3906,24 +4040,16 @@ var HtmlView = (function () {
                 _this.drawBoard(_this.prev_session);
             }, 1000);
         }
-        var money_motion = [
-            session_1.EventType.Blue,
-            session_1.EventType.Green,
-            session_1.EventType.Red,
-            session_1.EventType.Purple,
-            session_1.EventType.Build,
-        ];
-        if (money_motion.indexOf(event.type) !== -1) {
+        if (event.type === session_1.EventType.Build) {
             // Money motion
-            var _b = this.session.getPosition(event.card_id), x_3 = _b[0], y_2 = _b[1];
+            var _c = this.session.getPosition(event.card_id), x_3 = _c[0], y_2 = _c[1];
             var _loop_3 = function (pid) {
                 var money = event.moneys[pid];
                 if (money === 0) {
                     return "continue";
                 }
                 var delay = 0;
-                if ([session_1.EventType.Red, session_1.EventType.Purple, session_1.EventType.Build].indexOf(event.type) !== -1 &&
-                    money > 0) {
+                if (money > 0) {
                     delay = 1000;
                 }
                 window.setTimeout(function () {
@@ -3936,6 +4062,53 @@ var HtmlView = (function () {
             };
             for (var pid = 0; pid < event.moneys.length; pid++) {
                 _loop_3(pid);
+            }
+        }
+        var money_motion = [
+            session_1.EventType.Blue,
+            session_1.EventType.Green,
+            session_1.EventType.Red,
+            session_1.EventType.Purple,
+        ];
+        if (money_motion.indexOf(event.type) !== -1) {
+            // Money motion
+            var _d = this.session.getPosition(event.card_id), x_4 = _d[0], y_3 = _d[1];
+            var _loop_4 = function (pid) {
+                var money = event.moneys[pid];
+                if (money === 0) {
+                    return "continue";
+                }
+                var delay = 0;
+                if ([session_1.EventType.Red, session_1.EventType.Purple].indexOf(event.type) !== -1 &&
+                    money > 0) {
+                    delay = 1000;
+                }
+                window.setTimeout(function () {
+                    _this.drawMoneyMotion(money, pid, "field_" + x_4 + "_" + y_3);
+                    _this.board_view.setHighlight([x_4, y_3], COLOR_CLICKABLE);
+                    window.setTimeout(function () {
+                        _this.board_view.setHighlight([x_4, y_3], "transparent");
+                    }, 1000);
+                }, delay);
+            };
+            for (var pid = 0; pid < event.moneys.length; pid++) {
+                _loop_4(pid);
+            }
+            // For open and close.
+            var facility_2 = this.prev_session.getFacility(event.card_id);
+            if (facility_2.property["close"]) {
+                facility_2.is_open = false;
+                var owner_id_1 = this.prev_session.getOwnerId(event.card_id);
+                if ([session_1.EventType.Blue, session_1.EventType.Green].indexOf(event.type) !== -1) {
+                    window.setTimeout(function () {
+                        _this.drawField(x_4, y_3, event.card_id, facility_2, owner_id_1);
+                    }, 1000);
+                }
+                if ([session_1.EventType.Red, session_1.EventType.Purple].indexOf(event.type) !== -1) {
+                    window.setTimeout(function () {
+                        _this.drawField(x_4, y_3, event.card_id, facility_2, owner_id_1);
+                    }, 2000);
+                }
             }
         }
         if (event.type === session_1.EventType.Interaction) {
@@ -4031,7 +4204,7 @@ var HtmlView = (function () {
             return;
         }
         var timeout = 0;
-        var _loop_4 = function (card_id) {
+        var _loop_5 = function (card_id) {
             window.setTimeout(function () {
                 var data_id = _this.session.getCardDataId(card_id);
                 _this.cards_views[player_id].addCard(data_id, card_id, "player_" + player_id);
@@ -4040,7 +4213,7 @@ var HtmlView = (function () {
         };
         for (var _i = 0, card_ids_1 = card_ids; _i < card_ids_1.length; _i++) {
             var card_id = card_ids_1[_i];
-            _loop_4(card_id);
+            _loop_5(card_id);
         }
     };
     HtmlView.prototype.effectMoneyMotion = function (element_from, element_to, money) {
@@ -4053,7 +4226,7 @@ exports.HtmlView = HtmlView;
 
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4071,6 +4244,7 @@ var __extends = (this && this.__extends) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 var facility_1 = __webpack_require__(0);
 var session_1 = __webpack_require__(2);
+var types_1 = __webpack_require__(3);
 // TODO: Move it to a new file for util.
 var COLOR_FIELD = "#FFE082";
 var COLOR_LANDMARK = "#B0BEC5";
@@ -4792,14 +4966,17 @@ var HtmlBoardView = (function (_super) {
     HtmlBoardView.prototype.onClick = function (x, y) {
         this.callback(x, y);
     };
-    HtmlBoardView.prototype.redraw = function () {
-        this.clickable_fields.resetAll();
+    HtmlBoardView.prototype.clearEffects = function () {
+        this.clickable_fields.reset();
     };
     HtmlBoardView.prototype.setClickable = function (position, is_clickable) {
         this.clickable_fields.setClickable(position, is_clickable);
     };
     HtmlBoardView.prototype.setHighlight = function (position, color) {
         this.clickable_fields.setHighlight(position, color);
+    };
+    HtmlBoardView.prototype.showCost = function (position, cost) {
+        this.clickable_fields.showCost(position, cost);
     };
     HtmlBoardView.prototype.animateDiceResult = function (result, color) {
         this.clickable_fields.animateDiceResult(result, color);
@@ -4880,11 +5057,12 @@ var HtmlCharCardButtonView = (function (_super) {
         return session.isCharacter(cards[cards.length - 1]);
     };
     HtmlCharCardButtonView.prototype.draw = function (session, player_id) {
-        this.show();
         if (this.hasCharacterCard(session, player_id)) {
+            this.show();
             this.element.classList.remove("inactive");
         }
         else {
+            // TODO: show it but keep inactive.
             this.element.classList.add("inactive");
         }
     };
@@ -4896,6 +5074,7 @@ var HtmlButtonsView = (function (_super) {
     function HtmlButtonsView(element_id, dice_widget) {
         var _this = _super.call(this, document.getElementById(element_id)) || this;
         _this.element_id = element_id;
+        _this.dice_num = types_1.DiceNum.Any;
         _this.dice1 = new HtmlButtonView(element_id + "_dice1");
         var dice1_1 = dice_widget.clone();
         dice1_1.element.id = "buttons_dice1_1";
@@ -4918,19 +5097,34 @@ var HtmlButtonsView = (function (_super) {
         this.end_turn.reset();
         _super.prototype.reset.call(this);
     };
+    HtmlButtonsView.prototype.hide = function () {
+        _super.prototype.hide.call(this);
+        this.char_card.reset(); // is_open -> false.
+    };
+    HtmlButtonsView.prototype.hideDices = function () {
+        this.dice1.hide();
+        this.dice2.hide();
+    };
+    HtmlButtonsView.prototype.showDices = function () {
+        if (this.dice_num !== types_1.DiceNum.Two) {
+            this.dice1.show();
+        }
+        if (this.dice_num !== types_1.DiceNum.One) {
+            this.dice2.show();
+        }
+    };
     HtmlButtonsView.prototype.draw = function (session, player_id) {
         if (session.getCurrentPlayerId() !== player_id) {
             this.hide();
             return;
         }
-        this.dice1.hide();
-        this.dice2.hide();
+        this.dice_num = session.getDiceEffects().num;
+        this.hideDices();
         this.char_card.hide();
         this.end_turn.hide();
         var phase = session.getPhase();
         if (phase === session_1.Phase.CharacterCard || phase === session_1.Phase.DiceRoll) {
-            this.dice1.show();
-            this.dice2.show();
+            this.showDices();
         }
         if (phase === session_1.Phase.CharacterCard) {
             this.char_card.draw(session, player_id);
@@ -4950,6 +5144,7 @@ var HtmlClickableFieldView = (function (_super) {
     }
     HtmlClickableFieldView.prototype.reset = function () {
         this.element.style.borderColor = "transparent";
+        this.element.innerText = "";
     };
     HtmlClickableFieldView.prototype.setClickable = function (is_clickable) {
         // TODO: Use class of "clickable".
@@ -4957,6 +5152,9 @@ var HtmlClickableFieldView = (function (_super) {
     };
     HtmlClickableFieldView.prototype.setColor = function (color) {
         this.element.style.borderColor = color;
+    };
+    HtmlClickableFieldView.prototype.showCost = function (cost) {
+        this.element.innerText = String(cost);
     };
     return HtmlClickableFieldView;
 }(HtmlViewObject));
@@ -4976,7 +5174,7 @@ var HtmlClickableFieldsView = (function (_super) {
         }
         return _this;
     }
-    HtmlClickableFieldsView.prototype.resetAll = function () {
+    HtmlClickableFieldsView.prototype.reset = function () {
         for (var x = 0; x < this.column; ++x) {
             for (var y = 0; y < this.row; ++y) {
                 this.fields[x][y].reset();
@@ -4999,6 +5197,10 @@ var HtmlClickableFieldsView = (function (_super) {
     HtmlClickableFieldsView.prototype.setHighlight = function (_a, color) {
         var x = _a[0], y = _a[1];
         this.fields[x][y].setColor(color);
+    };
+    HtmlClickableFieldsView.prototype.showCost = function (_a, cost) {
+        var x = _a[0], y = _a[1];
+        this.fields[x][y].showCost(cost);
     };
     HtmlClickableFieldsView.prototype.animateDiceResult = function (pip, color) {
         var _this = this;
@@ -5099,14 +5301,14 @@ exports.HtmlChatButtonView = HtmlChatButtonView;
 
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var standalone_connection_1 = __webpack_require__(8);
-var saikoro_1 = __webpack_require__(7);
+var standalone_connection_1 = __webpack_require__(9);
+var saikoro_1 = __webpack_require__(8);
 var delay = 0; // msec
 var connection = new standalone_connection_1.StandaloneConnection(delay);
 var client = new saikoro_1.WebClient(connection);
@@ -5114,7 +5316,7 @@ document.addEventListener("DOMContentLoaded", function () { client.initBoard(); 
 
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5122,9 +5324,10 @@ document.addEventListener("DOMContentLoaded", function () { client.initBoard(); 
 Object.defineProperty(exports, "__esModule", { value: true });
 var session_1 = __webpack_require__(2);
 var facility_1 = __webpack_require__(0);
-var auto_play_1 = __webpack_require__(9);
+var auto_play_1 = __webpack_require__(10);
 var protocol_1 = __webpack_require__(1);
-var storage_1 = __webpack_require__(5);
+var storage_1 = __webpack_require__(7);
+var Utils = __webpack_require__(4);
 var MatchedData = (function () {
     function MatchedData(matching_id, session_id, player_id) {
         if (matching_id === void 0) { matching_id = ""; }
@@ -5373,29 +5576,52 @@ var SessionHandler = (function () {
     };
     SessionHandler.prototype.addNewPlayer = function (session, user_id, name, deck, is_auto) {
         var player_id = session.addPlayer(user_id, name, 1200, 250, is_auto);
-        var num_facilities = 0;
-        var num_chars = 0;
-        deck = deck ? deck : [];
+        // # of facility cards should be >= 10.
+        // # of character cards should be <= 5.
+        var num_facilities = 10;
+        var num_chars = 5;
+        var random_deck = (deck == null || deck.length === 0);
+        if (random_deck) {
+            num_facilities = 12;
+            deck = [];
+        }
+        var added_chars = [];
         for (var _i = 0, deck_1 = deck; _i < deck_1.length; _i++) {
             var data_id = deck_1[_i];
             if (facility_1.CardData.isFacility(data_id)) {
                 session.addFacility(player_id, data_id);
-                num_facilities++;
+                num_facilities--;
                 continue;
             }
             if (facility_1.CardData.isCharacter(data_id)) {
-                if (num_chars <= 5) {
+                if (added_chars.indexOf(data_id) !== -1) {
+                    continue;
+                }
+                if (num_chars > 0) {
                     session.addCharacter(player_id, data_id);
-                    num_chars++;
+                    added_chars.push(data_id);
+                    num_chars--;
                 }
                 continue;
             }
         }
-        for (var i = num_facilities; i < 10; ++i) {
+        for (var i = 0; i < num_facilities; ++i) {
             session.addFacility(player_id, facility_1.CardData.getRandomFacilityDataId());
         }
-        for (var i = num_chars; i < 5; ++i) {
-            session.addCharacter(player_id, facility_1.CardData.getRandomCharacterDataId());
+        if (random_deck && num_chars > 0) {
+            var all_chars = Utils.shuffle(facility_1.CardData.getAvailableCharacters());
+            for (var _a = 0, all_chars_1 = all_chars; _a < all_chars_1.length; _a++) {
+                var data_id = all_chars_1[_a];
+                if (added_chars.indexOf(data_id) !== -1) {
+                    continue;
+                }
+                session.addCharacter(player_id, data_id);
+                added_chars.push(data_id);
+                num_chars--;
+                if (num_chars === 0) {
+                    break;
+                }
+            }
         }
         return player_id;
     };
