@@ -1,3 +1,5 @@
+import { DiceEvenOdd, DiceNum, DiceEffects } from "./types";
+
 export class DiceResult {
     constructor(
         readonly dice1: number,
@@ -41,43 +43,36 @@ export class DiceResult {
     }
 }
 
-export enum DiceEvenOdd {
-    None,
-    Even,
-    Odd,
-}
-
 export class Dice {
-    static roll(dice_num: number, aim: number = 0, delta: number = 0,
-                even_odd: DiceEvenOdd = DiceEvenOdd.None): DiceResult {
+    static roll(dice_num: number, aim: number = 0, effects: DiceEffects): DiceResult {
         let dice2_factor: number = (dice_num === 2) ? 1 : 0;
 
-        let [dice1, dice2]: [number, number] = Dice.rollDices(dice_num, even_odd);
+        let [dice1, dice2]: [number, number] = Dice.rollDices(dice_num, effects);
         if (dice1 + dice2 === aim) {
             // Lucky, but not miracle lucky.
-            return new DiceResult(dice1, dice2, delta, false);
+            return new DiceResult(dice1, dice2, effects.delta, false);
         }
 
         // Try again for miracle.
-        let [miracle_dice1, miracle_dice2]: [number, number] = Dice.rollDices(dice_num, even_odd);
+        let [miracle_dice1, miracle_dice2]: [number, number] = Dice.rollDices(dice_num, effects);
         if (miracle_dice1 + miracle_dice2 === aim) {
-            return new DiceResult(dice1, dice2, delta, true, miracle_dice1, miracle_dice2);
+            return new DiceResult(dice1, dice2, effects.delta, true, miracle_dice1, miracle_dice2);
         }
-        return new DiceResult(dice1, dice2, delta, false);
+        return new DiceResult(dice1, dice2, effects.delta, false);
     }
 
-    static rollDices(dice_num: number, even_odd: DiceEvenOdd): [number, number] {
+    static rollDices(dice_num: number, effects: DiceEffects): [number, number] {
         let dice2_factor: number = (dice_num === 2) ? 1 : 0;
 
         let dice1: number = Dice.roll1();
         let dice2: number = Dice.roll1() * dice2_factor;
-        if (even_odd === DiceEvenOdd.Even) {
+        if (effects.even_odd === DiceEvenOdd.Even) {
             while ((dice1 + dice2) % 2 !== 0) {
                 dice1 = Dice.roll1();
                 dice2 = Dice.roll1() * dice2_factor;
             }
         }
-        if (even_odd === DiceEvenOdd.Odd) {
+        if (effects.even_odd === DiceEvenOdd.Odd) {
             while ((dice1 + dice2) % 2 !== 1) {
                 dice1 = Dice.roll1();
                 dice2 = Dice.roll1() * dice2_factor;

@@ -1,6 +1,8 @@
 export enum CharacterType {
     None,
     DiceDelta,  // Add N to dice results.
+    DiceOne,    // Force the number of dices to one only.
+    DiceTwo,    // Force the number of dices to two only.
     DiceEven,   // Dice result will be even.
     DiceOdd,    // Dice result will be odd.
     DrawCards,  // Draw cards from talon.

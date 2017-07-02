@@ -1,10 +1,11 @@
-import { Dice, DiceResult, DiceEvenOdd } from "./dice";
+import { Dice, DiceResult } from "./dice";
 import { Player, Board, PlayerId } from "./board";
 import { CardId, CardDataId, FacilityType, Facility,
          Character, CharacterData, CharacterType } from "./facility";
 import { shuffle } from "./utils";
 import { CardManager, EffectManager, PlayerCards } from "./card_manager";
 import * as Query from "./query";
+import { DiceEvenOdd, DiceNum, DiceEffects } from "./types";
 
 export enum Phase {
     StartGame,
@@ -340,14 +341,15 @@ export class Session {
 
     public processDiceCommand(query: Query.DiceQuery): boolean {
         const player_id: PlayerId = query.player_id;
-        const dice_num: number = query.dice_num;
         const aim: number = query.aim;
         if (!this.isValid(player_id, Phase.DiceRoll)) {
             return false;
         }
         const delta: number = this.effect_manager.getDiceDelta();
         const types: CharacterType[] = this.effect_manager.getCharacterTypes();
-        let even_odd: DiceEvenOdd = DiceEvenOdd.None;
+
+        // Even or odd.
+        let even_odd: DiceEvenOdd = DiceEvenOdd.Any;
         if (types.indexOf(CharacterType.DiceEven) !== -1) {
             even_odd = DiceEvenOdd.Even;
         }
@@ -355,7 +357,24 @@ export class Session {
             even_odd = DiceEvenOdd.Odd;
         }
 
-        this.dice_result = Dice.roll(dice_num, aim, delta, even_odd);
+        // Num of dices.
+        let dice_num: number = query.dice_num;
+        const dice_one_index = types.indexOf(CharacterType.DiceOne);
+        const dice_two_index = types.indexOf(CharacterType.DiceTwo);
+        if (dice_one_index !== -1) {
+            dice_num = (dice_two_index > dice_one_index) ? 2 : 1;
+        }
+        else {
+            dice_num = (dice_two_index === -1) ? dice_num : 2;
+        }
+
+        let effects: DiceEffects = {
+            delta: delta,
+            even_odd: even_odd,
+            num: DiceNum.Any,
+        };
+
+        this.dice_result = Dice.roll(dice_num, aim, effects);
         if (types.indexOf(CharacterType.DiceEven))
 
         // TODO: Move this to other place?
