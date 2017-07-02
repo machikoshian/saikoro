@@ -325,7 +325,7 @@ export class HtmlView {
             // Show components for game.
             this.message_view.show();
             this.board_view.show();
-            this.board_view.redraw();
+            this.board_view.clearEffects();
             if (this.session != null) {
                 this.drawSession(this.session);
             }
@@ -510,6 +510,7 @@ export class HtmlView {
                         this.session.getEventBuildFacility(this.client.player_id, x, y, card_id);
                     if (event && event.valid) {
                         this.board_view.setClickable([x, y], true);
+                        this.board_view.showCost([x, y], event.moneys[this.client.player_id]);
                     }
                 }
             }
@@ -798,6 +799,7 @@ export class HtmlView {
     }
 
     public drawBoard(session: Session): void {  // session may take a different value.
+        this.board_view.clearEffects();
         const board: Board = session.getBoard();
         for (let y: number = 0; y < board.row; ++y) {
             for (let x: number = 0; x < board.column; ++x) {
@@ -819,6 +821,7 @@ export class HtmlView {
     }
 
     public drawDeckBoard(): void {
+        this.board_view.clearEffects();
         const board: Board = this.deck_maker.board;
         for (let y: number = 0; y < board.row; ++y) {
             for (let x: number = 0; x < board.column; ++x) {
@@ -844,7 +847,6 @@ export class HtmlView {
     private drawField(x: number, y: number,
                       facility_id: CardId, facility: Facility, owner_id: PlayerId): void {
         let field: HTMLElement = document.getElementById(`field_${x}_${y}`);
-        this.board_view.setClickable([x, y], false);
 
         (<HTMLTableCellElement>field).colSpan = 1;
         field.style.display = "";

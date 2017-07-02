@@ -774,8 +774,8 @@ export class HtmlBoardView extends HtmlViewObject {
         this.callback(x, y);
     }
 
-    public redraw(): void {  // TODO: Need refactoring?
-        this.clickable_fields.resetAll();
+    public clearEffects(): void {
+        this.clickable_fields.reset();
     }
 
     public setClickable(position: [number, number], is_clickable: boolean): void {
@@ -784,6 +784,10 @@ export class HtmlBoardView extends HtmlViewObject {
 
     public setHighlight(position: [number, number], color: string): void {
         this.clickable_fields.setHighlight(position, color);
+    }
+
+    public showCost(position: [number, number], cost: number): void {
+        this.clickable_fields.showCost(position, cost);
     }
 
     public animateDiceResult(result: number, color: string): void {
@@ -964,6 +968,7 @@ export class HtmlClickableFieldView extends HtmlViewObject {
 
     public reset(): void {
         this.element.style.borderColor = "transparent";
+        this.element.innerText = "";
     }
 
     public setClickable(is_clickable: boolean): void {
@@ -973,6 +978,10 @@ export class HtmlClickableFieldView extends HtmlViewObject {
 
     public setColor(color: string): void {
         this.element.style.borderColor = color;
+    }
+
+    public showCost(cost: number): void {
+        this.element.innerText = String(cost);
     }
 }
 
@@ -994,7 +1003,7 @@ export class HtmlClickableFieldsView extends HtmlViewObject {
         }
     }
 
-    public resetAll(): void {
+    public reset(): void {
         for (let x: number = 0; x < this.column; ++x) {
             for (let y: number = 0; y < this.row; ++y) {
                 this.fields[x][y].reset();
@@ -1017,6 +1026,10 @@ export class HtmlClickableFieldsView extends HtmlViewObject {
 
     public setHighlight([x, y]: [number, number], color: string): void {
         this.fields[x][y].setColor(color);
+    }
+
+    public showCost([x, y]: [number, number], cost: number): void {
+        this.fields[x][y].showCost(cost);
     }
 
     public animateDiceResult(pip: number, color: string): void {
