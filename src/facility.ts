@@ -8,6 +8,7 @@ export enum CharacterType {
     DrawCards,  // Draw cards from talon.
     MoveMoney,  // Move money from other players.
     SalaryFactor,  // Multiply the salary.
+    Close,
 }
 
 export class CharacterData {
@@ -18,6 +19,14 @@ export class CharacterData {
         readonly round: number,
         readonly property: {},
     ) {}
+}
+
+export enum FacilityType {
+    Gray,
+    Blue,
+    Green,
+    Red,
+    Purple,
 }
 
 const CHARACTER_DATA_BASE: number = 1000;
@@ -34,17 +43,13 @@ const CHARACTER_DATA: CharacterData[] = [
     new CharacterData(1009, "黒奴", CharacterType.DiceOdd, 0, {}),  // odd
     new CharacterData(1010, "鉄道員", CharacterType.DiceOne, 2, {}),
     new CharacterData(1011, "CA",    CharacterType.DiceTwo, 2, {}),
+    new CharacterData(1012, "気象予報士", CharacterType.Close, 0, {"type": FacilityType.Blue}),
+    new CharacterData(1013, "消防士", CharacterType.Close, 0, {"type": FacilityType.Green}),
+    new CharacterData(1014, "保健所員", CharacterType.Close, 0, {"type": FacilityType.Red}),
+    new CharacterData(1015, "警察官", CharacterType.Close, 0, {"type": FacilityType.Purple}),
 ];
 
 export type CardDataId = number;
-
-export enum FacilityType {
-    Gray,
-    Blue,
-    Green,
-    Red,
-    Purple,
-}
 
 export class FacilityData {
     constructor(
@@ -184,6 +189,10 @@ export class Facility {
         return facility;
     }
 
+    public reset(): void {
+        this.is_open = true;
+    }
+
     public getName(): string {
         return this.name;
     }
@@ -308,6 +317,18 @@ export class Character {
             case CharacterType.MoveMoney: {
                 const money: number = this.property["money"];
                 return `選んだプレイヤーから${money}コインを奪う`;
+            }
+            case CharacterType.Close: {
+                switch (this.property["type"]) {
+                    case FacilityType.Blue:
+                        return "青施設をすべて休業にする";
+                    case FacilityType.Green:
+                        return "緑施設をすべて休業にする";
+                    case FacilityType.Red:
+                        return "赤施設をすべて休業にする";
+                    case FacilityType.Purple:
+                        return "紫施設をすべて休業にする";
+                }
             }
         }
         return "";

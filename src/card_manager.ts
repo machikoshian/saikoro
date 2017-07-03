@@ -3,11 +3,16 @@ import { CardId, CardDataId, FacilityType, Facility,
          Character, CharacterData, CharacterType } from "./facility";
 import { DiceEvenOdd, DiceNum, DiceEffects } from "./types";
 
+export enum CardState {
+    None,
+    Talon,    // 山札
+    Hand,     // 手札
+    Field,    // 建設
+    Discard,  // 捨て札
+}
+
 export class PlayerCards {
-    private talon: CardId[];    // 山札
-    private hand: CardId[];     // 手札
-    private field: CardId[];    // 使用中 (建設中)
-    private discard: CardId[];  // 捨て札
+    private cards: { [state: number]: CardId[] } = {};  // CardState -> CardId[]
     readonly max_hand: number = 10;
 
     constructor(
@@ -15,19 +20,19 @@ export class PlayerCards {
         hand: CardId[] = [],
         field: CardId[] = [],
         discard: CardId[] = []) {
-        this.talon = talon;
-        this.hand = hand;
-        this.field = field;
-        this.discard = discard;
+        this.cards[CardState.Talon] = talon;
+        this.cards[CardState.Hand] = hand;
+        this.cards[CardState.Field] = field;
+        this.cards[CardState.Discard] = discard;
     }
 
     public toJSON(): Object {
         return {
             class_name: "PlayerCards",
-            talon: this.talon,
-            hand: this.hand,
-            field: this.field,
-            discard: this.discard,
+            talon: this.cards[CardState.Talon],
+            hand: this.cards[CardState.Hand],
+            field: this.cards[CardState.Field],
+            discard: this.cards[CardState.Discard],
         }
     }
 
@@ -36,7 +41,10 @@ export class PlayerCards {
     }
 
     public getSize(): number {
-        return this.talon.length + this.hand.length + this.field.length + this.discard.length;
+        return (this.cards[CardState.Talon].length +
+                this.cards[CardState.Hand].length +
+                this.cards[CardState.Field].length +
+                this.cards[CardState.Discard].length);
     }
 
     private getIndex(card_id: CardId, facility_array: CardId[]): number {
@@ -78,68 +86,77 @@ export class PlayerCards {
             console.warn("card_id < 0.");
             return false;
         }
-        this.talon.push(card_id);
+        this.cards[CardState.Talon].push(card_id);
         return true;
     }
 
     public getTalon(): CardId[] {
-        return this.talon;
+        return this.cards[CardState.Talon];
     }
 
     public getHand(): CardId[] {
-        return this.hand;
+        return this.cards[CardState.Hand];
     }
 
     // Move a random facility from Talon to Hand.
     public dealToHand(): CardId {
-        if (this.talon.length === 0 || this.hand.length === this.max_hand) {
+        if (this.cards[CardState.Talon].length === 0 || this.cards[CardState.Hand].length === this.max_hand) {
             return -1;
         }
-        let random_index: number = Math.floor(Math.random() * this.talon.length);
-        let card_id: CardId = this.talon[random_index];
+        let random_index: number = Math.floor(Math.random() * this.cards[CardState.Talon].length);
+        let card_id: CardId = this.cards[CardState.Talon][random_index];
         this.moveTalonToHand(card_id);
         return card_id;
     }
 
     public getTalonSize(): number {
-        return this.talon.length;
+        return this.cards[CardState.Talon].length;
     }
 
     public getHandSize(): number {
-        return this.hand.length;
+        return this.cards[CardState.Hand].length;
     }
 
     public moveTalonToHand(card_id: CardId): boolean {
-        if (this.hand.length === this.max_hand) {
+        if (this.cards[CardState.Hand].length === this.max_hand) {
             return false;
         }
-        return this.moveCardId(card_id, this.talon, this.hand);
+        return this.moveCardId(card_id, this.cards[CardState.Talon], this.cards[CardState.Hand]);
     }
 
     public isInHand(card_id: CardId): boolean {
-        let index: number = this.getIndex(card_id, this.hand);
+        return this.isInState(card_id, CardState.Hand);
+    }
+
+    public isInState(card_id: CardId, state: CardState): boolean {
+        const index: number = this.getIndex(card_id, this.cards[state]);
         return (index >= 0);
     }
 
     // Used for initial build.
     public moveTalonToField(card_id: CardId): boolean {
-        return this.moveCardId(card_id, this.talon, this.field);
+        return this.moveCardId(card_id, this.cards[CardState.Talon], this.cards[CardState.Field]);
     }
 
     public moveHandToField(card_id: CardId): boolean {
-        return this.moveCardId(card_id, this.hand, this.field);
+        return this.moveCardId(card_id, this.cards[CardState.Hand], this.cards[CardState.Field]);
     }
 
     public moveHandToDiscard(card_id: CardId): boolean {
-        return this.moveCardId(card_id, this.hand, this.discard);
+        return this.moveCardId(card_id, this.cards[CardState.Hand], this.cards[CardState.Discard]);
     }
 
     public moveFieldToDiscard(card_id: CardId): boolean {
-        return this.moveCardId(card_id, this.field, this.discard);
+        return this.moveCardId(card_id, this.cards[CardState.Field], this.cards[CardState.Discard]);
     }
 }
 
 type LandmarkInfo = [CardId, PlayerId];
+
+export interface CardManagerQuery {
+    facility_type?: FacilityType,
+    state?: CardState,
+}
 
 export class CardManager {
     private facilities: { [key: number]: Facility; };
@@ -201,6 +218,24 @@ export class CardManager {
             json.player_cards_list.map(cards => { return PlayerCards.fromJSON(cards); }),
             json.landmarks,
         );
+    }
+
+    public getCards(query: CardManagerQuery): CardId[] {
+        let results: CardId[] = [];
+        const card_ids: CardId[] = Object.keys(this.facilities).map((key) => { return Number(key); });
+
+        for (let card_id of card_ids) {
+            if (query.facility_type != null &&
+                this.facilities[card_id].type !== query.facility_type) {
+                continue;
+            }
+            if (query.state != null &&
+                !this.getPlayerCardsFromCardId(card_id).isInState(card_id, query.state)) {
+                continue;
+            }
+            results.push(card_id);
+        }
+        return results;
     }
 
     public addFacility(player_id: PlayerId, facility_data_id: CardDataId): boolean {
@@ -356,6 +391,7 @@ export class CardManager {
             console.warn("card_id < 0.");
             return false;
         }
+        this.facilities[card_id].reset();
         return this.getPlayerCardsFromCardId(card_id).moveFieldToDiscard(card_id);
     }
 

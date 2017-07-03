@@ -252,8 +252,12 @@ table.player { width: 160px; }
 
 .card_area {
     width: 650px;
+    height: 150px;
+}
+#deck_cards {
     height: 300px;
 }
+
 table.card {
     display: inline-block;
     width: 98px; height: 140px;

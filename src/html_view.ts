@@ -1078,6 +1078,12 @@ export class HtmlView {
                 }
                 handled = true;
             }
+            if (type === CharacterType.Close) {
+                for (let card_id of event.target_card_ids) {
+                    this.prev_session.getFacility(card_id).is_open = false;
+                }
+                this.drawBoard(this.prev_session);
+            }
             return handled;
         }
 

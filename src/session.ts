@@ -3,7 +3,7 @@ import { Player, Board, PlayerId } from "./board";
 import { CardId, CardDataId, FacilityType, Facility,
          Character, CharacterData, CharacterType } from "./facility";
 import { shuffle } from "./utils";
-import { CardManager, EffectManager, PlayerCards } from "./card_manager";
+import { CardState, CardManager, CardManagerQuery, EffectManager, PlayerCards } from "./card_manager";
 import * as Query from "./query";
 import { DiceEvenOdd, DiceNum, DiceEffects } from "./types";
 
@@ -775,6 +775,21 @@ export class Session {
             case CharacterType.DiceEven:
             case CharacterType.DiceOdd: {
                 this.effect_manager.addCard(character.data_id, this.round, this.turn);
+                break;
+            }
+            case CharacterType.Close: {
+                const query: CardManagerQuery = {
+                    facility_type: character.property["type"],
+                    state: CardState.Field,
+                };
+                const card_ids: CardId[] = this.card_manager.getCards(query);
+                for (let card_id of card_ids) {
+                    let facility: Facility = this.card_manager.getFacility(card_id);
+                    if (facility.is_open) {
+                        facility.is_open = false;
+                        event.target_card_ids.push(card_id);
+                    }
+                }
                 break;
             }
         }
