@@ -435,6 +435,7 @@ export class HtmlDeckCardsView extends HtmlViewObject {
     }
 
     public resetPosition(): void {
+        const cols: number = 8;
         const num_cards: number = this.data_ids.length;
         if (num_cards === 0) {
             return;
@@ -443,11 +444,11 @@ export class HtmlDeckCardsView extends HtmlViewObject {
         const [base_x, base_y]: [number ,number] = this.getPosition();
         const base_width: number = this.width();
         const card_width: number = this.getCardView(this.data_ids[0]).width();
-        let x_delta: number = (base_width - card_width) / (num_cards - 1);
+        let x_delta: number = (base_width - card_width) / (Math.min(num_cards, cols) - 1);
         x_delta = Math.min(x_delta, card_width);
         for (let i: number = 0; i < num_cards; ++i) {
             let card_view: HtmlCardDataView = this.getCardView(this.data_ids[i]);
-            card_view.moveTo([base_x + x_delta * i, base_y]);
+            card_view.moveTo([base_x + x_delta * (i % cols), base_y + 130 * Math.floor(i / cols)]);
         }
     }
 }
