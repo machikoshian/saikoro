@@ -1,5 +1,5 @@
 import { Player, Board, PlayerId } from "./board";
-import { CardId, CardDataId, FacilityType, Facility,
+import { CardId, CardDataId, CardType, FacilityType, Facility,
          Character, CharacterData, CharacterType } from "./facility";
 import { DiceEvenOdd, DiceNum, DiceEffects } from "./types";
 
@@ -153,9 +153,12 @@ export class PlayerCards {
 
 type LandmarkInfo = [CardId, PlayerId];
 
+// TODO: Move this to other file.
 export interface CardManagerQuery {
+    card_type?: CardType,
     facility_type?: FacilityType,
     state?: CardState,
+    is_open?: boolean,  // Used in Session.
 }
 
 export class CardManager {
@@ -220,22 +223,40 @@ export class CardManager {
         );
     }
 
-    public getCards(query: CardManagerQuery): CardId[] {
+    public queryCards(query: CardManagerQuery): CardId[] {
         let results: CardId[] = [];
         const card_ids: CardId[] = Object.keys(this.facilities).map((key) => { return Number(key); });
 
         for (let card_id of card_ids) {
+            if (query.card_type != null &&
+                this.getCardType(card_id) !== query.card_type) {
+                continue;
+            }
             if (query.facility_type != null &&
                 this.facilities[card_id].type !== query.facility_type) {
                 continue;
             }
             if (query.state != null &&
+                this.isFacility(card_id) &&
                 !this.getPlayerCardsFromCardId(card_id).isInState(card_id, query.state)) {
                 continue;
             }
             results.push(card_id);
         }
         return results;
+    }
+
+    public getCardType(card_id: CardId): CardType {
+        if (this.isFacility(card_id)) {
+            return CardType.Facility;
+        }
+        if (this.isLandmark(card_id)) {
+            return CardType.Landmark;
+        }
+        if (this.isCharacter(card_id)) {
+            return CardType.Character;
+        }
+        return CardType.None;
     }
 
     public addFacility(player_id: PlayerId, facility_data_id: CardDataId): boolean {

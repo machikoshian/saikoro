@@ -1,6 +1,6 @@
 import { Dice, DiceResult } from "./dice";
 import { Player, Board, PlayerId } from "./board";
-import { CardId, CardDataId, FacilityType, Facility,
+import { CardId, CardDataId, CardType, FacilityType, Facility,
          Character, CharacterData, CharacterType } from "./facility";
 import { shuffle } from "./utils";
 import { CardState, CardManager, CardManagerQuery, EffectManager, PlayerCards } from "./card_manager";
@@ -658,6 +658,19 @@ export class Session {
         return positions;
     }
 
+    public queryCards(query: CardManagerQuery): CardId[] {
+        const card_ids: CardId[] = this.card_manager.queryCards(query);
+        let results: CardId[] = [];
+        for (let card_id of card_ids) {
+            let facility: Facility = this.card_manager.getFacility(card_id);
+            if (query.is_open && query.is_open !== facility.is_open) {
+                continue;
+            }
+            results.push(card_id);
+        }
+        return results;
+    }
+
     // Build a facility in the player's talon.
     // No overwrite an existing facility or no exceed the cost of the player's money.
     public buildInitialFacility(player_id: PlayerId) {
@@ -779,16 +792,30 @@ export class Session {
             }
             case CharacterType.Close: {
                 const query: CardManagerQuery = {
+                    card_type: CardType.Facility,
                     facility_type: character.property["type"],
                     state: CardState.Field,
+                    is_open: true,
                 };
-                const card_ids: CardId[] = this.card_manager.getCards(query);
+                const card_ids: CardId[] = this.queryCards(query);
                 for (let card_id of card_ids) {
                     let facility: Facility = this.card_manager.getFacility(card_id);
-                    if (facility.is_open) {
-                        facility.is_open = false;
-                        event.target_card_ids.push(card_id);
-                    }
+                    facility.is_open = false;
+                    event.target_card_ids.push(card_id);
+                }
+                break;
+            }
+            case CharacterType.Open: {
+                const query: CardManagerQuery = {
+                    card_type: CardType.Facility,
+                    state: CardState.Field,
+                    is_open: false,
+                };
+                const card_ids: CardId[] = this.queryCards(query);
+                for (let card_id of card_ids) {
+                    let facility: Facility = this.card_manager.getFacility(card_id);
+                    facility.is_open = true;
+                    event.target_card_ids.push(card_id);
                 }
                 break;
             }

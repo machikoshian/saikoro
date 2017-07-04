@@ -9,6 +9,7 @@ export enum CharacterType {
     MoveMoney,  // Move money from other players.
     SalaryFactor,  // Multiply the salary.
     Close,
+    Open,
 }
 
 export class CharacterData {
@@ -19,6 +20,13 @@ export class CharacterData {
         readonly round: number,
         readonly property: {},
     ) {}
+}
+
+export enum CardType {
+    None,
+    Facility,
+    Landmark,
+    Character,
 }
 
 export enum FacilityType {
@@ -47,6 +55,7 @@ const CHARACTER_DATA: CharacterData[] = [
     new CharacterData(1013, "消防士", CharacterType.Close, 0, {"type": FacilityType.Green}),
     new CharacterData(1014, "保健所員", CharacterType.Close, 0, {"type": FacilityType.Red}),
     new CharacterData(1015, "警察官", CharacterType.Close, 0, {"type": FacilityType.Purple}),
+    new CharacterData(1016, "医者", CharacterType.Open, 0, {}),
 ];
 
 export type CardDataId = number;
@@ -329,6 +338,9 @@ export class Character {
                     case FacilityType.Purple:
                         return "紫施設をすべて休業にする";
                 }
+            }
+            case CharacterType.Open: {
+                return "全施設の休業を解除する";
             }
         }
         return "";
