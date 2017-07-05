@@ -116,6 +116,13 @@ export class HtmlView {
 
     private reset(): void {
         this.client.reset();
+        this.resetGame();
+        this.client.startCheckLive((response: string) => {
+            this.onLiveSessionsUpdated(response);
+        });
+    }
+
+    private resetGame(): void {
         this.session = null;
         this.prev_session = null;
         this.prev_step = -1;
@@ -126,10 +133,6 @@ export class HtmlView {
             this.dice_roll_view = null;
         }
         this.event_queue.reset();
-
-        this.client.startCheckLive((response: string) => {
-            this.onLiveSessionsUpdated(response);
-        });
     }
 
     private resetViews(): void {
@@ -137,6 +140,11 @@ export class HtmlView {
         for (let card_view of this.cards_views) {
             card_view.reset();
         }
+    }
+
+    public matched(): void {
+        this.resetGame();
+        this.switchScene(Scene.Matching);
     }
 
     public initView(row: number = 5, column: number = 12): void {

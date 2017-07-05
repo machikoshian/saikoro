@@ -38,16 +38,17 @@ export class WebClient extends Client {
     public matching(query: Query.MatchingQuery): void {
         query.command = "matching";
         query.user_id = this.user_id;
-        this.mode = query["mode"];
+        this.mode = query.mode;
         this.connection.stopCheckMatching();
 
-        if (Protocol.isOnlineMode(this.mode)) {
+        if (Protocol.isOnlineMode(query.mode)) {
             this.connection.setQueryOnDisconnect(this.createQuitQuery());
             this.connection.matching(query, this.callbackMatching.bind(this));
 
-            // let offline_query: Query.MatchingQuery = JSON.parse(JSON.stringify(query));
-            // offline_query.mode = GameMode.OffLine_2;
-            // this.offline_connection.matching(offline_query, this.callbackMatching.bind(this));
+            let offline_query: Query.MatchingQuery = JSON.parse(JSON.stringify(query));
+            offline_query.mode = GameMode.OffLine_2;
+            this.mode = GameMode.OffLine_2;
+            this.offline_connection.matching(offline_query, this.callbackMatching.bind(this));
         }
         else {
             this.offline_connection.matching(query, this.callbackMatching.bind(this));
@@ -61,9 +62,13 @@ export class WebClient extends Client {
         }
 
         this.session_id = response_json.session_id;
+        this.mode = response_json.mode;
+        this.step = -1;
+        this.no_update_count = 0;
 
+        this.view.matched();
         this.checkUpdate();
-        if (Protocol.isOnlineMode(this.mode)) {
+        if (Protocol.isOnlineMode(response_json.mode)) {
             this.connection.setQueryOnDisconnect(this.createQuitQuery());
             this.connection.stopCheckMatching();
             this.connection.startCheckUpdate(this);
