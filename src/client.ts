@@ -2,7 +2,6 @@ import { CardId } from "./facility";
 import { PlayerId } from "./board";
 import { Protocol, GameMode, MatchingInfo } from "./protocol";
 import * as Query from "./query";
-import { StandaloneConnection } from "./standalone_connection";
 
 export type RequestCallback = (response: string) => void;
 
@@ -25,8 +24,6 @@ export abstract class Connection {
 
 export abstract class Client {
     // TODO: These variables should not be modified by others.
-    readonly connection: Connection;
-    readonly offline_connection: Connection;
     public session_id: number = -1;
     public mode: GameMode = GameMode.None;
     public player_id: PlayerId = -1;
@@ -35,83 +32,16 @@ export abstract class Client {
     public step: number = -1;
     public live_sessions: number[] = [];
 
-    constructor(connection: Connection) {
-        const delay: number = 0;  // msec.
-        this.offline_connection = new StandaloneConnection(delay);
-        this.connection = connection ? connection : this.offline_connection;
-    }
+    constructor(connection: Connection) {}
 
     abstract callbackSession(response: string): void;
     abstract callbackChat(response: { [user_id: string]: Query.ChatQuery }): void;
-
-    public reset(): void {
-        this.session_id = -1;
-        this.mode = GameMode.None;
-        this.player_id = -1;
-        this.step = -1;
-        this.connection.stopCheckUpdate();
-        this.connection.stopCheckLive();
-    }
-
-    public matching(query: Query.MatchingQuery): void {
-        query.command = "matching";
-        query.user_id = this.user_id;
-        this.mode = query["mode"];
-        this.connection.stopCheckMatching();
-
-        if (Protocol.isOnlineMode(this.mode)) {
-            this.connection.setQueryOnDisconnect(this.createQuitQuery());
-            this.connection.matching(query, this.callbackMatching.bind(this));
-        }
-        else {
-            this.offline_connection.matching(query, this.callbackMatching.bind(this));
-        }
-    }
-
-    public checkUpdate(): void {
-        this.sendRequest(this.createUpdateQuery(this.step));
-    }
-
-    private callbackMatching(response: string): void {
-        const response_json: MatchingInfo = JSON.parse(response);
-        if (response_json == null || !response_json.is_matched) {
-            return;
-        }
-
-        this.session_id = response_json.session_id;
-
-        this.checkUpdate();
-        if (Protocol.isOnlineMode(this.mode)) {
-            this.connection.setQueryOnDisconnect(this.createQuitQuery());
-            this.connection.stopCheckMatching();
-            this.connection.startCheckUpdate(this);
-            this.connection.stopCheckLive();
-        }
-    }
-
-    public startCheckLive(callback: RequestCallback): void {
-        this.connection.startCheckLive(callback);
-    }
-
-    public watchGame(session_id: number): void {
-        this.reset();
-        this.session_id = session_id;
-        this.mode = GameMode.OnLineWatch;
-
-        this.sendRequest(this.createWatchQuery());
-        this.connection.setQueryOnDisconnect(this.createQuitQuery());
-        this.connection.startCheckUpdate(this);
-        this.connection.stopCheckLive();
-    }
-
-    public sendRequest(request: Query.Query): void {
-        let connection: Connection =
-            Protocol.isOnlineMode(this.mode) ? this.connection : this.offline_connection;
-        connection.sendRequest(request, (response) => {
-            this.callbackSession(response);
-        });
-    }
-
+    abstract reset(): void;
+    abstract matching(query: Query.MatchingQuery): void;
+    abstract checkUpdate(): void;
+    abstract startCheckLive(callback: RequestCallback): void;
+    abstract watchGame(session_id: number): void;
+    abstract sendRequest(request: Query.Query): void;
     abstract initBoard(): void;
 
     public createQuery(): Query.Query {

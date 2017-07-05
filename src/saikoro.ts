@@ -1,27 +1,74 @@
 import { RequestCallback, Connection, Client } from "./client";
 import { Phase, Session } from "./session";
 import { HtmlView } from "./html_view";
-import { GameMode } from "./protocol";
+import { GameMode, Protocol, MatchingInfo } from "./protocol";
 import * as Query from "./query";
+import { StandaloneConnection } from "./standalone_connection";
 
 // TODO: can be merged with Client?
 export class WebClient extends Client {
     private no_update_count: number = 0;
     private view: HtmlView;
     private chat_timestamps: { [user_id: string]: number } = {};
+    readonly connection: Connection;
+    readonly offline_connection: Connection;
 
     constructor(connection: Connection) {
         super(connection);
+        const delay: number = 0;  // msec.
+        this.offline_connection = new StandaloneConnection(delay);
+        this.connection = connection ? connection : this.offline_connection;
         this.view = new HtmlView(this);
     }
 
     public reset(): void {
-        super.reset();
+        this.session_id = -1;
+        this.mode = GameMode.None;
+        this.player_id = -1;
+        this.step = -1;
+        this.connection.stopCheckUpdate();
+        this.connection.stopCheckLive();
         this.no_update_count = 0;
     }
 
     public initBoard(): void {
         this.view.initView();
+    }
+
+    public matching(query: Query.MatchingQuery): void {
+        query.command = "matching";
+        query.user_id = this.user_id;
+        this.mode = query["mode"];
+        this.connection.stopCheckMatching();
+
+        if (Protocol.isOnlineMode(this.mode)) {
+            this.connection.setQueryOnDisconnect(this.createQuitQuery());
+            this.connection.matching(query, this.callbackMatching.bind(this));
+
+            // let offline_query: Query.MatchingQuery = JSON.parse(JSON.stringify(query));
+            // offline_query.mode = GameMode.OffLine_2;
+            // this.offline_connection.matching(offline_query, this.callbackMatching.bind(this));
+        }
+        else {
+            this.offline_connection.matching(query, this.callbackMatching.bind(this));
+        }
+    }
+
+    private callbackMatching(response: string): void {
+        const response_json: MatchingInfo = JSON.parse(response);
+        if (response_json == null || !response_json.is_matched) {
+            return;
+        }
+
+        this.session_id = response_json.session_id;
+
+        this.checkUpdate();
+        if (Protocol.isOnlineMode(this.mode)) {
+            this.connection.setQueryOnDisconnect(this.createQuitQuery());
+            this.connection.stopCheckMatching();
+            this.connection.startCheckUpdate(this);
+            this.connection.stopCheckLive();
+        }
     }
 
     public callbackSession(response: string): void {
@@ -79,5 +126,32 @@ export class WebClient extends Client {
             this.view.updateChat(chat);
             this.chat_timestamps[user_id] = chat.timestamp;
         }
+    }
+
+    public checkUpdate(): void {
+        this.sendRequest(this.createUpdateQuery(this.step));
+    }
+
+    public startCheckLive(callback: RequestCallback): void {
+        this.connection.startCheckLive(callback);
+    }
+
+    public watchGame(session_id: number): void {
+        this.reset();
+        this.session_id = session_id;
+        this.mode = GameMode.OnLineWatch;
+
+        this.sendRequest(this.createWatchQuery());
+        this.connection.setQueryOnDisconnect(this.createQuitQuery());
+        this.connection.startCheckUpdate(this);
+        this.connection.stopCheckLive();
+    }
+
+    public sendRequest(request: Query.Query): void {
+        let connection: Connection =
+            Protocol.isOnlineMode(this.mode) ? this.connection : this.offline_connection;
+        connection.sendRequest(request, (response) => {
+            this.callbackSession(response);
+        });
     }
 }

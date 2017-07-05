@@ -1,5 +1,4 @@
 import { RequestCallback, Connection, Client } from "./client";
-import { StandaloneConnection } from "./standalone_connection";
 import { MatchingInfo } from "./protocol";
 import * as Query from "./query";
 
