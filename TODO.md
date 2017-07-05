@@ -1,6 +1,6 @@
 * 給料のイベントのタイミング
 * size=2 施設を上書きするとアニメーションがおかしくなる。
-* HybridConnection の機能を Client に移す
+* HybridConnection を削除する
 * ランドマークに色がつかない
 
 * firebase で以前の session データが残ったまま
