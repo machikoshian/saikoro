@@ -299,6 +299,8 @@ export class HtmlView {
         this.landmarks_view.none();
         this.reset_button_view.none();
 
+        document.body.classList.remove("evening");
+
         for (let cards_view of this.cards_views) {
             cards_view.none();
         }
@@ -330,6 +332,9 @@ export class HtmlView {
         }
 
         if (scene === Scene.Game) {
+            if (this.client.mode === GameMode.OffLine_2_Matching) {
+                document.body.classList.add("evening");
+            }
             // Show components for game.
             this.message_view.show();
             this.board_view.show();

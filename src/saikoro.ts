@@ -45,9 +45,10 @@ export class WebClient extends Client {
             this.connection.setQueryOnDisconnect(this.createQuitQuery());
             this.connection.matching(query, this.callbackMatching.bind(this));
 
+            // Start offline game for waiting.
             let offline_query: Query.MatchingQuery = JSON.parse(JSON.stringify(query));
-            offline_query.mode = GameMode.OffLine_2;
-            this.mode = GameMode.OffLine_2;
+            offline_query.mode = GameMode.OffLine_2_Matching;
+            this.mode = GameMode.OffLine_2_Matching;
             this.offline_connection.matching(offline_query, this.callbackMatching.bind(this));
         }
         else {
@@ -58,6 +59,12 @@ export class WebClient extends Client {
     private callbackMatching(response: string): void {
         const response_json: MatchingInfo = JSON.parse(response);
         if (response_json == null || !response_json.is_matched) {
+            return;
+        }
+
+        // Mode is already changed to online.
+        if (Protocol.isOnlineMode(this.mode) &&
+            response_json.mode === GameMode.OffLine_2_Matching) {
             return;
         }
 

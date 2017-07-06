@@ -3,6 +3,7 @@ export enum GameMode {
     OffLine_2,
     OffLine_3,
     OffLine_4,
+    OffLine_2_Matching,
     OnLineSingle_2,
     OnLineSingle_3,
     OnLineSingle_4,
@@ -40,6 +41,8 @@ export class Protocol {
                 return "3人バトル 😺 👻 👾";
             case GameMode.OffLine_4:
                 return "4人バトル 😺 👻 👾 🗿";
+            case GameMode.OffLine_2_Matching:
+                return "2人バトル 😺 👻";
             case GameMode.OnLineSingle_2:
                 return "2人バトル 😺 👻";
             case GameMode.OnLineSingle_3:
@@ -60,6 +63,7 @@ export class Protocol {
     static getNpcCount(mode: GameMode): number {
         switch (mode) {
             case GameMode.OffLine_2:
+            case GameMode.OffLine_2_Matching:
             case GameMode.OnLineSingle_2:
                 return 1;
             case GameMode.OffLine_3:
@@ -80,6 +84,7 @@ export class Protocol {
     static getPlayerCount(mode: GameMode): number {
         switch (mode) {
             case GameMode.OffLine_2:
+            case GameMode.OffLine_2_Matching:
             case GameMode.OnLineSingle_2:
             case GameMode.OffLine_3:
             case GameMode.OnLineSingle_3:
