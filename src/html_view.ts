@@ -189,6 +189,9 @@ export class HtmlView {
         document.getElementById("matching_button_watch_3").addEventListener(
             "click", () => { this.onClickWatch(2); });
 
+        document.getElementById("matching_button_offline_2_matching").addEventListener(
+            "click", () => { this.onClickMatching(GameMode.OffLine_2_Matching); });
+
         this.client.startCheckLive((response: string) => {
             this.onLiveSessionsUpdated(response);
         });
@@ -285,6 +288,7 @@ export class HtmlView {
 
         // Hide all
         document.getElementById("home").style.display = "none";
+        document.getElementById("matching").style.display = "none";
         this.resetMatchingButtons();
         this.resetBoard();
         this.back_button_view.none();
@@ -327,6 +331,7 @@ export class HtmlView {
         }
 
         if (scene === Scene.Matching) {
+            document.getElementById("matching").style.display = "";
             this.message_view.show();
             this.reset_button_view.show();
         }

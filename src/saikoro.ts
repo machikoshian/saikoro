@@ -39,17 +39,15 @@ export class WebClient extends Client {
         query.command = "matching";
         query.user_id = this.user_id;
         this.mode = query.mode;
-        this.connection.stopCheckMatching();
+
+        if (query.mode !== GameMode.OffLine_2_Matching) {
+            // If mode is OffLine_2_Matching, do not stop previous actual matching request.
+            this.connection.stopCheckMatching();
+        }
 
         if (Protocol.isOnlineMode(query.mode)) {
             this.connection.setQueryOnDisconnect(this.createQuitQuery());
             this.connection.matching(query, this.callbackMatching.bind(this));
-
-            // Start offline game for waiting.
-            let offline_query: Query.MatchingQuery = JSON.parse(JSON.stringify(query));
-            offline_query.mode = GameMode.OffLine_2_Matching;
-            this.mode = GameMode.OffLine_2_Matching;
-            this.offline_connection.matching(offline_query, this.callbackMatching.bind(this));
         }
         else {
             this.offline_connection.matching(query, this.callbackMatching.bind(this));
