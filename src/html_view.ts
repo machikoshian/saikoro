@@ -900,7 +900,7 @@ export class HtmlView {
 
         field.innerText = facility.getName();
         if (!facility.is_open) {
-            field.innerText += "🚫";
+            field.innerText += "💤";
         }
         field.style.display = "";
         field.style.backgroundColor = owner_color;
