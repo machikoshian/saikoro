@@ -884,23 +884,23 @@ export class HtmlView {
             this.board_view.setHighlight([x, y], COLOR_CLICKABLE);
         }
 
-        // for (let y: number = 0; y < board.row; ++y) {
-        //     for (let x: number = 0; x < board.column; ++x) {
-        //         const card_id: CardId = board.getRawCardId(x, y);
-        //         if (card_id < 0) {
-        //             continue;
-        //         }
-        //         let event: Event = session.doFacilityAction(card_id);
-        //         if (event.type === EventType.Interaction) {
-        //            const target_id: PlayerId = (this.client.player_id === 0) ? 1 : 0;
-        //            event = session.doFacilityActionWithTargetPlayer(card_id, target_id);
-        //         }
-        //         const money: number = event.moneys[this.client.player_id];
-        //         if (money !== 0) {
-        //             this.board_view.showCost([x, y], money);
-        //         }
-        //     }
-        // }
+        for (let y: number = 0; y < board.row; ++y) {
+            for (let x: number = 0; x < board.column; ++x) {
+                const card_id: CardId = board.getRawCardId(x, y);
+                if (card_id < 0) {
+                    continue;
+                }
+                let event: Event = session.getEventFacilityAction(card_id);
+                if (event.type === EventType.Interaction) {
+                   const target_id: PlayerId = (this.client.player_id === 0) ? 1 : 0;
+                   event = session.getEventFacilityActionWithTargetPlayer(card_id, target_id);
+                }
+                const money: number = event.moneys[this.client.player_id];
+                if (money !== 0) {
+                    this.board_view.showCost([x, y], money);
+                }
+            }
+        }
     }
 
     public drawDeckBoard(): void {

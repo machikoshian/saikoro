@@ -462,51 +462,21 @@ export class Session {
         });
     }
 
-    public moveMoney(player_id_from: PlayerId, player_id_to: PlayerId, money: number): number {
-        if (player_id_from === player_id_to) {
+    public checkMoveMoney(pid_from: PlayerId, pid_to: PlayerId, money: number): number {
+        if (pid_from === pid_to) {
             return 0;
         }
         if (money < 0) {
-            return this.moveMoney(player_id_to, player_id_from, -money);
+            return -Math.min(this.getPlayer(pid_to).getMoney(), -money);
         }
-        let actual: number = -(this.getPlayer(player_id_from).addMoney(-money));
-        this.getPlayer(player_id_to).addMoney(actual);
-        return actual;
+        return Math.min(this.getPlayer(pid_from).getMoney(), money);
     }
 
-    public doFacilityActionWithTargetPlayer(card_id: CardId, target_id: PlayerId): Event {
-        let event: Event = new Event();
-        let facility: Facility = this.getFacility(card_id);
-        if (facility.getType() !== FacilityType.Purple) {
-            return event;
-        }
-
-        if (facility.property["all"] === true) {
-            return event;
-        }
-
-        let player_id: PlayerId = this.getCurrentPlayerId();
-        let owner_id: PlayerId = this.getOwnerId(card_id);
-        if (player_id !== owner_id) {
-            return event;
-        }
-
-        if (facility.property["close"] === true) {
-            facility.is_open = false;
-        }
-
-        let owner: Player = this.getOwner(card_id);
-        event.step = this.step;
-        event.card_id = card_id;
-        event.player_id = player_id;
-        event.type = EventType.Purple;
-
-        let value: number = this.getFacilityValue(card_id);
-        let amount: number = this.moveMoney(target_id, owner_id, value);
-        event.moneys[target_id] -= amount;
-        event.moneys[owner_id] += amount;
-
-        return event;
+    public moveMoney(pid_from: PlayerId, pid_to: PlayerId, money: number): number {
+        const actual: number = this.checkMoveMoney(pid_from, pid_to, money);
+        this.getPlayer(pid_from).addMoney(-actual);
+        this.getPlayer(pid_to).addMoney(actual);
+        return actual;
     }
 
     public getFacilityValue(card_id: CardId): number {
@@ -516,11 +486,59 @@ export class Session {
         return value * boost;
     }
 
-    public doFacilityAction(card_id: CardId): Event {
-        let facility: Facility = this.getFacility(card_id);
-        let player_id: PlayerId = this.getCurrentPlayerId();
-        let owner_id: PlayerId = this.getOwnerId(card_id);
-        let owner: Player = this.getOwner(card_id);
+    public getEventFacilityActionWithTargetPlayer(card_id: CardId, target_id: PlayerId): Event {
+        let event: Event = new Event();
+        const facility: Facility = this.getFacility(card_id);
+        if (facility.getType() !== FacilityType.Purple) {
+            return event;
+        }
+
+        if (facility.property["all"] === true) {
+            return event;
+        }
+
+        const player_id: PlayerId = this.getCurrentPlayerId();
+        const owner_id: PlayerId = this.getOwnerId(card_id);
+        if (player_id !== owner_id) {
+            return event;
+        }
+
+        if (facility.property["close"] === true) {
+            event.close = true;
+        }
+
+        event.step = this.step;
+        event.card_id = card_id;
+        event.player_id = player_id;
+        event.type = EventType.Purple;
+
+        const value: number = this.getFacilityValue(card_id);
+        const amount: number = this.checkMoveMoney(target_id, owner_id, value);
+        event.moneys[target_id] -= amount;
+        event.moneys[owner_id] += amount;
+
+        return event;
+    }
+
+    public doFacilityActionWithTargetPlayer(card_id: CardId, target_id: PlayerId): Event {
+        const event: Event = this.getEventFacilityActionWithTargetPlayer(card_id, target_id);
+        for (let pid: PlayerId = 0; pid < event.moneys.length; ++pid) {
+            if (event.moneys[pid] !== 0) {
+                this.getPlayer(pid).addMoney(event.moneys[pid]);
+            }
+        }
+        if (event.close === true) {
+            let facility: Facility = this.getFacility(card_id);
+            facility.is_open = false;
+        }
+        return event;
+    }
+
+    public getEventFacilityAction(card_id: CardId): Event {
+        const facility: Facility = this.getFacility(card_id);
+        const player_id: PlayerId = this.getCurrentPlayerId();
+        const owner_id: PlayerId = this.getOwnerId(card_id);
+        const owner: Player = this.getOwner(card_id);
         let event: Event = new Event();
         event.step = this.step;
         event.card_id = card_id;
@@ -528,16 +546,14 @@ export class Session {
 
         if (facility.getType() === FacilityType.Blue) {
             if (!facility.is_open) {
-                facility.is_open = true;
                 event.type = EventType.Open;
                 return event;
             }
             if (facility.property["close"] === true) {
                 event.close = true;
-                facility.is_open = false;
             }
 
-            let amount: number = owner.addMoney(this.getFacilityValue(card_id));
+            let amount: number = this.getFacilityValue(card_id);
             event.type = EventType.Blue;
             event.moneys[owner_id] += amount;
             return event;
@@ -547,16 +563,14 @@ export class Session {
                 return event;
             }
             if (!facility.is_open) {
-                facility.is_open = true;
                 event.type = EventType.Open;
                 return event;
             }
             if (facility.property["close"] === true) {
                 event.close = true;
-                facility.is_open = false;
             }
 
-            let amount: number = owner.addMoney(this.getFacilityValue(card_id));
+            let amount: number = this.getFacilityValue(card_id);
             event.type = EventType.Green;
             event.moneys[owner_id] += amount;
             return event;
@@ -566,13 +580,11 @@ export class Session {
                 return event;
             }
             if (!facility.is_open) {
-                facility.is_open = true;
                 event.type = EventType.Open;
                 return event;
             }
             if (facility.property["close"] === true) {
                 event.close = true;
-                facility.is_open = false;
             }
 
             let value: number = this.getFacilityValue(card_id);
@@ -582,13 +594,13 @@ export class Session {
                     if (pid === owner_id) {
                         continue;
                     }
-                    let amount: number = this.moveMoney(pid, owner_id, value);
+                    let amount: number = this.checkMoveMoney(pid, owner_id, value);
                     event.moneys[pid] -= amount;
                     event.moneys[owner_id] += amount;
                 }
             }
             else {
-                let amount: number = this.moveMoney(player_id, owner_id, value);
+                let amount: number = this.checkMoveMoney(player_id, owner_id, value);
                 event.moneys[player_id] -= amount;
                 event.moneys[owner_id] += amount;
             }
@@ -600,7 +612,6 @@ export class Session {
             }
 
             if (!facility.is_open) {
-                facility.is_open = true;
                 event.type = EventType.Open;
                 return event;
             }
@@ -612,19 +623,38 @@ export class Session {
             else {
                 if (facility.property["close"] === true) {
                     event.close = true;
-                    facility.is_open = false;
                 }
                 event.type = EventType.Purple;
                 for (let pid: number = 0; pid < this.players.length; ++pid) {
                     if (pid === owner_id) {
                         continue;
                     }
-                    let amount: number = this.moveMoney(pid, owner_id, value);
+                    let amount: number = this.checkMoveMoney(pid, owner_id, value);
                     event.moneys[pid] -= amount;
                     event.moneys[owner_id] += amount;
                 }
             }
             return event;
+        }
+        return event;
+    }
+
+    public doFacilityAction(card_id: CardId): Event {
+        const event: Event = this.getEventFacilityAction(card_id);
+        let facility: Facility = this.getFacility(card_id);
+
+        if (event.type === EventType.Open) {
+            facility.is_open = true;
+            return event;
+        }
+
+        for (let pid: PlayerId = 0; pid < event.moneys.length; ++pid) {
+            if (event.moneys[pid] !== 0) {
+                this.getPlayer(pid).addMoney(event.moneys[pid]);
+            }
+        }
+        if (event.close === true) {
+            facility.is_open = false;
         }
         return event;
     }
@@ -687,7 +717,7 @@ export class Session {
 
     // Build a facility in the player's talon.
     // No overwrite an existing facility or no exceed the cost of the player's money.
-    public buildInitialFacility(player_id: PlayerId) {
+    public buildInitialFacility(player_id: PlayerId): boolean {
         // Player ID is valid?
         if (player_id >= this.players.length) {
             return false;
