@@ -71,29 +71,45 @@ export class WebClient extends Client {
     }
 
     private callbackMatching(response: string): void {
-        const response_json: MatchingInfo = JSON.parse(response);
-        if (response_json == null || !response_json.is_matched) {
+        const matching_info: MatchingInfo = JSON.parse(response);
+        if (matching_info == null || !matching_info.is_matched) {
             return;
         }
 
         // Mode is already changed to online.
         if (Protocol.isOnlineMode(this.mode) &&
-            response_json.mode === GameMode.OffLine_2_Matching) {
+            matching_info.mode === GameMode.OffLine_2_Matching) {
             return;
         }
 
-        this.session_id = response_json.session_id;
-        this.mode = response_json.mode;
+        if (Protocol.isOnlineMode(matching_info.mode)) {
+            this.connection.stopCheckMatching();
+            this.connection.stopCheckLive();
+        }
+
+        if (this.mode === GameMode.OffLine_2_Matching &&
+            this.mode !== matching_info.mode) {
+            this.view.announce("マッチングしました。");
+            setTimeout(() => {
+                this.readyGame(matching_info);
+            }, 3000);
+            return;
+        }
+
+        this.readyGame(matching_info);
+    }
+
+    private readyGame(matching_info: MatchingInfo): void {
+        this.session_id = matching_info.session_id;
+        this.mode = matching_info.mode;
         this.step = -1;
         this.no_update_count = 0;
 
-        this.view.matched();
+        this.view.readyGame();
         this.checkUpdate();
-        if (Protocol.isOnlineMode(response_json.mode)) {
+        if (Protocol.isOnlineMode(matching_info.mode)) {
             this.connection.setQueryOnDisconnect(this.createQuitQuery());
-            this.connection.stopCheckMatching();
             this.connection.startCheckUpdate(this);
-            this.connection.stopCheckLive();
         }
     }
 

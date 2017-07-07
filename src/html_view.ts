@@ -142,7 +142,7 @@ export class HtmlView {
         }
     }
 
-    public matched(): void {
+    public readyGame(): void {
         this.resetGame();
         this.switchScene(Scene.Matching);
     }
@@ -749,6 +749,10 @@ export class HtmlView {
         this.session = session;
         // Show event animations.
         this.drawEvents();
+    }
+
+    public announce(announce: string): void {
+        this.message_view.drawMessage(announce);
     }
 
     private drawMatchingMessage(mode: GameMode): void {
