@@ -14,7 +14,6 @@ export enum CharacterType {
 
 export class CharacterData {
     constructor(
-        readonly id: number,  // Unique number.
         readonly name: string,
         readonly type: CharacterType,
         readonly round: number,
@@ -39,30 +38,29 @@ export enum FacilityType {
 
 const CHARACTER_DATA_BASE: number = 1000;
 const CHARACTER_DATA: CharacterData[] = [
-    new CharacterData(1000, "幼稚園児", CharacterType.DiceDelta, 2, {"delta": -2}),
-    new CharacterData(1001, "小学生",  CharacterType.DiceDelta, 2, {"delta": -1}),
-    new CharacterData(1002, "中学生",  CharacterType.DiceDelta, 2, {"delta": 1}),
-    new CharacterData(1003, "高校生",  CharacterType.DiceDelta, 2, {"delta": 2}),
-    new CharacterData(1004, "大学生",  CharacterType.DiceDelta, 1, {"delta": 3}),
-    new CharacterData(1005, "執事",    CharacterType.DrawCards, 0, {"value": 3}),
-    new CharacterData(1006, "市長秘書", CharacterType.DrawCards, 0, {"value": 3}),
-    new CharacterData(1007, "有能秘書", CharacterType.MoveMoney, 0, {"money": 300}),
-    new CharacterData(1008, "白奴", CharacterType.DiceEven, 0, {}),  // even
-    new CharacterData(1009, "黒奴", CharacterType.DiceOdd, 0, {}),  // odd
-    new CharacterData(1010, "鉄道員", CharacterType.DiceOne, 2, {}),
-    new CharacterData(1011, "CA",    CharacterType.DiceTwo, 2, {}),
-    new CharacterData(1012, "気象予報士", CharacterType.Close, 0, {"type": FacilityType.Blue}),
-    new CharacterData(1013, "消防士", CharacterType.Close, 0, {"type": FacilityType.Green}),
-    new CharacterData(1014, "保健所員", CharacterType.Close, 0, {"type": FacilityType.Red}),
-    new CharacterData(1015, "警察官", CharacterType.Close, 0, {"type": FacilityType.Purple}),
-    new CharacterData(1016, "医者", CharacterType.Open, 0, {}),
+    new CharacterData("幼稚園児", CharacterType.DiceDelta, 2, {"delta": -2}),
+    new CharacterData("小学生",  CharacterType.DiceDelta, 2, {"delta": -1}),
+    new CharacterData("中学生",  CharacterType.DiceDelta, 2, {"delta": 1}),
+    new CharacterData("高校生",  CharacterType.DiceDelta, 2, {"delta": 2}),
+    new CharacterData("大学生",  CharacterType.DiceDelta, 1, {"delta": 3}),
+    new CharacterData("執事",    CharacterType.DrawCards, 0, {"value": 3}),
+    new CharacterData("市長秘書", CharacterType.DrawCards, 0, {"value": 3}),
+    new CharacterData("有能秘書", CharacterType.MoveMoney, 0, {"money": 300}),
+    new CharacterData("白奴", CharacterType.DiceEven, 0, {}),  // even
+    new CharacterData("黒奴", CharacterType.DiceOdd, 0, {}),  // odd
+    new CharacterData("鉄道員", CharacterType.DiceOne, 2, {}),
+    new CharacterData("CA",    CharacterType.DiceTwo, 2, {}),
+    new CharacterData("気象予報士", CharacterType.Close, 0, {"type": FacilityType.Blue}),
+    new CharacterData("消防士", CharacterType.Close, 0, {"type": FacilityType.Green}),
+    new CharacterData("保健所員", CharacterType.Close, 0, {"type": FacilityType.Red}),
+    new CharacterData("警察官", CharacterType.Close, 0, {"type": FacilityType.Purple}),
+    new CharacterData("医者", CharacterType.Open, 0, {}),
 ];
 
 export type CardDataId = number;
 
 export class FacilityData {
     constructor(
-        readonly id: number,  // Unique number.
         readonly size: number,
         readonly area: number[],  // TODO should be range.
         readonly name: string,
@@ -73,51 +71,53 @@ export class FacilityData {
 }
 
 const FACILITY_DATA: FacilityData[] = [
-    new FacilityData(0,  1, [1],    "🌾", 100, FacilityType.Blue,   {"value": 370}),
-    new FacilityData(1,  1, [2],    "🐮", 100, FacilityType.Blue,   {"value": 330}),
-    new FacilityData(2,  2, [3],    "👾", 200, FacilityType.Purple, {"value": 520}),
-    new FacilityData(3,  1, [4],    "🐝", 200, FacilityType.Blue,   {"value": 300}),
-    new FacilityData(4,  1, [5],    "🍴", 200, FacilityType.Red,    {"value": 550}),
-    new FacilityData(5,  1, [6],    "💆", 150, FacilityType.Green,  {"value": 600}),
-    new FacilityData(6,  1, [7],    "👕", 200, FacilityType.Green,  {"value": 550}),
-    new FacilityData(7,  1, [8],    "🐔", 250, FacilityType.Red,    {"value": 400, "all": true}),
-    new FacilityData(8,  1, [8,9],  "🌻", 200, FacilityType.Blue,   {"value": 400}),
-    new FacilityData(9,  1, [10],   "🍣", 100, FacilityType.Red,    {"value": 1000}),
-    new FacilityData(10, 2, [10],   "🗻", 300, FacilityType.Blue,   {"value": 1150, "close": true}),
-    new FacilityData(11, 1, [12],   "🍍", 150, FacilityType.Blue,   {"value": 800}),
+    new FacilityData(1, [1],   "🌾", 100, FacilityType.Blue, {"value": 370}),
+    new FacilityData(1, [2],   "🐮", 100, FacilityType.Blue, {"value": 330}),
+    new FacilityData(1, [4],   "🐝", 200, FacilityType.Blue, {"value": 300}),
+    new FacilityData(1, [5],   "🌴", 300, FacilityType.Blue, {"value": 650}),
+    new FacilityData(1, [8],   "🍅", 100, FacilityType.Blue, {"value": 450}),
+    new FacilityData(1, [8,9], "🌻", 200, FacilityType.Blue, {"value": 400}),
+    new FacilityData(1, [9],   "🌰", 100, FacilityType.Blue, {"value": 650}),
+    new FacilityData(1, [9],   "🗻", 300, FacilityType.Blue, {"value": 750}),
+    new FacilityData(1, [10],  "🍎", 100, FacilityType.Blue, {"value": 420}),
+    new FacilityData(2, [10],  "🗻", 300, FacilityType.Blue, {"value": 1150, "close": true}),
+    new FacilityData(1, [12],  "🍍", 150, FacilityType.Blue, {"value": 800}),
 
-    new FacilityData(12, 1, [1],  "🍣", 200, FacilityType.Red,    {"value": 750}),
-    new FacilityData(13, 1, [2],  "🐟", 100, FacilityType.Green,  {"value": 670}),
-    new FacilityData(14, 1, [3],  "💈", 100, FacilityType.Green,  {"value": 570}),
-    new FacilityData(15, 1, [4],  "📖", 200, FacilityType.Green,  {"value": 520}),
-    new FacilityData(16, 1, [5],  "📰", 100, FacilityType.Purple, {"value": 420}),
-    new FacilityData(17, 1, [6],  "🍱", 100, FacilityType.Red,    {"value": 420}),
-    new FacilityData(18, 1, [7],  "🍕", 100, FacilityType.Red,    {"value": 370}),
-    new FacilityData(19, 1, [8],  "🍅", 100, FacilityType.Blue,   {"value": 450}),
-    new FacilityData(20, 1, [9],  "🚗", 400, FacilityType.Green,  {"value": 950}),
-    new FacilityData(21, 1, [10], "🍎", 100, FacilityType.Blue,   {"value": 420}),
-    new FacilityData(22, 1, [11], "👓", 100, FacilityType.Green,  {"value": 1120}),
-    new FacilityData(23, 1, [12], "🔨", 300, FacilityType.Purple, {"value": 2000}),
+    new FacilityData(1, [2],  "🐟", 100, FacilityType.Green, {"value": 670}),
+    new FacilityData(1, [3],  "💈", 100, FacilityType.Green, {"value": 570}),
+    new FacilityData(1, [4],  "📖", 200, FacilityType.Green, {"value": 520}),
+    new FacilityData(1, [6],  "💆", 150, FacilityType.Green, {"value": 600}),
+    new FacilityData(1, [7],  "👕", 200, FacilityType.Green, {"value": 550}),
+    new FacilityData(2, [7],  "🏬", 250, FacilityType.Green, {"value": 880}),
+    new FacilityData(1, [9],  "🚗", 400, FacilityType.Green, {"value": 950}),
+    new FacilityData(1, [10], "🏄", 200, FacilityType.Green, {"value": 1120, "close": true}),
+    new FacilityData(1, [11], "👓", 100, FacilityType.Green, {"value": 1120}),
 
-    new FacilityData(24, 2, [8], "🍻", 300, FacilityType.Red,    {"value": 400, "all": true}),
-    new FacilityData(25, 2, [8], "🎥", 400, FacilityType.Purple, {"value": 400, "all": true}),
-    new FacilityData(26, 2, [9], "🐬", 500, FacilityType.Purple, {"value": 400, "all": true}),
-    new FacilityData(27, 2, [7], "🏬", 250, FacilityType.Green,  {"value": 880}),
-    new FacilityData(28, 1, [10], "🏄", 200, FacilityType.Green,  {"value": 1120, "close": true}),
-    new FacilityData(29, 1, [3], "🐙", 100, FacilityType.Red,  {"value": 520}),
-    new FacilityData(30, 1, [9], "🍛", 100, FacilityType.Red,    {"value": 470}),
-    new FacilityData(31, 2, [6], "🎸", 750, FacilityType.Purple, {"value": 750}),
-    new FacilityData(32, 2, [6], "⚽", 500, FacilityType.Purple, {"value": 480, "all": true}),
-    new FacilityData(33, 2, [7], "⚾", 500, FacilityType.Purple, {"value": 480, "all": true}),
-    new FacilityData(34, 1, [9], "🌰", 100, FacilityType.Blue,   {"value": 650}),
-    new FacilityData(35, 1, [5], "🌴", 300, FacilityType.Blue,   {"value": 650}),
-    new FacilityData(36, 1, [9], "🗻", 300, FacilityType.Blue,   {"value": 750}),
+    new FacilityData(1, [1],  "🍣", 200, FacilityType.Red, {"value": 750}),
+    new FacilityData(1, [3],  "🐙", 100, FacilityType.Red, {"value": 520}),
+    new FacilityData(1, [5],  "🍴", 200, FacilityType.Red, {"value": 550}),
+    new FacilityData(1, [6],  "🍱", 100, FacilityType.Red, {"value": 420}),
+    new FacilityData(1, [7],  "🍕", 100, FacilityType.Red, {"value": 370}),
+    new FacilityData(1, [8],  "🐔", 250, FacilityType.Red, {"value": 400, "all": true}),
+    new FacilityData(2, [8],  "🍻", 300, FacilityType.Red, {"value": 400, "all": true}),
+    new FacilityData(1, [9],  "🍛", 100, FacilityType.Red, {"value": 470}),
+    new FacilityData(1, [10], "🍣", 100, FacilityType.Red, {"value": 1000}),
+
+    new FacilityData(2, [3],  "👾", 200, FacilityType.Purple, {"value": 520}),
+    new FacilityData(1, [5],  "📰", 100, FacilityType.Purple, {"value": 420}),
+    new FacilityData(2, [6],  "🎸", 400, FacilityType.Purple, {"value": 750}),
+    new FacilityData(2, [6],  "⚽", 500, FacilityType.Purple, {"value": 480, "all": true}),
+    new FacilityData(2, [7],  "⚾", 500, FacilityType.Purple, {"value": 480, "all": true}),
+    new FacilityData(2, [8],  "🎥", 400, FacilityType.Purple, {"value": 400, "all": true}),
+    new FacilityData(2, [9],  "🐬", 500, FacilityType.Purple, {"value": 400, "all": true}),
+    new FacilityData(1, [12], "🔨", 300, FacilityType.Purple, {"value": 2000}),
 ];
 
 const LANDMARK_DATA_BASE: number = 10000;
 const LANDMARK_DATA: FacilityData[] = [
-    new FacilityData(10000, 2, [], "🏯", 2500, FacilityType.Gray, {}),
-    new FacilityData(10001, 1, [], "🏰", 2500, FacilityType.Gray, {}),
+    new FacilityData(2, [], "🏯", 2500, FacilityType.Gray, {}),
+    new FacilityData(1, [], "🏰", 2500, FacilityType.Gray, {}),
+    new FacilityData(2, [], "🚉", 2500, FacilityType.Gray, {}),
 ];
 
 export class CardData {
