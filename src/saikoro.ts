@@ -10,6 +10,7 @@ export class WebClient extends Client {
     private no_update_count: number = 0;
     private view: HtmlView;
     private chat_timestamps: { [user_id: string]: number } = {};
+    private prev_mode: GameMode = GameMode.None;
     readonly connection: Connection;
     readonly offline_connection: Connection;
 
@@ -22,8 +23,14 @@ export class WebClient extends Client {
     }
 
     public reset(): void {
+        if (this.prev_mode !== GameMode.None) {
+            this.mode = this.prev_mode;
+            this.prev_mode = GameMode.None;
+        }
+        else {
+            this.mode = GameMode.None;
+        }
         this.session_id = -1;
-        this.mode = GameMode.None;
         this.player_id = -1;
         this.step = -1;
         this.connection.stopCheckUpdate();
@@ -38,12 +45,15 @@ export class WebClient extends Client {
     public matching(query: Query.MatchingQuery): void {
         query.command = "matching";
         query.user_id = this.user_id;
-        this.mode = query.mode;
 
-        if (query.mode !== GameMode.OffLine_2_Matching) {
+        if (query.mode === GameMode.OffLine_2_Matching) {
+            this.prev_mode = this.mode;
+        }
+        else {
             // If mode is OffLine_2_Matching, do not stop previous actual matching request.
             this.connection.stopCheckMatching();
         }
+        this.mode = query.mode;
 
         if (Protocol.isOnlineMode(query.mode)) {
             this.connection.setQueryOnDisconnect(this.createQuitQuery());
@@ -51,6 +61,12 @@ export class WebClient extends Client {
         }
         else {
             this.offline_connection.matching(query, this.callbackMatching.bind(this));
+        }
+    }
+
+    public quit(): void {
+        if (this.mode !== GameMode.OffLine_2_Matching) {
+            this.sendRequest(this.createQuitQuery());
         }
     }
 

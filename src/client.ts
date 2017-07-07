@@ -38,6 +38,7 @@ export abstract class Client {
     abstract callbackChat(response: { [user_id: string]: Query.ChatQuery }): void;
     abstract reset(): void;
     abstract matching(query: Query.MatchingQuery): void;
+    abstract quit(); void;
     abstract checkUpdate(): void;
     abstract startCheckLive(callback: RequestCallback): void;
     abstract watchGame(session_id: number): void;

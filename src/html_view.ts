@@ -332,6 +332,7 @@ export class HtmlView {
 
         if (scene === Scene.Matching) {
             document.getElementById("matching").style.display = "";
+            this.drawMatchingMessage(this.client.mode);
             this.message_view.show();
             this.reset_button_view.show();
         }
@@ -357,8 +358,13 @@ export class HtmlView {
     }
 
     private onResetGame(): void {
-        this.client.sendRequest(this.client.createQuitQuery());
+        const mode: GameMode = this.client.mode;
+        this.client.quit();
         this.reset();
+        if (mode === GameMode.OffLine_2_Matching) {
+            this.switchScene(Scene.Matching);
+            return;
+        }
         this.switchScene(Scene.Home);
     }
 
@@ -587,19 +593,6 @@ export class HtmlView {
         let deck: string = (<HTMLInputElement>document.getElementById("deck")).value;
 
         this.client.matching(this.client.createMatchingQuery(name, mode, deck));
-        let message: string;
-        if (Protocol.isOnlineMode(mode)) {
-            if (Protocol.getPlayerCount(mode) > 1) {
-                message = "対戦相手を待っています";
-            }
-            else {
-                message = "通信中です";
-            }
-        }
-        else {
-            message = "準備中です";
-        }
-        this.message_view.drawMessage(message, this.getPlayerColor(this.client.player_id));
         this.switchScene(Scene.Matching);
     }
 
@@ -756,6 +749,22 @@ export class HtmlView {
         this.session = session;
         // Show event animations.
         this.drawEvents();
+    }
+
+    private drawMatchingMessage(mode: GameMode): void {
+        let message: string;
+        if (Protocol.isOnlineMode(mode)) {
+            if (Protocol.getPlayerCount(mode) > 1) {
+                message = "対戦相手を待っています";
+            }
+            else {
+                message = "通信中です";
+            }
+        }
+        else {
+            message = "準備中です";
+        }
+        this.message_view.drawMessage(message, this.getPlayerColor(this.client.player_id));
     }
 
     public drawCards(session: Session): void {
