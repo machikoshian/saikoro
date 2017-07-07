@@ -10,6 +10,7 @@ export enum CharacterType {
     SalaryFactor,  // Multiply the salary.
     Close,
     Open,
+    Boost,
 }
 
 export class CharacterData {
@@ -36,6 +37,14 @@ export enum FacilityType {
     Purple,
 }
 
+export enum SelectType {
+    Facility,
+    Blue,
+    Green,
+    Red,
+    Purple,
+}
+
 const CHARACTER_DATA_BASE: number = 1000;
 const CHARACTER_DATA: CharacterData[] = [
     new CharacterData("幼稚園児", CharacterType.DiceDelta, 2, {"delta": -2}),
@@ -50,11 +59,13 @@ const CHARACTER_DATA: CharacterData[] = [
     new CharacterData("黒奴", CharacterType.DiceOdd, 0, {}),  // odd
     new CharacterData("鉄道員", CharacterType.DiceOne, 2, {}),
     new CharacterData("CA",    CharacterType.DiceTwo, 2, {}),
-    new CharacterData("気象予報士", CharacterType.Close, 0, {"type": FacilityType.Blue}),
-    new CharacterData("消防士", CharacterType.Close, 0, {"type": FacilityType.Green}),
-    new CharacterData("保健所員", CharacterType.Close, 0, {"type": FacilityType.Red}),
-    new CharacterData("警察官", CharacterType.Close, 0, {"type": FacilityType.Purple}),
+    new CharacterData("気象予報士", CharacterType.Close, 0, {"type": SelectType.Blue}),
+    new CharacterData("消防士", CharacterType.Close, 0, {"type": SelectType.Green}),
+    new CharacterData("保健所員", CharacterType.Close, 0, {"type": SelectType.Red}),
+    new CharacterData("警察官", CharacterType.Close, 0, {"type": SelectType.Purple}),
+    new CharacterData("踊り子", CharacterType.Close, 0, {"type": SelectType.Facility}),
     new CharacterData("医者", CharacterType.Open, 0, {}),
+//    new CharacterData("残念秘書", CharacterType.Boost, 2, {"boost": -2.0}),
 ];
 
 export type CardDataId = number;
@@ -339,19 +350,27 @@ export class Character {
             }
             case CharacterType.Close: {
                 switch (this.property["type"]) {
-                    case FacilityType.Blue:
+                    case SelectType.Facility:
+                        return "選んだ施設を休業にする";
+                    case SelectType.Blue:
                         return "青施設をすべて休業にする";
-                    case FacilityType.Green:
+                    case SelectType.Green:
                         return "緑施設をすべて休業にする";
-                    case FacilityType.Red:
+                    case SelectType.Red:
                         return "赤施設をすべて休業にする";
-                    case FacilityType.Purple:
+                    case SelectType.Purple:
                         return "紫施設をすべて休業にする";
                 }
             }
             case CharacterType.Open: {
                 return "全施設の休業を解除する";
             }
+            case CharacterType.Boost: {
+                const boost: number = this.property["boost"] * 100;
+                const boost_str: string = ((boost > 0) ? "+" : "") + boost;
+                return `選んだ施設の収入を${boost_str}%する\n${this.round}ラウンド`;
+            }
+
         }
         return "";
     }

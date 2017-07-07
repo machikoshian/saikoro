@@ -2,7 +2,7 @@ import { Phase, Session, Event, EventType } from "./session";
 import { PlayerCards } from "./card_manager";
 import { Player, Board, PlayerId } from "./board";
 import { CardId, FacilityType, Facility, CharacterType, Character,
-         CardData, CardDataId } from "./facility";
+         CardData, CardDataId, SelectType } from "./facility";
 import { Dice, DiceResult } from "./dice";
 import { Client } from "./client";
 import { DeckMaker } from "./deck_maker";
@@ -563,6 +563,18 @@ export class HtmlView {
             }, 2000);
             this.dialogSelectPlayer((selected_pid: PlayerId) => {
                 this.client.sendRequest(this.client.createCharacterQuery(card_id, selected_pid));
+            });
+        }
+        else if (character.type === CharacterType.Close &&
+                 character.property["type"] === SelectType.Facility) {
+            this.event_queue.addEvent(() => {
+                this.effectCharacter(this.client.player_id, card_id);
+                return true;
+            }, 2000);
+            this.dialogSelectFacilityPosition(([x, y]) => {
+                const target_card_id: CardId = this.session.getCardIdOnBoard(x, y);
+                this.client.sendRequest(
+                    this.client.createCharacterWithCardIdQuery(card_id, target_card_id));
             });
         }
         else {
@@ -1255,6 +1267,12 @@ export class HtmlView {
             }
         }
         return true;
+    }
+
+    private dialogSelectFacilityPosition(callback: ([x, y]: [number, number]) => void): void {
+        const color: string = this.getPlayerColor(this.client.player_id);
+        this.message_view.drawMessage("対象施設を選択してください", color);
+        this.board_view.setFacilitiesClickable(this.session, callback);
     }
 
     private dialogSelectPlayer(callback): void {

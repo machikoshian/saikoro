@@ -47,6 +47,7 @@ export interface DiceQuery extends Query {
 export interface CharacterQuery extends Query {
     card_id: number,  // TODO: CardId
     target_player_id?: number  // TODO: PlayerId
+    target_card_id?: number  // TODO: CardId
 }
 
 export interface InteractQuery extends Query {

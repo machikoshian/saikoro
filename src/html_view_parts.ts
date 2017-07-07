@@ -1,9 +1,9 @@
-import { PlayerId, Player } from "./board";
+import { PlayerId, Player, Board } from "./board";
 import { CardId, CardDataId, CardData, Facility, FacilityType, Character } from "./facility";
 import { Phase, Event, EventType, Session } from "./session";
 import { PlayerCards } from "./card_manager";
 import { DiceResult } from "./dice";
-import { DiceEffects, DiceNum } from "./types";
+import { DiceEffects, DiceNum, Position } from "./types";
 
 // TODO: Move it to a new file for util.
 const COLOR_FIELD: string = "#FFE082";
@@ -22,6 +22,7 @@ const COLOR_PURPLE: string = "#B39DDB";
 type PlayerIdCallback = (player_id: PlayerId) => void;
 type CardIdCallback = (card_id: CardId) => void;
 type CardDataIdCallback = (card_data_id: CardDataId) => void;
+type PositionCallback = (position: Position) => void;
 
 function getFacilityColor(facility: Facility): string {
     if (!facility) {
@@ -758,6 +759,7 @@ export class HtmlMessageView extends HtmlViewObject {
 export class HtmlBoardView extends HtmlViewObject {
     readonly clickable_fields: HtmlClickableFieldsView;
     public callback: (x: number, y: number) => void;
+    private dialogCallback: PositionCallback = null;
 
     constructor(element_id: string, row: number, column: number) {
         super(document.getElementById(element_id));
@@ -772,7 +774,15 @@ export class HtmlBoardView extends HtmlViewObject {
     }
 
     private onClick(x: number, y: number): void {
-        this.callback(x, y);
+        if (this.dialogCallback != null) {
+            if (this.isClickable([x, y])) {
+                this.dialogCallback([x, y]);
+                this.dialogCallback = null;
+            }
+        }
+        else {
+            this.callback(x, y);
+        }
     }
 
     public clearEffects(): void {
@@ -783,6 +793,10 @@ export class HtmlBoardView extends HtmlViewObject {
         this.clickable_fields.setClickable(position, is_clickable);
     }
 
+    public isClickable(position: [number, number]): boolean {
+        return this.clickable_fields.isClickable(position);
+    }
+
     public setHighlight(position: [number, number], color: string): void {
         this.clickable_fields.setHighlight(position, color);
     }
@@ -791,8 +805,120 @@ export class HtmlBoardView extends HtmlViewObject {
         this.clickable_fields.showCost(position, cost);
     }
 
+    public setFacilitiesClickable(session: Session, callback: PositionCallback): void {
+        this.clearEffects();
+        const board: Board = session.getBoard();
+        for (let y: number = 0; y < board.row; ++y) {
+            for (let x: number = 0; x < board.column; ++x) {
+                const facility_id: CardId = board.getRawCardId(x, y);
+                if (session.isFacility(facility_id)) {
+                    this.setClickable([x, y], true);
+                }
+            }
+        }
+        this.dialogCallback = callback;
+    }
+
     public animateDiceResult(result: number, color: string): void {
         this.clickable_fields.animateDiceResult(result, color);
+    }
+}
+
+export class HtmlClickableFieldsView extends HtmlViewObject {
+    readonly row: number;
+    readonly column: number;
+    readonly fields: HtmlClickableFieldView[][] = [];
+
+    constructor(element_id: string, row: number, column: number) {
+        super(document.getElementById(element_id));
+        this.row = row;
+        this.column = column;
+
+        for (let x: number = 0; x < column; ++x) {
+            this.fields.push([]);
+            for (let y: number = 0; y < row; ++y) {
+                this.fields[x].push(new HtmlClickableFieldView(`${element_id}_${x}_${y}`));
+            }
+        }
+    }
+
+    public reset(): void {
+        for (let x: number = 0; x < this.column; ++x) {
+            for (let y: number = 0; y < this.row; ++y) {
+                this.fields[x][y].reset();
+            }
+        }
+    }
+
+    public setClickableAreas(areas: number[]): void {
+        for (let area of areas) {
+            let x: number = area - 1;
+            for (let y: number = 0; y < this.row; ++y) {
+                this.fields[x][y].setClickable(true);
+            }
+        }
+    }
+
+    public setClickable([x, y]: [number, number], is_clickable: boolean): void {
+        this.fields[x][y].setClickable(is_clickable);
+    }
+
+    public isClickable([x, y]: [number, number]): boolean {
+        return this.fields[x][y].isClickable();
+    }
+
+    public setHighlight([x, y]: [number, number], color: string): void {
+        this.fields[x][y].setColor(color);
+    }
+
+    public showCost([x, y]: [number, number], cost: number): void {
+        this.fields[x][y].showCost(cost);
+    }
+
+    public animateDiceResult(pip: number, color: string): void {
+        let x: number = pip - 1;
+        let delay: number = 0;
+        for (let i: number = 0; i < this.row; ++i) {
+            let y = this.row - 1 - i;
+            window.setTimeout(() => {
+                this.fields[x][y].setColor(color);
+                window.setTimeout(() => {
+                    this.fields[x][y].setColor("transparent"); }, 1500);
+            }, delay);
+            delay = delay + 10 * i;  // 0, 10, 30, 60, 100, ...
+        }
+    }
+}
+
+export class HtmlClickableFieldView extends HtmlViewObject {
+    private is_clickable: boolean = false;
+
+    constructor(element_id: string) {
+        super(document.getElementById(element_id));
+    }
+
+    public reset(): void {
+        this.element.style.borderColor = "transparent";
+        this.element.innerText = "";
+        this.is_clickable = false;
+    }
+
+    public isClickable(): boolean {
+        return this.is_clickable;
+    }
+
+    public setClickable(is_clickable: boolean): void {
+        this.is_clickable = is_clickable;
+        // TODO: Use class of "clickable".
+        this.element.style.borderColor = is_clickable ? COLOR_CLICKABLE : "transparent";
+    }
+
+    public setColor(color: string): void {
+        this.element.style.borderColor = color;
+    }
+
+    public showCost(cost: number): void {
+        this.element.innerText = String(cost);
     }
 }
 
@@ -959,92 +1085,6 @@ export class HtmlButtonsView extends HtmlViewObject {
             this.end_turn.show();
         }
         this.show();
-    }
-}
-
-export class HtmlClickableFieldView extends HtmlViewObject {
-    constructor(element_id: string) {
-        super(document.getElementById(element_id));
-    }
-
-    public reset(): void {
-        this.element.style.borderColor = "transparent";
-        this.element.innerText = "";
-    }
-
-    public setClickable(is_clickable: boolean): void {
-        // TODO: Use class of "clickable".
-        this.element.style.borderColor = is_clickable ? COLOR_CLICKABLE : "transparent";
-    }
-
-    public setColor(color: string): void {
-        this.element.style.borderColor = color;
-    }
-
-    public showCost(cost: number): void {
-        this.element.innerText = String(cost);
-    }
-}
-
-export class HtmlClickableFieldsView extends HtmlViewObject {
-    readonly row: number;
-    readonly column: number;
-    readonly fields: HtmlClickableFieldView[][] = [];
-
-    constructor(element_id: string, row: number, column: number) {
-        super(document.getElementById(element_id));
-        this.row = row;
-        this.column = column;
-
-        for (let x: number = 0; x < column; ++x) {
-            this.fields.push([]);
-            for (let y: number = 0; y < row; ++y) {
-                this.fields[x].push(new HtmlClickableFieldView(`${element_id}_${x}_${y}`));
-            }
-        }
-    }
-
-    public reset(): void {
-        for (let x: number = 0; x < this.column; ++x) {
-            for (let y: number = 0; y < this.row; ++y) {
-                this.fields[x][y].reset();
-            }
-        }
-    }
-
-    public setClickableAreas(areas: number[]): void {
-        for (let area of areas) {
-            let x: number = area - 1;
-            for (let y: number = 0; y < this.row; ++y) {
-                this.fields[x][y].setClickable(true);
-            }
-        }
-    }
-
-    public setClickable([x, y]: [number, number], is_clickable: boolean): void {
-        this.fields[x][y].setClickable(is_clickable);
-    }
-
-    public setHighlight([x, y]: [number, number], color: string): void {
-        this.fields[x][y].setColor(color);
-    }
-
-    public showCost([x, y]: [number, number], cost: number): void {
-        this.fields[x][y].showCost(cost);
-    }
-
-    public animateDiceResult(pip: number, color: string): void {
-        let x: number = pip - 1;
-        let delay: number = 0;
-        for (let i: number = 0; i < this.row; ++i) {
-            let y = this.row - 1 - i;
-            window.setTimeout(() => {
-                this.fields[x][y].setColor(color);
-                window.setTimeout(() => {
-                    this.fields[x][y].setColor("transparent"); }, 1500);
-            }, delay);
-            delay = delay + 10 * i;  // 0, 10, 30, 60, 100, ...
-        }
     }
 }
 

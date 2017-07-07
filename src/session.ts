@@ -1,7 +1,7 @@
 import { Dice, DiceResult } from "./dice";
 import { Player, Board, PlayerId } from "./board";
 import { CardId, CardDataId, CardType, FacilityType, Facility,
-         Character, CharacterData, CharacterType } from "./facility";
+         Character, CharacterData, CharacterType, SelectType } from "./facility";
 import { shuffle } from "./utils";
 import { CardState, CardManager, CardManagerQuery, EffectManager, PlayerCards } from "./card_manager";
 import * as Query from "./query";
@@ -791,17 +791,23 @@ export class Session {
                 break;
             }
             case CharacterType.Close: {
-                const query: CardManagerQuery = {
-                    card_type: CardType.Facility,
-                    facility_type: character.property["type"],
-                    state: CardState.Field,
-                    is_open: true,
-                };
-                const card_ids: CardId[] = this.queryCards(query);
-                for (let card_id of card_ids) {
-                    let facility: Facility = this.card_manager.getFacility(card_id);
+                let target_card_ids: CardId[] = [];
+                if (character.property["type"] === SelectType.Facility) {
+                    target_card_ids.push(query.target_card_id);
+                }
+                else {
+                    const card_query: CardManagerQuery = {
+                        card_type: CardType.Facility,
+                        facility_type: character.property["type"],
+                        state: CardState.Field,
+                        is_open: true,
+                    };
+                    target_card_ids = this.queryCards(card_query);
+                }
+                for (let target_card_id of target_card_ids) {
+                    let facility: Facility = this.card_manager.getFacility(target_card_id);
                     facility.is_open = false;
-                    event.target_card_ids.push(card_id);
+                    event.target_card_ids.push(target_card_id);
                 }
                 break;
             }

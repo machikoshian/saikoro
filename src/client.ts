@@ -115,6 +115,15 @@ export abstract class Client {
         return query;
     }
 
+    public createCharacterWithCardIdQuery(card_id: CardId,
+                                          target_card_id: CardId): Query.CharacterQuery {
+        let query: Query.CharacterQuery = <Query.CharacterQuery>this.createQuery();
+        query.command = "character";
+        query.card_id = card_id;
+        query.target_card_id = target_card_id;
+        return query;
+    }
+
     public createInteractQuery(card_id: CardId, target_player_id: PlayerId): Query.InteractQuery {
         let query: Query.InteractQuery = <Query.InteractQuery>this.createQuery();
         query.command = "interact";
