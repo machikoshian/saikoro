@@ -803,11 +803,15 @@ export class Session {
                     target_card_ids.push(query.target_card_id);
                 }
                 else {
+                    let owner_id = player_id;
+                    if (character.property["boost"] < 0) {
+                        owner_id = query.target_player_id;
+                    }
                     const card_query: CardManagerQuery = {
                         card_type: CardType.Facility,
                         facility_type: character.property["type"],
                         state: CardState.Field,
-                        owner_id: player_id,
+                        owner_id: owner_id,
                     };
                     target_card_ids = this.queryCards(card_query);
                 }

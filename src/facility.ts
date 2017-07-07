@@ -51,14 +51,14 @@ const CHARACTER_DATA: CharacterData[] = [
     new CharacterData("小学生",  CharacterType.DiceDelta, 2, {"delta": -1}),
     new CharacterData("中学生",  CharacterType.DiceDelta, 2, {"delta": 1}),
     new CharacterData("高校生",  CharacterType.DiceDelta, 2, {"delta": 2}),
-    new CharacterData("大学生",  CharacterType.DiceDelta, 1, {"delta": 3}),
-    new CharacterData("執事",    CharacterType.DrawCards, 0, {"value": 3}),
+    new CharacterData("大学生",  CharacterType.DiceDelta, 2, {"delta": 3}),
+    new CharacterData("執事",    CharacterType.DrawCards, 0, {"value": 5}),
     new CharacterData("市長秘書", CharacterType.DrawCards, 0, {"value": 3}),
     new CharacterData("有能秘書", CharacterType.MoveMoney, 0, {"money": 300}),
     new CharacterData("白奴", CharacterType.DiceEven, 0, {}),  // even
     new CharacterData("黒奴", CharacterType.DiceOdd, 0, {}),  // odd
-    new CharacterData("鉄道員", CharacterType.DiceOne, 2, {}),
-    new CharacterData("CA",    CharacterType.DiceTwo, 2, {}),
+    new CharacterData("鉄道員", CharacterType.DiceOne, 3, {}),
+    new CharacterData("CA",    CharacterType.DiceTwo, 3, {}),
     new CharacterData("気象予報士", CharacterType.Close, 0, {"type": SelectType.Blue}),
     new CharacterData("消防士", CharacterType.Close, 0, {"type": SelectType.Green}),
     new CharacterData("保健所員", CharacterType.Close, 0, {"type": SelectType.Red}),
@@ -72,6 +72,10 @@ const CHARACTER_DATA: CharacterData[] = [
     new CharacterData("看板娘", CharacterType.Boost, 1, {"type": SelectType.Green, "boost": 2.0}),
     new CharacterData("給仕", CharacterType.Boost, 1, {"type": SelectType.Red, "boost": 2.0}),
     new CharacterData("レポーター", CharacterType.Boost, 1, {"type": SelectType.Purple, "boost": 2.0}),
+    new CharacterData("土木作業員", CharacterType.Boost, 1, {"type": SelectType.Blue, "boost": -2.0}),
+    new CharacterData("解体屋", CharacterType.Boost, 1, {"type": SelectType.Green, "boost": -2.0}),
+    new CharacterData("大食い王", CharacterType.Boost, 1, {"type": SelectType.Red, "boost": -2.0}),
+    new CharacterData("ロッカー", CharacterType.Boost, 1, {"type": SelectType.Purple, "boost": -2.0}),
 ];
 
 export type CardDataId = number;
@@ -377,17 +381,19 @@ export class Character {
             case CharacterType.Boost: {
                 const boost: number = this.property["boost"] * 100;
                 const boost_str: string = ((boost > 0) ? "+" : "") + boost;
+                const target: string = (boost > 0) ? "自分" : "選んだプレイヤー";
+
                 switch (this.property["type"]) {
                     case SelectType.Facility:
                         return `選んだ施設の収入を${boost_str}%する\n${this.round}ラウンド`;
                     case SelectType.Blue:
-                        return `自分の青施設の収入を${boost_str}%する\n${this.round}ラウンド`;
+                        return `${target}の青施設の収入を${boost_str}%する\n${this.round}ラウンド`;
                     case SelectType.Green:
-                        return `自分の緑施設の収入を${boost_str}%する\n${this.round}ラウンド`;
+                        return `${target}の緑施設の収入を${boost_str}%する\n${this.round}ラウンド`;
                     case SelectType.Red:
-                        return `自分の赤施設の収入を${boost_str}%する\n${this.round}ラウンド`;
+                        return `${target}の赤施設の収入を${boost_str}%する\n${this.round}ラウンド`;
                     case SelectType.Purple:
-                        return `自分の紫施設の収入を${boost_str}%する\n${this.round}ラウンド`;
+                        return `${target}の紫施設の収入を${boost_str}%する\n${this.round}ラウンド`;
                 }
             }
         }

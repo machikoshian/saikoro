@@ -7,7 +7,7 @@ import { Dice, DiceResult } from "./dice";
 import { Client } from "./client";
 import { DeckMaker } from "./deck_maker";
 import { GameMode, Protocol, MatchingInfo } from "./protocol";
-import { HtmlViewObject, HtmlCardsView, HtmlCardView, HtmlPlayersView,
+import { PlayerIdCallback, HtmlViewObject, HtmlCardsView, HtmlCardView, HtmlPlayersView,
          HtmlMessageView, HtmlButtonsView, HtmlCardWidgetView,
          HtmlDeckCharView, HtmlBoardView, HtmlDiceView,
          HtmlChatButtonView, HtmlDeckCardsView } from "./html_view_parts";
@@ -587,6 +587,16 @@ export class HtmlView {
                 const target_card_id: CardId = this.session.getCardIdOnBoard(x, y);
                 this.client.sendRequest(
                     this.client.createCharacterWithCardIdQuery(card_id, target_card_id));
+            });
+        }
+        else if (character.type === CharacterType.Boost &&
+                 character.property["boost"] < 0) {
+            this.event_queue.addEvent(() => {
+                this.effectCharacter(this.client.player_id, card_id);
+                return true;
+            }, 2000);
+            this.dialogSelectPlayer((player_id: PlayerId) => {
+                this.client.sendRequest(this.client.createCharacterQuery(card_id, player_id));
             });
         }
         else {
@@ -1297,7 +1307,7 @@ export class HtmlView {
         this.board_view.setFacilitiesClickable(this.session, callback);
     }
 
-    private dialogSelectPlayer(callback): void {
+    private dialogSelectPlayer(callback: PlayerIdCallback): void {
         const color: string = this.getPlayerColor(this.client.player_id);
         this.message_view.drawMessage("対象プレイヤーを選択してください", color);
         this.players_view.setClickableForPlayer(this.client.player_id, callback);

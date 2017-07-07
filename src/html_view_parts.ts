@@ -19,10 +19,10 @@ const COLOR_GREEN: string = "#A5D6A7";
 const COLOR_RED: string = "#EF9A9A";
 const COLOR_PURPLE: string = "#B39DDB";
 
-type PlayerIdCallback = (player_id: PlayerId) => void;
-type CardIdCallback = (card_id: CardId) => void;
-type CardDataIdCallback = (card_data_id: CardDataId) => void;
-type PositionCallback = (position: Position) => void;
+export type PlayerIdCallback = (player_id: PlayerId) => void;
+export type CardIdCallback = (card_id: CardId) => void;
+export type CardDataIdCallback = (card_data_id: CardDataId) => void;
+export type PositionCallback = (position: Position) => void;
 
 function getFacilityColor(facility: Facility): string {
     if (!facility) {
