@@ -577,6 +577,18 @@ export class HtmlView {
                     this.client.createCharacterWithCardIdQuery(card_id, target_card_id));
             });
         }
+        else if (character.type === CharacterType.Boost &&
+                 character.property["type"] === SelectType.Facility) {
+            this.event_queue.addEvent(() => {
+                this.effectCharacter(this.client.player_id, card_id);
+                return true;
+            }, 2000);
+            this.dialogSelectFacilityPosition(([x, y]) => {
+                const target_card_id: CardId = this.session.getCardIdOnBoard(x, y);
+                this.client.sendRequest(
+                    this.client.createCharacterWithCardIdQuery(card_id, target_card_id));
+            });
+        }
         else {
             this.client.sendRequest(this.client.createCharacterQuery(card_id));
 
@@ -861,6 +873,16 @@ export class HtmlView {
             const [x, y]: [number, number] = session.getPosition(facility_id);
             this.board_view.setHighlight([x, y], COLOR_CLICKABLE);
         }
+
+
+        // for (let y: number = 0; y < board.row; ++y) {
+        //     for (let x: number = 0; x < board.column; ++x) {
+        //         const card_id: CardId = board.getRawCardId(x, y);
+        //         if (session.isFacility(card_id)) {
+        //             this.board_view.showCost([x, y], this.session.getFacilityValue(card_id));
+        //         }
+        //     }
+        // }
     }
 
     public drawDeckBoard(): void {

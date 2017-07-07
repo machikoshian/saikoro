@@ -65,7 +65,7 @@ const CHARACTER_DATA: CharacterData[] = [
     new CharacterData("警察官", CharacterType.Close, 0, {"type": SelectType.Purple}),
     new CharacterData("踊り子", CharacterType.Close, 0, {"type": SelectType.Facility}),
     new CharacterData("医者", CharacterType.Open, 0, {}),
-//    new CharacterData("残念秘書", CharacterType.Boost, 2, {"boost": -2.0}),
+    new CharacterData("残念秘書", CharacterType.Boost, 2, {"type": SelectType.Facility, "boost": -2.0}),
 ];
 
 export type CardDataId = number;

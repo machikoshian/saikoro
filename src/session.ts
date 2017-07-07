@@ -498,12 +498,19 @@ export class Session {
         event.player_id = player_id;
         event.type = EventType.Purple;
 
-        let value: number = facility.getPropertyValue();
+        let value: number = this.getFacilityValue(card_id);
         let amount: number = this.moveMoney(target_id, owner_id, value);
         event.moneys[target_id] -= amount;
         event.moneys[owner_id] += amount;
 
         return event;
+    }
+
+    public getFacilityValue(card_id: CardId): number {
+        const facility: Facility = this.getFacility(card_id);
+        const value: number = facility.getPropertyValue();
+        const boost: number = Math.max(0, 1.0 + this.effect_manager.getBoost(card_id));
+        return value * boost;
     }
 
     public doFacilityAction(card_id: CardId): Event {
@@ -526,7 +533,7 @@ export class Session {
                 facility.is_open = false;
             }
 
-            let amount: number = owner.addMoney(facility.getPropertyValue());
+            let amount: number = owner.addMoney(this.getFacilityValue(card_id));
             event.type = EventType.Blue;
             event.moneys[owner_id] += amount;
             return event;
@@ -544,7 +551,7 @@ export class Session {
                 facility.is_open = false;
             }
 
-            let amount: number = owner.addMoney(facility.getPropertyValue());
+            let amount: number = owner.addMoney(this.getFacilityValue(card_id));
             event.type = EventType.Green;
             event.moneys[owner_id] += amount;
             return event;
@@ -562,7 +569,7 @@ export class Session {
                 facility.is_open = false;
             }
 
-            let value: number = facility.getPropertyValue();
+            let value: number = this.getFacilityValue(card_id);
             event.type = EventType.Red;
             if (facility.property["all"]) {
                 for (let pid: number = 0; pid < this.players.length; ++pid) {
@@ -592,7 +599,7 @@ export class Session {
                 return event;
             }
 
-            let value: number = facility.getPropertyValue();
+            let value: number = this.getFacilityValue(card_id);
             if (facility.property["all"] !== true) {  // TODO: Update the logic.
                 event.type = EventType.Interaction;
             }
@@ -788,6 +795,24 @@ export class Session {
             case CharacterType.DiceEven:
             case CharacterType.DiceOdd: {
                 this.effect_manager.addCard(character.data_id, this.round, this.turn);
+                break;
+            }
+            case CharacterType.Boost: {
+                let target_card_ids: CardId[] = [];
+                if (character.property["type"] === SelectType.Facility) {
+                    target_card_ids.push(query.target_card_id);
+                }
+                else {
+                    const card_query: CardManagerQuery = {
+                        card_type: CardType.Facility,
+                        facility_type: character.property["type"],
+                        state: CardState.Field,
+                        is_open: true,
+                    };
+                    target_card_ids = this.queryCards(card_query);
+                }
+                this.effect_manager.addCard(
+                    character.data_id, this.round, this.turn, target_card_ids);
                 break;
             }
             case CharacterType.Close: {

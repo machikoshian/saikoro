@@ -516,14 +516,14 @@ export class CardEffect {
     readonly character: Character;  // TODO: Nice to merge it to CardManager?
     readonly round: number;
     readonly turn: number;
-    readonly fields: Position[];
+    readonly card_ids: CardId[];
 
-    constructor(data_id: CardDataId, round: number, turn: number, fields: Position[] = []) {
+    constructor(data_id: CardDataId, round: number, turn: number, card_ids: CardId[]) {
         this.data_id = data_id;
         this.character = new Character(data_id);
         this.round = round;
         this.turn = turn;
-        this.fields = [];
+        this.card_ids = card_ids;
     }
 
     public toJSON(): Object {
@@ -533,12 +533,12 @@ export class CardEffect {
             // Character is not encoded. data_id can reproduce Character.
             round: this.round,
             turn: this.turn,
-            fields: this.fields,
+            card_ids: this.card_ids,
         };
     }
 
     static fromJSON(json): CardEffect {
-        return new CardEffect(json.data_id, json.round, json.turn, json.fields);
+        return new CardEffect(json.data_id, json.round, json.turn, json.card_ids);
     }
 }
 
@@ -561,8 +561,8 @@ export class EffectManager {
         return new EffectManager(cards);
     }
 
-    public addCard(data_id: CardDataId, round: number, turn: number, fields: Position[] = []): void {
-        this.cards.push(new CardEffect(data_id, round, turn, fields));
+    public addCard(data_id: CardDataId, round: number, turn: number, card_ids: CardId[] = []): void {
+        this.cards.push(new CardEffect(data_id, round, turn, card_ids));
     }
 
     // Remove expired cards.
@@ -625,11 +625,11 @@ export class EffectManager {
         return this.cards.map((card) => { return card.character.type; });
     }
 
-    public getBoost(field: Position): number {
+    public getBoost(card_id: CardId): number {
         let boost: number = 0;
         for (let card of this.cards) {
             if (card.character.type === CharacterType.Boost &&
-                card.fields.indexOf(field) !== -1) {
+                card.card_ids.indexOf(card_id) !== -1) {
                 boost += card.character.property["boost"];
             }
         }
