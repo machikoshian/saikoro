@@ -53,6 +53,7 @@ export class Event {
     public card_id: CardId = null;
     public target_player_id: PlayerId = -1;
     public target_card_ids: CardId[] = [];
+    public close: boolean = false;
     public dice: DiceResult = null;
     public valid: boolean = false;
 
@@ -66,6 +67,7 @@ export class Event {
             card_id: this.card_id,
             target_player_id: this.target_player_id,
             target_card_ids: this.target_card_ids,
+            close: this.close,
             dice: this.dice ? this.dice.toJSON() : null,
             valid: this.valid,
         }
@@ -80,6 +82,7 @@ export class Event {
         event.card_id = json.card_id;
         event.target_player_id = json.target_player_id;
         event.target_card_ids = json.target_card_ids;
+        event.close = json.close;
         event.dice = json.dice ? DiceResult.fromJSON(json.dice) : null;
         event.valid = json.valid;
         return event;
@@ -530,6 +533,7 @@ export class Session {
                 return event;
             }
             if (facility.property["close"] === true) {
+                event.close = true;
                 facility.is_open = false;
             }
 
@@ -548,6 +552,7 @@ export class Session {
                 return event;
             }
             if (facility.property["close"] === true) {
+                event.close = true;
                 facility.is_open = false;
             }
 
@@ -566,6 +571,7 @@ export class Session {
                 return event;
             }
             if (facility.property["close"] === true) {
+                event.close = true;
                 facility.is_open = false;
             }
 
@@ -605,6 +611,7 @@ export class Session {
             }
             else {
                 if (facility.property["close"] === true) {
+                    event.close = true;
                     facility.is_open = false;
                 }
                 event.type = EventType.Purple;

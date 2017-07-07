@@ -436,7 +436,7 @@ export class HtmlDeckCardsView extends HtmlViewObject {
     }
 
     public resetPosition(): void {
-        const cols: number = 8;
+        const cols: number = 7;
         const num_cards: number = this.data_ids.length;
         if (num_cards === 0) {
             return;

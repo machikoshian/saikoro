@@ -54,7 +54,7 @@ const CHARACTER_DATA: CharacterData[] = [
     new CharacterData("大学生",  CharacterType.DiceDelta, 2, {"delta": 3}),
     new CharacterData("執事",    CharacterType.DrawCards, 0, {"value": 5}),
     new CharacterData("市長秘書", CharacterType.DrawCards, 0, {"value": 3}),
-    new CharacterData("有能秘書", CharacterType.MoveMoney, 0, {"money": 300}),
+    new CharacterData("有能秘書", CharacterType.MoveMoney, 0, {"money": 500}),
     new CharacterData("白奴", CharacterType.DiceEven, 0, {}),  // even
     new CharacterData("黒奴", CharacterType.DiceOdd, 0, {}),  // odd
     new CharacterData("鉄道員", CharacterType.DiceOne, 3, {}),
