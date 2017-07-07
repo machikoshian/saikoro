@@ -84,6 +84,8 @@ var CharacterType;
     CharacterType[CharacterType["DrawCards"] = 6] = "DrawCards";
     CharacterType[CharacterType["MoveMoney"] = 7] = "MoveMoney";
     CharacterType[CharacterType["SalaryFactor"] = 8] = "SalaryFactor";
+    CharacterType[CharacterType["Close"] = 9] = "Close";
+    CharacterType[CharacterType["Open"] = 10] = "Open";
 })(CharacterType = exports.CharacterType || (exports.CharacterType = {}));
 var CharacterData = (function () {
     function CharacterData(id, // Unique number.
@@ -97,6 +99,21 @@ var CharacterData = (function () {
     return CharacterData;
 }());
 exports.CharacterData = CharacterData;
+var CardType;
+(function (CardType) {
+    CardType[CardType["None"] = 0] = "None";
+    CardType[CardType["Facility"] = 1] = "Facility";
+    CardType[CardType["Landmark"] = 2] = "Landmark";
+    CardType[CardType["Character"] = 3] = "Character";
+})(CardType = exports.CardType || (exports.CardType = {}));
+var FacilityType;
+(function (FacilityType) {
+    FacilityType[FacilityType["Gray"] = 0] = "Gray";
+    FacilityType[FacilityType["Blue"] = 1] = "Blue";
+    FacilityType[FacilityType["Green"] = 2] = "Green";
+    FacilityType[FacilityType["Red"] = 3] = "Red";
+    FacilityType[FacilityType["Purple"] = 4] = "Purple";
+})(FacilityType = exports.FacilityType || (exports.FacilityType = {}));
 var CHARACTER_DATA_BASE = 1000;
 var CHARACTER_DATA = [
     new CharacterData(1000, "幼稚園児", CharacterType.DiceDelta, 2, { "delta": -2 }),
@@ -111,15 +128,12 @@ var CHARACTER_DATA = [
     new CharacterData(1009, "黒奴", CharacterType.DiceOdd, 0, {}),
     new CharacterData(1010, "鉄道員", CharacterType.DiceOne, 2, {}),
     new CharacterData(1011, "CA", CharacterType.DiceTwo, 2, {}),
+    new CharacterData(1012, "気象予報士", CharacterType.Close, 0, { "type": FacilityType.Blue }),
+    new CharacterData(1013, "消防士", CharacterType.Close, 0, { "type": FacilityType.Green }),
+    new CharacterData(1014, "保健所員", CharacterType.Close, 0, { "type": FacilityType.Red }),
+    new CharacterData(1015, "警察官", CharacterType.Close, 0, { "type": FacilityType.Purple }),
+    new CharacterData(1016, "医者", CharacterType.Open, 0, {}),
 ];
-var FacilityType;
-(function (FacilityType) {
-    FacilityType[FacilityType["Gray"] = 0] = "Gray";
-    FacilityType[FacilityType["Blue"] = 1] = "Blue";
-    FacilityType[FacilityType["Green"] = 2] = "Green";
-    FacilityType[FacilityType["Red"] = 3] = "Red";
-    FacilityType[FacilityType["Purple"] = 4] = "Purple";
-})(FacilityType = exports.FacilityType || (exports.FacilityType = {}));
 var FacilityData = (function () {
     function FacilityData(id, // Unique number.
         size, area, // TODO should be range.
@@ -243,6 +257,9 @@ var Facility = (function () {
         facility.is_open = json.is_open;
         return facility;
     };
+    Facility.prototype.reset = function () {
+        this.is_open = true;
+    };
     Facility.prototype.getName = function () {
         return this.name;
     };
@@ -359,6 +376,21 @@ var Character = (function () {
                 var money = this.property["money"];
                 return "\u9078\u3093\u3060\u30D7\u30EC\u30A4\u30E4\u30FC\u304B\u3089" + money + "\u30B3\u30A4\u30F3\u3092\u596A\u3046";
             }
+            case CharacterType.Close: {
+                switch (this.property["type"]) {
+                    case FacilityType.Blue:
+                        return "青施設をすべて休業にする";
+                    case FacilityType.Green:
+                        return "緑施設をすべて休業にする";
+                    case FacilityType.Red:
+                        return "赤施設をすべて休業にする";
+                    case FacilityType.Purple:
+                        return "紫施設をすべて休業にする";
+                }
+            }
+            case CharacterType.Open: {
+                return "全施設の休業を解除する";
+            }
         }
         return "";
     };
@@ -380,11 +412,12 @@ var GameMode;
     GameMode[GameMode["OffLine_2"] = 1] = "OffLine_2";
     GameMode[GameMode["OffLine_3"] = 2] = "OffLine_3";
     GameMode[GameMode["OffLine_4"] = 3] = "OffLine_4";
-    GameMode[GameMode["OnLineSingle_2"] = 4] = "OnLineSingle_2";
-    GameMode[GameMode["OnLineSingle_3"] = 5] = "OnLineSingle_3";
-    GameMode[GameMode["OnLineSingle_4"] = 6] = "OnLineSingle_4";
-    GameMode[GameMode["OnLine2Players"] = 7] = "OnLine2Players";
-    GameMode[GameMode["OnLineWatch"] = 8] = "OnLineWatch";
+    GameMode[GameMode["OffLine_2_Matching"] = 4] = "OffLine_2_Matching";
+    GameMode[GameMode["OnLineSingle_2"] = 5] = "OnLineSingle_2";
+    GameMode[GameMode["OnLineSingle_3"] = 6] = "OnLineSingle_3";
+    GameMode[GameMode["OnLineSingle_4"] = 7] = "OnLineSingle_4";
+    GameMode[GameMode["OnLine2Players"] = 8] = "OnLine2Players";
+    GameMode[GameMode["OnLineWatch"] = 9] = "OnLineWatch";
 })(GameMode = exports.GameMode || (exports.GameMode = {}));
 ;
 var Protocol = (function () {
@@ -405,6 +438,8 @@ var Protocol = (function () {
                 return "3人バトル 😺 👻 👾";
             case GameMode.OffLine_4:
                 return "4人バトル 😺 👻 👾 🗿";
+            case GameMode.OffLine_2_Matching:
+                return "2人バトル 😺 👻";
             case GameMode.OnLineSingle_2:
                 return "2人バトル 😺 👻";
             case GameMode.OnLineSingle_3:
@@ -424,6 +459,7 @@ var Protocol = (function () {
     Protocol.getNpcCount = function (mode) {
         switch (mode) {
             case GameMode.OffLine_2:
+            case GameMode.OffLine_2_Matching:
             case GameMode.OnLineSingle_2:
                 return 1;
             case GameMode.OffLine_3:
@@ -443,6 +479,7 @@ var Protocol = (function () {
     Protocol.getPlayerCount = function (mode) {
         switch (mode) {
             case GameMode.OffLine_2:
+            case GameMode.OffLine_2_Matching:
             case GameMode.OnLineSingle_2:
             case GameMode.OffLine_3:
             case GameMode.OnLineSingle_3:
@@ -471,7 +508,7 @@ exports.Protocol = Protocol;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var dice_1 = __webpack_require__(13);
-var board_1 = __webpack_require__(5);
+var board_1 = __webpack_require__(6);
 var facility_1 = __webpack_require__(0);
 var utils_1 = __webpack_require__(4);
 var card_manager_1 = __webpack_require__(11);
@@ -1056,6 +1093,19 @@ var Session = (function () {
         }
         return positions;
     };
+    Session.prototype.queryCards = function (query) {
+        var card_ids = this.card_manager.queryCards(query);
+        var results = [];
+        for (var _i = 0, card_ids_1 = card_ids; _i < card_ids_1.length; _i++) {
+            var card_id = card_ids_1[_i];
+            var facility = this.card_manager.getFacility(card_id);
+            if (query.is_open && query.is_open !== facility.is_open) {
+                continue;
+            }
+            results.push(card_id);
+        }
+        return results;
+    };
     // Build a facility in the player's talon.
     // No overwrite an existing facility or no exceed the cost of the player's money.
     Session.prototype.buildInitialFacility = function (player_id) {
@@ -1159,6 +1209,37 @@ var Session = (function () {
             case facility_1.CharacterType.DiceEven:
             case facility_1.CharacterType.DiceOdd: {
                 this.effect_manager.addCard(character.data_id, this.round, this.turn);
+                break;
+            }
+            case facility_1.CharacterType.Close: {
+                var query_1 = {
+                    card_type: facility_1.CardType.Facility,
+                    facility_type: character.property["type"],
+                    state: card_manager_1.CardState.Field,
+                    is_open: true,
+                };
+                var card_ids = this.queryCards(query_1);
+                for (var _i = 0, card_ids_2 = card_ids; _i < card_ids_2.length; _i++) {
+                    var card_id_1 = card_ids_2[_i];
+                    var facility = this.card_manager.getFacility(card_id_1);
+                    facility.is_open = false;
+                    event.target_card_ids.push(card_id_1);
+                }
+                break;
+            }
+            case facility_1.CharacterType.Open: {
+                var query_2 = {
+                    card_type: facility_1.CardType.Facility,
+                    state: card_manager_1.CardState.Field,
+                    is_open: false,
+                };
+                var card_ids = this.queryCards(query_2);
+                for (var _a = 0, card_ids_3 = card_ids; _a < card_ids_3.length; _a++) {
+                    var card_id_2 = card_ids_3[_a];
+                    var facility = this.card_manager.getFacility(card_id_2);
+                    facility.is_open = true;
+                    event.target_card_ids.push(card_id_2);
+                }
                 break;
             }
         }
@@ -1552,6 +1633,147 @@ exports.shuffle = shuffle;
 
 "use strict";
 
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var client_1 = __webpack_require__(7);
+var session_handler_1 = __webpack_require__(17);
+var storage_1 = __webpack_require__(8);
+var protocol_1 = __webpack_require__(1);
+var storage = new storage_1.LocalStorage();
+var session_handler = new session_handler_1.SessionHandler(storage);
+var StandaloneConnection = (function (_super) {
+    __extends(StandaloneConnection, _super);
+    function StandaloneConnection(delay) {
+        if (delay === void 0) { delay = 0; }
+        var _this = _super.call(this) || this;
+        _this.delay = delay;
+        return _this;
+    }
+    StandaloneConnection.prototype.startCheckUpdate = function (client) { };
+    StandaloneConnection.prototype.stopCheckUpdate = function () { };
+    StandaloneConnection.prototype.matching = function (query, callback) {
+        var _this = this;
+        session_handler.handleMatching(query).then(function (data) {
+            var matching_info = data.value;
+            setTimeout(function () {
+                callback(JSON.stringify(matching_info));
+            }, _this.delay);
+        });
+    };
+    StandaloneConnection.prototype.stopCheckMatching = function () {
+        // Do nothing.
+    };
+    StandaloneConnection.prototype.setQueryOnDisconnect = function (query) {
+        // Do nothing.
+    };
+    StandaloneConnection.prototype.sendRequest = function (query, callback) {
+        var _this = this;
+        session_handler.handleCommand(query).then(function (data) {
+            setTimeout(function () {
+                callback(data.value);
+            }, _this.delay);
+        });
+    };
+    StandaloneConnection.prototype.startCheckLive = function (callback) {
+        // Do nothing.
+    };
+    StandaloneConnection.prototype.stopCheckLive = function () {
+        // Do nothing.
+    };
+    return StandaloneConnection;
+}(client_1.Connection));
+exports.StandaloneConnection = StandaloneConnection;
+var HybridConnection = (function (_super) {
+    __extends(HybridConnection, _super);
+    function HybridConnection(online_connection) {
+        if (online_connection === void 0) { online_connection = null; }
+        var _this = _super.call(this) || this;
+        _this.online_connection = null;
+        _this.offline_connection = null;
+        _this.connection = null;
+        _this.online_connection = online_connection;
+        _this.offline_connection = new StandaloneConnection();
+        _this.connection = _this.offline_connection;
+        return _this;
+    }
+    HybridConnection.prototype.setOnlineConnection = function (connection) {
+        if (this.online_connection) {
+            this.online_connection.stopCheckUpdate();
+        }
+        this.online_connection = connection;
+    };
+    HybridConnection.prototype.startCheckUpdate = function (client) {
+        this.connection = this.getConnection(client.mode);
+        this.connection.startCheckUpdate(client);
+    };
+    HybridConnection.prototype.stopCheckUpdate = function () {
+        this.connection.stopCheckUpdate();
+    };
+    HybridConnection.prototype.matching = function (query, callback) {
+        this.connection.stopCheckUpdate();
+        this.connection = this.getConnection(query.mode);
+        this.connection.matching(query, callback);
+    };
+    HybridConnection.prototype.stopCheckMatching = function () {
+        if (this.online_connection) {
+            this.online_connection.stopCheckMatching();
+            return;
+        }
+        this.offline_connection.stopCheckMatching();
+    };
+    HybridConnection.prototype.setQueryOnDisconnect = function (query) {
+        // Online connection is used if available.
+        if (this.online_connection) {
+            this.online_connection.setQueryOnDisconnect(query);
+            return;
+        }
+        this.offline_connection.setQueryOnDisconnect(query);
+    };
+    HybridConnection.prototype.startCheckLive = function (callback) {
+        // Online connection is used if available.
+        if (this.online_connection) {
+            this.online_connection.startCheckLive(callback);
+            return;
+        }
+        this.offline_connection.startCheckLive(callback);
+    };
+    HybridConnection.prototype.stopCheckLive = function () {
+        // Online connection is used if available.
+        if (this.online_connection) {
+            this.online_connection.stopCheckLive();
+            return;
+        }
+        this.offline_connection.stopCheckLive();
+    };
+    HybridConnection.prototype.getConnection = function (mode) {
+        if (protocol_1.Protocol.isOnlineMode(mode) && (this.online_connection != null)) {
+            return this.online_connection;
+        }
+        return this.offline_connection;
+    };
+    HybridConnection.prototype.sendRequest = function (query, callback) {
+        this.getConnection(query.mode).sendRequest(query, callback);
+    };
+    return HybridConnection;
+}(client_1.Connection));
+exports.HybridConnection = HybridConnection;
+
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
 Object.defineProperty(exports, "__esModule", { value: true });
 var Player = (function () {
     function Player(user_id, id, name, money, salary, team, is_auto) {
@@ -1712,7 +1934,7 @@ exports.Board = Board;
 
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1727,6 +1949,7 @@ var Connection = (function () {
 exports.Connection = Connection;
 var Client = (function () {
     function Client(connection) {
+        // TODO: These variables should not be modified by others.
         this.session_id = -1;
         this.mode = protocol_1.GameMode.None;
         this.player_id = -1;
@@ -1734,57 +1957,7 @@ var Client = (function () {
         this.user_id = String(Math.floor(Math.random() * 1000000) + 10);
         this.step = -1;
         this.live_sessions = [];
-        this.connection = connection;
     }
-    Client.prototype.reset = function () {
-        this.session_id = -1;
-        this.mode = protocol_1.GameMode.None;
-        this.player_id = -1;
-        this.step = -1;
-        this.connection.stopCheckUpdate();
-        this.connection.stopCheckLive();
-    };
-    Client.prototype.matching = function (query) {
-        query.command = "matching";
-        query.user_id = this.user_id;
-        this.mode = query["mode"];
-        this.connection.stopCheckMatching();
-        this.connection.setQueryOnDisconnect(this.createQuitQuery());
-        this.connection.matching(query, this.callbackMatching.bind(this));
-    };
-    Client.prototype.checkUpdate = function () {
-        this.sendRequest(this.createUpdateQuery(this.step));
-    };
-    Client.prototype.callbackMatching = function (response) {
-        var response_json = JSON.parse(response);
-        if (response_json == null || !response_json.is_matched) {
-            return;
-        }
-        this.session_id = response_json.session_id;
-        this.connection.setQueryOnDisconnect(this.createQuitQuery());
-        this.checkUpdate();
-        this.connection.stopCheckMatching();
-        this.connection.startCheckUpdate(this);
-        this.connection.stopCheckLive();
-    };
-    Client.prototype.startCheckLive = function (callback) {
-        this.connection.startCheckLive(callback);
-    };
-    Client.prototype.watchGame = function (session_id) {
-        this.reset();
-        this.session_id = session_id;
-        this.mode = protocol_1.GameMode.OnLineWatch;
-        this.sendRequest(this.createWatchQuery());
-        this.connection.setQueryOnDisconnect(this.createQuitQuery());
-        this.connection.startCheckUpdate(this);
-        this.connection.stopCheckLive();
-    };
-    Client.prototype.sendRequest = function (request) {
-        var _this = this;
-        this.connection.sendRequest(request, function (response) {
-            _this.callbackSession(response);
-        });
-    };
     Client.prototype.createQuery = function () {
         return {
             command: "",
@@ -1880,7 +2053,7 @@ exports.Client = Client;
 
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2024,7 +2197,7 @@ exports.LocalStorage = LocalStorage;
 
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2040,10 +2213,11 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-var client_1 = __webpack_require__(6);
+var client_1 = __webpack_require__(7);
 var session_1 = __webpack_require__(2);
 var html_view_1 = __webpack_require__(14);
 var protocol_1 = __webpack_require__(1);
+var standalone_connection_1 = __webpack_require__(5);
 // TODO: can be merged with Client?
 var WebClient = (function (_super) {
     __extends(WebClient, _super);
@@ -2051,15 +2225,67 @@ var WebClient = (function (_super) {
         var _this = _super.call(this, connection) || this;
         _this.no_update_count = 0;
         _this.chat_timestamps = {};
+        var delay = 0; // msec.
+        _this.offline_connection = new standalone_connection_1.StandaloneConnection(delay);
+        _this.connection = connection ? connection : _this.offline_connection;
         _this.view = new html_view_1.HtmlView(_this);
         return _this;
     }
     WebClient.prototype.reset = function () {
-        _super.prototype.reset.call(this);
+        this.session_id = -1;
+        this.mode = protocol_1.GameMode.None;
+        this.player_id = -1;
+        this.step = -1;
+        this.connection.stopCheckUpdate();
+        this.connection.stopCheckLive();
         this.no_update_count = 0;
     };
     WebClient.prototype.initBoard = function () {
         this.view.initView();
+    };
+    WebClient.prototype.matching = function (query) {
+        query.command = "matching";
+        query.user_id = this.user_id;
+        this.mode = query.mode;
+        if (query.mode !== protocol_1.GameMode.OffLine_2_Matching) {
+            // If mode is OffLine_2_Matching, do not stop previous actual matching request.
+            this.connection.stopCheckMatching();
+        }
+        if (protocol_1.Protocol.isOnlineMode(query.mode)) {
+            this.connection.setQueryOnDisconnect(this.createQuitQuery());
+            this.connection.matching(query, this.callbackMatching.bind(this));
+            // Start offline game for waiting.
+            // let offline_query: Query.MatchingQuery = JSON.parse(JSON.stringify(query));
+            // offline_query.mode = GameMode.OffLine_2_Matching;
+            // this.mode = GameMode.OffLine_2_Matching;
+            // this.offline_connection.matching(offline_query, this.callbackMatching.bind(this));
+        }
+        else {
+            this.offline_connection.matching(query, this.callbackMatching.bind(this));
+        }
+    };
+    WebClient.prototype.callbackMatching = function (response) {
+        var response_json = JSON.parse(response);
+        if (response_json == null || !response_json.is_matched) {
+            return;
+        }
+        // Mode is already changed to online.
+        if (protocol_1.Protocol.isOnlineMode(this.mode) &&
+            response_json.mode === protocol_1.GameMode.OffLine_2_Matching) {
+            return;
+        }
+        this.session_id = response_json.session_id;
+        this.mode = response_json.mode;
+        this.step = -1;
+        this.no_update_count = 0;
+        this.view.matched();
+        this.checkUpdate();
+        if (protocol_1.Protocol.isOnlineMode(response_json.mode)) {
+            this.connection.setQueryOnDisconnect(this.createQuitQuery());
+            this.connection.stopCheckMatching();
+            this.connection.startCheckUpdate(this);
+            this.connection.stopCheckLive();
+        }
     };
     WebClient.prototype.callbackSession = function (response) {
         if (this.mode === protocol_1.GameMode.None) {
@@ -2111,150 +2337,31 @@ var WebClient = (function (_super) {
             this.chat_timestamps[user_id] = chat.timestamp;
         }
     };
+    WebClient.prototype.checkUpdate = function () {
+        this.sendRequest(this.createUpdateQuery(this.step));
+    };
+    WebClient.prototype.startCheckLive = function (callback) {
+        this.connection.startCheckLive(callback);
+    };
+    WebClient.prototype.watchGame = function (session_id) {
+        this.reset();
+        this.session_id = session_id;
+        this.mode = protocol_1.GameMode.OnLineWatch;
+        this.sendRequest(this.createWatchQuery());
+        this.connection.setQueryOnDisconnect(this.createQuitQuery());
+        this.connection.startCheckUpdate(this);
+        this.connection.stopCheckLive();
+    };
+    WebClient.prototype.sendRequest = function (request) {
+        var _this = this;
+        var connection = protocol_1.Protocol.isOnlineMode(this.mode) ? this.connection : this.offline_connection;
+        connection.sendRequest(request, function (response) {
+            _this.callbackSession(response);
+        });
+    };
     return WebClient;
 }(client_1.Client));
 exports.WebClient = WebClient;
-
-
-/***/ }),
-/* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-var client_1 = __webpack_require__(6);
-var session_handler_1 = __webpack_require__(17);
-var storage_1 = __webpack_require__(7);
-var protocol_1 = __webpack_require__(1);
-var storage = new storage_1.LocalStorage();
-var session_handler = new session_handler_1.SessionHandler(storage);
-var StandaloneConnection = (function (_super) {
-    __extends(StandaloneConnection, _super);
-    function StandaloneConnection(delay) {
-        if (delay === void 0) { delay = 0; }
-        var _this = _super.call(this) || this;
-        _this.delay = delay;
-        return _this;
-    }
-    StandaloneConnection.prototype.startCheckUpdate = function (client) { };
-    StandaloneConnection.prototype.stopCheckUpdate = function () { };
-    StandaloneConnection.prototype.matching = function (query, callback) {
-        var _this = this;
-        session_handler.handleMatching(query).then(function (data) {
-            var matching_info = data.value;
-            setTimeout(function () {
-                callback(JSON.stringify(matching_info));
-            }, _this.delay);
-        });
-    };
-    StandaloneConnection.prototype.stopCheckMatching = function () {
-        // Do nothing.
-    };
-    StandaloneConnection.prototype.setQueryOnDisconnect = function (query) {
-        // Do nothing.
-    };
-    StandaloneConnection.prototype.sendRequest = function (query, callback) {
-        var _this = this;
-        session_handler.handleCommand(query).then(function (data) {
-            setTimeout(function () {
-                callback(data.value);
-            }, _this.delay);
-        });
-    };
-    StandaloneConnection.prototype.startCheckLive = function (callback) {
-        // Do nothing.
-    };
-    StandaloneConnection.prototype.stopCheckLive = function () {
-        // Do nothing.
-    };
-    return StandaloneConnection;
-}(client_1.Connection));
-exports.StandaloneConnection = StandaloneConnection;
-var HybridConnection = (function (_super) {
-    __extends(HybridConnection, _super);
-    function HybridConnection(online_connection) {
-        if (online_connection === void 0) { online_connection = null; }
-        var _this = _super.call(this) || this;
-        _this.online_connection = null;
-        _this.offline_connection = null;
-        _this.connection = null;
-        _this.online_connection = online_connection;
-        _this.offline_connection = new StandaloneConnection();
-        _this.connection = _this.offline_connection;
-        return _this;
-    }
-    HybridConnection.prototype.setOnlineConnection = function (connection) {
-        if (this.online_connection) {
-            this.online_connection.stopCheckUpdate();
-        }
-        this.online_connection = connection;
-    };
-    HybridConnection.prototype.startCheckUpdate = function (client) {
-        this.connection = this.getConnection(client.mode);
-        this.connection.startCheckUpdate(client);
-    };
-    HybridConnection.prototype.stopCheckUpdate = function () {
-        this.connection.stopCheckUpdate();
-    };
-    HybridConnection.prototype.matching = function (query, callback) {
-        this.connection.stopCheckUpdate();
-        this.connection = this.getConnection(query.mode);
-        this.connection.matching(query, callback);
-    };
-    HybridConnection.prototype.stopCheckMatching = function () {
-        if (this.online_connection) {
-            this.online_connection.stopCheckMatching();
-            return;
-        }
-        this.offline_connection.stopCheckMatching();
-    };
-    HybridConnection.prototype.setQueryOnDisconnect = function (query) {
-        // Online connection is used if available.
-        if (this.online_connection) {
-            this.online_connection.setQueryOnDisconnect(query);
-            return;
-        }
-        this.offline_connection.setQueryOnDisconnect(query);
-    };
-    HybridConnection.prototype.startCheckLive = function (callback) {
-        // Online connection is used if available.
-        if (this.online_connection) {
-            this.online_connection.startCheckLive(callback);
-            return;
-        }
-        this.offline_connection.startCheckLive(callback);
-    };
-    HybridConnection.prototype.stopCheckLive = function () {
-        // Online connection is used if available.
-        if (this.online_connection) {
-            this.online_connection.stopCheckLive();
-            return;
-        }
-        this.offline_connection.stopCheckLive();
-    };
-    HybridConnection.prototype.getConnection = function (mode) {
-        if (protocol_1.Protocol.isOnlineMode(mode) && (this.online_connection != null)) {
-            return this.online_connection;
-        }
-        return this.offline_connection;
-    };
-    HybridConnection.prototype.sendRequest = function (query, callback) {
-        this.getConnection(query.mode).sendRequest(query, callback);
-    };
-    return HybridConnection;
-}(client_1.Connection));
-exports.HybridConnection = HybridConnection;
 
 
 /***/ }),
@@ -2375,32 +2482,44 @@ exports.AutoPlay = AutoPlay;
 Object.defineProperty(exports, "__esModule", { value: true });
 var facility_1 = __webpack_require__(0);
 var types_1 = __webpack_require__(3);
+var CardState;
+(function (CardState) {
+    CardState[CardState["None"] = 0] = "None";
+    CardState[CardState["Talon"] = 1] = "Talon";
+    CardState[CardState["Hand"] = 2] = "Hand";
+    CardState[CardState["Field"] = 3] = "Field";
+    CardState[CardState["Discard"] = 4] = "Discard";
+})(CardState = exports.CardState || (exports.CardState = {}));
 var PlayerCards = (function () {
     function PlayerCards(talon, hand, field, discard) {
         if (talon === void 0) { talon = []; }
         if (hand === void 0) { hand = []; }
         if (field === void 0) { field = []; }
         if (discard === void 0) { discard = []; }
+        this.cards = {}; // CardState -> CardId[]
         this.max_hand = 10;
-        this.talon = talon;
-        this.hand = hand;
-        this.field = field;
-        this.discard = discard;
+        this.cards[CardState.Talon] = talon;
+        this.cards[CardState.Hand] = hand;
+        this.cards[CardState.Field] = field;
+        this.cards[CardState.Discard] = discard;
     }
     PlayerCards.prototype.toJSON = function () {
         return {
             class_name: "PlayerCards",
-            talon: this.talon,
-            hand: this.hand,
-            field: this.field,
-            discard: this.discard,
+            talon: this.cards[CardState.Talon],
+            hand: this.cards[CardState.Hand],
+            field: this.cards[CardState.Field],
+            discard: this.cards[CardState.Discard],
         };
     };
     PlayerCards.fromJSON = function (json) {
         return new PlayerCards(json.talon, json.hand, json.field, json.discard);
     };
     PlayerCards.prototype.getSize = function () {
-        return this.talon.length + this.hand.length + this.field.length + this.discard.length;
+        return (this.cards[CardState.Talon].length +
+            this.cards[CardState.Hand].length +
+            this.cards[CardState.Field].length +
+            this.cards[CardState.Discard].length);
     };
     PlayerCards.prototype.getIndex = function (card_id, facility_array) {
         // indexOf is type sensitive (e.g. "1" is different value from 1).
@@ -2437,53 +2556,56 @@ var PlayerCards = (function () {
             console.warn("card_id < 0.");
             return false;
         }
-        this.talon.push(card_id);
+        this.cards[CardState.Talon].push(card_id);
         return true;
     };
     PlayerCards.prototype.getTalon = function () {
-        return this.talon;
+        return this.cards[CardState.Talon];
     };
     PlayerCards.prototype.getHand = function () {
-        return this.hand;
+        return this.cards[CardState.Hand];
     };
     // Move a random facility from Talon to Hand.
     PlayerCards.prototype.dealToHand = function () {
-        if (this.talon.length === 0 || this.hand.length === this.max_hand) {
+        if (this.cards[CardState.Talon].length === 0 || this.cards[CardState.Hand].length === this.max_hand) {
             return -1;
         }
-        var random_index = Math.floor(Math.random() * this.talon.length);
-        var card_id = this.talon[random_index];
+        var random_index = Math.floor(Math.random() * this.cards[CardState.Talon].length);
+        var card_id = this.cards[CardState.Talon][random_index];
         this.moveTalonToHand(card_id);
         return card_id;
     };
     PlayerCards.prototype.getTalonSize = function () {
-        return this.talon.length;
+        return this.cards[CardState.Talon].length;
     };
     PlayerCards.prototype.getHandSize = function () {
-        return this.hand.length;
+        return this.cards[CardState.Hand].length;
     };
     PlayerCards.prototype.moveTalonToHand = function (card_id) {
-        if (this.hand.length === this.max_hand) {
+        if (this.cards[CardState.Hand].length === this.max_hand) {
             return false;
         }
-        return this.moveCardId(card_id, this.talon, this.hand);
+        return this.moveCardId(card_id, this.cards[CardState.Talon], this.cards[CardState.Hand]);
     };
     PlayerCards.prototype.isInHand = function (card_id) {
-        var index = this.getIndex(card_id, this.hand);
+        return this.isInState(card_id, CardState.Hand);
+    };
+    PlayerCards.prototype.isInState = function (card_id, state) {
+        var index = this.getIndex(card_id, this.cards[state]);
         return (index >= 0);
     };
     // Used for initial build.
     PlayerCards.prototype.moveTalonToField = function (card_id) {
-        return this.moveCardId(card_id, this.talon, this.field);
+        return this.moveCardId(card_id, this.cards[CardState.Talon], this.cards[CardState.Field]);
     };
     PlayerCards.prototype.moveHandToField = function (card_id) {
-        return this.moveCardId(card_id, this.hand, this.field);
+        return this.moveCardId(card_id, this.cards[CardState.Hand], this.cards[CardState.Field]);
     };
     PlayerCards.prototype.moveHandToDiscard = function (card_id) {
-        return this.moveCardId(card_id, this.hand, this.discard);
+        return this.moveCardId(card_id, this.cards[CardState.Hand], this.cards[CardState.Discard]);
     };
     PlayerCards.prototype.moveFieldToDiscard = function (card_id) {
-        return this.moveCardId(card_id, this.field, this.discard);
+        return this.moveCardId(card_id, this.cards[CardState.Field], this.cards[CardState.Discard]);
     };
     return PlayerCards;
 }());
@@ -2536,6 +2658,40 @@ var CardManager = (function () {
             characters[id] = facility_1.Character.fromJSON(json.characters[id]);
         }
         return new CardManager(facilities, characters, json.player_cards_list.map(function (cards) { return PlayerCards.fromJSON(cards); }), json.landmarks);
+    };
+    CardManager.prototype.queryCards = function (query) {
+        var results = [];
+        var card_ids = Object.keys(this.facilities).map(function (key) { return Number(key); });
+        for (var _i = 0, card_ids_1 = card_ids; _i < card_ids_1.length; _i++) {
+            var card_id = card_ids_1[_i];
+            if (query.card_type != null &&
+                this.getCardType(card_id) !== query.card_type) {
+                continue;
+            }
+            if (query.facility_type != null &&
+                this.facilities[card_id].type !== query.facility_type) {
+                continue;
+            }
+            if (query.state != null &&
+                this.isFacility(card_id) &&
+                !this.getPlayerCardsFromCardId(card_id).isInState(card_id, query.state)) {
+                continue;
+            }
+            results.push(card_id);
+        }
+        return results;
+    };
+    CardManager.prototype.getCardType = function (card_id) {
+        if (this.isFacility(card_id)) {
+            return facility_1.CardType.Facility;
+        }
+        if (this.isLandmark(card_id)) {
+            return facility_1.CardType.Landmark;
+        }
+        if (this.isCharacter(card_id)) {
+            return facility_1.CardType.Character;
+        }
+        return facility_1.CardType.None;
     };
     CardManager.prototype.addFacility = function (player_id, facility_data_id) {
         var player_cards = this.player_cards_list[player_id];
@@ -2677,6 +2833,7 @@ var CardManager = (function () {
             console.warn("card_id < 0.");
             return false;
         }
+        this.facilities[card_id].reset();
         return this.getPlayerCardsFromCardId(card_id).moveFieldToDiscard(card_id);
     };
     CardManager.prototype.moveHandToField = function (card_id) {
@@ -2877,7 +3034,7 @@ exports.EffectManager = EffectManager;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var facility_1 = __webpack_require__(0);
-var board_1 = __webpack_require__(5);
+var board_1 = __webpack_require__(6);
 var DeckMaker = (function () {
     function DeckMaker() {
         this.cards = {}; // key is CardId.
@@ -3157,6 +3314,12 @@ var HtmlView = (function () {
     HtmlView.prototype.reset = function () {
         var _this = this;
         this.client.reset();
+        this.resetGame();
+        this.client.startCheckLive(function (response) {
+            _this.onLiveSessionsUpdated(response);
+        });
+    };
+    HtmlView.prototype.resetGame = function () {
         this.session = null;
         this.prev_session = null;
         this.prev_step = -1;
@@ -3166,9 +3329,6 @@ var HtmlView = (function () {
             this.dice_roll_view = null;
         }
         this.event_queue.reset();
-        this.client.startCheckLive(function (response) {
-            _this.onLiveSessionsUpdated(response);
-        });
     };
     HtmlView.prototype.resetViews = function () {
         this.buttons_view.reset();
@@ -3176,6 +3336,10 @@ var HtmlView = (function () {
             var card_view = _a[_i];
             card_view.reset();
         }
+    };
+    HtmlView.prototype.matched = function () {
+        this.resetGame();
+        this.switchScene(Scene.Matching);
     };
     HtmlView.prototype.initView = function (row, column) {
         var _this = this;
@@ -3203,6 +3367,7 @@ var HtmlView = (function () {
         document.getElementById("matching_button_watch_1").addEventListener("click", function () { _this.onClickWatch(0); });
         document.getElementById("matching_button_watch_2").addEventListener("click", function () { _this.onClickWatch(1); });
         document.getElementById("matching_button_watch_3").addEventListener("click", function () { _this.onClickWatch(2); });
+        document.getElementById("matching_button_offline_2_matching").addEventListener("click", function () { _this.onClickMatching(protocol_1.GameMode.OffLine_2_Matching); });
         this.client.startCheckLive(function (response) {
             _this.onLiveSessionsUpdated(response);
         });
@@ -3280,6 +3445,7 @@ var HtmlView = (function () {
         this.scene = scene;
         // Hide all
         document.getElementById("home").style.display = "none";
+        document.getElementById("matching").style.display = "none";
         this.resetMatchingButtons();
         this.resetBoard();
         this.back_button_view.none();
@@ -3293,6 +3459,7 @@ var HtmlView = (function () {
         this.buttons_view.none();
         this.landmarks_view.none();
         this.reset_button_view.none();
+        document.body.classList.remove("evening");
         for (var _i = 0, _a = this.cards_views; _i < _a.length; _i++) {
             var cards_view = _a[_i];
             cards_view.none();
@@ -3315,10 +3482,14 @@ var HtmlView = (function () {
             return;
         }
         if (scene === Scene.Matching) {
+            document.getElementById("matching").style.display = "";
             this.message_view.show();
             this.reset_button_view.show();
         }
         if (scene === Scene.Game) {
+            if (this.client.mode === protocol_1.GameMode.OffLine_2_Matching) {
+                document.body.classList.add("evening");
+            }
             // Show components for game.
             this.message_view.show();
             this.board_view.show();
@@ -3997,6 +4168,20 @@ var HtmlView = (function () {
                 }
                 handled = true;
             }
+            if (type === facility_1.CharacterType.Close) {
+                for (var _i = 0, _a = event.target_card_ids; _i < _a.length; _i++) {
+                    var card_id = _a[_i];
+                    this.prev_session.getFacility(card_id).is_open = false;
+                }
+                this.drawBoard(this.prev_session);
+            }
+            if (type === facility_1.CharacterType.Open) {
+                for (var _b = 0, _c = event.target_card_ids; _b < _c.length; _b++) {
+                    var card_id = _c[_b];
+                    this.prev_session.getFacility(card_id).is_open = true;
+                }
+                this.drawBoard(this.prev_session);
+            }
             return handled;
         }
         if (event.type === session_1.EventType.Salary) {
@@ -4014,7 +4199,7 @@ var HtmlView = (function () {
             return true;
         }
         if (event.type === session_1.EventType.Open) {
-            var _a = this.prev_session.getPosition(event.card_id), x = _a[0], y = _a[1];
+            var _d = this.prev_session.getPosition(event.card_id), x = _d[0], y = _d[1];
             var facility = this.prev_session.getFacility(event.card_id);
             facility.is_open = true;
             var owner_id = this.prev_session.getOwnerId(event.card_id);
@@ -4028,7 +4213,7 @@ var HtmlView = (function () {
                 this.message_view.drawMessage(message, color);
                 return true;
             }
-            var _b = this.session.getPosition(event.card_id), x = _b[0], y = _b[1];
+            var _e = this.session.getPosition(event.card_id), x = _e[0], y = _e[1];
             var facility = this.session.getFacility(event.card_id);
             this.prev_session.getBoard().removeCards(x, y, facility.size);
             this.prev_session.getBoard().setCardId(x, y, event.card_id, facility.size);
@@ -4042,7 +4227,7 @@ var HtmlView = (function () {
         }
         if (event.type === session_1.EventType.Build) {
             // Money motion
-            var _c = this.session.getPosition(event.card_id), x_3 = _c[0], y_2 = _c[1];
+            var _f = this.session.getPosition(event.card_id), x_3 = _f[0], y_2 = _f[1];
             var _loop_3 = function (pid) {
                 var money = event.moneys[pid];
                 if (money === 0) {
@@ -4072,7 +4257,7 @@ var HtmlView = (function () {
         ];
         if (money_motion.indexOf(event.type) !== -1) {
             // Money motion
-            var _d = this.session.getPosition(event.card_id), x_4 = _d[0], y_3 = _d[1];
+            var _g = this.session.getPosition(event.card_id), x_4 = _g[0], y_3 = _g[1];
             var _loop_4 = function (pid) {
                 var money = event.moneys[pid];
                 if (money === 0) {
@@ -4640,6 +4825,7 @@ var HtmlDeckCardsView = (function (_super) {
         this.resetPosition();
     };
     HtmlDeckCardsView.prototype.resetPosition = function () {
+        var cols = 8;
         var num_cards = this.data_ids.length;
         if (num_cards === 0) {
             return;
@@ -4647,11 +4833,11 @@ var HtmlDeckCardsView = (function (_super) {
         var _a = this.getPosition(), base_x = _a[0], base_y = _a[1];
         var base_width = this.width();
         var card_width = this.getCardView(this.data_ids[0]).width();
-        var x_delta = (base_width - card_width) / (num_cards - 1);
+        var x_delta = (base_width - card_width) / (Math.min(num_cards, cols) - 1);
         x_delta = Math.min(x_delta, card_width);
         for (var i = 0; i < num_cards; ++i) {
             var card_view = this.getCardView(this.data_ids[i]);
-            card_view.moveTo([base_x + x_delta * i, base_y]);
+            card_view.moveTo([base_x + x_delta * (i % cols), base_y + 130 * Math.floor(i / cols)]);
         }
     };
     return HtmlDeckCardsView;
@@ -5307,8 +5493,8 @@ exports.HtmlChatButtonView = HtmlChatButtonView;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var standalone_connection_1 = __webpack_require__(9);
-var saikoro_1 = __webpack_require__(8);
+var standalone_connection_1 = __webpack_require__(5);
+var saikoro_1 = __webpack_require__(9);
 var delay = 0; // msec
 var connection = new standalone_connection_1.StandaloneConnection(delay);
 var client = new saikoro_1.WebClient(connection);
@@ -5326,7 +5512,7 @@ var session_1 = __webpack_require__(2);
 var facility_1 = __webpack_require__(0);
 var auto_play_1 = __webpack_require__(10);
 var protocol_1 = __webpack_require__(1);
-var storage_1 = __webpack_require__(7);
+var storage_1 = __webpack_require__(8);
 var Utils = __webpack_require__(4);
 var MatchedData = (function () {
     function MatchedData(matching_id, session_id, player_id) {
