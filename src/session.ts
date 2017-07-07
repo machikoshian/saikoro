@@ -807,7 +807,7 @@ export class Session {
                         card_type: CardType.Facility,
                         facility_type: character.property["type"],
                         state: CardState.Field,
-                        is_open: true,
+                        owner_id: player_id,
                     };
                     target_card_ids = this.queryCards(card_query);
                 }

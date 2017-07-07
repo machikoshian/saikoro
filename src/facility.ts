@@ -66,6 +66,12 @@ const CHARACTER_DATA: CharacterData[] = [
     new CharacterData("踊り子", CharacterType.Close, 0, {"type": SelectType.Facility}),
     new CharacterData("医者", CharacterType.Open, 0, {}),
     new CharacterData("残念秘書", CharacterType.Boost, 2, {"type": SelectType.Facility, "boost": -2.0}),
+    new CharacterData("社長秘書", CharacterType.Boost, 2, {"type": SelectType.Facility, "boost": 1.5}),
+    new CharacterData("市長", CharacterType.Boost, 2, {"type": SelectType.Facility, "boost": 0.8}),
+    new CharacterData("農家", CharacterType.Boost, 1, {"type": SelectType.Blue, "boost": 2.0}),
+    new CharacterData("看板娘", CharacterType.Boost, 1, {"type": SelectType.Green, "boost": 2.0}),
+    new CharacterData("給仕", CharacterType.Boost, 1, {"type": SelectType.Red, "boost": 2.0}),
+    new CharacterData("レポーター", CharacterType.Boost, 1, {"type": SelectType.Purple, "boost": 2.0}),
 ];
 
 export type CardDataId = number;
@@ -371,9 +377,19 @@ export class Character {
             case CharacterType.Boost: {
                 const boost: number = this.property["boost"] * 100;
                 const boost_str: string = ((boost > 0) ? "+" : "") + boost;
-                return `選んだ施設の収入を${boost_str}%する\n${this.round}ラウンド`;
+                switch (this.property["type"]) {
+                    case SelectType.Facility:
+                        return `選んだ施設の収入を${boost_str}%する\n${this.round}ラウンド`;
+                    case SelectType.Blue:
+                        return `自分の青施設の収入を${boost_str}%する\n${this.round}ラウンド`;
+                    case SelectType.Green:
+                        return `自分の緑施設の収入を${boost_str}%する\n${this.round}ラウンド`;
+                    case SelectType.Red:
+                        return `自分の赤施設の収入を${boost_str}%する\n${this.round}ラウンド`;
+                    case SelectType.Purple:
+                        return `自分の紫施設の収入を${boost_str}%する\n${this.round}ラウンド`;
+                }
             }
-
         }
         return "";
     }

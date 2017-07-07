@@ -159,6 +159,7 @@ export interface CardManagerQuery {
     facility_type?: FacilityType,
     state?: CardState,
     is_open?: boolean,  // Used in Session.
+    owner_id?: PlayerId,
 }
 
 export class CardManager {
@@ -239,6 +240,10 @@ export class CardManager {
             if (query.state != null &&
                 this.isFacility(card_id) &&
                 !this.getPlayerCardsFromCardId(card_id).isInState(card_id, query.state)) {
+                continue;
+            }
+            if (query.owner_id != null &&
+                query.owner_id !== this.getOwner(card_id)) {
                 continue;
             }
             results.push(card_id);

@@ -879,7 +879,7 @@ export class HtmlView {
         //     for (let x: number = 0; x < board.column; ++x) {
         //         const card_id: CardId = board.getRawCardId(x, y);
         //         if (session.isFacility(card_id)) {
-        //             this.board_view.showCost([x, y], this.session.getFacilityValue(card_id));
+        //             this.board_view.showCost([x, y], session.getFacilityValue(card_id));
         //         }
         //     }
         // }
