@@ -486,7 +486,8 @@ export class Session {
         return value * boost;
     }
 
-    public getEventFacilityActionWithTargetPlayer(card_id: CardId, target_id: PlayerId): Event {
+    public getEventFacilityActionWithTargetPlayer(
+        player_id: PlayerId, card_id: CardId, target_id: PlayerId): Event {
         let event: Event = new Event();
         const facility: Facility = this.getFacility(card_id);
         if (facility.getType() !== FacilityType.Purple) {
@@ -497,7 +498,6 @@ export class Session {
             return event;
         }
 
-        const player_id: PlayerId = this.getCurrentPlayerId();
         const owner_id: PlayerId = this.getOwnerId(card_id);
         if (player_id !== owner_id) {
             return event;
@@ -521,7 +521,8 @@ export class Session {
     }
 
     public doFacilityActionWithTargetPlayer(card_id: CardId, target_id: PlayerId): Event {
-        const event: Event = this.getEventFacilityActionWithTargetPlayer(card_id, target_id);
+        const event: Event = this.getEventFacilityActionWithTargetPlayer(
+            this.getCurrentPlayerId(), card_id, target_id);
         for (let pid: PlayerId = 0; pid < event.moneys.length; ++pid) {
             if (event.moneys[pid] !== 0) {
                 this.getPlayer(pid).addMoney(event.moneys[pid]);
@@ -534,9 +535,8 @@ export class Session {
         return event;
     }
 
-    public getEventFacilityAction(card_id: CardId): Event {
+    public getEventFacilityAction(player_id: PlayerId, card_id: CardId): Event {
         const facility: Facility = this.getFacility(card_id);
-        const player_id: PlayerId = this.getCurrentPlayerId();
         const owner_id: PlayerId = this.getOwnerId(card_id);
         const owner: Player = this.getOwner(card_id);
         let event: Event = new Event();
@@ -640,7 +640,7 @@ export class Session {
     }
 
     public doFacilityAction(card_id: CardId): Event {
-        const event: Event = this.getEventFacilityAction(card_id);
+        const event: Event = this.getEventFacilityAction(this.getCurrentPlayerId(), card_id);
         let facility: Facility = this.getFacility(card_id);
 
         if (event.type === EventType.Open) {

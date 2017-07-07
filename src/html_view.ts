@@ -876,6 +876,8 @@ export class HtmlView {
             }
         }
 
+        this.drawFacilityValues(session, this.client.player_id);
+
         if (session.getCurrentPlayerId() === this.client.player_id &&
             session.getPhase() === Phase.FacilityActionWithInteraction &&
             session.getTargetFacilities().length > 0) {
@@ -884,18 +886,25 @@ export class HtmlView {
             this.board_view.setHighlight([x, y], COLOR_CLICKABLE);
         }
 
+    }
+
+    public drawFacilityValues(session: Session, player_id: PlayerId): void {
+        this.board_view.clearEffects();
+        const board: Board = session.getBoard();
         for (let y: number = 0; y < board.row; ++y) {
             for (let x: number = 0; x < board.column; ++x) {
                 const card_id: CardId = board.getRawCardId(x, y);
                 if (card_id < 0) {
                     continue;
                 }
-                let event: Event = session.getEventFacilityAction(card_id);
+                let event: Event = session.getEventFacilityAction(player_id, card_id);
                 if (event.type === EventType.Interaction) {
-                   const target_id: PlayerId = (this.client.player_id === 0) ? 1 : 0;
-                   event = session.getEventFacilityActionWithTargetPlayer(card_id, target_id);
+                    // TODO: Should be able to select other players.
+                    const target_id: PlayerId = (player_id === 0) ? 1 : 0;
+                    event = session.getEventFacilityActionWithTargetPlayer(
+                        player_id, card_id, target_id);
                 }
-                const money: number = event.moneys[this.client.player_id];
+                const money: number = event.moneys[player_id];
                 if (money !== 0) {
                     this.board_view.showCost([x, y], money);
                 }
@@ -1087,10 +1096,11 @@ export class HtmlView {
     private drawEvent(event: Event): boolean {
         // Draw cards
         if (event.type === EventType.Draw) {  // TODO: Change the event type to StartTurn?
-            let current_player: Player = this.session.getPlayer(event.player_id);
+            let current_player: Player = this.prev_session.getPlayer(event.player_id);
             let message = `${current_player.name} のターンです`;
             let color: string = this.getPlayerColor(event.player_id);
             this.message_view.drawMessage(message, color);
+            this.drawFacilityValues(this.prev_session, event.player_id);
             this.effectCardDeals(event.player_id, event.target_card_ids);
 
             return true;
