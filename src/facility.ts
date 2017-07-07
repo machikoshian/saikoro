@@ -77,58 +77,59 @@ export class FacilityData {
         readonly name: string,
         readonly cost: number,
         readonly type: FacilityType,
+        readonly value: number,
         readonly property: {},
         ) {}
 }
 
 const FACILITY_DATA: FacilityData[] = [
-    new FacilityData(1, [1],   "🌾", 100, FacilityType.Blue, {"value": 370}),
-    new FacilityData(1, [2],   "🐮", 100, FacilityType.Blue, {"value": 330}),
-    new FacilityData(1, [4],   "🐝", 200, FacilityType.Blue, {"value": 300}),
-    new FacilityData(1, [5],   "🌴", 300, FacilityType.Blue, {"value": 650}),
-    new FacilityData(1, [8],   "🍅", 100, FacilityType.Blue, {"value": 450}),
-    new FacilityData(1, [8,9], "🌻", 200, FacilityType.Blue, {"value": 400}),
-    new FacilityData(1, [9],   "🌰", 100, FacilityType.Blue, {"value": 650}),
-    new FacilityData(1, [9],   "🗻", 300, FacilityType.Blue, {"value": 750}),
-    new FacilityData(1, [10],  "🍎", 100, FacilityType.Blue, {"value": 420}),
-    new FacilityData(2, [10],  "🗻", 300, FacilityType.Blue, {"value": 1150, "close": true}),
-    new FacilityData(1, [12],  "🍍", 150, FacilityType.Blue, {"value": 800}),
+    new FacilityData(1, [1],   "🌾", 100, FacilityType.Blue, 370,  {}),
+    new FacilityData(1, [2],   "🐮", 100, FacilityType.Blue, 330,  {}),
+    new FacilityData(1, [4],   "🐝", 200, FacilityType.Blue, 300,  {}),
+    new FacilityData(1, [5],   "🌴", 300, FacilityType.Blue, 650,  {}),
+    new FacilityData(1, [8],   "🍅", 100, FacilityType.Blue, 450,  {}),
+    new FacilityData(1, [8,9], "🌻", 200, FacilityType.Blue, 400,  {}),
+    new FacilityData(1, [9],   "🌰", 100, FacilityType.Blue, 650,  {}),
+    new FacilityData(1, [9],   "🗻", 300, FacilityType.Blue, 750,  {}),
+    new FacilityData(1, [10],  "🍎", 100, FacilityType.Blue, 420,  {}),
+    new FacilityData(2, [10],  "🗻", 300, FacilityType.Blue, 1150, {"close": true}),
+    new FacilityData(1, [12],  "🍍", 150, FacilityType.Blue, 800,  {}),
 
-    new FacilityData(1, [2],  "🐟", 100, FacilityType.Green, {"value": 670}),
-    new FacilityData(1, [3],  "💈", 100, FacilityType.Green, {"value": 570}),
-    new FacilityData(1, [4],  "📖", 200, FacilityType.Green, {"value": 520}),
-    new FacilityData(1, [6],  "💆", 150, FacilityType.Green, {"value": 600}),
-    new FacilityData(1, [7],  "👕", 200, FacilityType.Green, {"value": 550}),
-    new FacilityData(2, [7],  "🏬", 250, FacilityType.Green, {"value": 880}),
-    new FacilityData(1, [9],  "🚗", 400, FacilityType.Green, {"value": 950}),
-    new FacilityData(1, [10], "🏄", 200, FacilityType.Green, {"value": 1120, "close": true}),
-    new FacilityData(1, [11], "👓", 100, FacilityType.Green, {"value": 1120}),
+    new FacilityData(1, [2],  "🐟", 100, FacilityType.Green, 670,  {}),
+    new FacilityData(1, [3],  "💈", 100, FacilityType.Green, 570,  {}),
+    new FacilityData(1, [4],  "📖", 200, FacilityType.Green, 520,  {}),
+    new FacilityData(1, [6],  "💆", 150, FacilityType.Green, 600,  {}),
+    new FacilityData(1, [7],  "👕", 200, FacilityType.Green, 550,  {}),
+    new FacilityData(2, [7],  "🏬", 250, FacilityType.Green, 880,  {}),
+    new FacilityData(1, [9],  "🚗", 400, FacilityType.Green, 950,  {}),
+    new FacilityData(1, [10], "🏄", 200, FacilityType.Green, 1120, {"close": true}),
+    new FacilityData(1, [11], "👓", 100, FacilityType.Green, 1120, {}),
 
-    new FacilityData(1, [1],  "🍣", 200, FacilityType.Red, {"value": 750}),
-    new FacilityData(1, [3],  "🐙", 100, FacilityType.Red, {"value": 520}),
-    new FacilityData(1, [5],  "🍴", 200, FacilityType.Red, {"value": 550}),
-    new FacilityData(1, [6],  "🍱", 100, FacilityType.Red, {"value": 420}),
-    new FacilityData(1, [7],  "🍕", 100, FacilityType.Red, {"value": 370}),
-    new FacilityData(1, [8],  "🐔", 250, FacilityType.Red, {"value": 400, "all": true}),
-    new FacilityData(2, [8],  "🍻", 300, FacilityType.Red, {"value": 400, "all": true}),
-    new FacilityData(1, [9],  "🍛", 100, FacilityType.Red, {"value": 470}),
-    new FacilityData(1, [10], "🍣", 100, FacilityType.Red, {"value": 1000}),
+    new FacilityData(1, [1],  "🍣", 200, FacilityType.Red, 750,  {}),
+    new FacilityData(1, [3],  "🐙", 100, FacilityType.Red, 520,  {}),
+    new FacilityData(1, [5],  "🍴", 200, FacilityType.Red, 550,  {}),
+    new FacilityData(1, [6],  "🍱", 100, FacilityType.Red, 420,  {}),
+    new FacilityData(1, [7],  "🍕", 100, FacilityType.Red, 370,  {}),
+    new FacilityData(1, [8],  "🐔", 250, FacilityType.Red, 400,  {"all": true}),
+    new FacilityData(2, [8],  "🍻", 300, FacilityType.Red, 400,  {"all": true}),
+    new FacilityData(1, [9],  "🍛", 100, FacilityType.Red, 470,  {}),
+    new FacilityData(1, [10], "🍣", 100, FacilityType.Red, 1000, {}),
 
-    new FacilityData(2, [3],  "👾", 200, FacilityType.Purple, {"value": 520}),
-    new FacilityData(1, [5],  "📰", 100, FacilityType.Purple, {"value": 420}),
-    new FacilityData(2, [6],  "🎸", 400, FacilityType.Purple, {"value": 750}),
-    new FacilityData(2, [6],  "⚽", 500, FacilityType.Purple, {"value": 480, "all": true}),
-    new FacilityData(2, [7],  "⚾", 500, FacilityType.Purple, {"value": 480, "all": true}),
-    new FacilityData(2, [8],  "🎥", 400, FacilityType.Purple, {"value": 400, "all": true}),
-    new FacilityData(2, [9],  "🐬", 500, FacilityType.Purple, {"value": 400, "all": true}),
-    new FacilityData(1, [12], "🔨", 300, FacilityType.Purple, {"value": 2000}),
+    new FacilityData(2, [3],  "👾", 200, FacilityType.Purple, 520,  {}),
+    new FacilityData(1, [5],  "📰", 100, FacilityType.Purple, 420,  {}),
+    new FacilityData(2, [6],  "🎸", 400, FacilityType.Purple, 750,  {}),
+    new FacilityData(2, [6],  "⚽", 500, FacilityType.Purple, 480,  {"all": true}),
+    new FacilityData(2, [7],  "⚾", 500, FacilityType.Purple, 480,  {"all": true}),
+    new FacilityData(2, [8],  "🎥", 400, FacilityType.Purple, 400,  {"all": true}),
+    new FacilityData(2, [9],  "🐬", 500, FacilityType.Purple, 400,  {"all": true}),
+    new FacilityData(1, [12], "🔨", 300, FacilityType.Purple, 2000, {}),
 ];
 
 const LANDMARK_DATA_BASE: number = 10000;
 const LANDMARK_DATA: FacilityData[] = [
-    new FacilityData(2, [], "🏯", 2500, FacilityType.Gray, {}),
-    new FacilityData(1, [], "🏰", 2500, FacilityType.Gray, {}),
-    new FacilityData(2, [], "🚉", 2500, FacilityType.Gray, {}),
+    new FacilityData(2, [], "🏯", 2500, FacilityType.Gray, 0, {}),
+    new FacilityData(1, [], "🏰", 2500, FacilityType.Gray, 0, {}),
+    new FacilityData(2, [], "🚉", 2500, FacilityType.Gray, 0, {}),
 ];
 
 export class CardData {
@@ -184,6 +185,7 @@ export class Facility {
     readonly area: number[];
     readonly cost: number;
     readonly type: FacilityType;
+    readonly value: number;
     readonly property: {};
     public is_open: boolean = true;
 
@@ -201,6 +203,7 @@ export class Facility {
         this.area = data.area;
         this.cost = data.cost;
         this.type = data.type;
+        this.value = data.value;
         this.property = data.property;
         this.is_open = true;
     }
@@ -238,8 +241,8 @@ export class Facility {
     public getType(): FacilityType {
         return this.type;
     }
-    public getPropertyValue(): number {
-        return this.property["value"] ? this.property["value"] : 0;
+    public getValue(): number {
+        return this.value;
     }
 
     public getDescription(): string {
@@ -249,28 +252,28 @@ export class Facility {
                 descriptions.push("ランドマーク");
                 break;
             case FacilityType.Blue:
-                descriptions.push(`${this.property["value"]}コイン稼ぐ`);
+                descriptions.push(`${this.value}コイン稼ぐ`);
                 descriptions.push("誰のターンでも");
                 break;
             case FacilityType.Green:
-                descriptions.push(`${this.property["value"]}コイン稼ぐ`);
+                descriptions.push(`${this.value}コイン稼ぐ`);
                 descriptions.push("自分のターンのみ");
                 break;
             case FacilityType.Red:
                 if (this.property["all"]) {
-                    descriptions.push(`${this.property["value"]}コインを全員から奪う`);
+                    descriptions.push(`${this.value}コインを全員から奪う`);
                 }
                 else {
-                    descriptions.push(`${this.property["value"]}コインを奪う`);
+                    descriptions.push(`${this.value}コインを奪う`);
                 }
                 descriptions.push("自分以外のターンのみ");
                 break;
             case FacilityType.Purple:
                 if (this.property["all"]) {
-                    descriptions.push(`${this.property["value"]}コインを全員から奪う`);
+                    descriptions.push(`${this.value}コインを全員から奪う`);
                 }
                 else {
-                    descriptions.push(`${this.property["value"]}コインを奪う`);
+                    descriptions.push(`${this.value}コインを奪う`);
                 }
                 descriptions.push("自分のターンのみ");
                 break;

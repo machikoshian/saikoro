@@ -508,7 +508,7 @@ export class Session {
 
     public getFacilityValue(card_id: CardId): number {
         const facility: Facility = this.getFacility(card_id);
-        const value: number = facility.getPropertyValue();
+        const value: number = facility.getValue();
         const boost: number = Math.max(0, 1.0 + this.effect_manager.getBoost(card_id));
         return value * boost;
     }
