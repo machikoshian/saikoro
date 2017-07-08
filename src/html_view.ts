@@ -806,7 +806,22 @@ export class HtmlView {
     }
 
     public drawCards(session: Session): void {
-        let players: Player[] = session.getPlayers();
+        const players: Player[] = session.getPlayers();
+        const landmark_ids: CardId[] = session.getLandmarks();
+
+        // Promote landmark cards if landmark is affordable.
+        const money: number = session.getCurrentPlayer().getMoney();
+        const landmark_cost: number = session.getFacility(landmark_ids[0]).getCost();
+        if (session.getPhase() === Phase.BuildFacility &&
+            session.getCurrentPlayerId() === this.client.player_id &&
+            money >= landmark_cost) {
+            this.cards_views[this.client.player_id].y_offset = 150;
+            this.landmarks_view.y_offset = -150;
+        }
+        else {
+            this.cards_views[this.client.player_id].y_offset = 0;
+            this.landmarks_view.y_offset = 0;
+        }
 
         // Update cards.
         for (let i: number = 0; i < players.length; ++i) {
@@ -822,7 +837,6 @@ export class HtmlView {
         }
 
         // Update landmarks.
-        let landmark_ids: CardId[] = session.getLandmarks();
         this.landmarks_view.show();
         this.landmarks_view.draw(session, landmark_ids);
 

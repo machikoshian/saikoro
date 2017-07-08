@@ -207,6 +207,7 @@ export class HtmlCardsView extends HtmlViewObject {
     private card_id_map: { [card_id: number]: number } = {};  // CardId -> CardDataId
     private card_ids: CardId[] = [];
     private cards_pool: { [data_id: number]: HtmlCardView } = {};
+    public y_offset: number = 0;
 
     private callback: CardIdCallback = null;
     readonly base_z_index = 10;
@@ -225,6 +226,7 @@ export class HtmlCardsView extends HtmlViewObject {
             this.cards_pool[Number(key)].remove();
         }
         this.cards_pool = {};
+        this.y_offset = 0;
         super.reset();
     }
 
@@ -285,7 +287,7 @@ export class HtmlCardsView extends HtmlViewObject {
         for (let i: number = 0; i < num_cards; ++i) {
             let card_view: HtmlCardView = this.getCardView(this.card_ids[i]);
             card_view.setZIndex(this.base_z_index + i);
-            card_view.moveTo([base_x + x_delta * i, base_y]);
+            card_view.moveTo([base_x + x_delta * i, base_y + this.y_offset]);
         }
     }
 
