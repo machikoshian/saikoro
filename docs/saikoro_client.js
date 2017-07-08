@@ -86,11 +86,10 @@ var CharacterType;
     CharacterType[CharacterType["SalaryFactor"] = 8] = "SalaryFactor";
     CharacterType[CharacterType["Close"] = 9] = "Close";
     CharacterType[CharacterType["Open"] = 10] = "Open";
+    CharacterType[CharacterType["Boost"] = 11] = "Boost";
 })(CharacterType = exports.CharacterType || (exports.CharacterType = {}));
 var CharacterData = (function () {
-    function CharacterData(id, // Unique number.
-        name, type, round, property) {
-        this.id = id;
+    function CharacterData(name, type, round, property) {
         this.name = name;
         this.type = type;
         this.round = round;
@@ -114,74 +113,104 @@ var FacilityType;
     FacilityType[FacilityType["Red"] = 3] = "Red";
     FacilityType[FacilityType["Purple"] = 4] = "Purple";
 })(FacilityType = exports.FacilityType || (exports.FacilityType = {}));
+var SelectType;
+(function (SelectType) {
+    SelectType[SelectType["Facility"] = 0] = "Facility";
+    SelectType[SelectType["Blue"] = 1] = "Blue";
+    SelectType[SelectType["Green"] = 2] = "Green";
+    SelectType[SelectType["Red"] = 3] = "Red";
+    SelectType[SelectType["Purple"] = 4] = "Purple";
+})(SelectType = exports.SelectType || (exports.SelectType = {}));
 var CHARACTER_DATA_BASE = 1000;
 var CHARACTER_DATA = [
-    new CharacterData(1000, "幼稚園児", CharacterType.DiceDelta, 2, { "delta": -2 }),
-    new CharacterData(1001, "小学生", CharacterType.DiceDelta, 2, { "delta": -1 }),
-    new CharacterData(1002, "中学生", CharacterType.DiceDelta, 2, { "delta": 1 }),
-    new CharacterData(1003, "高校生", CharacterType.DiceDelta, 2, { "delta": 2 }),
-    new CharacterData(1004, "大学生", CharacterType.DiceDelta, 1, { "delta": 3 }),
-    new CharacterData(1005, "執事", CharacterType.DrawCards, 0, { "value": 3 }),
-    new CharacterData(1006, "市長秘書", CharacterType.DrawCards, 0, { "value": 3 }),
-    new CharacterData(1007, "有能秘書", CharacterType.MoveMoney, 0, { "money": 300 }),
-    new CharacterData(1008, "白奴", CharacterType.DiceEven, 0, {}),
-    new CharacterData(1009, "黒奴", CharacterType.DiceOdd, 0, {}),
-    new CharacterData(1010, "鉄道員", CharacterType.DiceOne, 2, {}),
-    new CharacterData(1011, "CA", CharacterType.DiceTwo, 2, {}),
-    new CharacterData(1012, "気象予報士", CharacterType.Close, 0, { "type": FacilityType.Blue }),
-    new CharacterData(1013, "消防士", CharacterType.Close, 0, { "type": FacilityType.Green }),
-    new CharacterData(1014, "保健所員", CharacterType.Close, 0, { "type": FacilityType.Red }),
-    new CharacterData(1015, "警察官", CharacterType.Close, 0, { "type": FacilityType.Purple }),
-    new CharacterData(1016, "医者", CharacterType.Open, 0, {}),
+    new CharacterData("幼稚園児", CharacterType.DiceDelta, 2, { "delta": -2 }),
+    new CharacterData("小学生", CharacterType.DiceDelta, 2, { "delta": -1 }),
+    new CharacterData("中学生", CharacterType.DiceDelta, 2, { "delta": 1 }),
+    new CharacterData("高校生", CharacterType.DiceDelta, 2, { "delta": 2 }),
+    new CharacterData("大学生", CharacterType.DiceDelta, 2, { "delta": 3 }),
+    new CharacterData("執事", CharacterType.DrawCards, 0, { "value": 5 }),
+    new CharacterData("市長秘書", CharacterType.DrawCards, 0, { "value": 3 }),
+    new CharacterData("有能秘書", CharacterType.MoveMoney, 0, { "money": 500 }),
+    new CharacterData("白奴", CharacterType.DiceEven, 0, {}),
+    new CharacterData("黒奴", CharacterType.DiceOdd, 0, {}),
+    new CharacterData("鉄道員", CharacterType.DiceOne, 3, {}),
+    new CharacterData("CA", CharacterType.DiceTwo, 3, {}),
+    new CharacterData("気象予報士", CharacterType.Close, 0, { "type": SelectType.Blue }),
+    new CharacterData("消防士", CharacterType.Close, 0, { "type": SelectType.Green }),
+    new CharacterData("保健所員", CharacterType.Close, 0, { "type": SelectType.Red }),
+    new CharacterData("警察官", CharacterType.Close, 0, { "type": SelectType.Purple }),
+    new CharacterData("踊り子", CharacterType.Close, 0, { "type": SelectType.Facility }),
+    new CharacterData("医者", CharacterType.Open, 0, {}),
+    new CharacterData("残念秘書", CharacterType.Boost, 2, { "type": SelectType.Facility, "boost": -2.0 }),
+    new CharacterData("社長秘書", CharacterType.Boost, 2, { "type": SelectType.Facility, "boost": 1.5 }),
+    new CharacterData("市長", CharacterType.Boost, 2, { "type": SelectType.Facility, "boost": 0.8 }),
+    new CharacterData("農家", CharacterType.Boost, 1, { "type": SelectType.Blue, "boost": 2.0 }),
+    new CharacterData("看板娘", CharacterType.Boost, 1, { "type": SelectType.Green, "boost": 2.0 }),
+    new CharacterData("給仕", CharacterType.Boost, 1, { "type": SelectType.Red, "boost": 2.0 }),
+    new CharacterData("レポーター", CharacterType.Boost, 1, { "type": SelectType.Purple, "boost": 2.0 }),
+    new CharacterData("土木作業員", CharacterType.Boost, 1, { "type": SelectType.Blue, "boost": -2.0 }),
+    new CharacterData("解体屋", CharacterType.Boost, 1, { "type": SelectType.Green, "boost": -2.0 }),
+    new CharacterData("大食い王", CharacterType.Boost, 1, { "type": SelectType.Red, "boost": -2.0 }),
+    new CharacterData("ロッカー", CharacterType.Boost, 1, { "type": SelectType.Purple, "boost": -2.0 }),
 ];
 var FacilityData = (function () {
-    function FacilityData(id, // Unique number.
-        size, area, // TODO should be range.
-        name, cost, type, property) {
-        this.id = id;
+    function FacilityData(size, area, // TODO should be range.
+        name, cost, type, value, property) {
         this.size = size;
         this.area = area;
         this.name = name;
         this.cost = cost;
         this.type = type;
+        this.value = value;
         this.property = property;
     }
     return FacilityData;
 }());
 exports.FacilityData = FacilityData;
 var FACILITY_DATA = [
-    new FacilityData(0, 1, [1], "🌾", 100, FacilityType.Blue, { "value": 300 }),
-    new FacilityData(1, 1, [2], "🐮", 100, FacilityType.Blue, { "value": 250 }),
-    new FacilityData(2, 2, [3], "👾", 200, FacilityType.Purple, { "value": 300 }),
-    new FacilityData(3, 1, [4], "🐝", 200, FacilityType.Blue, { "value": 300 }),
-    new FacilityData(4, 1, [5], "🍴", 200, FacilityType.Red, { "value": 400 }),
-    new FacilityData(5, 1, [6], "💆", 150, FacilityType.Green, { "value": 450 }),
-    new FacilityData(6, 1, [7], "👕", 200, FacilityType.Green, { "value": 400 }),
-    new FacilityData(7, 1, [8], "🐔", 250, FacilityType.Red, { "value": 200, "all": true }),
-    new FacilityData(8, 1, [8, 9], "🌻", 200, FacilityType.Blue, { "value": 400 }),
-    new FacilityData(9, 1, [10], "🍣", 100, FacilityType.Red, { "value": 400 }),
-    new FacilityData(10, 2, [10], "🗻", 300, FacilityType.Blue, { "value": 1000, "close": true }),
-    new FacilityData(11, 1, [12], "🍍", 150, FacilityType.Blue, { "value": 650 }),
-    new FacilityData(12, 1, [1], "🍣", 200, FacilityType.Red, { "value": 600 }),
-    new FacilityData(13, 1, [2], "🐟", 100, FacilityType.Green, { "value": 550 }),
-    new FacilityData(14, 1, [3], "💈", 100, FacilityType.Green, { "value": 450 }),
-    new FacilityData(15, 1, [4], "📖", 200, FacilityType.Green, { "value": 400 }),
-    new FacilityData(16, 1, [5], "📰", 100, FacilityType.Purple, { "value": 300 }),
-    new FacilityData(17, 1, [6], "🍱", 100, FacilityType.Red, { "value": 300 }),
-    new FacilityData(18, 1, [7], "🍕", 100, FacilityType.Red, { "value": 300 }),
-    new FacilityData(19, 1, [8], "🍅", 100, FacilityType.Blue, { "value": 250 }),
-    new FacilityData(20, 1, [9], "🚗", 400, FacilityType.Green, { "value": 800 }),
-    new FacilityData(21, 1, [10], "🍎", 100, FacilityType.Blue, { "value": 350 }),
-    new FacilityData(22, 1, [11], "👓", 100, FacilityType.Green, { "value": 1000 }),
-    new FacilityData(23, 1, [12], "🔨", 300, FacilityType.Purple, { "value": 2000 }),
-    new FacilityData(24, 2, [8], "🍻", 300, FacilityType.Red, { "value": 100, "all": true }),
-    new FacilityData(25, 2, [8], "🎥", 300, FacilityType.Purple, { "value": 200, "all": true }),
-    new FacilityData(26, 2, [9], "🐬", 500, FacilityType.Purple, { "value": 300, "all": true }),
+    new FacilityData(1, [1], "🌾", 100, FacilityType.Blue, 370, {}),
+    new FacilityData(1, [2], "🐮", 100, FacilityType.Blue, 330, {}),
+    new FacilityData(1, [4], "🐝", 200, FacilityType.Blue, 300, {}),
+    new FacilityData(1, [5], "🌴", 300, FacilityType.Blue, 650, {}),
+    new FacilityData(1, [8], "🍅", 100, FacilityType.Blue, 450, {}),
+    new FacilityData(1, [8, 9], "🌻", 200, FacilityType.Blue, 400, {}),
+    new FacilityData(1, [9], "🌰", 100, FacilityType.Blue, 650, {}),
+    new FacilityData(1, [9], "🗻", 300, FacilityType.Blue, 750, {}),
+    new FacilityData(1, [10], "🍎", 100, FacilityType.Blue, 420, {}),
+    new FacilityData(2, [10], "🗻", 300, FacilityType.Blue, 1150, { "close": true }),
+    new FacilityData(1, [12], "🍍", 150, FacilityType.Blue, 800, {}),
+    new FacilityData(1, [2], "🐟", 100, FacilityType.Green, 670, {}),
+    new FacilityData(1, [3], "💈", 100, FacilityType.Green, 570, {}),
+    new FacilityData(1, [4], "📖", 200, FacilityType.Green, 520, {}),
+    new FacilityData(1, [6], "💆", 150, FacilityType.Green, 600, {}),
+    new FacilityData(1, [7], "👕", 200, FacilityType.Green, 550, {}),
+    new FacilityData(2, [7], "🏬", 250, FacilityType.Green, 880, {}),
+    new FacilityData(1, [9], "🚗", 400, FacilityType.Green, 950, {}),
+    new FacilityData(1, [10], "🏄", 200, FacilityType.Green, 1120, { "close": true }),
+    new FacilityData(1, [11], "👓", 100, FacilityType.Green, 1120, {}),
+    new FacilityData(1, [1], "🍣", 200, FacilityType.Red, 750, {}),
+    new FacilityData(1, [3], "🐙", 100, FacilityType.Red, 520, {}),
+    new FacilityData(1, [5], "🍴", 200, FacilityType.Red, 550, {}),
+    new FacilityData(1, [6], "🍱", 100, FacilityType.Red, 420, {}),
+    new FacilityData(1, [7], "🍕", 100, FacilityType.Red, 370, {}),
+    new FacilityData(1, [8], "🐔", 250, FacilityType.Red, 400, { "all": true }),
+    new FacilityData(2, [8], "🍻", 300, FacilityType.Red, 400, { "all": true }),
+    new FacilityData(1, [9], "🍛", 100, FacilityType.Red, 470, {}),
+    new FacilityData(1, [10], "🍣", 100, FacilityType.Red, 1000, {}),
+    new FacilityData(2, [3], "👾", 200, FacilityType.Purple, 520, {}),
+    new FacilityData(1, [5], "📰", 100, FacilityType.Purple, 420, {}),
+    new FacilityData(2, [6], "🎸", 400, FacilityType.Purple, 750, {}),
+    new FacilityData(2, [6], "⚽", 500, FacilityType.Purple, 480, { "all": true }),
+    new FacilityData(2, [7], "⚾", 500, FacilityType.Purple, 480, { "all": true }),
+    new FacilityData(2, [8], "🎥", 400, FacilityType.Purple, 400, { "all": true }),
+    new FacilityData(2, [9], "🐬", 500, FacilityType.Purple, 400, { "all": true }),
+    new FacilityData(1, [12], "🔨", 300, FacilityType.Purple, 2000, {}),
 ];
 var LANDMARK_DATA_BASE = 10000;
 var LANDMARK_DATA = [
-    new FacilityData(10000, 2, [], "🏯", 2500, FacilityType.Gray, {}),
-    new FacilityData(10001, 1, [], "🏰", 2500, FacilityType.Gray, {}),
+    new FacilityData(2, [], "🏯", 2500, FacilityType.Gray, 0, {}),
+    new FacilityData(1, [], "🏰", 2500, FacilityType.Gray, 0, {}),
+    new FacilityData(2, [], "🚉", 2500, FacilityType.Gray, 0, {}),
 ];
 var CardData = (function () {
     function CardData() {
@@ -242,6 +271,7 @@ var Facility = (function () {
         this.area = data.area;
         this.cost = data.cost;
         this.type = data.type;
+        this.value = data.value;
         this.property = data.property;
         this.is_open = true;
     }
@@ -275,8 +305,8 @@ var Facility = (function () {
     Facility.prototype.getType = function () {
         return this.type;
     };
-    Facility.prototype.getPropertyValue = function () {
-        return this.property["value"] ? this.property["value"] : 0;
+    Facility.prototype.getValue = function () {
+        return this.value;
     };
     Facility.prototype.getDescription = function () {
         var descriptions = [];
@@ -285,28 +315,28 @@ var Facility = (function () {
                 descriptions.push("ランドマーク");
                 break;
             case FacilityType.Blue:
-                descriptions.push(this.property["value"] + "\u30B3\u30A4\u30F3\u7A3C\u3050");
+                descriptions.push(this.value + "\u30B3\u30A4\u30F3\u7A3C\u3050");
                 descriptions.push("誰のターンでも");
                 break;
             case FacilityType.Green:
-                descriptions.push(this.property["value"] + "\u30B3\u30A4\u30F3\u7A3C\u3050");
+                descriptions.push(this.value + "\u30B3\u30A4\u30F3\u7A3C\u3050");
                 descriptions.push("自分のターンのみ");
                 break;
             case FacilityType.Red:
                 if (this.property["all"]) {
-                    descriptions.push(this.property["value"] + "\u30B3\u30A4\u30F3\u3092\u5168\u54E1\u304B\u3089\u596A\u3046");
+                    descriptions.push(this.value + "\u30B3\u30A4\u30F3\u3092\u5168\u54E1\u304B\u3089\u596A\u3046");
                 }
                 else {
-                    descriptions.push(this.property["value"] + "\u30B3\u30A4\u30F3\u3092\u596A\u3046");
+                    descriptions.push(this.value + "\u30B3\u30A4\u30F3\u3092\u596A\u3046");
                 }
                 descriptions.push("自分以外のターンのみ");
                 break;
             case FacilityType.Purple:
                 if (this.property["all"]) {
-                    descriptions.push(this.property["value"] + "\u30B3\u30A4\u30F3\u3092\u5168\u54E1\u304B\u3089\u596A\u3046");
+                    descriptions.push(this.value + "\u30B3\u30A4\u30F3\u3092\u5168\u54E1\u304B\u3089\u596A\u3046");
                 }
                 else {
-                    descriptions.push(this.property["value"] + "\u30B3\u30A4\u30F3\u3092\u596A\u3046");
+                    descriptions.push(this.value + "\u30B3\u30A4\u30F3\u3092\u596A\u3046");
                 }
                 descriptions.push("自分のターンのみ");
                 break;
@@ -378,18 +408,37 @@ var Character = (function () {
             }
             case CharacterType.Close: {
                 switch (this.property["type"]) {
-                    case FacilityType.Blue:
+                    case SelectType.Facility:
+                        return "選んだ施設を休業にする";
+                    case SelectType.Blue:
                         return "青施設をすべて休業にする";
-                    case FacilityType.Green:
+                    case SelectType.Green:
                         return "緑施設をすべて休業にする";
-                    case FacilityType.Red:
+                    case SelectType.Red:
                         return "赤施設をすべて休業にする";
-                    case FacilityType.Purple:
+                    case SelectType.Purple:
                         return "紫施設をすべて休業にする";
                 }
             }
             case CharacterType.Open: {
                 return "全施設の休業を解除する";
+            }
+            case CharacterType.Boost: {
+                var boost = this.property["boost"] * 100;
+                var boost_str = ((boost > 0) ? "+" : "") + boost;
+                var target = (boost > 0) ? "自分" : "選んだプレイヤー";
+                switch (this.property["type"]) {
+                    case SelectType.Facility:
+                        return "\u9078\u3093\u3060\u65BD\u8A2D\u306E\u53CE\u5165\u3092" + boost_str + "%\u3059\u308B\n" + this.round + "\u30E9\u30A6\u30F3\u30C9";
+                    case SelectType.Blue:
+                        return target + "\u306E\u9752\u65BD\u8A2D\u306E\u53CE\u5165\u3092" + boost_str + "%\u3059\u308B\n" + this.round + "\u30E9\u30A6\u30F3\u30C9";
+                    case SelectType.Green:
+                        return target + "\u306E\u7DD1\u65BD\u8A2D\u306E\u53CE\u5165\u3092" + boost_str + "%\u3059\u308B\n" + this.round + "\u30E9\u30A6\u30F3\u30C9";
+                    case SelectType.Red:
+                        return target + "\u306E\u8D64\u65BD\u8A2D\u306E\u53CE\u5165\u3092" + boost_str + "%\u3059\u308B\n" + this.round + "\u30E9\u30A6\u30F3\u30C9";
+                    case SelectType.Purple:
+                        return target + "\u306E\u7D2B\u65BD\u8A2D\u306E\u53CE\u5165\u3092" + boost_str + "%\u3059\u308B\n" + this.round + "\u30E9\u30A6\u30F3\u30C9";
+                }
             }
         }
         return "";
@@ -559,6 +608,7 @@ var Event = (function () {
         this.card_id = null;
         this.target_player_id = -1;
         this.target_card_ids = [];
+        this.close = false;
         this.dice = null;
         this.valid = false;
     }
@@ -572,6 +622,7 @@ var Event = (function () {
             card_id: this.card_id,
             target_player_id: this.target_player_id,
             target_card_ids: this.target_card_ids,
+            close: this.close,
             dice: this.dice ? this.dice.toJSON() : null,
             valid: this.valid,
         };
@@ -585,6 +636,7 @@ var Event = (function () {
         event.card_id = json.card_id;
         event.target_player_id = json.target_player_id;
         event.target_card_ids = json.target_card_ids;
+        event.close = json.close;
         event.dice = json.dice ? dice_1.DiceResult.fromJSON(json.dice) : null;
         event.valid = json.valid;
         return event;
@@ -910,18 +962,28 @@ var Session = (function () {
             return map_y[id2] - map_y[id1];
         });
     };
-    Session.prototype.moveMoney = function (player_id_from, player_id_to, money) {
-        if (player_id_from === player_id_to) {
+    Session.prototype.checkMoveMoney = function (pid_from, pid_to, money) {
+        if (pid_from === pid_to) {
             return 0;
         }
         if (money < 0) {
-            return this.moveMoney(player_id_to, player_id_from, -money);
+            return -Math.min(this.getPlayer(pid_to).getMoney(), -money);
         }
-        var actual = -(this.getPlayer(player_id_from).addMoney(-money));
-        this.getPlayer(player_id_to).addMoney(actual);
+        return Math.min(this.getPlayer(pid_from).getMoney(), money);
+    };
+    Session.prototype.moveMoney = function (pid_from, pid_to, money) {
+        var actual = this.checkMoveMoney(pid_from, pid_to, money);
+        this.getPlayer(pid_from).addMoney(-actual);
+        this.getPlayer(pid_to).addMoney(actual);
         return actual;
     };
-    Session.prototype.doFacilityActionWithTargetPlayer = function (card_id, target_id) {
+    Session.prototype.getFacilityValue = function (card_id) {
+        var facility = this.getFacility(card_id);
+        var value = facility.getValue();
+        var boost = Math.max(0, 1.0 + this.effect_manager.getBoost(card_id));
+        return value * boost;
+    };
+    Session.prototype.getEventFacilityActionWithTargetPlayer = function (player_id, card_id, target_id) {
         var event = new Event();
         var facility = this.getFacility(card_id);
         if (facility.getType() !== facility_1.FacilityType.Purple) {
@@ -930,28 +992,38 @@ var Session = (function () {
         if (facility.property["all"] === true) {
             return event;
         }
-        var player_id = this.getCurrentPlayerId();
         var owner_id = this.getOwnerId(card_id);
         if (player_id !== owner_id) {
             return event;
         }
         if (facility.property["close"] === true) {
-            facility.is_open = false;
+            event.close = true;
         }
-        var owner = this.getOwner(card_id);
         event.step = this.step;
         event.card_id = card_id;
         event.player_id = player_id;
         event.type = EventType.Purple;
-        var value = facility.getPropertyValue();
-        var amount = this.moveMoney(target_id, owner_id, value);
+        var value = this.getFacilityValue(card_id);
+        var amount = this.checkMoveMoney(target_id, owner_id, value);
         event.moneys[target_id] -= amount;
         event.moneys[owner_id] += amount;
         return event;
     };
-    Session.prototype.doFacilityAction = function (card_id) {
+    Session.prototype.doFacilityActionWithTargetPlayer = function (card_id, target_id) {
+        var event = this.getEventFacilityActionWithTargetPlayer(this.getCurrentPlayerId(), card_id, target_id);
+        for (var pid = 0; pid < event.moneys.length; ++pid) {
+            if (event.moneys[pid] !== 0) {
+                this.getPlayer(pid).addMoney(event.moneys[pid]);
+            }
+        }
+        if (event.close === true) {
+            var facility = this.getFacility(card_id);
+            facility.is_open = false;
+        }
+        return event;
+    };
+    Session.prototype.getEventFacilityAction = function (player_id, card_id) {
         var facility = this.getFacility(card_id);
-        var player_id = this.getCurrentPlayerId();
         var owner_id = this.getOwnerId(card_id);
         var owner = this.getOwner(card_id);
         var event = new Event();
@@ -960,14 +1032,13 @@ var Session = (function () {
         event.player_id = player_id;
         if (facility.getType() === facility_1.FacilityType.Blue) {
             if (!facility.is_open) {
-                facility.is_open = true;
                 event.type = EventType.Open;
                 return event;
             }
             if (facility.property["close"] === true) {
-                facility.is_open = false;
+                event.close = true;
             }
-            var amount = owner.addMoney(facility.getPropertyValue());
+            var amount = this.getFacilityValue(card_id);
             event.type = EventType.Blue;
             event.moneys[owner_id] += amount;
             return event;
@@ -977,14 +1048,13 @@ var Session = (function () {
                 return event;
             }
             if (!facility.is_open) {
-                facility.is_open = true;
                 event.type = EventType.Open;
                 return event;
             }
             if (facility.property["close"] === true) {
-                facility.is_open = false;
+                event.close = true;
             }
-            var amount = owner.addMoney(facility.getPropertyValue());
+            var amount = this.getFacilityValue(card_id);
             event.type = EventType.Green;
             event.moneys[owner_id] += amount;
             return event;
@@ -994,27 +1064,26 @@ var Session = (function () {
                 return event;
             }
             if (!facility.is_open) {
-                facility.is_open = true;
                 event.type = EventType.Open;
                 return event;
             }
             if (facility.property["close"] === true) {
-                facility.is_open = false;
+                event.close = true;
             }
-            var value = facility.getPropertyValue();
+            var value = this.getFacilityValue(card_id);
             event.type = EventType.Red;
             if (facility.property["all"]) {
                 for (var pid = 0; pid < this.players.length; ++pid) {
                     if (pid === owner_id) {
                         continue;
                     }
-                    var amount = this.moveMoney(pid, owner_id, value);
+                    var amount = this.checkMoveMoney(pid, owner_id, value);
                     event.moneys[pid] -= amount;
                     event.moneys[owner_id] += amount;
                 }
             }
             else {
-                var amount = this.moveMoney(player_id, owner_id, value);
+                var amount = this.checkMoveMoney(player_id, owner_id, value);
                 event.moneys[player_id] -= amount;
                 event.moneys[owner_id] += amount;
             }
@@ -1025,29 +1094,45 @@ var Session = (function () {
                 return event;
             }
             if (!facility.is_open) {
-                facility.is_open = true;
                 event.type = EventType.Open;
                 return event;
             }
-            var value = facility.getPropertyValue();
+            var value = this.getFacilityValue(card_id);
             if (facility.property["all"] !== true) {
                 event.type = EventType.Interaction;
             }
             else {
                 if (facility.property["close"] === true) {
-                    facility.is_open = false;
+                    event.close = true;
                 }
                 event.type = EventType.Purple;
                 for (var pid = 0; pid < this.players.length; ++pid) {
                     if (pid === owner_id) {
                         continue;
                     }
-                    var amount = this.moveMoney(pid, owner_id, value);
+                    var amount = this.checkMoveMoney(pid, owner_id, value);
                     event.moneys[pid] -= amount;
                     event.moneys[owner_id] += amount;
                 }
             }
             return event;
+        }
+        return event;
+    };
+    Session.prototype.doFacilityAction = function (card_id) {
+        var event = this.getEventFacilityAction(this.getCurrentPlayerId(), card_id);
+        var facility = this.getFacility(card_id);
+        if (event.type === EventType.Open) {
+            facility.is_open = true;
+            return event;
+        }
+        for (var pid = 0; pid < event.moneys.length; ++pid) {
+            if (event.moneys[pid] !== 0) {
+                this.getPlayer(pid).addMoney(event.moneys[pid]);
+            }
+        }
+        if (event.close === true) {
+            facility.is_open = false;
         }
         return event;
     };
@@ -1211,34 +1296,61 @@ var Session = (function () {
                 this.effect_manager.addCard(character.data_id, this.round, this.turn);
                 break;
             }
+            case facility_1.CharacterType.Boost: {
+                var target_card_ids = [];
+                if (character.property["type"] === facility_1.SelectType.Facility) {
+                    target_card_ids.push(query.target_card_id);
+                }
+                else {
+                    var owner_id = player_id;
+                    if (character.property["boost"] < 0) {
+                        owner_id = query.target_player_id;
+                    }
+                    var card_query = {
+                        card_type: facility_1.CardType.Facility,
+                        facility_type: character.property["type"],
+                        state: card_manager_1.CardState.Field,
+                        owner_id: owner_id,
+                    };
+                    target_card_ids = this.queryCards(card_query);
+                }
+                this.effect_manager.addCard(character.data_id, this.round, this.turn, target_card_ids);
+                break;
+            }
             case facility_1.CharacterType.Close: {
-                var query_1 = {
-                    card_type: facility_1.CardType.Facility,
-                    facility_type: character.property["type"],
-                    state: card_manager_1.CardState.Field,
-                    is_open: true,
-                };
-                var card_ids = this.queryCards(query_1);
-                for (var _i = 0, card_ids_2 = card_ids; _i < card_ids_2.length; _i++) {
-                    var card_id_1 = card_ids_2[_i];
-                    var facility = this.card_manager.getFacility(card_id_1);
+                var target_card_ids = [];
+                if (character.property["type"] === facility_1.SelectType.Facility) {
+                    target_card_ids.push(query.target_card_id);
+                }
+                else {
+                    var card_query = {
+                        card_type: facility_1.CardType.Facility,
+                        facility_type: character.property["type"],
+                        state: card_manager_1.CardState.Field,
+                        is_open: true,
+                    };
+                    target_card_ids = this.queryCards(card_query);
+                }
+                for (var _i = 0, target_card_ids_1 = target_card_ids; _i < target_card_ids_1.length; _i++) {
+                    var target_card_id = target_card_ids_1[_i];
+                    var facility = this.card_manager.getFacility(target_card_id);
                     facility.is_open = false;
-                    event.target_card_ids.push(card_id_1);
+                    event.target_card_ids.push(target_card_id);
                 }
                 break;
             }
             case facility_1.CharacterType.Open: {
-                var query_2 = {
+                var query_1 = {
                     card_type: facility_1.CardType.Facility,
                     state: card_manager_1.CardState.Field,
                     is_open: false,
                 };
-                var card_ids = this.queryCards(query_2);
-                for (var _a = 0, card_ids_3 = card_ids; _a < card_ids_3.length; _a++) {
-                    var card_id_2 = card_ids_3[_a];
-                    var facility = this.card_manager.getFacility(card_id_2);
+                var card_ids = this.queryCards(query_1);
+                for (var _a = 0, card_ids_2 = card_ids; _a < card_ids_2.length; _a++) {
+                    var card_id_1 = card_ids_2[_a];
+                    var facility = this.card_manager.getFacility(card_id_1);
                     facility.is_open = true;
-                    event.target_card_ids.push(card_id_2);
+                    event.target_card_ids.push(card_id_1);
                 }
                 break;
             }
@@ -2021,6 +2133,13 @@ var Client = (function () {
         query.target_player_id = target_player_id;
         return query;
     };
+    Client.prototype.createCharacterWithCardIdQuery = function (card_id, target_card_id) {
+        var query = this.createQuery();
+        query.command = "character";
+        query.card_id = card_id;
+        query.target_card_id = target_card_id;
+        return query;
+    };
     Client.prototype.createInteractQuery = function (card_id, target_player_id) {
         var query = this.createQuery();
         query.command = "interact";
@@ -2225,6 +2344,7 @@ var WebClient = (function (_super) {
         var _this = _super.call(this, connection) || this;
         _this.no_update_count = 0;
         _this.chat_timestamps = {};
+        _this.prev_mode = protocol_1.GameMode.None;
         var delay = 0; // msec.
         _this.offline_connection = new standalone_connection_1.StandaloneConnection(delay);
         _this.connection = connection ? connection : _this.offline_connection;
@@ -2232,8 +2352,14 @@ var WebClient = (function (_super) {
         return _this;
     }
     WebClient.prototype.reset = function () {
+        if (this.prev_mode !== protocol_1.GameMode.None) {
+            this.mode = this.prev_mode;
+            this.prev_mode = protocol_1.GameMode.None;
+        }
+        else {
+            this.mode = protocol_1.GameMode.None;
+        }
         this.session_id = -1;
-        this.mode = protocol_1.GameMode.None;
         this.player_id = -1;
         this.step = -1;
         this.connection.stopCheckUpdate();
@@ -2246,45 +2372,62 @@ var WebClient = (function (_super) {
     WebClient.prototype.matching = function (query) {
         query.command = "matching";
         query.user_id = this.user_id;
-        this.mode = query.mode;
-        if (query.mode !== protocol_1.GameMode.OffLine_2_Matching) {
+        if (query.mode === protocol_1.GameMode.OffLine_2_Matching) {
+            this.prev_mode = this.mode;
+        }
+        else {
             // If mode is OffLine_2_Matching, do not stop previous actual matching request.
             this.connection.stopCheckMatching();
         }
+        this.mode = query.mode;
         if (protocol_1.Protocol.isOnlineMode(query.mode)) {
             this.connection.setQueryOnDisconnect(this.createQuitQuery());
             this.connection.matching(query, this.callbackMatching.bind(this));
-            // Start offline game for waiting.
-            // let offline_query: Query.MatchingQuery = JSON.parse(JSON.stringify(query));
-            // offline_query.mode = GameMode.OffLine_2_Matching;
-            // this.mode = GameMode.OffLine_2_Matching;
-            // this.offline_connection.matching(offline_query, this.callbackMatching.bind(this));
         }
         else {
             this.offline_connection.matching(query, this.callbackMatching.bind(this));
         }
     };
+    WebClient.prototype.quit = function () {
+        if (this.mode !== protocol_1.GameMode.OffLine_2_Matching) {
+            this.sendRequest(this.createQuitQuery());
+        }
+    };
     WebClient.prototype.callbackMatching = function (response) {
-        var response_json = JSON.parse(response);
-        if (response_json == null || !response_json.is_matched) {
+        var _this = this;
+        var matching_info = JSON.parse(response);
+        if (matching_info == null || !matching_info.is_matched) {
             return;
         }
         // Mode is already changed to online.
         if (protocol_1.Protocol.isOnlineMode(this.mode) &&
-            response_json.mode === protocol_1.GameMode.OffLine_2_Matching) {
+            matching_info.mode === protocol_1.GameMode.OffLine_2_Matching) {
             return;
         }
-        this.session_id = response_json.session_id;
-        this.mode = response_json.mode;
+        if (protocol_1.Protocol.isOnlineMode(matching_info.mode)) {
+            this.connection.stopCheckMatching();
+            this.connection.stopCheckLive();
+        }
+        if (this.mode === protocol_1.GameMode.OffLine_2_Matching &&
+            this.mode !== matching_info.mode) {
+            this.view.announce("マッチングしました。");
+            setTimeout(function () {
+                _this.readyGame(matching_info);
+            }, 3000);
+            return;
+        }
+        this.readyGame(matching_info);
+    };
+    WebClient.prototype.readyGame = function (matching_info) {
+        this.session_id = matching_info.session_id;
+        this.mode = matching_info.mode;
         this.step = -1;
         this.no_update_count = 0;
-        this.view.matched();
+        this.view.readyGame();
         this.checkUpdate();
-        if (protocol_1.Protocol.isOnlineMode(response_json.mode)) {
+        if (protocol_1.Protocol.isOnlineMode(matching_info.mode)) {
             this.connection.setQueryOnDisconnect(this.createQuitQuery());
-            this.connection.stopCheckMatching();
             this.connection.startCheckUpdate(this);
-            this.connection.stopCheckLive();
         }
     };
     WebClient.prototype.callbackSession = function (response) {
@@ -2677,6 +2820,10 @@ var CardManager = (function () {
                 !this.getPlayerCardsFromCardId(card_id).isInState(card_id, query.state)) {
                 continue;
             }
+            if (query.owner_id != null &&
+                query.owner_id !== this.getOwner(card_id)) {
+                continue;
+            }
             results.push(card_id);
         }
         return results;
@@ -2926,11 +3073,12 @@ var CardManager = (function () {
 }());
 exports.CardManager = CardManager;
 var CardEffect = (function () {
-    function CardEffect(data_id, round, turn) {
+    function CardEffect(data_id, round, turn, card_ids) {
         this.data_id = data_id;
         this.character = new facility_1.Character(data_id);
         this.round = round;
         this.turn = turn;
+        this.card_ids = card_ids;
     }
     CardEffect.prototype.toJSON = function () {
         return {
@@ -2939,10 +3087,11 @@ var CardEffect = (function () {
             // Character is not encoded. data_id can reproduce Character.
             round: this.round,
             turn: this.turn,
+            card_ids: this.card_ids,
         };
     };
     CardEffect.fromJSON = function (json) {
-        return new CardEffect(json.data_id, json.round, json.turn);
+        return new CardEffect(json.data_id, json.round, json.turn, json.card_ids);
     };
     return CardEffect;
 }());
@@ -2963,8 +3112,9 @@ var EffectManager = (function () {
         var cards = json.cards.map(function (card) { return CardEffect.fromJSON(card); });
         return new EffectManager(cards);
     };
-    EffectManager.prototype.addCard = function (data_id, round, turn) {
-        this.cards.push(new CardEffect(data_id, round, turn));
+    EffectManager.prototype.addCard = function (data_id, round, turn, card_ids) {
+        if (card_ids === void 0) { card_ids = []; }
+        this.cards.push(new CardEffect(data_id, round, turn, card_ids));
     };
     // Remove expired cards.
     EffectManager.prototype.expire = function (round, turn) {
@@ -3020,6 +3170,17 @@ var EffectManager = (function () {
     };
     EffectManager.prototype.getCharacterTypes = function () {
         return this.cards.map(function (card) { return card.character.type; });
+    };
+    EffectManager.prototype.getBoost = function (card_id) {
+        var boost = 0;
+        for (var _i = 0, _a = this.cards; _i < _a.length; _i++) {
+            var card = _a[_i];
+            if (card.character.type === facility_1.CharacterType.Boost &&
+                card.card_ids.indexOf(card_id) !== -1) {
+                boost += card.character.property["boost"];
+            }
+        }
+        return boost;
     };
     return EffectManager;
 }());
@@ -3337,7 +3498,7 @@ var HtmlView = (function () {
             card_view.reset();
         }
     };
-    HtmlView.prototype.matched = function () {
+    HtmlView.prototype.readyGame = function () {
         this.resetGame();
         this.switchScene(Scene.Matching);
     };
@@ -3483,6 +3644,7 @@ var HtmlView = (function () {
         }
         if (scene === Scene.Matching) {
             document.getElementById("matching").style.display = "";
+            this.drawMatchingMessage(this.client.mode);
             this.message_view.show();
             this.reset_button_view.show();
         }
@@ -3506,8 +3668,13 @@ var HtmlView = (function () {
         }
     };
     HtmlView.prototype.onResetGame = function () {
-        this.client.sendRequest(this.client.createQuitQuery());
+        var mode = this.client.mode;
+        this.client.quit();
         this.reset();
+        if (mode === protocol_1.GameMode.OffLine_2_Matching) {
+            this.switchScene(Scene.Matching);
+            return;
+        }
         this.switchScene(Scene.Home);
     };
     HtmlView.prototype.onClickPlayer = function (target_player_id) {
@@ -3684,6 +3851,40 @@ var HtmlView = (function () {
                 _this.client.sendRequest(_this.client.createCharacterQuery(card_id, selected_pid));
             });
         }
+        else if (character.type === facility_1.CharacterType.Close &&
+            character.property["type"] === facility_1.SelectType.Facility) {
+            this.event_queue.addEvent(function () {
+                _this.effectCharacter(_this.client.player_id, card_id);
+                return true;
+            }, 2000);
+            this.dialogSelectFacilityPosition(function (_a) {
+                var x = _a[0], y = _a[1];
+                var target_card_id = _this.session.getCardIdOnBoard(x, y);
+                _this.client.sendRequest(_this.client.createCharacterWithCardIdQuery(card_id, target_card_id));
+            });
+        }
+        else if (character.type === facility_1.CharacterType.Boost &&
+            character.property["type"] === facility_1.SelectType.Facility) {
+            this.event_queue.addEvent(function () {
+                _this.effectCharacter(_this.client.player_id, card_id);
+                return true;
+            }, 2000);
+            this.dialogSelectFacilityPosition(function (_a) {
+                var x = _a[0], y = _a[1];
+                var target_card_id = _this.session.getCardIdOnBoard(x, y);
+                _this.client.sendRequest(_this.client.createCharacterWithCardIdQuery(card_id, target_card_id));
+            });
+        }
+        else if (character.type === facility_1.CharacterType.Boost &&
+            character.property["boost"] < 0) {
+            this.event_queue.addEvent(function () {
+                _this.effectCharacter(_this.client.player_id, card_id);
+                return true;
+            }, 2000);
+            this.dialogSelectPlayer(function (player_id) {
+                _this.client.sendRequest(_this.client.createCharacterQuery(card_id, player_id));
+            });
+        }
         else {
             this.client.sendRequest(this.client.createCharacterQuery(card_id));
             this.event_queue.addEvent(function () {
@@ -3709,19 +3910,6 @@ var HtmlView = (function () {
         }
         var deck = document.getElementById("deck").value;
         this.client.matching(this.client.createMatchingQuery(name, mode, deck));
-        var message;
-        if (protocol_1.Protocol.isOnlineMode(mode)) {
-            if (protocol_1.Protocol.getPlayerCount(mode) > 1) {
-                message = "対戦相手を待っています";
-            }
-            else {
-                message = "通信中です";
-            }
-        }
-        else {
-            message = "準備中です";
-        }
-        this.message_view.drawMessage(message, this.getPlayerColor(this.client.player_id));
         this.switchScene(Scene.Matching);
     };
     HtmlView.prototype.onLiveSessionsUpdated = function (response) {
@@ -3861,6 +4049,24 @@ var HtmlView = (function () {
         // Show event animations.
         this.drawEvents();
     };
+    HtmlView.prototype.announce = function (announce) {
+        this.message_view.drawMessage(announce);
+    };
+    HtmlView.prototype.drawMatchingMessage = function (mode) {
+        var message;
+        if (protocol_1.Protocol.isOnlineMode(mode)) {
+            if (protocol_1.Protocol.getPlayerCount(mode) > 1) {
+                message = "対戦相手を待っています";
+            }
+            else {
+                message = "通信中です";
+            }
+        }
+        else {
+            message = "準備中です";
+        }
+        this.message_view.drawMessage(message, this.getPlayerColor(this.client.player_id));
+    };
     HtmlView.prototype.drawCards = function (session) {
         var _this = this;
         var players = session.getPlayers();
@@ -3921,12 +4127,35 @@ var HtmlView = (function () {
                 this.drawField(x, y, facility_id, facility, owner_id);
             }
         }
+        this.drawFacilityValues(session, this.client.player_id);
         if (session.getCurrentPlayerId() === this.client.player_id &&
             session.getPhase() === session_1.Phase.FacilityActionWithInteraction &&
             session.getTargetFacilities().length > 0) {
             var facility_id = session.getTargetFacilities()[0];
             var _a = session.getPosition(facility_id), x = _a[0], y = _a[1];
             this.board_view.setHighlight([x, y], COLOR_CLICKABLE);
+        }
+    };
+    HtmlView.prototype.drawFacilityValues = function (session, player_id) {
+        this.board_view.clearEffects();
+        var board = session.getBoard();
+        for (var y = 0; y < board.row; ++y) {
+            for (var x = 0; x < board.column; ++x) {
+                var card_id = board.getRawCardId(x, y);
+                if (card_id < 0) {
+                    continue;
+                }
+                var event_2 = session.getEventFacilityAction(player_id, card_id);
+                if (event_2.type === session_1.EventType.Interaction) {
+                    // TODO: Should be able to select other players.
+                    var target_id = (player_id === 0) ? 1 : 0;
+                    event_2 = session.getEventFacilityActionWithTargetPlayer(player_id, card_id, target_id);
+                }
+                var money = event_2.moneys[player_id];
+                if (money !== 0) {
+                    this.board_view.showCost([x, y], money);
+                }
+            }
         }
     };
     HtmlView.prototype.drawDeckBoard = function () {
@@ -3968,7 +4197,7 @@ var HtmlView = (function () {
         var owner_color = (owner_id === -1) ? COLOR_LANDMARK : this.getPlayerColor(owner_id);
         field.innerText = facility.getName();
         if (!facility.is_open) {
-            field.innerText += "🚫";
+            field.innerText += "💤";
         }
         field.style.display = "";
         field.style.backgroundColor = owner_color;
@@ -4009,10 +4238,10 @@ var HtmlView = (function () {
         if (phase === session_1.Phase.EndGame) {
             var events = session.getEvents();
             for (var _i = 0, events_1 = events; _i < events_1.length; _i++) {
-                var event_2 = events_1[_i];
-                if (event_2.type === session_1.EventType.Quit) {
-                    message = players[event_2.player_id].name + " \u304C\u5207\u65AD\u3057\u307E\u3057\u305F";
-                    this.message_view.drawMessage(message, this.getPlayerColor(event_2.player_id));
+                var event_3 = events_1[_i];
+                if (event_3.type === session_1.EventType.Quit) {
+                    message = players[event_3.player_id].name + " \u304C\u5207\u65AD\u3057\u307E\u3057\u305F";
+                    this.message_view.drawMessage(message, this.getPlayerColor(event_3.player_id));
                     return true;
                 }
             }
@@ -4070,15 +4299,15 @@ var HtmlView = (function () {
         }
         var handled = false;
         for (; i < events.length; ++i) {
-            var event_3 = events[i];
-            if (event_3.step !== step) {
+            var event_4 = events[i];
+            if (event_4.step !== step) {
                 if (handled) {
                     break;
                 }
                 // The previous step does not have handled events. Go to the next step.
-                step = event_3.step;
+                step = event_4.step;
             }
-            if (this.drawEvent(event_3)) {
+            if (this.drawEvent(event_4)) {
                 handled = true;
             }
         }
@@ -4092,10 +4321,11 @@ var HtmlView = (function () {
         var _this = this;
         // Draw cards
         if (event.type === session_1.EventType.Draw) {
-            var current_player = this.session.getPlayer(event.player_id);
+            var current_player = this.prev_session.getPlayer(event.player_id);
             var message = current_player.name + " \u306E\u30BF\u30FC\u30F3\u3067\u3059";
             var color = this.getPlayerColor(event.player_id);
             this.message_view.drawMessage(message, color);
+            this.drawFacilityValues(this.prev_session, event.player_id);
             this.effectCardDeals(event.player_id, event.target_card_ids);
             return true;
         }
@@ -4281,7 +4511,7 @@ var HtmlView = (function () {
             }
             // For open and close.
             var facility_2 = this.prev_session.getFacility(event.card_id);
-            if (facility_2.property["close"]) {
+            if (event.close) {
                 facility_2.is_open = false;
                 var owner_id_1 = this.prev_session.getOwnerId(event.card_id);
                 if ([session_1.EventType.Blue, session_1.EventType.Green].indexOf(event.type) !== -1) {
@@ -4310,6 +4540,11 @@ var HtmlView = (function () {
             }
         }
         return true;
+    };
+    HtmlView.prototype.dialogSelectFacilityPosition = function (callback) {
+        var color = this.getPlayerColor(this.client.player_id);
+        this.message_view.drawMessage("対象施設を選択してください", color);
+        this.board_view.setFacilitiesClickable(this.session, callback);
     };
     HtmlView.prototype.dialogSelectPlayer = function (callback) {
         var color = this.getPlayerColor(this.client.player_id);
@@ -4825,7 +5060,7 @@ var HtmlDeckCardsView = (function (_super) {
         this.resetPosition();
     };
     HtmlDeckCardsView.prototype.resetPosition = function () {
-        var cols = 8;
+        var cols = 7;
         var num_cards = this.data_ids.length;
         if (num_cards === 0) {
             return;
@@ -5134,6 +5369,7 @@ var HtmlBoardView = (function (_super) {
     __extends(HtmlBoardView, _super);
     function HtmlBoardView(element_id, row, column) {
         var _this = _super.call(this, document.getElementById(element_id)) || this;
+        _this.dialogCallback = null;
         _this.clickable_fields = new HtmlClickableFieldsView("click", row, column);
         var _loop_2 = function (y) {
             var _loop_3 = function (x) {
@@ -5150,7 +5386,15 @@ var HtmlBoardView = (function (_super) {
         return _this;
     }
     HtmlBoardView.prototype.onClick = function (x, y) {
-        this.callback(x, y);
+        if (this.dialogCallback != null) {
+            if (this.isClickable([x, y])) {
+                this.dialogCallback([x, y]);
+                this.dialogCallback = null;
+            }
+        }
+        else {
+            this.callback(x, y);
+        }
     };
     HtmlBoardView.prototype.clearEffects = function () {
         this.clickable_fields.reset();
@@ -5158,11 +5402,27 @@ var HtmlBoardView = (function (_super) {
     HtmlBoardView.prototype.setClickable = function (position, is_clickable) {
         this.clickable_fields.setClickable(position, is_clickable);
     };
+    HtmlBoardView.prototype.isClickable = function (position) {
+        return this.clickable_fields.isClickable(position);
+    };
     HtmlBoardView.prototype.setHighlight = function (position, color) {
         this.clickable_fields.setHighlight(position, color);
     };
     HtmlBoardView.prototype.showCost = function (position, cost) {
         this.clickable_fields.showCost(position, cost);
+    };
+    HtmlBoardView.prototype.setFacilitiesClickable = function (session, callback) {
+        this.clearEffects();
+        var board = session.getBoard();
+        for (var y = 0; y < board.row; ++y) {
+            for (var x = 0; x < board.column; ++x) {
+                var facility_id = board.getRawCardId(x, y);
+                if (session.isFacility(facility_id)) {
+                    this.setClickable([x, y], true);
+                }
+            }
+        }
+        this.dialogCallback = callback;
     };
     HtmlBoardView.prototype.animateDiceResult = function (result, color) {
         this.clickable_fields.animateDiceResult(result, color);
@@ -5170,22 +5430,120 @@ var HtmlBoardView = (function (_super) {
     return HtmlBoardView;
 }(HtmlViewObject));
 exports.HtmlBoardView = HtmlBoardView;
+var HtmlClickableFieldsView = (function (_super) {
+    __extends(HtmlClickableFieldsView, _super);
+    function HtmlClickableFieldsView(element_id, row, column) {
+        var _this = _super.call(this, document.getElementById(element_id)) || this;
+        _this.fields = [];
+        _this.row = row;
+        _this.column = column;
+        for (var x = 0; x < column; ++x) {
+            _this.fields.push([]);
+            for (var y = 0; y < row; ++y) {
+                _this.fields[x].push(new HtmlClickableFieldView(element_id + "_" + x + "_" + y));
+            }
+        }
+        return _this;
+    }
+    HtmlClickableFieldsView.prototype.reset = function () {
+        for (var x = 0; x < this.column; ++x) {
+            for (var y = 0; y < this.row; ++y) {
+                this.fields[x][y].reset();
+            }
+        }
+    };
+    HtmlClickableFieldsView.prototype.setClickableAreas = function (areas) {
+        for (var _i = 0, areas_1 = areas; _i < areas_1.length; _i++) {
+            var area = areas_1[_i];
+            var x = area - 1;
+            for (var y = 0; y < this.row; ++y) {
+                this.fields[x][y].setClickable(true);
+            }
+        }
+    };
+    HtmlClickableFieldsView.prototype.setClickable = function (_a, is_clickable) {
+        var x = _a[0], y = _a[1];
+        this.fields[x][y].setClickable(is_clickable);
+    };
+    HtmlClickableFieldsView.prototype.isClickable = function (_a) {
+        var x = _a[0], y = _a[1];
+        return this.fields[x][y].isClickable();
+    };
+    HtmlClickableFieldsView.prototype.setHighlight = function (_a, color) {
+        var x = _a[0], y = _a[1];
+        this.fields[x][y].setColor(color);
+    };
+    HtmlClickableFieldsView.prototype.showCost = function (_a, cost) {
+        var x = _a[0], y = _a[1];
+        this.fields[x][y].showCost(cost);
+    };
+    HtmlClickableFieldsView.prototype.animateDiceResult = function (pip, color) {
+        var _this = this;
+        var x = pip - 1;
+        var delay = 0;
+        var _loop_4 = function (i) {
+            var y = this_3.row - 1 - i;
+            window.setTimeout(function () {
+                _this.fields[x][y].setColor(color);
+                window.setTimeout(function () {
+                    _this.fields[x][y].setColor("transparent");
+                }, 1500);
+            }, delay);
+            delay = delay + 10 * i; // 0, 10, 30, 60, 100, ...
+        };
+        var this_3 = this;
+        for (var i = 0; i < this.row; ++i) {
+            _loop_4(i);
+        }
+    };
+    return HtmlClickableFieldsView;
+}(HtmlViewObject));
+exports.HtmlClickableFieldsView = HtmlClickableFieldsView;
+var HtmlClickableFieldView = (function (_super) {
+    __extends(HtmlClickableFieldView, _super);
+    function HtmlClickableFieldView(element_id) {
+        var _this = _super.call(this, document.getElementById(element_id)) || this;
+        _this.is_clickable = false;
+        return _this;
+    }
+    HtmlClickableFieldView.prototype.reset = function () {
+        this.element.style.borderColor = "transparent";
+        this.element.innerText = "";
+        this.is_clickable = false;
+    };
+    HtmlClickableFieldView.prototype.isClickable = function () {
+        return this.is_clickable;
+    };
+    HtmlClickableFieldView.prototype.setClickable = function (is_clickable) {
+        this.is_clickable = is_clickable;
+        // TODO: Use class of "clickable".
+        this.element.style.borderColor = is_clickable ? COLOR_CLICKABLE : "transparent";
+    };
+    HtmlClickableFieldView.prototype.setColor = function (color) {
+        this.element.style.borderColor = color;
+    };
+    HtmlClickableFieldView.prototype.showCost = function (cost) {
+        this.element.innerText = String(cost);
+    };
+    return HtmlClickableFieldView;
+}(HtmlViewObject));
+exports.HtmlClickableFieldView = HtmlClickableFieldView;
 var HtmlDeckCharView = (function (_super) {
     __extends(HtmlDeckCharView, _super);
     function HtmlDeckCharView(element_id) {
         var _this = _super.call(this, document.getElementById(element_id)) || this;
         _this.fields = [];
         _this.clickables = [];
-        var _loop_4 = function (i) {
+        var _loop_5 = function (i) {
             var field = new HtmlViewObject(document.getElementById(element_id + "_" + i));
-            this_3.fields.push(field);
+            this_4.fields.push(field);
             var clickable = new HtmlClickableFieldView("clickable_" + element_id + "_" + i);
-            this_3.clickables.push(clickable);
+            this_4.clickables.push(clickable);
             clickable.addClickListener(function () { _this.onClick(i); });
         };
-        var this_3 = this;
+        var this_4 = this;
         for (var i = 0; i < 5; ++i) {
-            _loop_4(i);
+            _loop_5(i);
         }
         return _this;
     }
@@ -5323,93 +5681,6 @@ var HtmlButtonsView = (function (_super) {
     return HtmlButtonsView;
 }(HtmlViewObject));
 exports.HtmlButtonsView = HtmlButtonsView;
-var HtmlClickableFieldView = (function (_super) {
-    __extends(HtmlClickableFieldView, _super);
-    function HtmlClickableFieldView(element_id) {
-        return _super.call(this, document.getElementById(element_id)) || this;
-    }
-    HtmlClickableFieldView.prototype.reset = function () {
-        this.element.style.borderColor = "transparent";
-        this.element.innerText = "";
-    };
-    HtmlClickableFieldView.prototype.setClickable = function (is_clickable) {
-        // TODO: Use class of "clickable".
-        this.element.style.borderColor = is_clickable ? COLOR_CLICKABLE : "transparent";
-    };
-    HtmlClickableFieldView.prototype.setColor = function (color) {
-        this.element.style.borderColor = color;
-    };
-    HtmlClickableFieldView.prototype.showCost = function (cost) {
-        this.element.innerText = String(cost);
-    };
-    return HtmlClickableFieldView;
-}(HtmlViewObject));
-exports.HtmlClickableFieldView = HtmlClickableFieldView;
-var HtmlClickableFieldsView = (function (_super) {
-    __extends(HtmlClickableFieldsView, _super);
-    function HtmlClickableFieldsView(element_id, row, column) {
-        var _this = _super.call(this, document.getElementById(element_id)) || this;
-        _this.fields = [];
-        _this.row = row;
-        _this.column = column;
-        for (var x = 0; x < column; ++x) {
-            _this.fields.push([]);
-            for (var y = 0; y < row; ++y) {
-                _this.fields[x].push(new HtmlClickableFieldView(element_id + "_" + x + "_" + y));
-            }
-        }
-        return _this;
-    }
-    HtmlClickableFieldsView.prototype.reset = function () {
-        for (var x = 0; x < this.column; ++x) {
-            for (var y = 0; y < this.row; ++y) {
-                this.fields[x][y].reset();
-            }
-        }
-    };
-    HtmlClickableFieldsView.prototype.setClickableAreas = function (areas) {
-        for (var _i = 0, areas_1 = areas; _i < areas_1.length; _i++) {
-            var area = areas_1[_i];
-            var x = area - 1;
-            for (var y = 0; y < this.row; ++y) {
-                this.fields[x][y].setClickable(true);
-            }
-        }
-    };
-    HtmlClickableFieldsView.prototype.setClickable = function (_a, is_clickable) {
-        var x = _a[0], y = _a[1];
-        this.fields[x][y].setClickable(is_clickable);
-    };
-    HtmlClickableFieldsView.prototype.setHighlight = function (_a, color) {
-        var x = _a[0], y = _a[1];
-        this.fields[x][y].setColor(color);
-    };
-    HtmlClickableFieldsView.prototype.showCost = function (_a, cost) {
-        var x = _a[0], y = _a[1];
-        this.fields[x][y].showCost(cost);
-    };
-    HtmlClickableFieldsView.prototype.animateDiceResult = function (pip, color) {
-        var _this = this;
-        var x = pip - 1;
-        var delay = 0;
-        var _loop_5 = function (i) {
-            var y = this_4.row - 1 - i;
-            window.setTimeout(function () {
-                _this.fields[x][y].setColor(color);
-                window.setTimeout(function () {
-                    _this.fields[x][y].setColor("transparent");
-                }, 1500);
-            }, delay);
-            delay = delay + 10 * i; // 0, 10, 30, 60, 100, ...
-        };
-        var this_4 = this;
-        for (var i = 0; i < this.row; ++i) {
-            _loop_5(i);
-        }
-    };
-    return HtmlClickableFieldsView;
-}(HtmlViewObject));
-exports.HtmlClickableFieldsView = HtmlClickableFieldsView;
 var HtmlDiceView = (function (_super) {
     __extends(HtmlDiceView, _super);
     function HtmlDiceView(element_id) {
