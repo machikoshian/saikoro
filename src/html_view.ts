@@ -90,7 +90,7 @@ export class HtmlView {
     private deck_char_view: HtmlDeckCharView = null;
     private deck_cards_view: HtmlDeckCardsView = null;
     private clicked_field: [number, number] = [-1, -1];
-    private cards_views: HtmlCardsView[] = [];
+    private cards_view: HtmlCardsView = null;
     private players_view: HtmlPlayersView;
     private back_button_view: HtmlViewObject = null;
     private reset_button_view: HtmlViewObject = null;
@@ -137,9 +137,7 @@ export class HtmlView {
 
     private resetViews(): void {
         this.buttons_view.reset();
-        for (let card_view of this.cards_views) {
-            card_view.reset();
-        }
+        this.cards_view.reset();
     }
 
     public readyGame(): void {
@@ -247,10 +245,7 @@ export class HtmlView {
         this.deck_cards_view.callback = (data_id) => { this.onClickDeckCard(data_id); };
 
         // HtmlCardsView
-        for (let pid = 0; pid < 4; ++pid) {
-            let cards_view: HtmlCardsView = new HtmlCardsView(`card_${pid}`);
-            this.cards_views.push(cards_view);
-        }
+        this.cards_view = new HtmlCardsView("card_0");
 
         // Landmark cards
         this.landmarks_view = new HtmlCardsView("landmark");
@@ -305,9 +300,7 @@ export class HtmlView {
 
         document.body.classList.remove("evening");
 
-        for (let cards_view of this.cards_views) {
-            cards_view.none();
-        }
+        this.cards_view.none();
         this.field_card_view.none();
         this.resetViews();
 
@@ -446,7 +439,7 @@ export class HtmlView {
                 this.landmarks_view.useCard(this.clicked_card_id, field);
             }
             else {
-                this.cards_views[this.client.player_id].useCard(this.clicked_card_id, field);
+                this.cards_view.useCard(this.clicked_card_id, field);
             }
             this.resetCardsClickable();
             return true;
@@ -487,7 +480,7 @@ export class HtmlView {
         }
 
         // Reset character cards.
-        this.cards_views[this.client.player_id].resetClickable();
+        this.cards_view.resetClickable();
 
         this.client.sendRequest(this.client.createDiceQuery(dice_num, aim));
 
@@ -762,9 +755,7 @@ export class HtmlView {
 
     private resetCardsClickable(): void {
         this.clicked_card_id = -1;
-        for (let i: number = 0; i < this.cards_views.length; ++i) {
-            this.cards_views[i].resetClickable();
-        }
+        this.cards_view.resetClickable();
         this.landmarks_view.resetClickable();
     }
 
@@ -815,26 +806,17 @@ export class HtmlView {
         if (session.getPhase() === Phase.BuildFacility &&
             session.getCurrentPlayerId() === this.client.player_id &&
             money >= landmark_cost) {
-            this.cards_views[this.client.player_id].y_offset = 150;
+            this.cards_view.y_offset = 150;
             this.landmarks_view.y_offset = -150;
         }
         else {
-            this.cards_views[this.client.player_id].y_offset = 0;
+            this.cards_view.y_offset = 0;
             this.landmarks_view.y_offset = 0;
         }
 
         // Update cards.
-        for (let i: number = 0; i < players.length; ++i) {
-            if (this.client.player_id !== i) {
-                this.cards_views[i].none();
-                continue;
-            }
-            let card_ids: CardId[] = session.getSortedHand(i);
-            this.cards_views[i].draw(session, card_ids);
-        }
-        for (let i: number = players.length; i < 4; ++i) {
-            this.cards_views[i].none();
-        }
+        const card_ids: CardId[] = session.getSortedHand(this.client.player_id);
+        this.cards_view.draw(session, card_ids);
 
         // Update landmarks.
         this.landmarks_view.show();
@@ -1346,26 +1328,24 @@ export class HtmlView {
     }
 
     private dialogSelectCharCard(is_open: boolean, callback: (card_id: CardId) => void): void {
-        let cards_view: HtmlCardsView = this.cards_views[this.client.player_id];
         if (is_open) {
             const color: string = this.getPlayerColor(this.client.player_id);
             this.message_view.drawMessage("キャラカードを選択してください", color);
-            cards_view.setCharCardsClickable((card_id: CardId) => {
-                cards_view.useCard(card_id, "board");
+            this.cards_view.setCharCardsClickable((card_id: CardId) => {
+                this.cards_view.useCard(card_id, "board");
                 callback(card_id);
-                cards_view.resetClickable();
+                this.cards_view.resetClickable();
             });
         }
         else {
             this.message_view.revertMessage();
-            cards_view.resetClickable();
+            this.cards_view.resetClickable();
         }
     }
 
     private dialogSelectFacilityCard(is_open: boolean, callback: (card_id: CardId) => void): void {
-        let cards_view: HtmlCardsView = this.cards_views[this.client.player_id];
         if (is_open) {
-            cards_view.setFacilityCardsClickable(callback);
+            this.cards_view.setFacilityCardsClickable(callback);
             this.landmarks_view.setFacilityCardsClickable(callback);
         }
         else {
@@ -1428,7 +1408,7 @@ export class HtmlView {
         for (let card_id of card_ids) {
             window.setTimeout(() => {
                 const data_id: CardDataId = this.session.getCardDataId(card_id);
-                this.cards_views[player_id].addCard(data_id, card_id, `player_${player_id}`);
+                this.cards_view.addCard(data_id, card_id, `player_${player_id}`);
             }, timeout);
             timeout += 500;
         }
