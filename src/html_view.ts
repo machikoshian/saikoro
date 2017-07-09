@@ -1209,10 +1209,11 @@ export class HtmlView {
 
         if (event.type === EventType.Build) {
             if (event.card_id === -1) {  // Pass.
-                let name: string = this.session.getPlayer(event.player_id).name;
+                let name: string = this.prev_session.getPlayer(event.player_id).name;
                 let message = `${name} は何も建設しませんでした。`;
                 let color: string = this.getPlayerColor(event.player_id);
                 this.message_view.drawMessage(message, color);
+                this.drawCards(this.prev_session);
                 return true;
             }
 
@@ -1222,6 +1223,7 @@ export class HtmlView {
 
             // Draw the board after money motion.
             window.setTimeout(() => {
+                this.drawCards(this.prev_session);
                 this.drawBoard(this.prev_session);
             }, 1000);
         }

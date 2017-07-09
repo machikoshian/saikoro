@@ -254,6 +254,10 @@ export class HtmlCardsView extends HtmlViewObject {
         // TODO: move this to other.
         for (let card_id of card_ids) {
             this.card_id_map[card_id] = session.getCardDataId(card_id);
+
+            if (session.isLandmark(card_id)) {
+                this.getCardView(card_id).setOwnerId(session.getOwnerId(card_id));
+            }
         }
 
         // Removed cards
@@ -349,7 +353,7 @@ export class HtmlCardsView extends HtmlViewObject {
         let delay: number = 0;
         for (let i: number = 0; i < this.card_ids.length; ++i) {
             let card: HtmlCardView = this.getCardView(this.card_ids[i]);
-            if (!CardData.isCharacter(card.data_id)) {
+            if (!CardData.isCharacter(card.getDataId())) {
                 continue;
             }
             let [x, y] = card.getPosition();
@@ -367,7 +371,7 @@ export class HtmlCardsView extends HtmlViewObject {
         let delay: number = 0;
         for (let i: number = 0; i < this.card_ids.length; ++i) {
             let card: HtmlCardView = this.getCardView(this.card_ids[i]);
-            if (CardData.isCharacter(card.data_id)) {
+            if (CardData.isCharacter(card.getDataId())) {
                 continue;
             }
             card.setHighlight(true);
@@ -460,6 +464,8 @@ export class HtmlCardBaseView extends HtmlViewObject {
     private element_name: HTMLElement;
     private element_cost: HTMLElement;
     private element_description: HTMLElement;
+    protected data_id: CardDataId = -1;
+    protected owner_id: PlayerId = -1;
     public is_highlight: boolean = false;
 
     constructor(readonly element_id: string) {
@@ -469,7 +475,12 @@ export class HtmlCardBaseView extends HtmlViewObject {
         this.element_description = <HTMLElement>this.element.getElementsByClassName("card_description")[0];
     }
 
-    protected setData(data_id: CardDataId): void {
+    public getDataId(): CardDataId {
+        return this.data_id;
+    }
+
+    public setDataId(data_id: CardDataId): void {
+        this.data_id = data_id;
         // No card
         if (data_id === -1) {
             this.none();
@@ -494,6 +505,13 @@ export class HtmlCardBaseView extends HtmlViewObject {
         // Facility
         let facility: Facility = new Facility(data_id);
         this.setFacilityCard(facility);
+    }
+
+    public setOwnerId(owner_id: PlayerId): void {
+        this.owner_id = owner_id;
+        if (owner_id !== -1 && CardData.isLandmark(this.data_id)) {
+            this.element.style.backgroundColor = getPlayerColor(owner_id);
+        }
     }
 
     public setFacilityCard(facility: Facility): void {
@@ -544,53 +562,19 @@ export class HtmlCardBaseView extends HtmlViewObject {
 
 export class HtmlCardView extends HtmlCardBaseView {
     constructor(readonly element_id: string,
-                readonly data_id: CardDataId,
+                data_id: CardDataId,
                 readonly card_id: CardId) {
         super(element_id);
-        this.setData(data_id);
+        this.setDataId(data_id);
     }
 }
 
-export class HtmlCardWidgetView extends HtmlCardBaseView {
-    private data_id: CardDataId = -1;
-
-    public getDataId(): CardDataId {
-        return this.data_id;
-    }
-
-    public setDataId(data_id: CardDataId): void {
-        this.data_id = data_id;
-        // No card
-        if (this.data_id === -1) {
-            this.none();
-            return;
-        }
-
-        // Character
-        if (CardData.isCharacter(data_id)) {
-            let character: Character = new Character(this.data_id);
-            this.setCharacterCard(character);
-            return;
-        }
-
-        // Landmark
-        if (CardData.isLandmark(this.data_id)) {
-            let landmark: Facility = new Facility(this.data_id);
-            let owner_id: PlayerId = -1;
-            this.setLandmarkCard(landmark, owner_id);
-            return;
-        }
-
-        // Facility
-        let facility: Facility = new Facility(this.data_id);
-        this.setFacilityCard(facility);
-    }
-}
+export class HtmlCardWidgetView extends HtmlCardBaseView {}
 
 export class HtmlCardDataView extends HtmlCardBaseView {
-    constructor(readonly element_id: string, readonly data_id: CardDataId) {
+    constructor(readonly element_id: string, data_id: CardDataId) {
         super(element_id);
-        this.setData(data_id);
+        this.setDataId(data_id);
     }
 }
 
@@ -879,6 +863,9 @@ export class HtmlClickableFieldsView extends HtmlViewObject {
 
     public animateDiceResult(pip: number, color: string): void {
         let x: number = pip - 1;
+        if (x < 0 || 11 < x) {
+            return;
+        }
         let delay: number = 0;
         for (let i: number = 0; i < this.row; ++i) {
             let y = this.row - 1 - i;
