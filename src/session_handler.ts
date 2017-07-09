@@ -30,7 +30,11 @@ export class SessionHandler {
             }
 
             if (session.getCurrentPlayer().isAuto()) {
-                cont = AutoPlay.play(session);
+                const query: Query.Query = AutoPlay.getQuery(session);
+                if (query == null) {
+                    return false;
+                }
+                cont = this.processCommand(session, query);
                 new_step = session.getStep();
             }
             if (cont) {

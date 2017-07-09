@@ -426,12 +426,13 @@ export class HtmlView {
             this.drawFieldInfo(x, y);
             return;
         }
-        let event: Event = this.session.getEventBuildFacility(this.client.player_id, x, y, this.clicked_card_id);
+        const query: Query.BuildQuery = this.client.createBuildQuery(x, y, this.clicked_card_id);
+        const event: Event = this.session.getEventBuildCommand(query);
         if (event == null || !event.valid) {
             return;
         }
 
-        this.client.sendRequest(this.client.createBuildQuery(x, y, this.clicked_card_id));
+        this.client.sendRequest(query);
 
         this.event_queue.addEvent(() => {
             this.buttons_view.hide();  // for the turn end button.
@@ -524,8 +525,8 @@ export class HtmlView {
             for (let area of facility.getArea()) {
                 let x: number = area - 1;
                 for (let y: number = 0; y < 5; ++y) {  // TODO: y can be other than 5.
-                    let event: Event =
-                        this.session.getEventBuildFacility(this.client.player_id, x, y, card_id);
+                    const query: Query.BuildQuery = this.client.createBuildQuery(x, y, card_id);
+                    const event: Event = this.session.getEventBuildCommand(query);
                     if (event && event.valid) {
                         this.board_view.setClickable([x, y], true);
                         this.board_view.showCost([x, y], event.moneys[this.client.player_id]);
@@ -1215,40 +1216,14 @@ export class HtmlView {
                 return true;
             }
 
-            let [x, y]: [number, number] = this.session.getPosition(event.card_id);
-            let facility: Facility = this.session.getFacility(event.card_id);
-            this.prev_session.getBoard().removeCards(x, y, facility.size);
-            this.prev_session.getBoard().setCardId(x, y, event.card_id, facility.size);
-            if (this.prev_session.isFacility(event.card_id)) {
-                this.prev_session.getPlayerCards(event.player_id).moveHandToField(event.card_id);
-            }
+            // Money motion
+            this.drawEventOfMoneyMotion(this.prev_session, event);
+            this.prev_session.processEventBuild(event);
+
             // Draw the board after money motion.
             window.setTimeout(() => {
                 this.drawBoard(this.prev_session);
             }, 1000);
-        }
-
-        if (event.type === EventType.Build) {
-            // Money motion
-            const [x, y]: [number, number] = this.session.getPosition(event.card_id);
-
-            for (let pid = 0; pid < event.moneys.length; pid++) {
-                const money: number = event.moneys[pid];
-                if (money === 0) {
-                    continue;
-                }
-                let delay: number = 0;
-                if (money > 0) {
-                    delay = 1000;
-                }
-                window.setTimeout(() => {
-                    this.drawMoneyMotion(money, pid, `field_${x}_${y}`);
-                    this.board_view.setHighlight([x, y], COLOR_CLICKABLE);
-                    window.setTimeout(() => {
-                        this.board_view.setHighlight([x, y], "transparent");
-                    }, 1000);
-                }, delay);
-            }
         }
 
         const money_motion: EventType[] = [
@@ -1259,43 +1234,21 @@ export class HtmlView {
         ];
         if (money_motion.indexOf(event.type) !== -1) {
             // Money motion
-            const [x, y]: [number, number] = this.session.getPosition(event.card_id);
-
-            for (let pid = 0; pid < event.moneys.length; pid++) {
-                const money: number = event.moneys[pid];
-                if (money === 0) {
-                    continue;
-                }
-                let delay: number = 0;
-                if ([EventType.Red, EventType.Purple].indexOf(event.type) !== -1 &&
-                    money > 0) {
-                    delay = 1000;
-                }
-                window.setTimeout(() => {
-                    this.drawMoneyMotion(money, pid, `field_${x}_${y}`);
-                    this.board_view.setHighlight([x, y], COLOR_CLICKABLE);
-                    window.setTimeout(() => {
-                        this.board_view.setHighlight([x, y], "transparent");
-                    }, 1000);
-                }, delay);
-            }
+            this.drawEventOfMoneyMotion(this.prev_session, event);
 
             // For open and close.
             let facility: Facility = this.prev_session.getFacility(event.card_id);
             if (event.close) {
                 facility.is_open = false;
-
+                const [x, y]: [number, number] = this.session.getPosition(event.card_id);
                 const owner_id: PlayerId = this.prev_session.getOwnerId(event.card_id);
-                if ([EventType.Blue, EventType.Green].indexOf(event.type) !== -1) {
-                    window.setTimeout(() => {
-                        this.drawField(x, y, event.card_id, facility, owner_id);
-                    }, 1000);
-                }
+                let delay: number = 1000;
                 if ([EventType.Red, EventType.Purple].indexOf(event.type) !== -1) {
-                    window.setTimeout(() => {
-                        this.drawField(x, y, event.card_id, facility, owner_id);
-                    }, 2000);
+                    delay = 2000;
                 }
+                window.setTimeout(() => {
+                    this.drawField(x, y, event.card_id, facility, owner_id);
+                }, delay);
             }
         }
 
@@ -1314,6 +1267,35 @@ export class HtmlView {
             }
         }
         return true;
+    }
+
+    private drawEventOfMoneyMotion(session: Session, event: Event): void {
+        const [x, y]: [number, number] =
+            (event.position != null) ? event.position : session.getPosition(event.card_id);
+
+        // If event.moneys has both positive and negative values,
+        // motions for positive values are delayed.
+        let delay_value: number = 0;
+        for (let pid = 0; pid < event.moneys.length; pid++) {
+            if (event.moneys[pid] < 0) {
+                delay_value = 1000;
+                break;
+            }
+        }
+        for (let pid = 0; pid < event.moneys.length; pid++) {
+            const money: number = event.moneys[pid];
+            if (money === 0) {
+                continue;
+            }
+            let delay: number = (money > 0) ? 1000 : 0;
+            window.setTimeout(() => {
+                this.drawMoneyMotion(money, pid, `field_${x}_${y}`);
+                this.board_view.setHighlight([x, y], COLOR_CLICKABLE);
+                window.setTimeout(() => {
+                    this.board_view.setHighlight([x, y], "transparent");
+                }, 1000);
+            }, delay);
+        }
     }
 
     private dialogSelectFacilityPosition(callback: ([x, y]: [number, number]) => void): void {

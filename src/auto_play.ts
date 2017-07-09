@@ -5,21 +5,21 @@ import { shuffle } from "./utils";
 import * as Query from "./query";
 
 export class AutoPlay {
-    static play(session: Session): boolean {
+    static getQuery(session: Session): Query.Query {
         let player_id: PlayerId = session.getCurrentPlayerId();
         switch (session.getPhase()) {
             case Phase.CharacterCard:
             case Phase.DiceRoll:
-                return AutoPlay.playDiceRoll(session);
+                return AutoPlay.getDiceQuery(session);
             case Phase.BuildFacility:
-                return AutoPlay.playBuildFacility(session);
+                return AutoPlay.getBuildQuery(session);
             case Phase.FacilityActionWithInteraction:
-                return AutoPlay.playInteractFacilityAction(session);
+                return AutoPlay.getInteractQuery(session);
         }
-        return false;
+        return null;
     }
 
-    static playDiceRoll(session: Session): boolean {
+    static getDiceQuery(session: Session): Query.DiceQuery {
         const player_id: PlayerId = session.getCurrentPlayerId();
         const query: Query.DiceQuery = {
             command: "dice",
@@ -30,16 +30,16 @@ export class AutoPlay {
             dice_num: 2,
             aim: 0,
         };
-        return session.processDiceCommand(query);
+        return query;
     }
 
-    static playInteractFacilityAction(session: Session): boolean {
+    static getInteractQuery(session: Session): Query.InteractQuery {
         let player_id: PlayerId = session.getCurrentPlayerId();
         let target_facilities: CardId[] = session.getTargetFacilities();
         let target_id: PlayerId = (player_id === 0) ? 1 : 0;  // TODO: Fixme :)
 
         if (target_facilities.length === 0) {
-            return false;
+            return null;
         }
 
         const query: Query.InteractQuery = {
@@ -51,26 +51,14 @@ export class AutoPlay {
             card_id: target_facilities[0],
             target_player_id: target_id,
         };
-        return session.processInteractCommand(query);
+        return query;
     }
 
-    static playBuildFacility(session: Session): boolean {
+    static getBuildQuery(session: Session): Query.BuildQuery {
         let landmarks: CardId[] = session.getLandmarks();
         let player_id: PlayerId = session.getCurrentPlayerId();
         let player: Player = session.getPlayer(player_id);
         let money: number = player.getMoney();
-
-        for (let landmark of landmarks) {
-            if (session.getOwnerId(landmark) !== -1) {
-                continue;
-            }
-
-            if (money >= session.getFacility(landmark).getCost()) {
-                return session.buildLandmark(player_id, landmark);
-            }
-        }
-
-        let card_ids: CardId[] = session.getPlayerCards(player_id).getHand();
 
         let query: Query.BuildQuery = {
             command: "build",
@@ -82,6 +70,19 @@ export class AutoPlay {
             y: -1,
             card_id: -1,
         };
+
+        for (let landmark of landmarks) {
+            if (session.getOwnerId(landmark) !== -1) {
+                continue;
+            }
+
+            if (money >= session.getFacility(landmark).getCost()) {
+                query.card_id = landmark;
+                return query;
+            }
+        }
+
+        let card_ids: CardId[] = session.getPlayerCards(player_id).getHand();
 
         for (let card_id of card_ids) {
             if (session.isCharacter(card_id)) {
@@ -103,8 +104,8 @@ export class AutoPlay {
             query.x = x;
             query.y = y;
             query.card_id = card_id;
-            return session.processBuildCommand(query);
+            return query;
         }
-        return session.processBuildCommand(query);
+        return query;
     }
 }

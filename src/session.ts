@@ -51,6 +51,7 @@ export class Event {
     public player_id: PlayerId = -1;
     public moneys: number[] = [0, 0, 0, 0];
     public card_id: CardId = null;
+    public position: [number, number] = null;
     public target_player_id: PlayerId = -1;
     public target_card_ids: CardId[] = [];
     public close: boolean = false;
@@ -65,6 +66,7 @@ export class Event {
             player_id: this.player_id,
             moneys: this.moneys,
             card_id: this.card_id,
+            position: this.position,
             target_player_id: this.target_player_id,
             target_card_ids: this.target_card_ids,
             close: this.close,
@@ -80,6 +82,7 @@ export class Event {
         event.player_id = json.player_id;
         event.moneys = json.moneys;
         event.card_id = json.card_id;
+        event.position = json.position;
         event.target_player_id = json.target_player_id;
         event.target_card_ids = json.target_card_ids;
         event.close = json.close;
@@ -923,66 +926,23 @@ export class Session {
     }
 
     public processBuildCommand(query: Query.BuildQuery): boolean {
+        let event: Event = this.getEventBuildCommand(query);
+        return this.processEventBuild(event);
+    }
+
+    public getEventBuildCommand(query: Query.BuildQuery): Event {
         const player_id: PlayerId = query.player_id;
         const x: number = query.x;
         const y: number = query.y;
         const card_id: CardId = query.card_id;
 
         if (x == null || y == null && player_id == null && card_id == null) {
-            return false;
+            return null;
         }
 
         // Facility is a landmark?
         if (this.card_manager.isLandmark(card_id)) {
-            return this.buildLandmark(player_id, card_id);
-        }
-
-        let event: Event = this.getEventBuildFacility(player_id, x, y, card_id);
-        if (event == null || !event.valid) {
-            return false;
-        }
-        this.events.push(event);
-
-        // End turn, no build.
-        if (event.card_id === -1) {
-            this.done(Phase.BuildFacility);
-            return true;
-        }
-
-        let facility: Facility = this.getFacility(card_id);
-
-        // Update the data.
-        this.board.removeCards(x, y, facility.size);
-        for (let card_id_on_board of event.target_card_ids) {
-            // Delete the existing facility.
-            if (!this.card_manager.moveFieldToDiscard(card_id_on_board)) {
-                // Something is wrong.
-                console.warn(`moveFieldToDiscard(${card_id_on_board}) failed.`);
-                return false;
-            }
-        }
-
-        // Build the new facility.
-        if (!this.card_manager.moveHandToField(card_id)) {
-            // Something is wrong.
-            console.warn(`moveHandToField(${card_id}) failed.`);
-            return false;
-        }
-
-        this.board.setCardId(x, y, card_id, facility.size);
-        for (let i: number = 0; i < this.players.length; ++i) {
-            this.players[i].addMoney(event.moneys[i]);
-        }
-
-        this.done(Phase.BuildFacility);
-        return true;
-    }
-
-    public getEventBuildFacility(player_id: PlayerId, x: number, y: number,
-                                 card_id: CardId): Event {
-        // Facility is a landmark?
-        if (this.card_manager.isLandmark(card_id)) {
-            return this.getEventBuildLandmark(player_id, card_id);
+            return this.getEventBuildLandmark(query);
         }
 
         // State is valid?
@@ -994,6 +954,7 @@ export class Session {
         event.step = this.step;
         event.type = EventType.Build;
         event.player_id = player_id;
+        event.position = [x, y];
 
         // Is pass?  (valid action, but not build a facility).
         if (x === -1 && y === -1 && card_id === -1) {
@@ -1053,22 +1014,10 @@ export class Session {
         return event;
     }
 
-    public buildLandmark(player_id: PlayerId, card_id: CardId): boolean {
-        let event: Event = this.getEventBuildLandmark(player_id, card_id);
-        if (event == null || !event.valid) {
-            return false;
-        }
-        this.events.push(event);
+    private getEventBuildLandmark(query: Query.BuildQuery): Event {
+        const player_id: PlayerId = query.player_id;
+        const card_id: CardId = query.card_id;
 
-        // Update the data.
-        this.getPlayer(player_id).addMoney(event.moneys[player_id]);
-        this.card_manager.buildLandmark(player_id, card_id);
-
-        this.done(Phase.BuildFacility);
-        return true;
-    }
-
-    public getEventBuildLandmark(player_id: PlayerId, card_id: CardId): Event {
         // State is valid?
         if (!this.isValid(player_id, Phase.BuildFacility)) {
             return null;
@@ -1107,6 +1056,59 @@ export class Session {
         event.card_id = card_id;
 
         return event;
+    }
+
+    public processEventBuild(event): boolean {
+        if (event == null || !event.valid) {
+            return false;
+        }
+
+        this.events.push(event);
+        const card_id: CardId = event.card_id;
+
+        // End turn, no build.
+        if (card_id === -1) {
+            this.done(Phase.BuildFacility);
+            return true;
+        }
+
+        // Landmark
+        if (this.card_manager.isLandmark(card_id)) {
+            this.getPlayer(event.player_id).addMoney(event.moneys[event.player_id]);
+            this.card_manager.buildLandmark(event.player_id, card_id);
+
+            this.done(Phase.BuildFacility);
+            return true;
+        }
+
+        const facility: Facility = this.getFacility(card_id);
+        const [x, y]: [number, number] = event.position;
+
+        // Update the data.
+        this.board.removeCards(x, y, facility.size);
+        for (let card_id_on_board of event.target_card_ids) {
+            // Delete the existing facility.
+            if (!this.card_manager.moveFieldToDiscard(card_id_on_board)) {
+                // Something is wrong.
+                console.warn(`moveFieldToDiscard(${card_id_on_board}) failed.`);
+                return false;
+            }
+        }
+
+        // Build the new facility.
+        if (!this.card_manager.moveHandToField(card_id)) {
+            // Something is wrong.
+            console.warn(`moveHandToField(${card_id}) failed.`);
+            return false;
+        }
+
+        this.board.setCardId(x, y, card_id, facility.size);
+        for (let i: number = 0; i < this.players.length; ++i) {
+            this.players[i].addMoney(event.moneys[i]);
+        }
+
+        this.done(Phase.BuildFacility);
+        return true;
     }
 
     public paySalary(): boolean {
