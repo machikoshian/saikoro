@@ -1,6 +1,6 @@
 import { Dice, DiceResult } from "./dice";
 import { Player, Board, PlayerId } from "./board";
-import { CardId, CardDataId, CardType, FacilityType, Facility,
+import { CardId, CardDataId, CardType, FacilityType, CardData, Facility,
          Character, CharacterData, CharacterType, SelectType } from "./facility";
 import { shuffle } from "./utils";
 import { CardState, CardManager, CardManagerQuery, EffectManager, PlayerCards } from "./card_manager";
@@ -235,7 +235,7 @@ export class Session {
                     }
                 }
                 // TODO: support multiple landmarks.
-                if (num_landmarks > 0) {
+                if (num_landmarks > (landmarks.length / this.players.length)) {
                     this.winner = this.current_player_id;
                     this.phase = Phase.EndGame;
                     return;
@@ -307,7 +307,11 @@ export class Session {
     }
 
     public startGame(): boolean {
-        this.setLandmark();
+        const landmark_ids: CardDataId[] = shuffle(CardData.getAvailableLandmarks());
+        const num_landmarks: number = (this.players.length + 1);
+        for (let i: number = 0; i < num_landmarks; i++) {
+            this.setLandmark(landmark_ids[i]);
+        }
 
         for (let r: number = 0; r < 2; r++) {
             for (let p: PlayerId = 0; p < this.players.length; p++) {
@@ -755,18 +759,17 @@ export class Session {
         return true;  // True is returned even if no facility was built.
     }
 
-    public setLandmark(): boolean {  // Reserve the area for landmark.
-        const landmark_data_id: number = 10000;
-        let landmark: Facility = new Facility(landmark_data_id);
-        let landmark_id: CardId = this.card_manager.addLandmark(landmark);
+    public setLandmark(data_id: CardDataId): boolean {  // Reserve the area for landmark.
+        let landmark: Facility = new Facility(data_id);
+        const landmark_id: CardId = this.card_manager.addLandmark(landmark);
 
-        let positions: [number, number][] = shuffle(this.availablePosition(landmark_id));
+        const positions: [number, number][] = shuffle(this.availablePosition(landmark_id));
         if (positions.length === 0) {
             console.error("Landmark cannot be built.");
             return false;
         }
 
-        let [x, y] = positions[0];
+        const [x, y]: [number, number] = positions[0];
         this.board.setCardId(x, y, landmark_id, landmark.size);
         return true;
     }

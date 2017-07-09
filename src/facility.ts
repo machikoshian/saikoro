@@ -65,7 +65,7 @@ const CHARACTER_DATA: CharacterData[] = [
     new CharacterData("警察官", CharacterType.Close, 0, {"type": SelectType.Purple}),
     new CharacterData("踊り子", CharacterType.Close, 0, {"type": SelectType.Facility}),
     new CharacterData("医者", CharacterType.Open, 0, {}),
-    new CharacterData("残念秘書", CharacterType.Boost, 2, {"type": SelectType.Facility, "boost": -2.0}),
+    new CharacterData("残念秘書", CharacterType.Boost, 2, {"type": SelectType.Facility, "boost": -1.5}),
     new CharacterData("社長秘書", CharacterType.Boost, 2, {"type": SelectType.Facility, "boost": 1.5}),
     new CharacterData("市長", CharacterType.Boost, 2, {"type": SelectType.Facility, "boost": 0.8}),
     new CharacterData("農家", CharacterType.Boost, 1, {"type": SelectType.Blue, "boost": 2.0}),
@@ -138,8 +138,13 @@ const FACILITY_DATA: FacilityData[] = [
 const LANDMARK_DATA_BASE: number = 10000;
 const LANDMARK_DATA: FacilityData[] = [
     new FacilityData(2, [], "🏯", 2500, FacilityType.Gray, 0, {}),
-    new FacilityData(1, [], "🏰", 2500, FacilityType.Gray, 0, {}),
-    new FacilityData(2, [], "🚉", 2500, FacilityType.Gray, 0, {}),
+    new FacilityData(2, [], "🏰", 2500, FacilityType.Gray, 0, {}),
+    new FacilityData(1, [], "🚉", 2500, FacilityType.Gray, 0, {}),
+    new FacilityData(2, [], "✈️", 2500, FacilityType.Gray, 0, {}),
+    new FacilityData(1, [], "🗼", 2500, FacilityType.Gray, 0, {}),
+    new FacilityData(1, [], "🗽", 2500, FacilityType.Gray, 0, {}),
+    new FacilityData(1, [], "🚂", 2500, FacilityType.Gray, 0, {}),
+    new FacilityData(2, [], "️🚅", 2500, FacilityType.Gray, 0, {}),
 ];
 
 export class CardData {
@@ -167,6 +172,13 @@ export class CardData {
     static isLandmark(data_id: number): boolean {
         return ((LANDMARK_DATA_BASE <= data_id) &&
                 (data_id < LANDMARK_DATA_BASE + LANDMARK_DATA.length));
+    }
+    static getAvailableLandmarks(): CardDataId[] {
+        let data_ids: CardDataId[] = [];
+        for (let i: number = 0; i < LANDMARK_DATA.length; ++i) {
+            data_ids.push(LANDMARK_DATA_BASE + i);
+        }
+        return data_ids;
     }
 
     static isCharacter(data_id: number): boolean {

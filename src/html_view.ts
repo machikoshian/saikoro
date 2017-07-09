@@ -138,6 +138,7 @@ export class HtmlView {
     private resetViews(): void {
         this.buttons_view.reset();
         this.cards_view.reset();
+        this.landmarks_view.reset();
     }
 
     public readyGame(): void {
@@ -1393,11 +1394,6 @@ export class HtmlView {
         new_view.showAt(new_view.getPositionAlignedWithElementId(id1));
         new_view.animateMoveToElementId(id2);
         window.setTimeout(() => { new_view.remove(); }, 1500);
-    }
-
-    private effectCardDeal(pid: PlayerId, card_id: CardId): void {
-        this.card_widget_view.setDataId(this.session.getCardDataId(card_id));
-        this.effectClonedObjectMove(this.card_widget_view, `player_${pid}`, `card_${pid}_0`);
     }
 
     private effectCardDeals(player_id: PlayerId, card_ids: CardId[]): void {
