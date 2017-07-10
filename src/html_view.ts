@@ -1237,16 +1237,16 @@ export class HtmlView {
         if (money_motion.indexOf(event.type) !== -1) {
             // Money motion
             this.drawEventOfMoneyMotion(this.prev_session, event);
+            this.prev_session.processEventFacilityAction(event);
 
             // For open and close.
-            let facility: Facility = this.prev_session.getFacility(event.card_id);
             if (event.close) {
-                facility.is_open = false;
-                const [x, y]: [number, number] = this.session.getPosition(event.card_id);
+                const facility: Facility = this.prev_session.getFacility(event.card_id);
+                const [x, y]: [number, number] = this.prev_session.getPosition(event.card_id);
                 const owner_id: PlayerId = this.prev_session.getOwnerId(event.card_id);
                 let delay: number = 1000;
                 if ([EventType.Red, EventType.Purple].indexOf(event.type) !== -1) {
-                    delay = 2000;
+                    delay += 1000;
                 }
                 window.setTimeout(() => {
                     this.drawField(x, y, event.card_id, facility, owner_id);

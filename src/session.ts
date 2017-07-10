@@ -422,11 +422,7 @@ export class Session {
                 break;
             }
 
-            let event: Event = this.doFacilityAction(card_id);
-            if (event.type !== EventType.None) {
-                this.events.push(event);
-            }
-            if (event.type === EventType.Interaction) {
+            if (!this.doFacilityAction(card_id)) {
                 // The facility requires user's interaction.
                 break;
             }
@@ -646,13 +642,25 @@ export class Session {
         return event;
     }
 
-    public doFacilityAction(card_id: CardId): Event {
+    public doFacilityAction(card_id: CardId): boolean {
         const event: Event = this.getEventFacilityAction(this.getCurrentPlayerId(), card_id);
-        let facility: Facility = this.getFacility(card_id);
+        return this.processEventFacilityAction(event);
+    }
+
+    public processEventFacilityAction(event: Event): boolean {
+        let facility: Facility = this.getFacility(event.card_id);
+        if (event.type !== EventType.None) {
+            this.events.push(event);
+        }
+
+        if (event.type === EventType.Interaction) {
+            // The facility requires user's interaction.
+            return false;
+        }
 
         if (event.type === EventType.Open) {
             facility.is_open = true;
-            return event;
+            return true;
         }
 
         for (let pid: PlayerId = 0; pid < event.moneys.length; ++pid) {
@@ -663,7 +671,7 @@ export class Session {
         if (event.close === true) {
             facility.is_open = false;
         }
-        return event;
+        return true;
     }
 
     private getOverwriteCosts(x: number, y: number, size: number): number[] {
