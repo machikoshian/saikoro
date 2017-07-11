@@ -829,12 +829,6 @@ export class HtmlView {
         if (session.getCurrentPlayerId() !== this.client.player_id) {
             return;
         }
-
-        if (session.getPhase() === Phase.BuildFacility) {
-            this.dialogSelectFacilityCard(true, (card_id: CardId) => {
-                this.processFacilityCard(card_id);
-            });
-        }
     }
 
     public drawFieldInfo(x, y): void {
@@ -1037,6 +1031,12 @@ export class HtmlView {
         // Update buttons.
         this.buttons_view.draw(session, this.client.player_id);
         this.drawCards(session);
+
+        if (session.getPhase() === Phase.BuildFacility) {
+            this.dialogSelectFacilityCard((card_id: CardId) => {
+                this.processFacilityCard(card_id);
+            });
+        }
 
         this.prev_session = session;
     }
@@ -1318,14 +1318,9 @@ export class HtmlView {
         }
     }
 
-    private dialogSelectFacilityCard(is_open: boolean, callback: (card_id: CardId) => void): void {
-        if (is_open) {
-            this.cards_view.setFacilityCardsClickable(callback);
-            this.landmarks_view.setFacilityCardsClickable(callback);
-        }
-        else {
-            this.resetCardsClickable();
-        }
+    private dialogSelectFacilityCard(callback: (card_id: CardId) => void): void {
+        this.cards_view.setFacilityCardsClickable(callback);
+        this.landmarks_view.setFacilityCardsClickable(callback);
     }
 
     private drawMoneyMotion(money: number, player_id: PlayerId, element_id: string): void {
