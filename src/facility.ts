@@ -145,6 +145,8 @@ const LANDMARK_DATA: FacilityData[] = [
     new FacilityData(1, [], "🗽", 2500, FacilityType.Gray, 0, {}),
     new FacilityData(1, [], "🚂", 2500, FacilityType.Gray, 0, {}),
     new FacilityData(2, [], "️🚅", 2500, FacilityType.Gray, 0, {}),
+    new FacilityData(1, [], "🏫", 2500, FacilityType.Gray, 0, {}),
+    new FacilityData(2, [], "🏣", 2500, FacilityType.Gray, 0, {}),
 ];
 
 export class CardData {
