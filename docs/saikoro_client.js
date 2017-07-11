@@ -216,6 +216,8 @@ var LANDMARK_DATA = [
     new FacilityData(1, [], "🗽", 2500, FacilityType.Gray, 0, {}),
     new FacilityData(1, [], "🚂", 2500, FacilityType.Gray, 0, {}),
     new FacilityData(2, [], "️🚅", 2500, FacilityType.Gray, 0, {}),
+    new FacilityData(1, [], "🏫", 2500, FacilityType.Gray, 0, {}),
+    new FacilityData(2, [], "🏣", 2500, FacilityType.Gray, 0, {}),
 ];
 var CardData = (function () {
     function CardData() {
@@ -614,6 +616,8 @@ var EventType;
 var Event = (function () {
     function Event() {
         this.step = 0;
+        this.round = 0;
+        this.turn = 0;
         this.type = EventType.None;
         this.player_id = -1;
         this.moneys = [0, 0, 0, 0];
@@ -629,6 +633,8 @@ var Event = (function () {
         return {
             class_name: "Event",
             step: this.step,
+            round: this.round,
+            turn: this.turn,
             type: this.type,
             player_id: this.player_id,
             moneys: this.moneys,
@@ -644,6 +650,8 @@ var Event = (function () {
     Event.fromJSON = function (json) {
         var event = new Event();
         event.step = json.step;
+        event.round = json.round;
+        event.turn = json.turn;
         event.type = json.type;
         event.player_id = json.player_id;
         event.moneys = json.moneys;
@@ -717,6 +725,13 @@ var Session = (function () {
         session.dice_result = json.dice_result ? dice_1.DiceResult.fromJSON(json.dice_result) : null;
         session.watcher_user_ids = json.watcher_user_ids;
         return session;
+    };
+    Session.prototype.newEvent = function () {
+        var event = new Event();
+        event.step = this.step;
+        event.round = this.round;
+        event.turn = this.turn;
+        return event;
     };
     Session.prototype.isValidPhase = function (phase) {
         if (this.phase === phase) {
@@ -941,11 +956,7 @@ var Session = (function () {
             if (facility_types.indexOf(facility.getType()) === -1) {
                 break;
             }
-            var event_2 = this.doFacilityAction(card_id);
-            if (event_2.type !== EventType.None) {
-                this.events.push(event_2);
-            }
-            if (event_2.type === EventType.Interaction) {
+            if (!this.doFacilityAction(card_id)) {
                 // The facility requires user's interaction.
                 break;
             }
@@ -1140,10 +1151,20 @@ var Session = (function () {
     };
     Session.prototype.doFacilityAction = function (card_id) {
         var event = this.getEventFacilityAction(this.getCurrentPlayerId(), card_id);
-        var facility = this.getFacility(card_id);
+        return this.processEventFacilityAction(event);
+    };
+    Session.prototype.processEventFacilityAction = function (event) {
+        var facility = this.getFacility(event.card_id);
+        if (event.type !== EventType.None) {
+            this.events.push(event);
+        }
+        if (event.type === EventType.Interaction) {
+            // The facility requires user's interaction.
+            return false;
+        }
         if (event.type === EventType.Open) {
             facility.is_open = true;
-            return event;
+            return true;
         }
         for (var pid = 0; pid < event.moneys.length; ++pid) {
             if (event.moneys[pid] !== 0) {
@@ -1153,7 +1174,7 @@ var Session = (function () {
         if (event.close === true) {
             facility.is_open = false;
         }
-        return event;
+        return true;
     };
     Session.prototype.getOverwriteCosts = function (x, y, size) {
         var costs = [0, 0, 0, 0];
@@ -1270,54 +1291,55 @@ var Session = (function () {
     };
     // TODO: Support other additional arguments.
     Session.prototype.processCharacterCommand = function (query) {
+        var event = this.getEventCharacterCommand(query);
+        return this.processEventCharacterCommand(event);
+    };
+    Session.prototype.getEventCharacterCommand = function (query) {
         var player_id = query.player_id;
         var card_id = query.card_id;
         var target_player_id = query.target_player_id;
         if (!this.isValid(player_id, Phase.CharacterCard)) {
-            return false;
+            return null;
         }
         // Is character.
         if (!this.isCharacter(card_id)) {
-            return false;
+            return null;
         }
         // Facility is in owner's hand?
         if (!this.card_manager.isInHand(player_id, card_id)) {
-            return false;
+            return null;
         }
         // Add card to the effect manager.
         var character = this.card_manager.getCharacter(card_id);
-        var event = new Event();
+        var event = this.newEvent();
         event.type = EventType.Character;
         event.card_id = card_id;
-        event.step = this.step;
         event.player_id = player_id;
         event.valid = true;
-        this.events.push(event);
         switch (character.type) {
             case facility_1.CharacterType.DrawCards: {
-                event.target_card_ids = this.drawCards(player_id, character.getPropertyValue());
+                var size = character.getPropertyValue();
+                event.target_card_ids = this.card_manager.getCardsFromTalon(player_id, size);
                 event.player_id = player_id;
-                break;
+                return event;
             }
             case facility_1.CharacterType.MoveMoney: {
-                var money = this.moveMoney(target_player_id, player_id, character.property["money"]);
+                var money = this.checkMoveMoney(target_player_id, player_id, character.property["money"]);
                 event.target_player_id = target_player_id;
                 event.moneys[player_id] += money;
                 event.moneys[target_player_id] -= money;
-                break;
+                return event;
             }
             case facility_1.CharacterType.DiceDelta:
             case facility_1.CharacterType.DiceOne:
             case facility_1.CharacterType.DiceTwo:
             case facility_1.CharacterType.DiceEven:
             case facility_1.CharacterType.DiceOdd: {
-                this.effect_manager.addCard(character.data_id, this.round, this.turn);
-                break;
+                return event;
             }
             case facility_1.CharacterType.Boost: {
-                var target_card_ids = [];
                 if (character.property["type"] === facility_1.SelectType.Facility) {
-                    target_card_ids.push(query.target_card_id);
+                    event.target_card_ids.push(query.target_card_id);
                 }
                 else {
                     var owner_id = player_id;
@@ -1330,15 +1352,13 @@ var Session = (function () {
                         state: card_manager_1.CardState.Field,
                         owner_id: owner_id,
                     };
-                    target_card_ids = this.queryCards(card_query);
+                    event.target_card_ids = this.queryCards(card_query);
                 }
-                this.effect_manager.addCard(character.data_id, this.round, this.turn, target_card_ids);
-                break;
+                return event;
             }
             case facility_1.CharacterType.Close: {
-                var target_card_ids = [];
                 if (character.property["type"] === facility_1.SelectType.Facility) {
-                    target_card_ids.push(query.target_card_id);
+                    event.target_card_ids.push(query.target_card_id);
                 }
                 else {
                     var card_query = {
@@ -1347,15 +1367,9 @@ var Session = (function () {
                         state: card_manager_1.CardState.Field,
                         is_open: true,
                     };
-                    target_card_ids = this.queryCards(card_query);
+                    event.target_card_ids = this.queryCards(card_query);
                 }
-                for (var _i = 0, target_card_ids_1 = target_card_ids; _i < target_card_ids_1.length; _i++) {
-                    var target_card_id = target_card_ids_1[_i];
-                    var facility = this.card_manager.getFacility(target_card_id);
-                    facility.is_open = false;
-                    event.target_card_ids.push(target_card_id);
-                }
-                break;
+                return event;
             }
             case facility_1.CharacterType.Open: {
                 var query_1 = {
@@ -1363,22 +1377,69 @@ var Session = (function () {
                     state: card_manager_1.CardState.Field,
                     is_open: false,
                 };
-                var card_ids = this.queryCards(query_1);
-                for (var _a = 0, card_ids_2 = card_ids; _a < card_ids_2.length; _a++) {
-                    var card_id_1 = card_ids_2[_a];
-                    var facility = this.card_manager.getFacility(card_id_1);
-                    facility.is_open = true;
-                    event.target_card_ids.push(card_id_1);
-                }
-                break;
+                event.target_card_ids = this.queryCards(query_1);
+                return event;
             }
         }
+        return null;
+    };
+    Session.prototype.processEventCharacterCommand = function (event) {
+        if (event == null) {
+            return false;
+        }
+        var card_id = event.card_id;
+        var character = this.card_manager.getCharacter(card_id);
         // Move the card to discard.
         if (!this.card_manager.moveHandToDiscard(card_id)) {
             // Something is wrong.
             console.warn("moveHandToDiscard(" + card_id + ") failed.");
             return false;
         }
+        // Process event
+        switch (character.type) {
+            case facility_1.CharacterType.DrawCards: {
+                for (var _i = 0, _a = event.target_card_ids; _i < _a.length; _i++) {
+                    var drawn_card_id = _a[_i];
+                    this.card_manager.moveTalonToHand(drawn_card_id);
+                }
+                break;
+            }
+            case facility_1.CharacterType.MoveMoney: {
+                for (var i = 0; i < this.players.length; ++i) {
+                    this.players[i].addMoney(event.moneys[i]);
+                }
+                break;
+            }
+            case facility_1.CharacterType.DiceDelta:
+            case facility_1.CharacterType.DiceOne:
+            case facility_1.CharacterType.DiceTwo:
+            case facility_1.CharacterType.DiceEven:
+            case facility_1.CharacterType.DiceOdd: {
+                this.effect_manager.addCard(character.data_id, event.round, event.turn);
+                break;
+            }
+            case facility_1.CharacterType.Boost: {
+                this.effect_manager.addCard(character.data_id, event.round, event.turn, event.target_card_ids);
+                break;
+            }
+            case facility_1.CharacterType.Close: {
+                for (var _b = 0, _c = event.target_card_ids; _b < _c.length; _b++) {
+                    var card_id_1 = _c[_b];
+                    var facility = this.card_manager.getFacility(card_id_1);
+                    facility.is_open = false;
+                }
+                break;
+            }
+            case facility_1.CharacterType.Open: {
+                for (var _d = 0, _e = event.target_card_ids; _d < _e.length; _d++) {
+                    var card_id_2 = _e[_d];
+                    var facility = this.card_manager.getFacility(card_id_2);
+                    facility.is_open = true;
+                }
+                break;
+            }
+        }
+        this.events.push(event);
         this.done(Phase.CharacterCard);
         return true;
     };
@@ -2768,6 +2829,9 @@ var PlayerCards = (function () {
     PlayerCards.prototype.moveFieldToDiscard = function (card_id) {
         return this.moveCardId(card_id, this.cards[CardState.Field], this.cards[CardState.Discard]);
     };
+    PlayerCards.prototype.getCardsFromTalon = function (size) {
+        return this.cards[CardState.Talon].slice(0, size);
+    };
     return PlayerCards;
 }());
 exports.PlayerCards = PlayerCards;
@@ -3022,6 +3086,16 @@ var CardManager = (function () {
             return false;
         }
         return this.getPlayerCardsFromCardId(card_id).moveTalonToField(card_id);
+    };
+    CardManager.prototype.moveTalonToHand = function (card_id) {
+        if (card_id < 0) {
+            console.warn("card_id < 0.");
+            return false;
+        }
+        return this.getPlayerCardsFromCardId(card_id).moveTalonToHand(card_id);
+    };
+    CardManager.prototype.getCardsFromTalon = function (player_id, size) {
+        return this.player_cards_list[player_id].getCardsFromTalon(size);
     };
     CardManager.prototype.compareCharacters = function (id1, id2) {
         var char1 = this.characters[id1];
@@ -4078,7 +4152,6 @@ var HtmlView = (function () {
         this.message_view.drawMessage(message, this.getPlayerColor(this.client.player_id));
     };
     HtmlView.prototype.drawCards = function (session) {
-        var _this = this;
         var players = session.getPlayers();
         var landmark_ids = session.getLandmarks();
         // Promote landmark cards if landmark is affordable.
@@ -4103,11 +4176,6 @@ var HtmlView = (function () {
         this.resetCardsClickable(); // Nice to check if built or not?
         if (session.getCurrentPlayerId() !== this.client.player_id) {
             return;
-        }
-        if (session.getPhase() === session_1.Phase.BuildFacility) {
-            this.dialogSelectFacilityCard(true, function (card_id) {
-                _this.processFacilityCard(card_id);
-            });
         }
     };
     HtmlView.prototype.drawFieldInfo = function (x, y) {
@@ -4277,6 +4345,7 @@ var HtmlView = (function () {
         this.watchers_view.show();
     };
     HtmlView.prototype.drawSession = function (session) {
+        var _this = this;
         this.drawStatusMessage(session);
         this.players_view.draw(session);
         this.drawBoard(session);
@@ -4284,6 +4353,11 @@ var HtmlView = (function () {
         // Update buttons.
         this.buttons_view.draw(session, this.client.player_id);
         this.drawCards(session);
+        if (session.getPhase() === session_1.Phase.BuildFacility) {
+            this.dialogSelectFacilityCard(function (card_id) {
+                _this.processFacilityCard(card_id);
+            });
+        }
         this.prev_session = session;
     };
     HtmlView.prototype.drawEvents = function () {
@@ -4412,20 +4486,8 @@ var HtmlView = (function () {
                 }
                 handled = true;
             }
-            if (type === facility_1.CharacterType.Close) {
-                for (var _i = 0, _a = event.target_card_ids; _i < _a.length; _i++) {
-                    var card_id = _a[_i];
-                    this.prev_session.getFacility(card_id).is_open = false;
-                }
-                this.drawBoard(this.prev_session);
-            }
-            if (type === facility_1.CharacterType.Open) {
-                for (var _b = 0, _c = event.target_card_ids; _b < _c.length; _b++) {
-                    var card_id = _c[_b];
-                    this.prev_session.getFacility(card_id).is_open = true;
-                }
-                this.drawBoard(this.prev_session);
-            }
+            this.prev_session.processEventCharacterCommand(event);
+            this.drawBoard(this.prev_session); // for open and close
             return handled;
         }
         if (event.type === session_1.EventType.Salary) {
@@ -4443,7 +4505,7 @@ var HtmlView = (function () {
             return true;
         }
         if (event.type === session_1.EventType.Open) {
-            var _d = this.prev_session.getPosition(event.card_id), x = _d[0], y = _d[1];
+            var _a = this.prev_session.getPosition(event.card_id), x = _a[0], y = _a[1];
             var facility = this.prev_session.getFacility(event.card_id);
             facility.is_open = true;
             var owner_id = this.prev_session.getOwnerId(event.card_id);
@@ -4476,15 +4538,15 @@ var HtmlView = (function () {
         if (money_motion.indexOf(event.type) !== -1) {
             // Money motion
             this.drawEventOfMoneyMotion(this.prev_session, event);
+            this.prev_session.processEventFacilityAction(event);
             // For open and close.
-            var facility_2 = this.prev_session.getFacility(event.card_id);
             if (event.close) {
-                facility_2.is_open = false;
-                var _e = this.session.getPosition(event.card_id), x_3 = _e[0], y_2 = _e[1];
+                var facility_2 = this.prev_session.getFacility(event.card_id);
+                var _b = this.prev_session.getPosition(event.card_id), x_3 = _b[0], y_2 = _b[1];
                 var owner_id_1 = this.prev_session.getOwnerId(event.card_id);
                 var delay = 1000;
                 if ([session_1.EventType.Red, session_1.EventType.Purple].indexOf(event.type) !== -1) {
-                    delay = 2000;
+                    delay += 1000;
                 }
                 window.setTimeout(function () {
                     _this.drawField(x_3, y_2, event.card_id, facility_2, owner_id_1);
@@ -4562,14 +4624,9 @@ var HtmlView = (function () {
             this.cards_view.resetClickable();
         }
     };
-    HtmlView.prototype.dialogSelectFacilityCard = function (is_open, callback) {
-        if (is_open) {
-            this.cards_view.setFacilityCardsClickable(callback);
-            this.landmarks_view.setFacilityCardsClickable(callback);
-        }
-        else {
-            this.resetCardsClickable();
-        }
+    HtmlView.prototype.dialogSelectFacilityCard = function (callback) {
+        this.cards_view.setFacilityCardsClickable(callback);
+        this.landmarks_view.setFacilityCardsClickable(callback);
     };
     HtmlView.prototype.drawMoneyMotion = function (money, player_id, element_id) {
         if (money > 0) {
