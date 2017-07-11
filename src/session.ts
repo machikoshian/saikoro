@@ -826,9 +826,10 @@ export class Session {
         event.valid = true;
         this.events.push(event);
 
-        switch(character.type) {
+        switch (character.type) {
             case CharacterType.DrawCards: {
-                event.target_card_ids = this.drawCards(player_id, character.getPropertyValue());
+                const size: number = character.getPropertyValue();
+                event.target_card_ids = this.card_manager.getCardsFromTalon(player_id, size);
                 event.player_id = player_id;
                 break;
             }
@@ -912,6 +913,15 @@ export class Session {
             // Something is wrong.
             console.warn(`moveHandToDiscard(${card_id}) failed.`);
             return false;
+        }
+
+        // Process event
+        switch (character.type) {
+            case CharacterType.DrawCards: {
+                for (let drawn_card_id of event.target_card_ids) {
+                    this.card_manager.moveTalonToHand(drawn_card_id);
+                }
+            }
         }
 
         this.done(Phase.CharacterCard);

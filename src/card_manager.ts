@@ -149,6 +149,10 @@ export class PlayerCards {
     public moveFieldToDiscard(card_id: CardId): boolean {
         return this.moveCardId(card_id, this.cards[CardState.Field], this.cards[CardState.Discard]);
     }
+
+    public getCardsFromTalon(size: number): CardId[] {
+        return this.cards[CardState.Talon].slice(0, size);
+    }
 }
 
 type LandmarkInfo = [CardId, PlayerId];
@@ -444,6 +448,18 @@ export class CardManager {
             return false;
         }
         return this.getPlayerCardsFromCardId(card_id).moveTalonToField(card_id);
+    }
+
+    public moveTalonToHand(card_id: CardId): boolean {
+        if (card_id < 0) {
+            console.warn("card_id < 0.");
+            return false;
+        }
+        return this.getPlayerCardsFromCardId(card_id).moveTalonToHand(card_id);
+    }
+
+    public getCardsFromTalon(player_id: PlayerId, size: number): CardId[] {
+        return this.player_cards_list[player_id].getCardsFromTalon(size);
     }
 
     private compareCharacters(id1: CardId, id2: CardId): number {
