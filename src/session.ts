@@ -813,21 +813,26 @@ export class Session {
 
     // TODO: Support other additional arguments.
     public processCharacterCommand(query: Query.CharacterQuery): boolean {
+        const event: Event = this.getEventCharacterCommand(query);
+        return this.processEventCharacterCommand(event);
+    }
+
+    public getEventCharacterCommand(query: Query.CharacterQuery): Event {
         const player_id: PlayerId = query.player_id;
         const card_id: CardId = query.card_id;
         const target_player_id: PlayerId = query.target_player_id;
         if (!this.isValid(player_id, Phase.CharacterCard)) {
-            return false;
+            return null;
         }
 
         // Is character.
         if (!this.isCharacter(card_id)) {
-            return false;
+            return null;
         }
 
         // Facility is in owner's hand?
         if (!this.card_manager.isInHand(player_id, card_id)) {
-            return false;
+            return null;
         }
 
         // Add card to the effect manager.
@@ -837,14 +842,13 @@ export class Session {
         event.card_id = card_id;
         event.player_id = player_id;
         event.valid = true;
-        this.events.push(event);
 
         switch (character.type) {
             case CharacterType.DrawCards: {
                 const size: number = character.getPropertyValue();
                 event.target_card_ids = this.card_manager.getCardsFromTalon(player_id, size);
                 event.player_id = player_id;
-                break;
+                return event;
             }
             case CharacterType.MoveMoney: {
                 const money: number =
@@ -852,14 +856,14 @@ export class Session {
                 event.target_player_id = target_player_id;
                 event.moneys[player_id] += money;
                 event.moneys[target_player_id] -= money;
-                break;
+                return event;
             }
             case CharacterType.DiceDelta:
             case CharacterType.DiceOne:
             case CharacterType.DiceTwo:
             case CharacterType.DiceEven:
             case CharacterType.DiceOdd: {
-                break;
+                return event;
             }
             case CharacterType.Boost: {
                 if (character.property["type"] === SelectType.Facility) {
@@ -878,7 +882,7 @@ export class Session {
                     };
                     event.target_card_ids = this.queryCards(card_query);
                 }
-                break;
+                return event;
             }
             case CharacterType.Close: {
                 if (character.property["type"] === SelectType.Facility) {
@@ -893,7 +897,7 @@ export class Session {
                     };
                     event.target_card_ids = this.queryCards(card_query);
                 }
-                break;
+                return event;
             }
             case CharacterType.Open: {
                 const query: CardManagerQuery = {
@@ -902,9 +906,19 @@ export class Session {
                     is_open: false,
                 };
                 event.target_card_ids = this.queryCards(query);
-                break;
+                return event;
             }
         }
+        return null;
+    }
+
+    public processEventCharacterCommand(event: Event): boolean {
+        if (event == null) {
+            return false;
+        }
+
+        const card_id: CardId = event.card_id;
+        const character: Character = this.card_manager.getCharacter(card_id);
 
         // Move the card to discard.
         if (!this.card_manager.moveHandToDiscard(card_id)) {
@@ -956,7 +970,7 @@ export class Session {
                 break;
             }
         }
-
+        this.events.push(event);
         this.done(Phase.CharacterCard);
         return true;
     }
