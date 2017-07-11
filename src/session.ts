@@ -47,6 +47,8 @@ export enum EventType {
 
 export class Event {
     public step: number = 0;
+    public round: number = 0;
+    public turn: number = 0;
     public type: EventType = EventType.None;
     public player_id: PlayerId = -1;
     public moneys: number[] = [0, 0, 0, 0];
@@ -62,6 +64,8 @@ export class Event {
         return {
             class_name: "Event",
             step: this.step,
+            round: this.round,
+            turn: this.turn,
             type: this.type,
             player_id: this.player_id,
             moneys: this.moneys,
@@ -78,6 +82,8 @@ export class Event {
     static fromJSON(json): Event {
         let event = new Event();
         event.step = json.step;
+        event.round = json.round;
+        event.turn = json.turn;
         event.type = json.type;
         event.player_id = json.player_id;
         event.moneys = json.moneys;
@@ -164,6 +170,14 @@ export class Session {
         session.dice_result = json.dice_result ? DiceResult.fromJSON(json.dice_result) : null;
         session.watcher_user_ids = json.watcher_user_ids;
         return session;
+    }
+
+    private newEvent(): Event {
+        let event: Event = new Event();
+        event.step = this.step;
+        event.round = this.round;
+        event.turn = this.turn;
+        return event;
     }
 
     public isValidPhase(phase: Phase): boolean {
@@ -818,10 +832,9 @@ export class Session {
 
         // Add card to the effect manager.
         let character: Character = this.card_manager.getCharacter(card_id);
-        let event: Event = new Event();
+        let event: Event = this.newEvent();
         event.type = EventType.Character;
         event.card_id = card_id;
-        event.step = this.step;
         event.player_id = player_id;
         event.valid = true;
         this.events.push(event);
@@ -835,7 +848,7 @@ export class Session {
             }
             case CharacterType.MoveMoney: {
                 const money: number =
-                    this.moveMoney(target_player_id, player_id, character.property["money"]);
+                    this.checkMoveMoney(target_player_id, player_id, character.property["money"]);
                 event.target_player_id = target_player_id;
                 event.moneys[player_id] += money;
                 event.moneys[target_player_id] -= money;
@@ -846,13 +859,11 @@ export class Session {
             case CharacterType.DiceTwo:
             case CharacterType.DiceEven:
             case CharacterType.DiceOdd: {
-                this.effect_manager.addCard(character.data_id, this.round, this.turn);
                 break;
             }
             case CharacterType.Boost: {
-                let target_card_ids: CardId[] = [];
                 if (character.property["type"] === SelectType.Facility) {
-                    target_card_ids.push(query.target_card_id);
+                    event.target_card_ids.push(query.target_card_id);
                 }
                 else {
                     let owner_id = player_id;
@@ -865,16 +876,13 @@ export class Session {
                         state: CardState.Field,
                         owner_id: owner_id,
                     };
-                    target_card_ids = this.queryCards(card_query);
+                    event.target_card_ids = this.queryCards(card_query);
                 }
-                this.effect_manager.addCard(
-                    character.data_id, this.round, this.turn, target_card_ids);
                 break;
             }
             case CharacterType.Close: {
-                let target_card_ids: CardId[] = [];
                 if (character.property["type"] === SelectType.Facility) {
-                    target_card_ids.push(query.target_card_id);
+                    event.target_card_ids.push(query.target_card_id);
                 }
                 else {
                     const card_query: CardManagerQuery = {
@@ -883,12 +891,7 @@ export class Session {
                         state: CardState.Field,
                         is_open: true,
                     };
-                    target_card_ids = this.queryCards(card_query);
-                }
-                for (let target_card_id of target_card_ids) {
-                    let facility: Facility = this.card_manager.getFacility(target_card_id);
-                    facility.is_open = false;
-                    event.target_card_ids.push(target_card_id);
+                    event.target_card_ids = this.queryCards(card_query);
                 }
                 break;
             }
@@ -898,12 +901,7 @@ export class Session {
                     state: CardState.Field,
                     is_open: false,
                 };
-                const card_ids: CardId[] = this.queryCards(query);
-                for (let card_id of card_ids) {
-                    let facility: Facility = this.card_manager.getFacility(card_id);
-                    facility.is_open = true;
-                    event.target_card_ids.push(card_id);
-                }
+                event.target_card_ids = this.queryCards(query);
                 break;
             }
         }
@@ -921,6 +919,41 @@ export class Session {
                 for (let drawn_card_id of event.target_card_ids) {
                     this.card_manager.moveTalonToHand(drawn_card_id);
                 }
+                break;
+            }
+            case CharacterType.MoveMoney: {
+                for (let i: number = 0; i < this.players.length; ++i) {
+                    this.players[i].addMoney(event.moneys[i]);
+                }
+                break;
+            }
+            case CharacterType.DiceDelta:
+            case CharacterType.DiceOne:
+            case CharacterType.DiceTwo:
+            case CharacterType.DiceEven:
+            case CharacterType.DiceOdd: {
+                this.effect_manager.addCard(character.data_id, event.round, event.turn);
+                break;
+            }
+
+            case CharacterType.Boost: {
+                this.effect_manager.addCard(
+                    character.data_id, event.round, event.turn, event.target_card_ids);
+                break;
+            }
+            case CharacterType.Close: {
+                for (let card_id of event.target_card_ids) {
+                    let facility: Facility = this.card_manager.getFacility(card_id);
+                    facility.is_open = false;
+                }
+                break;
+            }
+            case CharacterType.Open: {
+                for (let card_id of event.target_card_ids) {
+                    let facility: Facility = this.card_manager.getFacility(card_id);
+                    facility.is_open = true;
+                }
+                break;
             }
         }
 
