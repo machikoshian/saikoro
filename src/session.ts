@@ -389,7 +389,6 @@ export class Session {
     public processInteractCommand(query: Query.InteractQuery): boolean {
         const player_id: PlayerId = query.player_id;
         const card_id: CardId = query.card_id;
-        const target_id: PlayerId = query.target_player_id;
         if (!this.isValid(player_id, Phase.FacilityActionWithInteraction)) {
             return false;
         }
@@ -402,9 +401,60 @@ export class Session {
             return false;
         }
 
-        let event: Event = this.doFacilityActionWithTargetPlayer(card_id, target_id);
-        if (event.type === EventType.None) {
+        const event: Event = this.getEventInteractCommand(query);
+        return this.processEventInteractCommand(event);
+    }
+
+    public getEventInteractCommand(query: Query.InteractQuery): Event {
+        const player_id: PlayerId = query.player_id;
+        const card_id: CardId = query.card_id;
+        const target_id: PlayerId = query.target_player_id;
+
+        let event: Event = new Event();
+        const facility: Facility = this.getFacility(card_id);
+        if (facility.getType() !== FacilityType.Purple) {
+            return event;
+        }
+
+        if (facility.property["all"] === true) {
+            return event;
+        }
+
+        const owner_id: PlayerId = this.getOwnerId(card_id);
+        if (player_id !== owner_id) {
+            return event;
+        }
+
+        if (facility.property["close"] === true) {
+            event.close = true;
+        }
+
+        event.step = this.step;
+        event.card_id = card_id;
+        event.player_id = player_id;
+        event.type = EventType.Purple;
+
+        const value: number = this.getFacilityValue(card_id);
+        const amount: number = this.checkMoveMoney(target_id, owner_id, value);
+        event.moneys[target_id] -= amount;
+        event.moneys[owner_id] += amount;
+
+        return event;
+    }
+
+    public processEventInteractCommand(event: Event): boolean {
+        if (event == null || event.type === EventType.None) {
             return false;
+        }
+
+        for (let pid: PlayerId = 0; pid < event.moneys.length; ++pid) {
+            if (event.moneys[pid] !== 0) {
+                this.getPlayer(pid).addMoney(event.moneys[pid]);
+            }
+        }
+        if (event.close === true) {
+            let facility: Facility = this.getFacility(event.card_id);
+            facility.is_open = false;
         }
 
         this.events.push(event);
@@ -507,55 +557,6 @@ export class Session {
         }
 
         return value * boost * lmboost;
-    }
-
-    public getEventFacilityActionWithTargetPlayer(
-        player_id: PlayerId, card_id: CardId, target_id: PlayerId): Event {
-        let event: Event = new Event();
-        const facility: Facility = this.getFacility(card_id);
-        if (facility.getType() !== FacilityType.Purple) {
-            return event;
-        }
-
-        if (facility.property["all"] === true) {
-            return event;
-        }
-
-        const owner_id: PlayerId = this.getOwnerId(card_id);
-        if (player_id !== owner_id) {
-            return event;
-        }
-
-        if (facility.property["close"] === true) {
-            event.close = true;
-        }
-
-        event.step = this.step;
-        event.card_id = card_id;
-        event.player_id = player_id;
-        event.type = EventType.Purple;
-
-        const value: number = this.getFacilityValue(card_id);
-        const amount: number = this.checkMoveMoney(target_id, owner_id, value);
-        event.moneys[target_id] -= amount;
-        event.moneys[owner_id] += amount;
-
-        return event;
-    }
-
-    public doFacilityActionWithTargetPlayer(card_id: CardId, target_id: PlayerId): Event {
-        const event: Event = this.getEventFacilityActionWithTargetPlayer(
-            this.getCurrentPlayerId(), card_id, target_id);
-        for (let pid: PlayerId = 0; pid < event.moneys.length; ++pid) {
-            if (event.moneys[pid] !== 0) {
-                this.getPlayer(pid).addMoney(event.moneys[pid]);
-            }
-        }
-        if (event.close === true) {
-            let facility: Facility = this.getFacility(card_id);
-            facility.is_open = false;
-        }
-        return event;
     }
 
     public getEventFacilityAction(player_id: PlayerId, card_id: CardId): Event {

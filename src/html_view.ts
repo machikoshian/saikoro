@@ -893,8 +893,8 @@ export class HtmlView {
                 if (event.type === EventType.Interaction) {
                     // TODO: Should be able to select other players.
                     const target_id: PlayerId = (player_id === 0) ? 1 : 0;
-                    event = session.getEventFacilityActionWithTargetPlayer(
-                        player_id, card_id, target_id);
+                    event = session.getEventInteractCommand(
+                        this.client.createInteractQuery(event.card_id, target_id));
                 }
                 const money: number = event.moneys[player_id];
                 if (money !== 0) {
