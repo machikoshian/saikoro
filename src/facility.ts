@@ -102,6 +102,7 @@ const FACILITY_DATA: FacilityData[] = [
     new FacilityData(1, [1],   "🌾", 100, FacilityType.Blue, 370,  {}),
     new FacilityData(1, [2],   "🐮", 100, FacilityType.Blue, 330,  {}),
     new FacilityData(1, [2],   "🌽", 100, FacilityType.Blue, 520,  {lmboost: 0.5}),
+    new FacilityData(1, [2],   "🐑", 200, FacilityType.Blue, 680,  {}),  // SS
     new FacilityData(1, [4],   "🐝", 200, FacilityType.Blue, 300,  {}),
     new FacilityData(1, [5],   "🌴", 300, FacilityType.Blue, 650,  {}),
     new FacilityData(1, [8],   "🍅", 100, FacilityType.Blue, 450,  {lmboost: 2}),
@@ -110,6 +111,7 @@ const FACILITY_DATA: FacilityData[] = [
     new FacilityData(1, [9],   "🗻", 300, FacilityType.Blue, 750,  {}),
     new FacilityData(1, [10],  "🍎", 100, FacilityType.Blue, 420,  {}),
     new FacilityData(2, [10],  "🗻", 300, FacilityType.Blue, 1150, {close: true}),
+    new FacilityData(2, [11],  "🐐", 200, FacilityType.Blue, 710,  {}),  // SSS
     new FacilityData(1, [12],  "🍍", 150, FacilityType.Blue, 800,  {}),
 
     new FacilityData(1, [2],  "🐟", 100, FacilityType.Green, 670,  {}),
