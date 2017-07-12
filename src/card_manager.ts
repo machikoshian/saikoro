@@ -164,6 +164,7 @@ export interface CardManagerQuery {
     state?: CardState,
     is_open?: boolean,  // Used in Session.
     owner_id?: PlayerId,
+    data_id?: CardDataId,
 }
 
 export class CardManager {
@@ -234,11 +235,11 @@ export class CardManager {
 
         for (let card_id of card_ids) {
             if (query.card_type != null &&
-                this.getCardType(card_id) !== query.card_type) {
+                query.card_type !== this.getCardType(card_id)) {
                 continue;
             }
             if (query.facility_type != null &&
-                this.facilities[card_id].type !== query.facility_type) {
+                query.facility_type !== this.facilities[card_id].type) {
                 continue;
             }
             if (query.state != null &&
@@ -248,6 +249,10 @@ export class CardManager {
             }
             if (query.owner_id != null &&
                 query.owner_id !== this.getOwner(card_id)) {
+                continue;
+            }
+            if (query.data_id != null &&
+                query.data_id !== this.getCardDataId(card_id)) {
                 continue;
             }
             results.push(card_id);

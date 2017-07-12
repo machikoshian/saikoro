@@ -550,13 +550,24 @@ export class Session {
         const facility: Facility = this.getFacility(card_id);
         const value: number = facility.getValue();
         const boost: number = Math.max(0, 1.0 + this.effect_manager.getBoost(card_id));
+
         let lmboost: number = 1.0;
-        if (facility.property["lmboost"] != undefined &&
+        if (facility.property.lmboost != undefined &&
             this.card_manager.getBuiltLandmarks().length >= 2) {
-                lmboost = facility.property["lmboost"];
+                lmboost = facility.property.lmboost;
         }
 
-        return value * boost * lmboost;
+        let multi: number = 1.0;
+        if (facility.property.multi === true) {
+            const card_query: CardManagerQuery = {
+                data_id: facility.data_id,
+                state: CardState.Field,
+            };
+            const card_ids: CardId[] = this.queryCards(card_query);
+            multi = card_ids.length;
+        }
+
+        return value * boost * lmboost * multi;
     }
 
     public getEventFacilityAction(player_id: PlayerId, card_id: CardId): Event {

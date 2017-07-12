@@ -84,6 +84,7 @@ export interface FacilityProperty {
     lmboost?: number,
     close?: boolean,
     all?: boolean,
+    multi?: boolean,
 }
 
 export class FacilityData {
@@ -106,7 +107,7 @@ const FACILITY_DATA: FacilityData[] = [
     new FacilityData(1, [4],   "🐝", 200, FacilityType.Blue, 300,  {}),
     new FacilityData(1, [5],   "🌴", 300, FacilityType.Blue, 650,  {}),
     new FacilityData(1, [8],   "🍅", 100, FacilityType.Blue, 450,  {lmboost: 2}),
-    new FacilityData(1, [8,9], "🌻", 200, FacilityType.Blue, 400,  {}),
+    new FacilityData(1, [8,9], "🌻", 200, FacilityType.Blue, 350,  {multi: true}),
     new FacilityData(1, [9],   "🌰", 100, FacilityType.Blue, 650,  {}),
     new FacilityData(1, [9],   "🗻", 300, FacilityType.Blue, 750,  {}),
     new FacilityData(1, [10],  "🍎", 100, FacilityType.Blue, 420,  {}),
@@ -224,7 +225,7 @@ export class Facility {
     readonly cost: number;
     readonly type: FacilityType;
     readonly value: number;
-    readonly property: {};
+    readonly property: FacilityProperty;
     public is_open: boolean = true;
 
     constructor(data_id: CardDataId) {
@@ -298,7 +299,7 @@ export class Facility {
                 descriptions.push("自分ターンのみ");
                 break;
             case FacilityType.Red:
-                if (this.property["all"]) {
+                if (this.property.all) {
                     descriptions.push(`${this.value}コインを全員から奪う`);
                 }
                 else {
@@ -307,7 +308,7 @@ export class Facility {
                 descriptions.push("相手ターンのみ");
                 break;
             case FacilityType.Purple:
-                if (this.property["all"]) {
+                if (this.property.all) {
                     descriptions.push(`${this.value}コインを全員から奪う`);
                 }
                 else {
@@ -316,7 +317,10 @@ export class Facility {
                 descriptions.push("相手ターンのみ");
                 break;
         }
-        const lmboost: number = this.property["lmboost"];
+        if (this.property.multi === true) {
+            descriptions.push("同じ施設数だけ収入が倍増");
+        }
+        const lmboost: number = this.property.lmboost;
         if (lmboost != undefined) {
             if (lmboost === 0.5) {
                 descriptions.push("ランドマーク2軒以上で収入半減");
@@ -325,7 +329,7 @@ export class Facility {
                 descriptions.push(`ランドマーク2軒以上で、収入${lmboost}倍`);
             }
         }
-        if (this.property["close"] === true) {
+        if (this.property.close === true) {
             descriptions.push("発動後休業する");
         }
         return descriptions.join("\n");
