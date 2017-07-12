@@ -347,6 +347,16 @@ export class CardManager {
         return landmarks;
     }
 
+    public getBuiltLandmarks(): CardId[] {
+        let landmarks: CardId[] = [];
+        for (let landmark_info of this.landmarks) {
+            if (landmark_info[1] !== -1) {
+                landmarks.push(landmark_info[0]);
+            }
+        }
+        return landmarks;
+    }
+
     public getFacility(card_id: CardId): Facility {
         if (card_id < 0) {
             return null;

@@ -80,6 +80,12 @@ const CHARACTER_DATA: CharacterData[] = [
 
 export type CardDataId = number;
 
+export interface FacilityProperty {
+    lmboost?: number,
+    close?: boolean,
+    all?: boolean,
+}
+
 export class FacilityData {
     constructor(
         readonly size: number,
@@ -88,50 +94,56 @@ export class FacilityData {
         readonly cost: number,
         readonly type: FacilityType,
         readonly value: number,
-        readonly property: {},
+        readonly property: FacilityProperty,
         ) {}
 }
 
 const FACILITY_DATA: FacilityData[] = [
     new FacilityData(1, [1],   "🌾", 100, FacilityType.Blue, 370,  {}),
     new FacilityData(1, [2],   "🐮", 100, FacilityType.Blue, 330,  {}),
+    new FacilityData(1, [2],   "🌽", 100, FacilityType.Blue, 520,  {lmboost: 0.5}),
     new FacilityData(1, [4],   "🐝", 200, FacilityType.Blue, 300,  {}),
     new FacilityData(1, [5],   "🌴", 300, FacilityType.Blue, 650,  {}),
-    new FacilityData(1, [8],   "🍅", 100, FacilityType.Blue, 450,  {}),
+    new FacilityData(1, [8],   "🍅", 100, FacilityType.Blue, 450,  {lmboost: 2}),
     new FacilityData(1, [8,9], "🌻", 200, FacilityType.Blue, 400,  {}),
     new FacilityData(1, [9],   "🌰", 100, FacilityType.Blue, 650,  {}),
     new FacilityData(1, [9],   "🗻", 300, FacilityType.Blue, 750,  {}),
     new FacilityData(1, [10],  "🍎", 100, FacilityType.Blue, 420,  {}),
-    new FacilityData(2, [10],  "🗻", 300, FacilityType.Blue, 1150, {"close": true}),
+    new FacilityData(2, [10],  "🗻", 300, FacilityType.Blue, 1150, {close: true}),
     new FacilityData(1, [12],  "🍍", 150, FacilityType.Blue, 800,  {}),
 
     new FacilityData(1, [2],  "🐟", 100, FacilityType.Green, 670,  {}),
+    new FacilityData(1, [2],  "🍬", 100, FacilityType.Green, 420,  {lmboost: 3}),
     new FacilityData(1, [3],  "💈", 100, FacilityType.Green, 570,  {}),
     new FacilityData(1, [4],  "📖", 200, FacilityType.Green, 520,  {}),
-    new FacilityData(1, [6],  "💆", 150, FacilityType.Green, 600,  {}),
+    new FacilityData(1, [6],  "💆", 150, FacilityType.Green, 600,  {lmboost: 2}),
     new FacilityData(1, [7],  "👕", 200, FacilityType.Green, 550,  {}),
     new FacilityData(2, [7],  "🏬", 250, FacilityType.Green, 880,  {}),
-    new FacilityData(1, [9],  "🚗", 400, FacilityType.Green, 950,  {}),
-    new FacilityData(1, [10], "🏄", 200, FacilityType.Green, 1120, {"close": true}),
+    new FacilityData(1, [7],  "🚲", 200, FacilityType.Green, 950,  {lmboost: 2}),
+    new FacilityData(1, [9],  "🔧", 200, FacilityType.Green, 850,  {lmboost: 2}),
+    new FacilityData(1, [9],  "🚗", 400, FacilityType.Green, 950,  {lmboost: 2}),
+    new FacilityData(1, [10], "⚽", 200, FacilityType.Green, 950,  {lmboost: 2}),
+    new FacilityData(1, [10], "🏄", 200, FacilityType.Green, 1120, {close: true}),
     new FacilityData(1, [11], "👓", 100, FacilityType.Green, 1120, {}),
 
     new FacilityData(1, [1],  "🍣", 200, FacilityType.Red, 750,  {}),
     new FacilityData(1, [3],  "🐙", 100, FacilityType.Red, 520,  {}),
-    new FacilityData(1, [5],  "🍴", 200, FacilityType.Red, 550,  {}),
-    new FacilityData(1, [6],  "🍱", 100, FacilityType.Red, 420,  {}),
+    new FacilityData(1, [5],  "🍴", 200, FacilityType.Red, 580,  {lmboost: 2}),
+    new FacilityData(1, [6],  "🍱", 100, FacilityType.Red, 420,  {lmboost: 2}),
     new FacilityData(1, [7],  "🍕", 100, FacilityType.Red, 370,  {}),
-    new FacilityData(1, [8],  "🐔", 250, FacilityType.Red, 400,  {"all": true}),
-    new FacilityData(2, [8],  "🍻", 300, FacilityType.Red, 400,  {"all": true}),
+    new FacilityData(1, [8],  "🐔", 250, FacilityType.Red, 400,  {all: true}),
+    new FacilityData(2, [8],  "🍻", 300, FacilityType.Red, 400,  {all: true}),
     new FacilityData(1, [9],  "🍛", 100, FacilityType.Red, 470,  {}),
+    new FacilityData(1, [10], "🐡", 200, FacilityType.Red, 650,  {lmboost: 2}),
     new FacilityData(1, [10], "🍣", 100, FacilityType.Red, 1000, {}),
 
     new FacilityData(2, [3],  "👾", 200, FacilityType.Purple, 520,  {}),
     new FacilityData(1, [5],  "📰", 100, FacilityType.Purple, 420,  {}),
     new FacilityData(2, [6],  "🎸", 400, FacilityType.Purple, 750,  {}),
-    new FacilityData(2, [6],  "⚽", 500, FacilityType.Purple, 480,  {"all": true}),
-    new FacilityData(2, [7],  "⚾", 500, FacilityType.Purple, 480,  {"all": true}),
-    new FacilityData(2, [8],  "🎥", 400, FacilityType.Purple, 400,  {"all": true}),
-    new FacilityData(2, [9],  "🐬", 500, FacilityType.Purple, 400,  {"all": true}),
+    new FacilityData(2, [6],  "⚽", 500, FacilityType.Purple, 480,  {all: true}),
+    new FacilityData(2, [7],  "⚾", 500, FacilityType.Purple, 480,  {all: true}),
+    new FacilityData(2, [8],  "🎥", 400, FacilityType.Purple, 400,  {all: true}),
+    new FacilityData(2, [9],  "🐬", 500, FacilityType.Purple, 400,  {all: true}),
     new FacilityData(1, [12], "🔨", 300, FacilityType.Purple, 2000, {}),
 ];
 
@@ -281,26 +293,35 @@ export class Facility {
                 break;
             case FacilityType.Green:
                 descriptions.push(`${this.value}コイン稼ぐ`);
-                descriptions.push("自分のターンのみ");
+                descriptions.push("自分ターンのみ");
                 break;
             case FacilityType.Red:
                 if (this.property["all"]) {
                     descriptions.push(`${this.value}コインを全員から奪う`);
                 }
                 else {
-                    descriptions.push(`${this.value}コインを奪う`);
+                    descriptions.push(`${this.value}コイン奪う`);
                 }
-                descriptions.push("自分以外のターンのみ");
+                descriptions.push("相手ターンのみ");
                 break;
             case FacilityType.Purple:
                 if (this.property["all"]) {
                     descriptions.push(`${this.value}コインを全員から奪う`);
                 }
                 else {
-                    descriptions.push(`${this.value}コインを奪う`);
+                    descriptions.push(`${this.value}コイン奪う`);
                 }
-                descriptions.push("自分のターンのみ");
+                descriptions.push("相手ターンのみ");
                 break;
+        }
+        const lmboost: number = this.property["lmboost"];
+        if (lmboost != undefined) {
+            if (lmboost === 0.5) {
+                descriptions.push("ランドマーク2軒以上で収入半減");
+            }
+            else {
+                descriptions.push(`ランドマーク2軒以上で、収入${lmboost}倍`);
+            }
         }
         if (this.property["close"] === true) {
             descriptions.push("発動後休業する");

@@ -1,6 +1,6 @@
 import { Dice, DiceResult } from "./dice";
 import { Player, Board, PlayerId } from "./board";
-import { CardId, CardDataId, CardType, FacilityType, CardData, Facility,
+import { CardId, CardDataId, CardType, FacilityType, CardData, Facility, FacilityProperty,
          Character, CharacterData, CharacterType, SelectType } from "./facility";
 import { shuffle } from "./utils";
 import { CardState, CardManager, CardManagerQuery, EffectManager, PlayerCards } from "./card_manager";
@@ -500,7 +500,13 @@ export class Session {
         const facility: Facility = this.getFacility(card_id);
         const value: number = facility.getValue();
         const boost: number = Math.max(0, 1.0 + this.effect_manager.getBoost(card_id));
-        return value * boost;
+        let lmboost: number = 1.0;
+        if (facility.property["lmboost"] != undefined &&
+            this.card_manager.getBuiltLandmarks().length >= 2) {
+                lmboost = facility.property["lmboost"];
+        }
+
+        return value * boost * lmboost;
     }
 
     public getEventFacilityActionWithTargetPlayer(
