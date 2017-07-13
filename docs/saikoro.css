@@ -23,6 +23,7 @@ body {
     background-color: #82B1FF;
     background-image:
         repeating-linear-gradient(45deg, #82B1FF, #82B1FF 25px, #86B7FF 25px, #86B7FF 50px);
+    user-select: none;
 }
 
 body.evening {

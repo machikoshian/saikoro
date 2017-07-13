@@ -170,40 +170,48 @@ exports.FacilityData = FacilityData;
 var FACILITY_DATA = [
     new FacilityData(1, [1], "🌾", 100, FacilityType.Blue, 370, {}),
     new FacilityData(1, [2], "🐮", 100, FacilityType.Blue, 330, {}),
+    new FacilityData(1, [2], "🌽", 100, FacilityType.Blue, 520, { lmboost: 0.5 }),
+    new FacilityData(1, [2], "🐑", 200, FacilityType.Blue, 680, {}),
     new FacilityData(1, [4], "🐝", 200, FacilityType.Blue, 300, {}),
     new FacilityData(1, [5], "🌴", 300, FacilityType.Blue, 650, {}),
-    new FacilityData(1, [8], "🍅", 100, FacilityType.Blue, 450, {}),
-    new FacilityData(1, [8, 9], "🌻", 200, FacilityType.Blue, 400, {}),
+    new FacilityData(1, [8], "🍅", 100, FacilityType.Blue, 450, { lmboost: 2 }),
+    new FacilityData(1, [8, 9], "🌻", 200, FacilityType.Blue, 350, { multi: true }),
     new FacilityData(1, [9], "🌰", 100, FacilityType.Blue, 650, {}),
     new FacilityData(1, [9], "🗻", 300, FacilityType.Blue, 750, {}),
     new FacilityData(1, [10], "🍎", 100, FacilityType.Blue, 420, {}),
-    new FacilityData(2, [10], "🗻", 300, FacilityType.Blue, 1150, { "close": true }),
+    new FacilityData(2, [10], "🗻", 300, FacilityType.Blue, 1150, { close: true }),
+    new FacilityData(2, [11], "🐐", 200, FacilityType.Blue, 710, {}),
     new FacilityData(1, [12], "🍍", 150, FacilityType.Blue, 800, {}),
     new FacilityData(1, [2], "🐟", 100, FacilityType.Green, 670, {}),
+    new FacilityData(1, [2], "🍬", 100, FacilityType.Green, 420, { lmboost: 3 }),
     new FacilityData(1, [3], "💈", 100, FacilityType.Green, 570, {}),
     new FacilityData(1, [4], "📖", 200, FacilityType.Green, 520, {}),
-    new FacilityData(1, [6], "💆", 150, FacilityType.Green, 600, {}),
+    new FacilityData(1, [6], "💆", 150, FacilityType.Green, 600, { lmboost: 2 }),
     new FacilityData(1, [7], "👕", 200, FacilityType.Green, 550, {}),
     new FacilityData(2, [7], "🏬", 250, FacilityType.Green, 880, {}),
-    new FacilityData(1, [9], "🚗", 400, FacilityType.Green, 950, {}),
-    new FacilityData(1, [10], "🏄", 200, FacilityType.Green, 1120, { "close": true }),
+    new FacilityData(1, [7], "🚲", 200, FacilityType.Green, 950, { lmboost: 2 }),
+    new FacilityData(1, [9], "🔧", 200, FacilityType.Green, 850, { lmboost: 2 }),
+    new FacilityData(1, [9], "🚗", 400, FacilityType.Green, 950, { lmboost: 2 }),
+    new FacilityData(1, [10], "⚽", 200, FacilityType.Green, 950, { lmboost: 2 }),
+    new FacilityData(1, [10], "🏄", 200, FacilityType.Green, 1120, { close: true }),
     new FacilityData(1, [11], "👓", 100, FacilityType.Green, 1120, {}),
     new FacilityData(1, [1], "🍣", 200, FacilityType.Red, 750, {}),
     new FacilityData(1, [3], "🐙", 100, FacilityType.Red, 520, {}),
-    new FacilityData(1, [5], "🍴", 200, FacilityType.Red, 550, {}),
-    new FacilityData(1, [6], "🍱", 100, FacilityType.Red, 420, {}),
+    new FacilityData(1, [5], "🍴", 200, FacilityType.Red, 580, { lmboost: 2 }),
+    new FacilityData(1, [6], "🍱", 100, FacilityType.Red, 420, { lmboost: 2 }),
     new FacilityData(1, [7], "🍕", 100, FacilityType.Red, 370, {}),
-    new FacilityData(1, [8], "🐔", 250, FacilityType.Red, 400, { "all": true }),
-    new FacilityData(2, [8], "🍻", 300, FacilityType.Red, 400, { "all": true }),
+    new FacilityData(1, [8], "🐔", 250, FacilityType.Red, 400, { all: true }),
+    new FacilityData(2, [8], "🍻", 300, FacilityType.Red, 400, { all: true }),
     new FacilityData(1, [9], "🍛", 100, FacilityType.Red, 470, {}),
+    new FacilityData(1, [10], "🐡", 200, FacilityType.Red, 650, { lmboost: 2 }),
     new FacilityData(1, [10], "🍣", 100, FacilityType.Red, 1000, {}),
     new FacilityData(2, [3], "👾", 200, FacilityType.Purple, 520, {}),
     new FacilityData(1, [5], "📰", 100, FacilityType.Purple, 420, {}),
     new FacilityData(2, [6], "🎸", 400, FacilityType.Purple, 750, {}),
-    new FacilityData(2, [6], "⚽", 500, FacilityType.Purple, 480, { "all": true }),
-    new FacilityData(2, [7], "⚾", 500, FacilityType.Purple, 480, { "all": true }),
-    new FacilityData(2, [8], "🎥", 400, FacilityType.Purple, 400, { "all": true }),
-    new FacilityData(2, [9], "🐬", 500, FacilityType.Purple, 400, { "all": true }),
+    new FacilityData(2, [6], "⚽", 500, FacilityType.Purple, 480, { all: true }),
+    new FacilityData(2, [7], "⚾", 500, FacilityType.Purple, 480, { all: true }),
+    new FacilityData(2, [8], "🎥", 400, FacilityType.Purple, 400, { all: true }),
+    new FacilityData(2, [9], "🐬", 500, FacilityType.Purple, 400, { all: true }),
     new FacilityData(1, [12], "🔨", 300, FacilityType.Purple, 2000, {}),
 ];
 var LANDMARK_DATA_BASE = 10000;
@@ -334,28 +342,40 @@ var Facility = (function () {
                 break;
             case FacilityType.Green:
                 descriptions.push(this.value + "\u30B3\u30A4\u30F3\u7A3C\u3050");
-                descriptions.push("自分のターンのみ");
+                descriptions.push("自分ターンのみ");
                 break;
             case FacilityType.Red:
-                if (this.property["all"]) {
+                if (this.property.all) {
                     descriptions.push(this.value + "\u30B3\u30A4\u30F3\u3092\u5168\u54E1\u304B\u3089\u596A\u3046");
                 }
                 else {
-                    descriptions.push(this.value + "\u30B3\u30A4\u30F3\u3092\u596A\u3046");
+                    descriptions.push(this.value + "\u30B3\u30A4\u30F3\u596A\u3046");
                 }
-                descriptions.push("自分以外のターンのみ");
+                descriptions.push("相手ターンのみ");
                 break;
             case FacilityType.Purple:
-                if (this.property["all"]) {
+                if (this.property.all) {
                     descriptions.push(this.value + "\u30B3\u30A4\u30F3\u3092\u5168\u54E1\u304B\u3089\u596A\u3046");
                 }
                 else {
-                    descriptions.push(this.value + "\u30B3\u30A4\u30F3\u3092\u596A\u3046");
+                    descriptions.push(this.value + "\u30B3\u30A4\u30F3\u596A\u3046");
                 }
-                descriptions.push("自分のターンのみ");
+                descriptions.push("相手ターンのみ");
                 break;
         }
-        if (this.property["close"] === true) {
+        if (this.property.multi === true) {
+            descriptions.push("同じ施設数だけ収入が倍増");
+        }
+        var lmboost = this.property.lmboost;
+        if (lmboost != undefined) {
+            if (lmboost === 0.5) {
+                descriptions.push("ランドマーク2軒以上で収入半減");
+            }
+            else {
+                descriptions.push("\u30E9\u30F3\u30C9\u30DE\u30FC\u30AF2\u8ED2\u4EE5\u4E0A\u3067\u3001\u53CE\u5165" + lmboost + "\u500D");
+            }
+        }
+        if (this.property.close === true) {
             descriptions.push("発動後休業する");
         }
         return descriptions.join("\n");
@@ -464,107 +484,6 @@ exports.Character = Character;
 
 /***/ }),
 /* 1 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var GameMode;
-(function (GameMode) {
-    GameMode[GameMode["None"] = 0] = "None";
-    GameMode[GameMode["OffLine_2"] = 1] = "OffLine_2";
-    GameMode[GameMode["OffLine_3"] = 2] = "OffLine_3";
-    GameMode[GameMode["OffLine_4"] = 3] = "OffLine_4";
-    GameMode[GameMode["OffLine_2_Matching"] = 4] = "OffLine_2_Matching";
-    GameMode[GameMode["OnLineSingle_2"] = 5] = "OnLineSingle_2";
-    GameMode[GameMode["OnLineSingle_3"] = 6] = "OnLineSingle_3";
-    GameMode[GameMode["OnLineSingle_4"] = 7] = "OnLineSingle_4";
-    GameMode[GameMode["OnLine2Players"] = 8] = "OnLine2Players";
-    GameMode[GameMode["OnLineWatch"] = 9] = "OnLineWatch";
-})(GameMode = exports.GameMode || (exports.GameMode = {}));
-;
-var Protocol = (function () {
-    function Protocol() {
-    }
-    Protocol.isOnlineMode = function (mode) {
-        var onlines = [
-            GameMode.OnLineSingle_2, GameMode.OnLineSingle_3, GameMode.OnLineSingle_4,
-            GameMode.OnLine2Players, GameMode.OnLineWatch
-        ];
-        return (onlines.indexOf(mode) !== -1);
-    };
-    Protocol.getGameModeName = function (mode) {
-        switch (mode) {
-            case GameMode.OffLine_2:
-                return "2人バトル 😺 👻";
-            case GameMode.OffLine_3:
-                return "3人バトル 😺 👻 👾";
-            case GameMode.OffLine_4:
-                return "4人バトル 😺 👻 👾 🗿";
-            case GameMode.OffLine_2_Matching:
-                return "2人バトル 😺 👻";
-            case GameMode.OnLineSingle_2:
-                return "2人バトル 😺 👻";
-            case GameMode.OnLineSingle_3:
-                return "3人バトル 😺 👻 👾";
-            case GameMode.OnLineSingle_4:
-                return "4人バトル 😺 👻 👾 🗿";
-            case GameMode.OnLine2Players:
-                return "2人バトル 😺 😺";
-            case GameMode.OnLineWatch:
-                return "観戦モード";
-            case GameMode.None:
-                return "";
-            default:
-                return "";
-        }
-    };
-    Protocol.getNpcCount = function (mode) {
-        switch (mode) {
-            case GameMode.OffLine_2:
-            case GameMode.OffLine_2_Matching:
-            case GameMode.OnLineSingle_2:
-                return 1;
-            case GameMode.OffLine_3:
-            case GameMode.OnLineSingle_3:
-                return 2;
-            case GameMode.OffLine_4:
-            case GameMode.OnLineSingle_4:
-                return 3;
-            case GameMode.OnLine2Players:
-            case GameMode.OnLineWatch:
-                return 0;
-            case GameMode.None:
-            default:
-                return -1;
-        }
-    };
-    Protocol.getPlayerCount = function (mode) {
-        switch (mode) {
-            case GameMode.OffLine_2:
-            case GameMode.OffLine_2_Matching:
-            case GameMode.OnLineSingle_2:
-            case GameMode.OffLine_3:
-            case GameMode.OnLineSingle_3:
-            case GameMode.OffLine_4:
-            case GameMode.OnLineSingle_4:
-                return 1;
-            case GameMode.OnLine2Players:
-                return 2;
-            case GameMode.OnLineWatch:
-                return 0;
-            case GameMode.None:
-            default:
-                return -1;
-        }
-    };
-    return Protocol;
-}());
-exports.Protocol = Protocol;
-
-
-/***/ }),
-/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -916,7 +835,6 @@ var Session = (function () {
     Session.prototype.processInteractCommand = function (query) {
         var player_id = query.player_id;
         var card_id = query.card_id;
-        var target_id = query.target_player_id;
         if (!this.isValid(player_id, Phase.FacilityActionWithInteraction)) {
             return false;
         }
@@ -926,9 +844,50 @@ var Session = (function () {
         if (this.target_facilities[0] !== card_id) {
             return false;
         }
-        var event = this.doFacilityActionWithTargetPlayer(card_id, target_id);
-        if (event.type === EventType.None) {
+        var event = this.getEventInteractCommand(query);
+        return this.processEventInteractCommand(event);
+    };
+    Session.prototype.getEventInteractCommand = function (query) {
+        var player_id = query.player_id;
+        var card_id = query.card_id;
+        var target_id = query.target_player_id;
+        var event = new Event();
+        var facility = this.getFacility(card_id);
+        if (facility.getType() !== facility_1.FacilityType.Purple) {
+            return event;
+        }
+        if (facility.property["all"] === true) {
+            return event;
+        }
+        var owner_id = this.getOwnerId(card_id);
+        if (player_id !== owner_id) {
+            return event;
+        }
+        if (facility.property["close"] === true) {
+            event.close = true;
+        }
+        event.step = this.step;
+        event.card_id = card_id;
+        event.player_id = player_id;
+        event.type = EventType.Purple;
+        var value = this.getFacilityValue(card_id);
+        var amount = this.checkMoveMoney(target_id, owner_id, value);
+        event.moneys[target_id] -= amount;
+        event.moneys[owner_id] += amount;
+        return event;
+    };
+    Session.prototype.processEventInteractCommand = function (event) {
+        if (event == null || event.type === EventType.None) {
             return false;
+        }
+        for (var pid = 0; pid < event.moneys.length; ++pid) {
+            if (event.moneys[pid] !== 0) {
+                this.getPlayer(pid).addMoney(event.moneys[pid]);
+            }
+        }
+        if (event.close === true) {
+            var facility = this.getFacility(event.card_id);
+            facility.is_open = false;
         }
         this.events.push(event);
         this.target_facilities.shift();
@@ -1011,46 +970,21 @@ var Session = (function () {
         var facility = this.getFacility(card_id);
         var value = facility.getValue();
         var boost = Math.max(0, 1.0 + this.effect_manager.getBoost(card_id));
-        return value * boost;
-    };
-    Session.prototype.getEventFacilityActionWithTargetPlayer = function (player_id, card_id, target_id) {
-        var event = new Event();
-        var facility = this.getFacility(card_id);
-        if (facility.getType() !== facility_1.FacilityType.Purple) {
-            return event;
+        var lmboost = 1.0;
+        if (facility.property.lmboost != undefined &&
+            this.card_manager.getBuiltLandmarks().length >= 2) {
+            lmboost = facility.property.lmboost;
         }
-        if (facility.property["all"] === true) {
-            return event;
+        var multi = 1.0;
+        if (facility.property.multi === true) {
+            var card_query = {
+                data_id: facility.data_id,
+                state: card_manager_1.CardState.Field,
+            };
+            var card_ids = this.queryCards(card_query);
+            multi = card_ids.length;
         }
-        var owner_id = this.getOwnerId(card_id);
-        if (player_id !== owner_id) {
-            return event;
-        }
-        if (facility.property["close"] === true) {
-            event.close = true;
-        }
-        event.step = this.step;
-        event.card_id = card_id;
-        event.player_id = player_id;
-        event.type = EventType.Purple;
-        var value = this.getFacilityValue(card_id);
-        var amount = this.checkMoveMoney(target_id, owner_id, value);
-        event.moneys[target_id] -= amount;
-        event.moneys[owner_id] += amount;
-        return event;
-    };
-    Session.prototype.doFacilityActionWithTargetPlayer = function (card_id, target_id) {
-        var event = this.getEventFacilityActionWithTargetPlayer(this.getCurrentPlayerId(), card_id, target_id);
-        for (var pid = 0; pid < event.moneys.length; ++pid) {
-            if (event.moneys[pid] !== 0) {
-                this.getPlayer(pid).addMoney(event.moneys[pid]);
-            }
-        }
-        if (event.close === true) {
-            var facility = this.getFacility(card_id);
-            facility.is_open = false;
-        }
-        return event;
+        return value * boost * lmboost * multi;
     };
     Session.prototype.getEventFacilityAction = function (player_id, card_id) {
         var facility = this.getFacility(card_id);
@@ -1778,6 +1712,107 @@ exports.Session = Session;
 
 
 /***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var GameMode;
+(function (GameMode) {
+    GameMode[GameMode["None"] = 0] = "None";
+    GameMode[GameMode["OffLine_2"] = 1] = "OffLine_2";
+    GameMode[GameMode["OffLine_3"] = 2] = "OffLine_3";
+    GameMode[GameMode["OffLine_4"] = 3] = "OffLine_4";
+    GameMode[GameMode["OffLine_2_Matching"] = 4] = "OffLine_2_Matching";
+    GameMode[GameMode["OnLineSingle_2"] = 5] = "OnLineSingle_2";
+    GameMode[GameMode["OnLineSingle_3"] = 6] = "OnLineSingle_3";
+    GameMode[GameMode["OnLineSingle_4"] = 7] = "OnLineSingle_4";
+    GameMode[GameMode["OnLine2Players"] = 8] = "OnLine2Players";
+    GameMode[GameMode["OnLineWatch"] = 9] = "OnLineWatch";
+})(GameMode = exports.GameMode || (exports.GameMode = {}));
+;
+var Protocol = (function () {
+    function Protocol() {
+    }
+    Protocol.isOnlineMode = function (mode) {
+        var onlines = [
+            GameMode.OnLineSingle_2, GameMode.OnLineSingle_3, GameMode.OnLineSingle_4,
+            GameMode.OnLine2Players, GameMode.OnLineWatch
+        ];
+        return (onlines.indexOf(mode) !== -1);
+    };
+    Protocol.getGameModeName = function (mode) {
+        switch (mode) {
+            case GameMode.OffLine_2:
+                return "2人バトル 😺 👻";
+            case GameMode.OffLine_3:
+                return "3人バトル 😺 👻 👾";
+            case GameMode.OffLine_4:
+                return "4人バトル 😺 👻 👾 🗿";
+            case GameMode.OffLine_2_Matching:
+                return "2人バトル 😺 👻";
+            case GameMode.OnLineSingle_2:
+                return "2人バトル 😺 👻";
+            case GameMode.OnLineSingle_3:
+                return "3人バトル 😺 👻 👾";
+            case GameMode.OnLineSingle_4:
+                return "4人バトル 😺 👻 👾 🗿";
+            case GameMode.OnLine2Players:
+                return "2人バトル 😺 😺";
+            case GameMode.OnLineWatch:
+                return "観戦モード";
+            case GameMode.None:
+                return "";
+            default:
+                return "";
+        }
+    };
+    Protocol.getNpcCount = function (mode) {
+        switch (mode) {
+            case GameMode.OffLine_2:
+            case GameMode.OffLine_2_Matching:
+            case GameMode.OnLineSingle_2:
+                return 1;
+            case GameMode.OffLine_3:
+            case GameMode.OnLineSingle_3:
+                return 2;
+            case GameMode.OffLine_4:
+            case GameMode.OnLineSingle_4:
+                return 3;
+            case GameMode.OnLine2Players:
+            case GameMode.OnLineWatch:
+                return 0;
+            case GameMode.None:
+            default:
+                return -1;
+        }
+    };
+    Protocol.getPlayerCount = function (mode) {
+        switch (mode) {
+            case GameMode.OffLine_2:
+            case GameMode.OffLine_2_Matching:
+            case GameMode.OnLineSingle_2:
+            case GameMode.OffLine_3:
+            case GameMode.OnLineSingle_3:
+            case GameMode.OffLine_4:
+            case GameMode.OnLineSingle_4:
+                return 1;
+            case GameMode.OnLine2Players:
+                return 2;
+            case GameMode.OnLineWatch:
+                return 0;
+            case GameMode.None:
+            default:
+                return -1;
+        }
+    };
+    return Protocol;
+}());
+exports.Protocol = Protocol;
+
+
+/***/ }),
 /* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -1837,7 +1872,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var client_1 = __webpack_require__(7);
 var session_handler_1 = __webpack_require__(17);
 var storage_1 = __webpack_require__(8);
-var protocol_1 = __webpack_require__(1);
 var storage = new storage_1.LocalStorage();
 var session_handler = new session_handler_1.SessionHandler(storage);
 var StandaloneConnection = (function (_super) {
@@ -1882,80 +1916,6 @@ var StandaloneConnection = (function (_super) {
     return StandaloneConnection;
 }(client_1.Connection));
 exports.StandaloneConnection = StandaloneConnection;
-var HybridConnection = (function (_super) {
-    __extends(HybridConnection, _super);
-    function HybridConnection(online_connection) {
-        if (online_connection === void 0) { online_connection = null; }
-        var _this = _super.call(this) || this;
-        _this.online_connection = null;
-        _this.offline_connection = null;
-        _this.connection = null;
-        _this.online_connection = online_connection;
-        _this.offline_connection = new StandaloneConnection();
-        _this.connection = _this.offline_connection;
-        return _this;
-    }
-    HybridConnection.prototype.setOnlineConnection = function (connection) {
-        if (this.online_connection) {
-            this.online_connection.stopCheckUpdate();
-        }
-        this.online_connection = connection;
-    };
-    HybridConnection.prototype.startCheckUpdate = function (client) {
-        this.connection = this.getConnection(client.mode);
-        this.connection.startCheckUpdate(client);
-    };
-    HybridConnection.prototype.stopCheckUpdate = function () {
-        this.connection.stopCheckUpdate();
-    };
-    HybridConnection.prototype.matching = function (query, callback) {
-        this.connection.stopCheckUpdate();
-        this.connection = this.getConnection(query.mode);
-        this.connection.matching(query, callback);
-    };
-    HybridConnection.prototype.stopCheckMatching = function () {
-        if (this.online_connection) {
-            this.online_connection.stopCheckMatching();
-            return;
-        }
-        this.offline_connection.stopCheckMatching();
-    };
-    HybridConnection.prototype.setQueryOnDisconnect = function (query) {
-        // Online connection is used if available.
-        if (this.online_connection) {
-            this.online_connection.setQueryOnDisconnect(query);
-            return;
-        }
-        this.offline_connection.setQueryOnDisconnect(query);
-    };
-    HybridConnection.prototype.startCheckLive = function (callback) {
-        // Online connection is used if available.
-        if (this.online_connection) {
-            this.online_connection.startCheckLive(callback);
-            return;
-        }
-        this.offline_connection.startCheckLive(callback);
-    };
-    HybridConnection.prototype.stopCheckLive = function () {
-        // Online connection is used if available.
-        if (this.online_connection) {
-            this.online_connection.stopCheckLive();
-            return;
-        }
-        this.offline_connection.stopCheckLive();
-    };
-    HybridConnection.prototype.getConnection = function (mode) {
-        if (protocol_1.Protocol.isOnlineMode(mode) && (this.online_connection != null)) {
-            return this.online_connection;
-        }
-        return this.offline_connection;
-    };
-    HybridConnection.prototype.sendRequest = function (query, callback) {
-        this.getConnection(query.mode).sendRequest(query, callback);
-    };
-    return HybridConnection;
-}(client_1.Connection));
-exports.HybridConnection = HybridConnection;
 
 
 /***/ }),
@@ -2130,7 +2090,7 @@ exports.Board = Board;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var protocol_1 = __webpack_require__(1);
+var protocol_1 = __webpack_require__(2);
 var Connection = (function () {
     function Connection() {
     }
@@ -2411,9 +2371,9 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var client_1 = __webpack_require__(7);
-var session_1 = __webpack_require__(2);
+var session_1 = __webpack_require__(1);
 var html_view_1 = __webpack_require__(14);
-var protocol_1 = __webpack_require__(1);
+var protocol_1 = __webpack_require__(2);
 var standalone_connection_1 = __webpack_require__(5);
 // TODO: can be merged with Client?
 var WebClient = (function (_super) {
@@ -2592,7 +2552,7 @@ exports.WebClient = WebClient;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var session_1 = __webpack_require__(2);
+var session_1 = __webpack_require__(1);
 var utils_1 = __webpack_require__(4);
 var AutoPlay = (function () {
     function AutoPlay() {
@@ -2890,11 +2850,11 @@ var CardManager = (function () {
         for (var _i = 0, card_ids_1 = card_ids; _i < card_ids_1.length; _i++) {
             var card_id = card_ids_1[_i];
             if (query.card_type != null &&
-                this.getCardType(card_id) !== query.card_type) {
+                query.card_type !== this.getCardType(card_id)) {
                 continue;
             }
             if (query.facility_type != null &&
-                this.facilities[card_id].type !== query.facility_type) {
+                query.facility_type !== this.facilities[card_id].type) {
                 continue;
             }
             if (query.state != null &&
@@ -2904,6 +2864,10 @@ var CardManager = (function () {
             }
             if (query.owner_id != null &&
                 query.owner_id !== this.getOwner(card_id)) {
+                continue;
+            }
+            if (query.data_id != null &&
+                query.data_id !== this.getCardDataId(card_id)) {
                 continue;
             }
             results.push(card_id);
@@ -2993,6 +2957,16 @@ var CardManager = (function () {
         for (var _i = 0, _a = this.landmarks; _i < _a.length; _i++) {
             var landmark_info = _a[_i];
             landmarks.push(landmark_info[0]);
+        }
+        return landmarks;
+    };
+    CardManager.prototype.getBuiltLandmarks = function () {
+        var landmarks = [];
+        for (var _i = 0, _a = this.landmarks; _i < _a.length; _i++) {
+            var landmark_info = _a[_i];
+            if (landmark_info[1] !== -1) {
+                landmarks.push(landmark_info[0]);
+            }
         }
         return landmarks;
     };
@@ -3467,10 +3441,10 @@ exports.Dice = Dice;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var session_1 = __webpack_require__(2);
+var session_1 = __webpack_require__(1);
 var facility_1 = __webpack_require__(0);
 var deck_maker_1 = __webpack_require__(12);
-var protocol_1 = __webpack_require__(1);
+var protocol_1 = __webpack_require__(2);
 var html_view_parts_1 = __webpack_require__(15);
 var types_1 = __webpack_require__(3);
 var COLOR_FIELD = "#FFF8E1";
@@ -3828,7 +3802,7 @@ var HtmlView = (function () {
         this.client.sendRequest(query);
         this.event_queue.addEvent(function () {
             _this.buttons_view.hide(); // for the turn end button.
-            var field = "field_" + x + "_" + y;
+            var field = "click_" + x + "_" + y;
             if (_this.session.isLandmark(_this.clicked_card_id)) {
                 _this.landmarks_view.useCard(_this.clicked_card_id, field);
             }
@@ -4231,7 +4205,7 @@ var HtmlView = (function () {
                 if (event_2.type === session_1.EventType.Interaction) {
                     // TODO: Should be able to select other players.
                     var target_id = (player_id === 0) ? 1 : 0;
-                    event_2 = session.getEventFacilityActionWithTargetPlayer(player_id, card_id, target_id);
+                    event_2 = session.getEventInteractCommand(this.client.createInteractQuery(event_2.card_id, target_id));
                 }
                 var money = event_2.moneys[player_id];
                 if (money !== 0) {
@@ -4571,6 +4545,7 @@ var HtmlView = (function () {
     HtmlView.prototype.drawEventOfMoneyMotion = function (session, event) {
         var _this = this;
         var _a = (event.position != null) ? event.position : session.getPosition(event.card_id), x = _a[0], y = _a[1];
+        var element_id = (event.type === session_1.EventType.Build) ? "click_" + x + "_" + y : "field_" + x + "_" + y;
         // If event.moneys has both positive and negative values,
         // motions for positive values are delayed.
         var delay_value = 0;
@@ -4587,7 +4562,7 @@ var HtmlView = (function () {
             }
             var delay = (money > 0) ? 1000 : 0;
             window.setTimeout(function () {
-                _this.drawMoneyMotion(money, pid, "field_" + x + "_" + y);
+                _this.drawMoneyMotion(money, pid, element_id);
                 _this.board_view.setHighlight([x, y], COLOR_CLICKABLE);
                 window.setTimeout(function () {
                     _this.board_view.setHighlight([x, y], "transparent");
@@ -4633,7 +4608,7 @@ var HtmlView = (function () {
             this.effectMoneyMotion(element_id, "player_" + player_id, money);
         }
         else if (money < 0) {
-            this.effectMoneyMotion("player_" + player_id, element_id, money);
+            this.effectMoneyMotion("player_" + player_id, element_id, -money);
         }
         this.players_view.players[player_id].addMoney(money);
     };
@@ -4710,7 +4685,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var facility_1 = __webpack_require__(0);
-var session_1 = __webpack_require__(2);
+var session_1 = __webpack_require__(1);
 var types_1 = __webpack_require__(3);
 // TODO: Move it to a new file for util.
 var COLOR_FIELD = "#FFE082";
@@ -5815,10 +5790,10 @@ document.addEventListener("DOMContentLoaded", function () { client.initBoard(); 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var session_1 = __webpack_require__(2);
+var session_1 = __webpack_require__(1);
 var facility_1 = __webpack_require__(0);
 var auto_play_1 = __webpack_require__(10);
-var protocol_1 = __webpack_require__(1);
+var protocol_1 = __webpack_require__(2);
 var storage_1 = __webpack_require__(8);
 var Utils = __webpack_require__(4);
 var MatchedData = (function () {
