@@ -111,11 +111,7 @@ export class FirebaseConnection extends Connection {
     public startCheckLive(callback: RequestCallback): void {
         this.ref_live = firebase.database().ref("live");
         this.ref_live.on("value", (snapshot) => {
-            let value = snapshot.val();
-            if (!value) {
-                return;
-            }
-            callback(JSON.stringify(value));
+            callback(JSON.stringify(snapshot.val()));
         });
     }
     public stopCheckLive(): void {

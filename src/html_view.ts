@@ -635,6 +635,10 @@ export class HtmlView {
         }
         document.getElementById("matching_button_multi_2").classList.remove("promote");
 
+        if (response == null) {
+            return;
+        }
+
         // TODO: session_info should be a class instance.
         const live_dict: {[key: string]: MatchingInfo} = JSON.parse(response);
 
