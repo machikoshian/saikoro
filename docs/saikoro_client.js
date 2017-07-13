@@ -172,7 +172,8 @@ var FACILITY_DATA = [
     new FacilityData(1, [2], "🐮", 100, FacilityType.Blue, 330, {}),
     new FacilityData(1, [2], "🌽", 100, FacilityType.Blue, 520, { lmboost: 0.5 }),
     new FacilityData(1, [2], "🐑", 200, FacilityType.Blue, 680, {}),
-    new FacilityData(1, [4], "🐝", 200, FacilityType.Blue, 300, {}),
+    new FacilityData(1, [4], "🐝", 200, FacilityType.Blue, 300, { multi: true }),
+    new FacilityData(1, [4, 5], "🍄", 100, FacilityType.Blue, 220, { multi: true }),
     new FacilityData(1, [5], "🌴", 300, FacilityType.Blue, 650, {}),
     new FacilityData(1, [8], "🍅", 100, FacilityType.Blue, 450, { lmboost: 2 }),
     new FacilityData(1, [8, 9], "🌻", 200, FacilityType.Blue, 350, { multi: true }),
@@ -181,15 +182,18 @@ var FACILITY_DATA = [
     new FacilityData(1, [10], "🍎", 100, FacilityType.Blue, 420, {}),
     new FacilityData(2, [10], "🗻", 300, FacilityType.Blue, 1150, { close: true }),
     new FacilityData(2, [11], "🐐", 200, FacilityType.Blue, 710, {}),
+    new FacilityData(1, [11, 12], "🎋", 300, FacilityType.Blue, 580, { multi: true }),
     new FacilityData(1, [12], "🍍", 150, FacilityType.Blue, 800, {}),
     new FacilityData(1, [2], "🐟", 100, FacilityType.Green, 670, {}),
     new FacilityData(1, [2], "🍬", 100, FacilityType.Green, 420, { lmboost: 3 }),
     new FacilityData(1, [3], "💈", 100, FacilityType.Green, 570, {}),
     new FacilityData(1, [4], "📖", 200, FacilityType.Green, 520, {}),
+    new FacilityData(1, [4], "🏪", 100, FacilityType.Green, 320, { multi: true }),
     new FacilityData(1, [6], "💆", 150, FacilityType.Green, 600, { lmboost: 2 }),
-    new FacilityData(1, [7], "👕", 200, FacilityType.Green, 550, {}),
+    new FacilityData(1, [7], "👕", 200, FacilityType.Green, 550, { multi: true }),
     new FacilityData(2, [7], "🏬", 250, FacilityType.Green, 880, {}),
     new FacilityData(1, [7], "🚲", 200, FacilityType.Green, 950, { lmboost: 2 }),
+    new FacilityData(1, [8], "📱", 200, FacilityType.Green, 1050, {}),
     new FacilityData(1, [9], "🔧", 200, FacilityType.Green, 850, { lmboost: 2 }),
     new FacilityData(1, [9], "🚗", 400, FacilityType.Green, 950, { lmboost: 2 }),
     new FacilityData(1, [10], "⚽", 200, FacilityType.Green, 950, { lmboost: 2 }),
@@ -200,18 +204,25 @@ var FACILITY_DATA = [
     new FacilityData(1, [5], "🍴", 200, FacilityType.Red, 580, { lmboost: 2 }),
     new FacilityData(1, [6], "🍱", 100, FacilityType.Red, 420, { lmboost: 2 }),
     new FacilityData(1, [7], "🍕", 100, FacilityType.Red, 370, {}),
+    new FacilityData(1, [7], "🍜", 200, FacilityType.Red, 320, { multi: true }),
     new FacilityData(1, [8], "🐔", 250, FacilityType.Red, 400, { all: true }),
     new FacilityData(2, [8], "🍻", 300, FacilityType.Red, 400, { all: true }),
     new FacilityData(1, [9], "🍛", 100, FacilityType.Red, 470, {}),
     new FacilityData(1, [10], "🐡", 200, FacilityType.Red, 650, { lmboost: 2 }),
     new FacilityData(1, [10], "🍣", 100, FacilityType.Red, 1000, {}),
+    new FacilityData(1, [3], "🎳", 200, FacilityType.Purple, 220, {}),
     new FacilityData(2, [3], "👾", 200, FacilityType.Purple, 520, {}),
     new FacilityData(1, [5], "📰", 100, FacilityType.Purple, 420, {}),
+    new FacilityData(2, [5], "🎨", 400, FacilityType.Purple, 650, {}),
     new FacilityData(2, [6], "🎸", 400, FacilityType.Purple, 750, {}),
     new FacilityData(2, [6], "⚽", 500, FacilityType.Purple, 480, { all: true }),
+    new FacilityData(1, [7], "🎤", 200, FacilityType.Purple, 370, { all: true }),
     new FacilityData(2, [7], "⚾", 500, FacilityType.Purple, 480, { all: true }),
+    new FacilityData(2, [8], "🗿", 400, FacilityType.Purple, 720, {}),
     new FacilityData(2, [8], "🎥", 400, FacilityType.Purple, 400, { all: true }),
     new FacilityData(2, [9], "🐬", 500, FacilityType.Purple, 400, { all: true }),
+    new FacilityData(1, [9], "🎾", 100, FacilityType.Purple, 420, { all: true }),
+    new FacilityData(1, [10], "⛳", 100, FacilityType.Purple, 770, {}),
     new FacilityData(1, [12], "🔨", 300, FacilityType.Purple, 2000, {}),
 ];
 var LANDMARK_DATA_BASE = 10000;
@@ -3981,6 +3992,9 @@ var HtmlView = (function () {
             element.classList.add("inactive");
         }
         document.getElementById("matching_button_multi_2").classList.remove("promote");
+        if (response == null) {
+            return;
+        }
         // TODO: session_info should be a class instance.
         var live_dict = JSON.parse(response);
         var keys = Object.keys(live_dict);
@@ -4142,15 +4156,14 @@ var HtmlView = (function () {
             this.landmarks_view.y_offset = 0;
         }
         // Update cards.
-        var card_ids = session.getSortedHand(this.client.player_id);
-        this.cards_view.draw(session, card_ids);
+        if (this.client.player_id !== -1) {
+            var card_ids = session.getSortedHand(this.client.player_id);
+            this.cards_view.draw(session, card_ids);
+        }
         // Update landmarks.
         this.landmarks_view.show();
         this.landmarks_view.draw(session, landmark_ids);
         this.resetCardsClickable(); // Nice to check if built or not?
-        if (session.getCurrentPlayerId() !== this.client.player_id) {
-            return;
-        }
     };
     HtmlView.prototype.drawFieldInfo = function (x, y) {
         var card_id = this.session.getCardIdOnBoard(x, y);
@@ -4193,6 +4206,9 @@ var HtmlView = (function () {
         }
     };
     HtmlView.prototype.drawFacilityValues = function (session, player_id) {
+        if (player_id === -1) {
+            player_id = session.getCurrentPlayerId();
+        }
         this.board_view.clearEffects();
         var board = session.getBoard();
         for (var y = 0; y < board.row; ++y) {
@@ -4327,7 +4343,8 @@ var HtmlView = (function () {
         // Update buttons.
         this.buttons_view.draw(session, this.client.player_id);
         this.drawCards(session);
-        if (session.getPhase() === session_1.Phase.BuildFacility) {
+        if (session.getPhase() === session_1.Phase.BuildFacility &&
+            session.getCurrentPlayerId() === this.client.player_id) {
             this.dialogSelectFacilityCard(function (card_id) {
                 _this.processFacilityCard(card_id);
             });
