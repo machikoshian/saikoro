@@ -817,18 +817,16 @@ export class HtmlView {
         }
 
         // Update cards.
-        const card_ids: CardId[] = session.getSortedHand(this.client.player_id);
-        this.cards_view.draw(session, card_ids);
+        if (this.client.player_id !== -1) {
+            const card_ids: CardId[] = session.getSortedHand(this.client.player_id);
+            this.cards_view.draw(session, card_ids);
+        }
 
         // Update landmarks.
         this.landmarks_view.show();
         this.landmarks_view.draw(session, landmark_ids);
 
         this.resetCardsClickable();  // Nice to check if built or not?
-
-        if (session.getCurrentPlayerId() !== this.client.player_id) {
-            return;
-        }
     }
 
     public drawFieldInfo(x, y): void {
@@ -881,6 +879,10 @@ export class HtmlView {
     }
 
     public drawFacilityValues(session: Session, player_id: PlayerId): void {
+        if (player_id === -1) {
+            player_id = session.getCurrentPlayerId();
+        }
+
         this.board_view.clearEffects();
         const board: Board = session.getBoard();
         for (let y: number = 0; y < board.row; ++y) {
@@ -1032,7 +1034,8 @@ export class HtmlView {
         this.buttons_view.draw(session, this.client.player_id);
         this.drawCards(session);
 
-        if (session.getPhase() === Phase.BuildFacility) {
+        if (session.getPhase() === Phase.BuildFacility &&
+            session.getCurrentPlayerId() === this.client.player_id) {
             this.dialogSelectFacilityCard((card_id: CardId) => {
                 this.processFacilityCard(card_id);
             });
