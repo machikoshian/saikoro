@@ -1,10 +1,8 @@
 * 給料のイベントのタイミング
-* HybridConnection を削除する
 
 * firebase で以前の session データが残ったまま
 
 * dice1, dice2 を配列に
-* event.target_card_ids を event.buildFacility でも使う。
 * html_view.ts のリファクタリング
 * 各イベントの同期
 * タイムアウトの実装
