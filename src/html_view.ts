@@ -436,7 +436,7 @@ export class HtmlView {
 
         this.event_queue.addEvent(() => {
             this.buttons_view.hide();  // for the turn end button.
-            const field: string = `field_${x}_${y}`;
+            const field: string = `click_${x}_${y}`;
             if (this.session.isLandmark(this.clicked_card_id)) {
                 this.landmarks_view.useCard(this.clicked_card_id, field);
             }
@@ -1264,6 +1264,8 @@ export class HtmlView {
     private drawEventOfMoneyMotion(session: Session, event: Event): void {
         const [x, y]: [number, number] =
             (event.position != null) ? event.position : session.getPosition(event.card_id);
+        const element_id: string =
+            (event.type === EventType.Build) ? `click_${x}_${y}` : `field_${x}_${y}`;
 
         // If event.moneys has both positive and negative values,
         // motions for positive values are delayed.
@@ -1281,7 +1283,7 @@ export class HtmlView {
             }
             let delay: number = (money > 0) ? 1000 : 0;
             window.setTimeout(() => {
-                this.drawMoneyMotion(money, pid, `field_${x}_${y}`);
+                this.drawMoneyMotion(money, pid, element_id);
                 this.board_view.setHighlight([x, y], COLOR_CLICKABLE);
                 window.setTimeout(() => {
                     this.board_view.setHighlight([x, y], "transparent");
@@ -1328,7 +1330,7 @@ export class HtmlView {
             this.effectMoneyMotion(element_id, `player_${player_id}`, money);
         }
         else if (money < 0) {
-            this.effectMoneyMotion(`player_${player_id}`, element_id, money);
+            this.effectMoneyMotion(`player_${player_id}`, element_id, -money);
         }
         this.players_view.players[player_id].addMoney(money);
     }

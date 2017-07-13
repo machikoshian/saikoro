@@ -1,5 +1,4 @@
 * 給料のイベントのタイミング
-* size=2 施設を上書きするとアニメーションがおかしくなる。
 * HybridConnection を削除する
 
 * firebase で以前の session データが残ったまま
