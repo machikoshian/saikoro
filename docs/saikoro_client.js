@@ -172,25 +172,25 @@ var FACILITY_DATA = [
     new FacilityData(1, [2], "🐮", 100, FacilityType.Blue, 330, {}),
     new FacilityData(1, [2], "🌽", 100, FacilityType.Blue, 520, { lmboost: 0.5 }),
     new FacilityData(1, [2], "🐑", 200, FacilityType.Blue, 680, {}),
-    new FacilityData(1, [4], "🐝", 200, FacilityType.Blue, 300, { multi: true }),
-    new FacilityData(1, [4, 5], "🍄", 100, FacilityType.Blue, 220, { multi: true }),
+    new FacilityData(1, [4], "🐝", 200, FacilityType.Blue, 300, { multi: 2 }),
+    new FacilityData(1, [4, 5], "🍄", 100, FacilityType.Blue, 220, { multi: 2 }),
     new FacilityData(1, [5], "🌴", 300, FacilityType.Blue, 650, {}),
     new FacilityData(1, [8], "🍅", 100, FacilityType.Blue, 450, { lmboost: 2 }),
-    new FacilityData(1, [8, 9], "🌻", 200, FacilityType.Blue, 350, { multi: true }),
+    new FacilityData(1, [8, 9], "🌻", 200, FacilityType.Blue, 350, { multi: 2 }),
     new FacilityData(1, [9], "🌰", 100, FacilityType.Blue, 650, {}),
     new FacilityData(1, [9], "🗻", 300, FacilityType.Blue, 750, {}),
     new FacilityData(1, [10], "🍎", 100, FacilityType.Blue, 420, {}),
     new FacilityData(2, [10], "🗻", 300, FacilityType.Blue, 1150, { close: true }),
     new FacilityData(2, [11], "🐐", 200, FacilityType.Blue, 710, {}),
-    new FacilityData(1, [11, 12], "🎋", 300, FacilityType.Blue, 580, { multi: true }),
+    new FacilityData(1, [11, 12], "🎋", 300, FacilityType.Blue, 580, { multi: 2 }),
     new FacilityData(1, [12], "🍍", 150, FacilityType.Blue, 800, {}),
     new FacilityData(1, [2], "🐟", 100, FacilityType.Green, 670, {}),
     new FacilityData(1, [2], "🍬", 100, FacilityType.Green, 420, { lmboost: 3 }),
     new FacilityData(1, [3], "💈", 100, FacilityType.Green, 570, {}),
     new FacilityData(1, [4], "📖", 200, FacilityType.Green, 520, {}),
-    new FacilityData(1, [4], "🏪", 100, FacilityType.Green, 320, { multi: true }),
+    new FacilityData(1, [4], "🏪", 100, FacilityType.Green, 320, { multi: 2 }),
     new FacilityData(1, [6], "💆", 150, FacilityType.Green, 600, { lmboost: 2 }),
-    new FacilityData(1, [7], "👕", 200, FacilityType.Green, 550, { multi: true }),
+    new FacilityData(1, [7], "👕", 200, FacilityType.Green, 550, { multi: 2 }),
     new FacilityData(2, [7], "🏬", 250, FacilityType.Green, 880, {}),
     new FacilityData(1, [7], "🚲", 200, FacilityType.Green, 950, { lmboost: 2 }),
     new FacilityData(1, [8], "📱", 200, FacilityType.Green, 1050, {}),
@@ -204,7 +204,7 @@ var FACILITY_DATA = [
     new FacilityData(1, [5], "🍴", 200, FacilityType.Red, 580, { lmboost: 2 }),
     new FacilityData(1, [6], "🍱", 100, FacilityType.Red, 420, { lmboost: 2 }),
     new FacilityData(1, [7], "🍕", 100, FacilityType.Red, 370, {}),
-    new FacilityData(1, [7], "🍜", 200, FacilityType.Red, 320, { multi: true }),
+    new FacilityData(1, [7], "🍜", 200, FacilityType.Red, 320, { multi: 2 }),
     new FacilityData(1, [8], "🐔", 250, FacilityType.Red, 400, { all: true }),
     new FacilityData(2, [8], "🍻", 300, FacilityType.Red, 400, { all: true }),
     new FacilityData(1, [9], "🍛", 100, FacilityType.Red, 470, {}),
@@ -374,8 +374,14 @@ var Facility = (function () {
                 descriptions.push("相手ターンのみ");
                 break;
         }
-        if (this.property.multi === true) {
-            descriptions.push("同じ施設数だけ収入が倍増");
+        var multi = this.property.multi;
+        if (multi != undefined) {
+            if (multi === 0.5) {
+                descriptions.push("同じ施設があると収入半減");
+            }
+            else {
+                descriptions.push("\u540C\u3058\u65BD\u8A2D\u304C\u3042\u308B\u3068\u53CE\u5165" + multi + "\u500D");
+            }
         }
         var lmboost = this.property.lmboost;
         if (lmboost != undefined) {
@@ -383,7 +389,7 @@ var Facility = (function () {
                 descriptions.push("ランドマーク2軒以上で収入半減");
             }
             else {
-                descriptions.push("\u30E9\u30F3\u30C9\u30DE\u30FC\u30AF2\u8ED2\u4EE5\u4E0A\u3067\u3001\u53CE\u5165" + lmboost + "\u500D");
+                descriptions.push("\u30E9\u30F3\u30C9\u30DE\u30FC\u30AF2\u8ED2\u4EE5\u4E0A\u3067\u53CE\u5165" + lmboost + "\u500D");
             }
         }
         if (this.property.close === true) {
@@ -987,13 +993,15 @@ var Session = (function () {
             lmboost = facility.property.lmboost;
         }
         var multi = 1.0;
-        if (facility.property.multi === true) {
+        if (facility.property.multi != undefined) {
             var card_query = {
                 data_id: facility.data_id,
                 state: card_manager_1.CardState.Field,
             };
             var card_ids = this.queryCards(card_query);
-            multi = card_ids.length;
+            if (card_ids.length > 1) {
+                multi = facility.property.multi;
+            }
         }
         return value * boost * lmboost * multi;
     };
