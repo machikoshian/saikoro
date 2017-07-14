@@ -558,13 +558,15 @@ export class Session {
         }
 
         let multi: number = 1.0;
-        if (facility.property.multi === true) {
+        if (facility.property.multi != undefined) {
             const card_query: CardManagerQuery = {
                 data_id: facility.data_id,
                 state: CardState.Field,
             };
             const card_ids: CardId[] = this.queryCards(card_query);
-            multi = card_ids.length;
+            if (card_ids.length > 1) {
+                multi = facility.property.multi;
+            }
         }
 
         return value * boost * lmboost * multi;
