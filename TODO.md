@@ -1,7 +1,5 @@
 * 給料のイベントのタイミング
 
-* firebase で以前の session データが残ったまま
-
 * dice1, dice2 を配列に
 * html_view.ts のリファクタリング
 * 各イベントの同期

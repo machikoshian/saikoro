@@ -109,41 +109,55 @@ const FACILITY_DATA: FacilityData[] = [
     new FacilityData(1, [5],     "🌴", 300, FacilityType.Blue, 650,  {}),
     new FacilityData(1, [8],     "🍅", 100, FacilityType.Blue, 450,  {lmboost: 2}),
     new FacilityData(1, [8,9],   "🌻", 200, FacilityType.Blue, 350,  {multi: 2}),
-    new FacilityData(1, [9],     "🌰", 100, FacilityType.Blue, 650,  {}),
+    new FacilityData(1, [9],     "🌰", 100, FacilityType.Blue, 650,  {multi: 0.5}),
     new FacilityData(1, [9],     "🗻", 300, FacilityType.Blue, 750,  {}),
     new FacilityData(1, [10],    "🍎", 100, FacilityType.Blue, 420,  {}),
+    new FacilityData(1, [10],    "🍓", 100, FacilityType.Blue, 720,  {multi: 0.5}),
     new FacilityData(2, [10],    "🗻", 300, FacilityType.Blue, 1150, {close: true}),
+    new FacilityData(1, [11],    "🍉", 100, FacilityType.Blue, 720,  {multi: 0.5}),  // A
+    new FacilityData(1, [11],    "🍑", 200, FacilityType.Blue, 750,  {multi: 0.5}),  // S
     new FacilityData(2, [11],    "🐐", 200, FacilityType.Blue, 710,  {}),  // SSS
     new FacilityData(1, [11,12], "🎋", 300, FacilityType.Blue, 580,  {multi: 2}), // SS
     new FacilityData(1, [12],    "🍍", 150, FacilityType.Blue, 800,  {}),
 
-    new FacilityData(1, [2],  "🐟", 100, FacilityType.Green, 670,  {}),
+    new FacilityData(1, [2],  "🍞", 100, FacilityType.Green, 470,  {}),
+    new FacilityData(1, [2],  "🐟", 100, FacilityType.Green, 670,  {multi: 0.5}),
+    new FacilityData(1, [2],  "🍆", 100, FacilityType.Green, 670,  {multi: 0.5}),
+    new FacilityData(1, [2],  "🍖", 100, FacilityType.Green, 670,  {multi: 0.5}),
     new FacilityData(1, [2],  "🍬", 100, FacilityType.Green, 420,  {lmboost: 3}),
-    new FacilityData(1, [3],  "💈", 100, FacilityType.Green, 570,  {}),
+    new FacilityData(1, [3],  "💈", 100, FacilityType.Green, 570,  {}),  // A
+    new FacilityData(1, [3],  "👞", 100, FacilityType.Green, 570,  {multi: 0.5}),  // B
+    new FacilityData(1, [3],  "💅", 100, FacilityType.Green, 600,  {lmboost: 2}),  // S
     new FacilityData(1, [4],  "📖", 200, FacilityType.Green, 520,  {}),
     new FacilityData(1, [4],  "🏪", 100, FacilityType.Green, 320,  {multi: 2}),
     new FacilityData(1, [6],  "💆", 150, FacilityType.Green, 600,  {lmboost: 2}),
+    new FacilityData(1, [7],  "💻", 200, FacilityType.Green, 1050, {multi: 0.5}),  // S
     new FacilityData(1, [7],  "👕", 200, FacilityType.Green, 550,  {multi: 2}),
     new FacilityData(2, [7],  "🏬", 250, FacilityType.Green, 880,  {}),
     new FacilityData(1, [7],  "🚲", 200, FacilityType.Green, 950,  {lmboost: 2}),
+    new FacilityData(1, [8],  "🐻", 250, FacilityType.Green, 1180, {multi: 0.5}),  // SS
     new FacilityData(1, [8],  "📱", 200, FacilityType.Green, 1050, {}),
     new FacilityData(1, [9],  "🔧", 200, FacilityType.Green, 850,  {lmboost: 2}),
     new FacilityData(1, [9],  "🚗", 400, FacilityType.Green, 950,  {lmboost: 2}),
     new FacilityData(1, [10], "⚽", 200, FacilityType.Green, 950,  {lmboost: 2}),
-    new FacilityData(1, [10], "🏄", 200, FacilityType.Green, 1120, {close: true}),
+    new FacilityData(1, [10], "🏄", 200, FacilityType.Green, 1120, {close: true, multi: 0.5}),
+    new FacilityData(1, [10], "🐞", 100, FacilityType.Green, 1150, {multi: 0.5}),
+    new FacilityData(1, [10], "🐠", 100, FacilityType.Green, 1120, {multi: 0.5}),
     new FacilityData(1, [11], "👓", 100, FacilityType.Green, 1120, {}),
 
     new FacilityData(1, [1],  "🍣", 200, FacilityType.Red, 750,  {}),
-    new FacilityData(1, [3],  "🐙", 100, FacilityType.Red, 520,  {}),
+    new FacilityData(1, [3],  "🐙", 100, FacilityType.Red, 520,  {multi: 0.5}),
     new FacilityData(1, [5],  "🍴", 200, FacilityType.Red, 580,  {lmboost: 2}),
     new FacilityData(1, [6],  "🍱", 100, FacilityType.Red, 420,  {lmboost: 2}),
-    new FacilityData(1, [7],  "🍕", 100, FacilityType.Red, 370,  {}),
+    new FacilityData(1, [7],  "🍕", 100, FacilityType.Red, 370,  {multi: 0.5}),
     new FacilityData(1, [7],  "🍜", 200, FacilityType.Red, 320,  {multi: 2}),
     new FacilityData(1, [8],  "🐔", 250, FacilityType.Red, 400,  {all: true}),
     new FacilityData(2, [8],  "🍻", 300, FacilityType.Red, 400,  {all: true}),
-    new FacilityData(1, [9],  "🍛", 100, FacilityType.Red, 470,  {}),
+    new FacilityData(1, [9],  "🍛", 100, FacilityType.Red, 470,  {multi: 0.5}),
     new FacilityData(1, [10], "🐡", 200, FacilityType.Red, 650,  {lmboost: 2}),
     new FacilityData(1, [10], "🍣", 100, FacilityType.Red, 1000, {}),
+    new FacilityData(1, [12], "🍵", 200, FacilityType.Red, 720,  {multi: 0.5}),
+    new FacilityData(1, [12], "🍸", 150, FacilityType.Red, 350,  {all: true}),  // SS
 
     new FacilityData(1, [3],  "🎳", 200, FacilityType.Purple, 220,  {}),
     new FacilityData(2, [3],  "👾", 200, FacilityType.Purple, 520,  {}),
