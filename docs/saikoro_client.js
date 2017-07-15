@@ -177,39 +177,53 @@ var FACILITY_DATA = [
     new FacilityData(1, [5], "🌴", 300, FacilityType.Blue, 650, {}),
     new FacilityData(1, [8], "🍅", 100, FacilityType.Blue, 450, { lmboost: 2 }),
     new FacilityData(1, [8, 9], "🌻", 200, FacilityType.Blue, 350, { multi: 2 }),
-    new FacilityData(1, [9], "🌰", 100, FacilityType.Blue, 650, {}),
+    new FacilityData(1, [9], "🌰", 100, FacilityType.Blue, 650, { multi: 0.5 }),
     new FacilityData(1, [9], "🗻", 300, FacilityType.Blue, 750, {}),
     new FacilityData(1, [10], "🍎", 100, FacilityType.Blue, 420, {}),
+    new FacilityData(1, [10], "🍓", 100, FacilityType.Blue, 720, { multi: 0.5 }),
     new FacilityData(2, [10], "🗻", 300, FacilityType.Blue, 1150, { close: true }),
+    new FacilityData(1, [11], "🍉", 100, FacilityType.Blue, 720, { multi: 0.5 }),
+    new FacilityData(1, [11], "🍑", 200, FacilityType.Blue, 750, { multi: 0.5 }),
     new FacilityData(2, [11], "🐐", 200, FacilityType.Blue, 710, {}),
     new FacilityData(1, [11, 12], "🎋", 300, FacilityType.Blue, 580, { multi: 2 }),
     new FacilityData(1, [12], "🍍", 150, FacilityType.Blue, 800, {}),
-    new FacilityData(1, [2], "🐟", 100, FacilityType.Green, 670, {}),
+    new FacilityData(1, [2], "🍞", 100, FacilityType.Green, 470, {}),
+    new FacilityData(1, [2], "🐟", 100, FacilityType.Green, 670, { multi: 0.5 }),
+    new FacilityData(1, [2], "🍆", 100, FacilityType.Green, 670, { multi: 0.5 }),
+    new FacilityData(1, [2], "🍖", 100, FacilityType.Green, 670, { multi: 0.5 }),
     new FacilityData(1, [2], "🍬", 100, FacilityType.Green, 420, { lmboost: 3 }),
     new FacilityData(1, [3], "💈", 100, FacilityType.Green, 570, {}),
+    new FacilityData(1, [3], "👞", 100, FacilityType.Green, 570, { multi: 0.5 }),
+    new FacilityData(1, [3], "💅", 100, FacilityType.Green, 600, { lmboost: 2 }),
     new FacilityData(1, [4], "📖", 200, FacilityType.Green, 520, {}),
     new FacilityData(1, [4], "🏪", 100, FacilityType.Green, 320, { multi: 2 }),
     new FacilityData(1, [6], "💆", 150, FacilityType.Green, 600, { lmboost: 2 }),
+    new FacilityData(1, [7], "💻", 200, FacilityType.Green, 1050, { multi: 0.5 }),
     new FacilityData(1, [7], "👕", 200, FacilityType.Green, 550, { multi: 2 }),
     new FacilityData(2, [7], "🏬", 250, FacilityType.Green, 880, {}),
     new FacilityData(1, [7], "🚲", 200, FacilityType.Green, 950, { lmboost: 2 }),
+    new FacilityData(1, [8], "🐻", 250, FacilityType.Green, 1180, { multi: 0.5 }),
     new FacilityData(1, [8], "📱", 200, FacilityType.Green, 1050, {}),
     new FacilityData(1, [9], "🔧", 200, FacilityType.Green, 850, { lmboost: 2 }),
     new FacilityData(1, [9], "🚗", 400, FacilityType.Green, 950, { lmboost: 2 }),
     new FacilityData(1, [10], "⚽", 200, FacilityType.Green, 950, { lmboost: 2 }),
-    new FacilityData(1, [10], "🏄", 200, FacilityType.Green, 1120, { close: true }),
+    new FacilityData(1, [10], "🏄", 200, FacilityType.Green, 1120, { close: true, multi: 0.5 }),
+    new FacilityData(1, [10], "🐞", 100, FacilityType.Green, 1150, { multi: 0.5 }),
+    new FacilityData(1, [10], "🐠", 100, FacilityType.Green, 1120, { multi: 0.5 }),
     new FacilityData(1, [11], "👓", 100, FacilityType.Green, 1120, {}),
     new FacilityData(1, [1], "🍣", 200, FacilityType.Red, 750, {}),
-    new FacilityData(1, [3], "🐙", 100, FacilityType.Red, 520, {}),
+    new FacilityData(1, [3], "🐙", 100, FacilityType.Red, 520, { multi: 0.5 }),
     new FacilityData(1, [5], "🍴", 200, FacilityType.Red, 580, { lmboost: 2 }),
     new FacilityData(1, [6], "🍱", 100, FacilityType.Red, 420, { lmboost: 2 }),
-    new FacilityData(1, [7], "🍕", 100, FacilityType.Red, 370, {}),
+    new FacilityData(1, [7], "🍕", 100, FacilityType.Red, 370, { multi: 0.5 }),
     new FacilityData(1, [7], "🍜", 200, FacilityType.Red, 320, { multi: 2 }),
     new FacilityData(1, [8], "🐔", 250, FacilityType.Red, 400, { all: true }),
     new FacilityData(2, [8], "🍻", 300, FacilityType.Red, 400, { all: true }),
-    new FacilityData(1, [9], "🍛", 100, FacilityType.Red, 470, {}),
+    new FacilityData(1, [9], "🍛", 100, FacilityType.Red, 470, { multi: 0.5 }),
     new FacilityData(1, [10], "🐡", 200, FacilityType.Red, 650, { lmboost: 2 }),
     new FacilityData(1, [10], "🍣", 100, FacilityType.Red, 1000, {}),
+    new FacilityData(1, [12], "🍵", 200, FacilityType.Red, 720, { multi: 0.5 }),
+    new FacilityData(1, [12], "🍸", 150, FacilityType.Red, 350, { all: true }),
     new FacilityData(1, [3], "🎳", 200, FacilityType.Purple, 220, {}),
     new FacilityData(2, [3], "👾", 200, FacilityType.Purple, 520, {}),
     new FacilityData(1, [5], "📰", 100, FacilityType.Purple, 420, {}),
@@ -5095,24 +5109,23 @@ var HtmlDeckCardsView = (function (_super) {
         return card_view;
     };
     HtmlDeckCardsView.prototype.draw = function (data_ids) {
-        var _a = this.getPosition(), base_x = _a[0], base_y = _a[1];
-        for (var _i = 0, _b = this.data_ids; _i < _b.length; _i++) {
-            var data_id = _b[_i];
+        for (var _i = 0, _a = this.data_ids; _i < _a.length; _i++) {
+            var data_id = _a[_i];
             if (data_ids.indexOf(data_id) === -1) {
-                this.getCardView(data_id).moveTo([-200, base_y]);
+                this.getCardView(data_id).moveTo([-200, 0]);
             }
         }
-        for (var _c = 0, data_ids_1 = data_ids; _c < data_ids_1.length; _c++) {
-            var data_id = data_ids_1[_c];
+        for (var _b = 0, data_ids_1 = data_ids; _b < data_ids_1.length; _b++) {
+            var data_id = data_ids_1[_b];
             if (this.data_ids.indexOf(data_id) === -1) {
-                this.getCardView(data_id).showAt([-200, base_y]);
+                this.getCardView(data_id).showAt([-200, 0]);
             }
         }
         this.data_ids = data_ids;
         this.resetPosition();
     };
     HtmlDeckCardsView.prototype.resetPosition = function () {
-        var cols = 7;
+        var cols = 6;
         var num_cards = this.data_ids.length;
         if (num_cards === 0) {
             return;
@@ -5124,7 +5137,7 @@ var HtmlDeckCardsView = (function (_super) {
         x_delta = Math.min(x_delta, card_width);
         for (var i = 0; i < num_cards; ++i) {
             var card_view = this.getCardView(this.data_ids[i]);
-            card_view.moveTo([base_x + x_delta * (i % cols), base_y + 130 * Math.floor(i / cols)]);
+            card_view.moveTo([base_x + x_delta * (i % cols), 145 * Math.floor(i / cols)]);
         }
     };
     return HtmlDeckCardsView;

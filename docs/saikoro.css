@@ -272,7 +272,16 @@ table.player { width: 160px; }
     height: 150px;
 }
 #deck_cards {
-    height: 300px;
+    height: calc(100vh - 520px);
+    position: relative;
+    overflow-y: scroll;
+}
+#deck_cards::-webkit-scrollbar {
+    width: 7px;
+    background: transparent;
+}
+#deck_cards::-webkit-scrollbar-thumb {
+    background: rgba(100, 100, 100, 0.5);
 }
 
 table.card {
