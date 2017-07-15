@@ -425,16 +425,15 @@ export class HtmlDeckCardsView extends HtmlViewObject {
     }
 
     public draw(data_ids: CardDataId[]): void {
-        const [base_x, base_y]: [number ,number] = this.getPosition();
         for (let data_id of this.data_ids) {
             if (data_ids.indexOf(data_id) === -1) {
-                this.getCardView(data_id).moveTo([-200, base_y]);
+                this.getCardView(data_id).moveTo([-200, 0]);
             }
         }
 
         for (let data_id of data_ids) {
             if (this.data_ids.indexOf(data_id) === -1) {
-                this.getCardView(data_id).showAt([-200, base_y]);
+                this.getCardView(data_id).showAt([-200, 0]);
             }
         }
         this.data_ids = data_ids;
@@ -442,7 +441,7 @@ export class HtmlDeckCardsView extends HtmlViewObject {
     }
 
     public resetPosition(): void {
-        const cols: number = 7;
+        const cols: number = 6;
         const num_cards: number = this.data_ids.length;
         if (num_cards === 0) {
             return;
@@ -455,7 +454,7 @@ export class HtmlDeckCardsView extends HtmlViewObject {
         x_delta = Math.min(x_delta, card_width);
         for (let i: number = 0; i < num_cards; ++i) {
             let card_view: HtmlCardDataView = this.getCardView(this.data_ids[i]);
-            card_view.moveTo([base_x + x_delta * (i % cols), base_y + 130 * Math.floor(i / cols)]);
+            card_view.moveTo([base_x + x_delta * (i % cols), 145 * Math.floor(i / cols)]);
         }
     }
 }
