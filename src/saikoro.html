@@ -27,45 +27,52 @@
       <br />
       <hr>
       <br />
-      <div class="ui_box">
-        1人プレイ (オフライン) <br />
-        <div id="matching_button_offline_2" class="menu_button">2人バトル<br />😺 👻</div>
-        <div id="matching_button_offline_3" class="menu_button">3人バトル<br />😺 👻 👾</div>
-        <div id="matching_button_offline_4" class="menu_button">4人バトル<br />😺 👻 👾 🗿</div><br />
-        <small>Internet Explorer では動きません。</small>
-      </div>
+      <div id="home_menu" class="scrollable">
+        <div class="ui_box">
+          1人プレイ (オフライン) <br />
+          <div id="matching_button_offline_2" class="menu_button">2人バトル<br />😺 👻</div>
+          <div id="matching_button_offline_3" class="menu_button">3人バトル<br />😺 👻 👾</div>
+          <div id="matching_button_offline_4" class="menu_button">4人バトル<br />😺 👻 👾 🗿</div><br />
+          <small>Internet Explorer では動きません。</small>
+        </div>
 
-      <div class="ui_box">
-        1人プレイ (ネット通信) <br />
-        <div id="matching_button_online_2" class="menu_button">2人バトル<br />😺 👻</div>
-        <div id="matching_button_online_3" class="menu_button">3人バトル<br />😺 👻 👾</div>
-        <div id="matching_button_online_4" class="menu_button">4人バトル<br />😺 👻 👾 🗿</div><br />
-        <small>オフライン版と機能は同じです。</small>
-      </div>
+        <div class="ui_box">
+          1人プレイ (ネット通信) <br />
+          <div id="matching_button_online_2" class="menu_button">2人バトル<br />😺 👻</div>
+          <div id="matching_button_online_3" class="menu_button">3人バトル<br />😺 👻 👾</div>
+          <div id="matching_button_online_4" class="menu_button">4人バトル<br />😺 👻 👾 🗿</div><br />
+          <small>オフライン版と機能は同じです。</small>
+        </div>
 
-      <div class="ui_box">
-        対戦プレイ (ネット通信) <br />
-        <div id="matching_button_multi_2" class="menu_button">2人バトル<br />😺 😺</div>
-        <div id="matching_button_multi_3" class="menu_button promote">準備中</div>
-        <div id="matching_button_multi_4" class="menu_button inactive">準備中</div><br />
-        <small>実験段階です。同時にプレイできる人が必要です。</small>
-      </div>
+        <div class="ui_box">
+          対戦プレイ (ネット通信) <br />
+          <div id="matching_button_multi_2" class="menu_button">2人バトル<br />😺 😺</div>
+          <div id="matching_button_multi_3" class="menu_button promote">準備中</div>
+          <div id="matching_button_multi_4" class="menu_button inactive">準備中</div><br />
+          <small>実験段階です。同時にプレイできる人が必要です。</small>
+        </div>
 
-      <div class="ui_box watch">
-        観戦モード (ネット通信) <br />
-        <div id="matching_button_watch_1" class="menu_button">準備中</div>
-        <div id="matching_button_watch_2" class="menu_button inactive">準備中</div>
-        <div id="matching_button_watch_3" class="menu_button inactive">準備中</div><br />
-        <small>他のプレイヤーのゲームを観戦できます。</small>
+        <div class="ui_box watch">
+          観戦モード (ネット通信) <br />
+          <div id="matching_button_watch_1" class="menu_button">準備中</div>
+          <div id="matching_button_watch_2" class="menu_button inactive">準備中</div>
+          <div id="matching_button_watch_3" class="menu_button inactive">準備中</div><br />
+          <small>他のプレイヤーのゲームを観戦できます。</small>
+        </div>
+        <br />
+        <hr>
+        <div id="home_list" class="ui_button">
+          カードリスト
+        </div>
+        <textarea id="deck" class="none" name="deck" size="50" value=""></textarea>
       </div>
+    </div><!-- id=home -->
 
-      <br />
-      <br />
-      でっきのじゅもん<br />
-      <textarea id="deck" name="deck" size="50" value=""></textarea><br />
-    </div>
     <div id="back" class="ui_button">
       ← 戻る
+    </div>
+    <div id="list">
+      <div id="list_cards" class="card_area scrollable"></div>
     </div>
     <div id="game">
       <table id="players">
@@ -136,7 +143,7 @@
           </tbody></table>
         </div>
       </div>
-      <div id="deck_cards" class="card_area"></div>
+      <div id="deck_cards" class="card_area scrollable"></div>
       <div>
         <div id="chat">💬</div>
         <div id="watchers">N人観戦中</div>

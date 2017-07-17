@@ -200,6 +200,10 @@ export class CardData {
     static getAvailableFacilities(pip: number): CardDataId[] {
         let facilities: CardDataId[] = [];
         for (let i: number = 0; i < FACILITY_DATA.length; ++i) {
+            if (pip <= 0) {
+                facilities.push(i);
+                continue;
+            }
             let facility: FacilityData = FACILITY_DATA[i];
             for (let s: number = 0; s < facility.size; ++s) {
                 if (facility.area.indexOf(pip - s) !== -1) {

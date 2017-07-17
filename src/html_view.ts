@@ -30,6 +30,7 @@ enum Scene {
     Home,
     Matching,
     Deck,
+    List,
     Game,
 }
 
@@ -89,6 +90,7 @@ export class HtmlView {
     private deck_maker: DeckMaker = new DeckMaker();
     private deck_char_view: HtmlDeckCharView = null;
     private deck_cards_view: HtmlDeckCardsView = null;
+    private list_cards_view: HtmlDeckCardsView = null;
     private clicked_field: [number, number] = [-1, -1];
     private cards_view: HtmlCardsView = null;
     private players_view: HtmlPlayersView;
@@ -157,6 +159,8 @@ export class HtmlView {
         // Matching.
         document.getElementById("matching_button_deck").addEventListener(
             "click", () => { this.switchScene(Scene.Deck); });
+        document.getElementById("home_list").addEventListener(
+            "click", () => { this.switchScene(Scene.List); });
 
         document.getElementById("matching_button_offline_2").addEventListener(
             "click", () => { this.onClickMatching(GameMode.OffLine_2); });
@@ -241,9 +245,11 @@ export class HtmlView {
         this.deck_char_view.callback = (x: number) => {
             this.onClickDeckField(x, -1);
         }
-        const deck_cards_size: number = 10;
         this.deck_cards_view = new HtmlDeckCardsView("deck_cards");
         this.deck_cards_view.callback = (data_id) => { this.onClickDeckCard(data_id); };
+
+        // List
+        this.list_cards_view = new HtmlDeckCardsView("list_cards");
 
         // HtmlCardsView
         this.cards_view = new HtmlCardsView("card_0");
@@ -293,6 +299,7 @@ export class HtmlView {
         this.board_view.none();
         this.deck_char_view.none();
         this.deck_cards_view.none();
+        this.list_cards_view.none();
         this.chat_button_view.none();
         this.watchers_view.none();
         this.buttons_view.none();
@@ -321,6 +328,17 @@ export class HtmlView {
 
             this.drawDeckBoard();
             this.deck_cards_view.show();
+            return;
+        }
+
+        if (scene === Scene.List) {
+            this.back_button_view.show();
+            this.list_cards_view.show();
+            let data_ids: CardDataId[] = [];
+            Array.prototype.push.apply(data_ids, CardData.getAvailableCharacters());
+            Array.prototype.push.apply(data_ids, CardData.getAvailableFacilities(0));
+            Array.prototype.push.apply(data_ids, CardData.getAvailableLandmarks());
+            this.list_cards_view.draw(data_ids);
             return;
         }
 
