@@ -90,7 +90,7 @@ export interface FacilityProperty {
 export class FacilityData {
     constructor(
         readonly size: number,
-        readonly area: number[],  // TODO should be range.
+        readonly area: number[],
         readonly name: string,
         readonly cost: number,
         readonly type: FacilityType,
@@ -175,18 +175,22 @@ const FACILITY_DATA: FacilityData[] = [
     new FacilityData(1, [12], "🔨", 300, FacilityType.Purple, 2000, {}),
 ];
 
+function LandmarkData(size: number, name: string): FacilityData {
+    return new FacilityData(size, [], name, 2500, FacilityType.Gray, 0, {});
+}
+
 const LANDMARK_DATA_BASE: number = 10000;
 const LANDMARK_DATA: FacilityData[] = [
-    new FacilityData(2, [], "🏯", 2500, FacilityType.Gray, 0, {}),
-    new FacilityData(2, [], "🏰", 2500, FacilityType.Gray, 0, {}),
-    new FacilityData(1, [], "🚉", 2500, FacilityType.Gray, 0, {}),
-    new FacilityData(2, [], "✈️", 2500, FacilityType.Gray, 0, {}),
-    new FacilityData(1, [], "🗼", 2500, FacilityType.Gray, 0, {}),
-    new FacilityData(1, [], "🗽", 2500, FacilityType.Gray, 0, {}),
-    new FacilityData(1, [], "🚂", 2500, FacilityType.Gray, 0, {}),
-    new FacilityData(2, [], "️🚅", 2500, FacilityType.Gray, 0, {}),
-    new FacilityData(1, [], "🏫", 2500, FacilityType.Gray, 0, {}),
-    new FacilityData(2, [], "🏣", 2500, FacilityType.Gray, 0, {}),
+    LandmarkData(2, "🏯"),
+    LandmarkData(2, "🏰"),
+    LandmarkData(1, "🚉"),
+    LandmarkData(2, "✈️"),
+    LandmarkData(1, "🗼"),
+    LandmarkData(1, "🗽"),
+    LandmarkData(1, "🚂"),
+    LandmarkData(2, "️🚅"),
+    LandmarkData(1, "🏫"),
+    LandmarkData(2, "🏣"),
 ];
 
 export class CardData {
