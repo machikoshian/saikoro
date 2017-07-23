@@ -13,12 +13,20 @@ export enum CharacterType {
     Boost,
 }
 
+export interface CharacterProperty {
+    delta?: number,
+    value?: number,
+    money?: number,
+    boost?: number,
+    type?: SelectType,
+}
+
 export class CharacterData {
     constructor(
         readonly name: string,
         readonly type: CharacterType,
         readonly round: number,
-        readonly property: {},
+        readonly property: CharacterProperty,
     ) {}
 }
 
@@ -184,11 +192,11 @@ function LandmarkData(size: number, name: string, property: FacilityProperty): F
 const LANDMARK_DATA_BASE: number = 10000;
 const LANDMARK_DATA: FacilityData[] = [
     LandmarkData(2, "🏯", {effect: CharacterType.Close, type: SelectType.Blue}),
-    LandmarkData(2, "🏰", {}),
+    LandmarkData(2, "🏰", {effect: CharacterType.Close, type: SelectType.Green}),
+    LandmarkData(1, "🗼", {effect: CharacterType.Close, type: SelectType.Red}),
+    LandmarkData(1, "🗽", {effect: CharacterType.Close, type: SelectType.Purple}),
     LandmarkData(1, "🚉", {}),
     LandmarkData(2, "✈️", {}),
-    LandmarkData(1, "🗼", {}),
-    LandmarkData(1, "🗽", {}),
     LandmarkData(1, "🚂", {}),
     LandmarkData(2, "️🚅", {}),
     LandmarkData(1, "🏫", {}),
@@ -324,6 +332,15 @@ export class Facility {
             if (this.property.type === SelectType.Blue) {
                 return "青施設は発動後、休業する";
             }
+            if (this.property.type === SelectType.Green) {
+                return "緑施設は発動後、休業する";
+            }
+            if (this.property.type === SelectType.Red) {
+                return "赤施設は発動後、休業する";
+            }
+            if (this.property.type === SelectType.Purple) {
+                return "紫施設は発動後、休業する";
+            }
         }
         return "";
     }
@@ -392,7 +409,7 @@ export class Character {
     readonly name: string;
     readonly type: CharacterType;
     readonly round: number;
-    readonly property: {};
+    readonly property: CharacterProperty;
 
     constructor(data_id: CardDataId) {
         let data: CharacterData = CHARACTER_DATA[data_id - CHARACTER_DATA_BASE];
@@ -421,7 +438,7 @@ export class Character {
         return this.type;
     }
     public getPropertyValue(): number {
-        return this.property["value"] ? this.property["value"] : 0;
+        return this.property.value ? this.property.value : 0;
     }
     public getDescription(): string {
         switch (this.type) {
@@ -429,7 +446,7 @@ export class Character {
                 return "";
             }
             case CharacterType.DiceDelta: {
-                const delta: number = this.property["delta"];
+                const delta: number = this.property.delta;
                 const delta_str: string = ((delta > 0) ? "+" : "") + delta;
                 return `サイコロの目を${delta_str}する\n${this.round}ラウンド`;
             }
@@ -446,15 +463,15 @@ export class Character {
                 return `サイコロを2個振り限定にする\n${this.round}ラウンド`;
             }
             case CharacterType.DrawCards: {
-                const value: number = this.property["value"];
+                const value: number = this.property.value;
                 return `山札からカードを${value}枚引く`;
             }
             case CharacterType.MoveMoney: {
-                const money: number = this.property["money"];
+                const money: number = this.property.money;
                 return `選んだプレイヤーから${money}コインを奪う`;
             }
             case CharacterType.Close: {
-                switch (this.property["type"]) {
+                switch (this.property.type) {
                     case SelectType.Facility:
                         return "選んだ施設を休業にする";
                     case SelectType.Blue:
@@ -471,11 +488,11 @@ export class Character {
                 return "全施設の休業を解除する";
             }
             case CharacterType.Boost: {
-                const boost: number = this.property["boost"] * 100;
+                const boost: number = this.property.boost * 100;
                 const boost_str: string = ((boost > 0) ? "+" : "") + boost;
                 const target: string = (boost > 0) ? "自分" : "選んだプレイヤー";
 
-                switch (this.property["type"]) {
+                switch (this.property.type) {
                     case SelectType.Facility:
                         return `選んだ施設の収入を${boost_str}%する\n${this.round}ラウンド`;
                     case SelectType.Blue:

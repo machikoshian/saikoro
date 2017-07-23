@@ -1,6 +1,6 @@
 import { Player, Board, PlayerId } from "./board";
 import { CardId, CardDataId, CardType, FacilityType, Facility,
-         Character, CharacterData, CharacterType } from "./facility";
+         Character, CharacterData, CharacterType, SelectType } from "./facility";
 import { DiceEvenOdd, DiceNum, DiceEffects, Position } from "./types";
 
 export enum CardState {

@@ -98,6 +98,21 @@ export class Event {
     }
 }
 
+function ConvertToFacilityType(type: SelectType): FacilityType {
+    switch(type) {
+        case SelectType.Blue:
+            return FacilityType.Blue;
+        case SelectType.Green:
+            return FacilityType.Green;
+        case SelectType.Red:
+            return FacilityType.Red;
+        case SelectType.Purple:
+            return FacilityType.Purple;
+        default:
+            return null;
+    }
+}
+
 export class Session {
     private board: Board;
     private players: Player[];
@@ -689,7 +704,7 @@ export class Session {
             }
             const card_query: CardManagerQuery = {
                 card_type: CardType.Facility,
-                facility_type: FacilityType.Blue, //landmark.property["type"],  // FIXME: incompatible type.
+                facility_type: ConvertToFacilityType(landmark.property.type),
                 state: CardState.Field,
             };
             const card_ids: CardId[] = this.queryCards(card_query);
@@ -896,7 +911,7 @@ export class Session {
             }
             case CharacterType.MoveMoney: {
                 const money: number =
-                    this.checkMoveMoney(target_player_id, player_id, character.property["money"]);
+                    this.checkMoveMoney(target_player_id, player_id, character.property.money);
                 event.target_player_id = target_player_id;
                 event.moneys[player_id] += money;
                 event.moneys[target_player_id] -= money;
@@ -910,17 +925,17 @@ export class Session {
                 return event;
             }
             case CharacterType.Boost: {
-                if (character.property["type"] === SelectType.Facility) {
+                if (character.property.type === SelectType.Facility) {
                     event.target_card_ids.push(query.target_card_id);
                 }
                 else {
                     let owner_id = player_id;
-                    if (character.property["boost"] < 0) {
+                    if (character.property.boost < 0) {
                         owner_id = query.target_player_id;
                     }
                     const card_query: CardManagerQuery = {
                         card_type: CardType.Facility,
-                        facility_type: character.property["type"],
+                        facility_type: ConvertToFacilityType(character.property.type),
                         state: CardState.Field,
                         owner_id: owner_id,
                     };
@@ -929,13 +944,13 @@ export class Session {
                 return event;
             }
             case CharacterType.Close: {
-                if (character.property["type"] === SelectType.Facility) {
+                if (character.property.type === SelectType.Facility) {
                     event.target_card_ids.push(query.target_card_id);
                 }
                 else {
                     const card_query: CardManagerQuery = {
                         card_type: CardType.Facility,
-                        facility_type: character.property["type"],
+                        facility_type: ConvertToFacilityType(character.property.type),
                         state: CardState.Field,
                         is_open: true,
                     };
