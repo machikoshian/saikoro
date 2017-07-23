@@ -85,6 +85,8 @@ export interface FacilityProperty {
     close?: boolean,
     all?: boolean,
     multi?: number,
+    effect?: CharacterType,  // For Landmark effect
+    type?: SelectType,       // For Landmark effect
 }
 
 export class FacilityData {
@@ -175,22 +177,22 @@ const FACILITY_DATA: FacilityData[] = [
     new FacilityData(1, [12], "🔨", 300, FacilityType.Purple, 2000, {}),
 ];
 
-function LandmarkData(size: number, name: string): FacilityData {
-    return new FacilityData(size, [], name, 2500, FacilityType.Gray, 0, {});
+function LandmarkData(size: number, name: string, property: FacilityProperty): FacilityData {
+    return new FacilityData(size, [], name, 2500, FacilityType.Gray, 0, property);
 }
 
 const LANDMARK_DATA_BASE: number = 10000;
 const LANDMARK_DATA: FacilityData[] = [
-    LandmarkData(2, "🏯"),
-    LandmarkData(2, "🏰"),
-    LandmarkData(1, "🚉"),
-    LandmarkData(2, "✈️"),
-    LandmarkData(1, "🗼"),
-    LandmarkData(1, "🗽"),
-    LandmarkData(1, "🚂"),
-    LandmarkData(2, "️🚅"),
-    LandmarkData(1, "🏫"),
-    LandmarkData(2, "🏣"),
+    LandmarkData(2, "🏯", {effect: CharacterType.Close, type: SelectType.Blue}),
+    LandmarkData(2, "🏰", {}),
+    LandmarkData(1, "🚉", {}),
+    LandmarkData(2, "✈️", {}),
+    LandmarkData(1, "🗼", {}),
+    LandmarkData(1, "🗽", {}),
+    LandmarkData(1, "🚂", {}),
+    LandmarkData(2, "️🚅", {}),
+    LandmarkData(1, "🏫", {}),
+    LandmarkData(2, "🏣", {}),
 ];
 
 export class CardData {
@@ -317,11 +319,21 @@ export class Facility {
         return this.value;
     }
 
+    public getLandmarkDescription(): string {
+        if (this.property.effect === CharacterType.Close) {
+            if (this.property.type === SelectType.Blue) {
+                return "青施設は発動後、休業する";
+            }
+        }
+        return "";
+    }
+
     public getDescription(): string {
         let descriptions: string[] = [];
         switch (this.type) {
             case FacilityType.Gray:
                 descriptions.push("ランドマーク");
+                descriptions.push(this.getLandmarkDescription());
                 break;
             case FacilityType.Blue:
                 descriptions.push(`${this.value}コイン稼ぐ`);

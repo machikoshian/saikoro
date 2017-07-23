@@ -416,7 +416,7 @@ export class Session {
             return event;
         }
 
-        if (facility.property["all"] === true) {
+        if (facility.property.all === true) {
             return event;
         }
 
@@ -425,7 +425,7 @@ export class Session {
             return event;
         }
 
-        if (facility.property["close"] === true) {
+        if (this.willFacilityClose(card_id)) {
             event.close = true;
         }
 
@@ -586,7 +586,7 @@ export class Session {
                 event.type = EventType.Open;
                 return event;
             }
-            if (facility.property["close"] === true) {
+            if (this.willFacilityClose(card_id)) {
                 event.close = true;
             }
 
@@ -603,7 +603,7 @@ export class Session {
                 event.type = EventType.Open;
                 return event;
             }
-            if (facility.property["close"] === true) {
+            if (this.willFacilityClose(card_id)) {
                 event.close = true;
             }
 
@@ -620,13 +620,13 @@ export class Session {
                 event.type = EventType.Open;
                 return event;
             }
-            if (facility.property["close"] === true) {
+            if (this.willFacilityClose(card_id)) {
                 event.close = true;
             }
 
             let value: number = this.getFacilityValue(card_id);
             event.type = EventType.Red;
-            if (facility.property["all"]) {
+            if (facility.property.all) {
                 for (let pid: number = 0; pid < this.players.length; ++pid) {
                     if (pid === owner_id) {
                         continue;
@@ -654,11 +654,11 @@ export class Session {
             }
 
             let value: number = this.getFacilityValue(card_id);
-            if (facility.property["all"] !== true) {  // TODO: Update the logic.
+            if (facility.property.all !== true) {  // TODO: Update the logic.
                 event.type = EventType.Interaction;
             }
             else {
-                if (facility.property["close"] === true) {
+                if (this.willFacilityClose(card_id)) {
                     event.close = true;
                 }
                 event.type = EventType.Purple;
@@ -674,6 +674,30 @@ export class Session {
             return event;
         }
         return event;
+    }
+
+    public willFacilityClose(facility_id: CardId): boolean {
+        const facility: Facility = this.getFacility(facility_id);
+        if (facility.property.close === true) {
+            return true;
+        }
+        const landmark_ids: CardId[] = this.card_manager.getBuiltLandmarks();
+        for (let landmark_id of landmark_ids) {
+            const landmark: Facility = this.getFacility(landmark_id);
+            if (landmark.property.effect !== CharacterType.Close) {
+                continue;
+            }
+            const card_query: CardManagerQuery = {
+                card_type: CardType.Facility,
+                facility_type: FacilityType.Blue, //landmark.property["type"],  // FIXME: incompatible type.
+                state: CardState.Field,
+            };
+            const card_ids: CardId[] = this.queryCards(card_query);
+            if (card_ids.indexOf(facility_id) !== -1) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public doFacilityAction(card_id: CardId): boolean {
