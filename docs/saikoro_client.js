@@ -154,8 +154,7 @@ var CHARACTER_DATA = [
     new CharacterData("ロッカー", CharacterType.Boost, 1, { "type": SelectType.Purple, "boost": -2.0 }),
 ];
 var FacilityData = (function () {
-    function FacilityData(size, area, // TODO should be range.
-        name, cost, type, value, property) {
+    function FacilityData(size, area, name, cost, type, value, property) {
         this.size = size;
         this.area = area;
         this.name = name;
@@ -239,18 +238,21 @@ var FACILITY_DATA = [
     new FacilityData(1, [10], "⛳", 100, FacilityType.Purple, 770, {}),
     new FacilityData(1, [12], "🔨", 300, FacilityType.Purple, 2000, {}),
 ];
+function LandmarkData(size, name, property) {
+    return new FacilityData(size, [], name, 2500, FacilityType.Gray, 0, property);
+}
 var LANDMARK_DATA_BASE = 10000;
 var LANDMARK_DATA = [
-    new FacilityData(2, [], "🏯", 2500, FacilityType.Gray, 0, {}),
-    new FacilityData(2, [], "🏰", 2500, FacilityType.Gray, 0, {}),
-    new FacilityData(1, [], "🚉", 2500, FacilityType.Gray, 0, {}),
-    new FacilityData(2, [], "✈️", 2500, FacilityType.Gray, 0, {}),
-    new FacilityData(1, [], "🗼", 2500, FacilityType.Gray, 0, {}),
-    new FacilityData(1, [], "🗽", 2500, FacilityType.Gray, 0, {}),
-    new FacilityData(1, [], "🚂", 2500, FacilityType.Gray, 0, {}),
-    new FacilityData(2, [], "️🚅", 2500, FacilityType.Gray, 0, {}),
-    new FacilityData(1, [], "🏫", 2500, FacilityType.Gray, 0, {}),
-    new FacilityData(2, [], "🏣", 2500, FacilityType.Gray, 0, {}),
+    LandmarkData(2, "🏯", { effect: CharacterType.Close, type: SelectType.Blue }),
+    LandmarkData(2, "🏰", { effect: CharacterType.Close, type: SelectType.Green }),
+    LandmarkData(1, "🗼", { effect: CharacterType.Close, type: SelectType.Red }),
+    LandmarkData(1, "🗽", { effect: CharacterType.Close, type: SelectType.Purple }),
+    LandmarkData(1, "🚉", {}),
+    LandmarkData(2, "✈️", {}),
+    LandmarkData(1, "🚂", {}),
+    LandmarkData(2, "️🚅", {}),
+    LandmarkData(1, "🏫", {}),
+    LandmarkData(2, "🏣", {}),
 ];
 var CardData = (function () {
     function CardData() {
@@ -264,6 +266,10 @@ var CardData = (function () {
     CardData.getAvailableFacilities = function (pip) {
         var facilities = [];
         for (var i = 0; i < FACILITY_DATA.length; ++i) {
+            if (pip <= 0) {
+                facilities.push(i);
+                continue;
+            }
             var facility = FACILITY_DATA[i];
             for (var s = 0; s < facility.size; ++s) {
                 if (facility.area.indexOf(pip - s) !== -1) {
@@ -355,11 +361,29 @@ var Facility = (function () {
     Facility.prototype.getValue = function () {
         return this.value;
     };
+    Facility.prototype.getLandmarkDescription = function () {
+        if (this.property.effect === CharacterType.Close) {
+            if (this.property.type === SelectType.Blue) {
+                return "青施設は発動後、休業する";
+            }
+            if (this.property.type === SelectType.Green) {
+                return "緑施設は発動後、休業する";
+            }
+            if (this.property.type === SelectType.Red) {
+                return "赤施設は発動後、休業する";
+            }
+            if (this.property.type === SelectType.Purple) {
+                return "紫施設は発動後、休業する";
+            }
+        }
+        return "";
+    };
     Facility.prototype.getDescription = function () {
         var descriptions = [];
         switch (this.type) {
             case FacilityType.Gray:
                 descriptions.push("ランドマーク");
+                descriptions.push(this.getLandmarkDescription());
                 break;
             case FacilityType.Blue:
                 descriptions.push(this.value + "\u30B3\u30A4\u30F3\u7A3C\u3050");
@@ -439,7 +463,7 @@ var Character = (function () {
         return this.type;
     };
     Character.prototype.getPropertyValue = function () {
-        return this.property["value"] ? this.property["value"] : 0;
+        return this.property.value ? this.property.value : 0;
     };
     Character.prototype.getDescription = function () {
         switch (this.type) {
@@ -447,7 +471,7 @@ var Character = (function () {
                 return "";
             }
             case CharacterType.DiceDelta: {
-                var delta = this.property["delta"];
+                var delta = this.property.delta;
                 var delta_str = ((delta > 0) ? "+" : "") + delta;
                 return "\u30B5\u30A4\u30B3\u30ED\u306E\u76EE\u3092" + delta_str + "\u3059\u308B\n" + this.round + "\u30E9\u30A6\u30F3\u30C9";
             }
@@ -464,15 +488,15 @@ var Character = (function () {
                 return "\u30B5\u30A4\u30B3\u30ED\u30922\u500B\u632F\u308A\u9650\u5B9A\u306B\u3059\u308B\n" + this.round + "\u30E9\u30A6\u30F3\u30C9";
             }
             case CharacterType.DrawCards: {
-                var value = this.property["value"];
+                var value = this.property.value;
                 return "\u5C71\u672D\u304B\u3089\u30AB\u30FC\u30C9\u3092" + value + "\u679A\u5F15\u304F";
             }
             case CharacterType.MoveMoney: {
-                var money = this.property["money"];
+                var money = this.property.money;
                 return "\u9078\u3093\u3060\u30D7\u30EC\u30A4\u30E4\u30FC\u304B\u3089" + money + "\u30B3\u30A4\u30F3\u3092\u596A\u3046";
             }
             case CharacterType.Close: {
-                switch (this.property["type"]) {
+                switch (this.property.type) {
                     case SelectType.Facility:
                         return "選んだ施設を休業にする";
                     case SelectType.Blue:
@@ -489,10 +513,10 @@ var Character = (function () {
                 return "全施設の休業を解除する";
             }
             case CharacterType.Boost: {
-                var boost = this.property["boost"] * 100;
+                var boost = this.property.boost * 100;
                 var boost_str = ((boost > 0) ? "+" : "") + boost;
                 var target = (boost > 0) ? "自分" : "選んだプレイヤー";
-                switch (this.property["type"]) {
+                switch (this.property.type) {
                     case SelectType.Facility:
                         return "\u9078\u3093\u3060\u65BD\u8A2D\u306E\u53CE\u5165\u3092" + boost_str + "%\u3059\u308B\n" + this.round + "\u30E9\u30A6\u30F3\u30C9";
                     case SelectType.Blue:
@@ -617,6 +641,20 @@ var Event = (function () {
     return Event;
 }());
 exports.Event = Event;
+function ConvertToFacilityType(type) {
+    switch (type) {
+        case facility_1.SelectType.Blue:
+            return facility_1.FacilityType.Blue;
+        case facility_1.SelectType.Green:
+            return facility_1.FacilityType.Green;
+        case facility_1.SelectType.Red:
+            return facility_1.FacilityType.Red;
+        case facility_1.SelectType.Purple:
+            return facility_1.FacilityType.Purple;
+        default:
+            return null;
+    }
+}
 var Session = (function () {
     function Session(session_id) {
         if (session_id === void 0) { session_id = -1; }
@@ -887,14 +925,14 @@ var Session = (function () {
         if (facility.getType() !== facility_1.FacilityType.Purple) {
             return event;
         }
-        if (facility.property["all"] === true) {
+        if (facility.property.all === true) {
             return event;
         }
         var owner_id = this.getOwnerId(card_id);
         if (player_id !== owner_id) {
             return event;
         }
-        if (facility.property["close"] === true) {
+        if (this.willFacilityClose(card_id)) {
             event.close = true;
         }
         event.step = this.step;
@@ -1032,7 +1070,7 @@ var Session = (function () {
                 event.type = EventType.Open;
                 return event;
             }
-            if (facility.property["close"] === true) {
+            if (this.willFacilityClose(card_id)) {
                 event.close = true;
             }
             var amount = this.getFacilityValue(card_id);
@@ -1048,7 +1086,7 @@ var Session = (function () {
                 event.type = EventType.Open;
                 return event;
             }
-            if (facility.property["close"] === true) {
+            if (this.willFacilityClose(card_id)) {
                 event.close = true;
             }
             var amount = this.getFacilityValue(card_id);
@@ -1064,12 +1102,12 @@ var Session = (function () {
                 event.type = EventType.Open;
                 return event;
             }
-            if (facility.property["close"] === true) {
+            if (this.willFacilityClose(card_id)) {
                 event.close = true;
             }
             var value = this.getFacilityValue(card_id);
             event.type = EventType.Red;
-            if (facility.property["all"]) {
+            if (facility.property.all) {
                 for (var pid = 0; pid < this.players.length; ++pid) {
                     if (pid === owner_id) {
                         continue;
@@ -1095,11 +1133,11 @@ var Session = (function () {
                 return event;
             }
             var value = this.getFacilityValue(card_id);
-            if (facility.property["all"] !== true) {
+            if (facility.property.all !== true) {
                 event.type = EventType.Interaction;
             }
             else {
-                if (facility.property["close"] === true) {
+                if (this.willFacilityClose(card_id)) {
                     event.close = true;
                 }
                 event.type = EventType.Purple;
@@ -1115,6 +1153,30 @@ var Session = (function () {
             return event;
         }
         return event;
+    };
+    Session.prototype.willFacilityClose = function (facility_id) {
+        var facility = this.getFacility(facility_id);
+        if (facility.property.close === true) {
+            return true;
+        }
+        var landmark_ids = this.card_manager.getBuiltLandmarks();
+        for (var _i = 0, landmark_ids_1 = landmark_ids; _i < landmark_ids_1.length; _i++) {
+            var landmark_id = landmark_ids_1[_i];
+            var landmark = this.getFacility(landmark_id);
+            if (landmark.property.effect !== facility_1.CharacterType.Close) {
+                continue;
+            }
+            var card_query = {
+                card_type: facility_1.CardType.Facility,
+                facility_type: ConvertToFacilityType(landmark.property.type),
+                state: card_manager_1.CardState.Field,
+            };
+            var card_ids = this.queryCards(card_query);
+            if (card_ids.indexOf(facility_id) !== -1) {
+                return true;
+            }
+        }
+        return false;
     };
     Session.prototype.doFacilityAction = function (card_id) {
         var event = this.getEventFacilityAction(this.getCurrentPlayerId(), card_id);
@@ -1291,7 +1353,7 @@ var Session = (function () {
                 return event;
             }
             case facility_1.CharacterType.MoveMoney: {
-                var money = this.checkMoveMoney(target_player_id, player_id, character.property["money"]);
+                var money = this.checkMoveMoney(target_player_id, player_id, character.property.money);
                 event.target_player_id = target_player_id;
                 event.moneys[player_id] += money;
                 event.moneys[target_player_id] -= money;
@@ -1305,17 +1367,17 @@ var Session = (function () {
                 return event;
             }
             case facility_1.CharacterType.Boost: {
-                if (character.property["type"] === facility_1.SelectType.Facility) {
+                if (character.property.type === facility_1.SelectType.Facility) {
                     event.target_card_ids.push(query.target_card_id);
                 }
                 else {
                     var owner_id = player_id;
-                    if (character.property["boost"] < 0) {
+                    if (character.property.boost < 0) {
                         owner_id = query.target_player_id;
                     }
                     var card_query = {
                         card_type: facility_1.CardType.Facility,
-                        facility_type: character.property["type"],
+                        facility_type: ConvertToFacilityType(character.property.type),
                         state: card_manager_1.CardState.Field,
                         owner_id: owner_id,
                     };
@@ -1324,13 +1386,13 @@ var Session = (function () {
                 return event;
             }
             case facility_1.CharacterType.Close: {
-                if (character.property["type"] === facility_1.SelectType.Facility) {
+                if (character.property.type === facility_1.SelectType.Facility) {
                     event.target_card_ids.push(query.target_card_id);
                 }
                 else {
                     var card_query = {
                         card_type: facility_1.CardType.Facility,
-                        facility_type: character.property["type"],
+                        facility_type: ConvertToFacilityType(character.property.type),
                         state: card_manager_1.CardState.Field,
                         is_open: true,
                     };
@@ -3496,7 +3558,8 @@ var Scene;
     Scene[Scene["Home"] = 1] = "Home";
     Scene[Scene["Matching"] = 2] = "Matching";
     Scene[Scene["Deck"] = 3] = "Deck";
-    Scene[Scene["Game"] = 4] = "Game";
+    Scene[Scene["List"] = 4] = "List";
+    Scene[Scene["Game"] = 5] = "Game";
 })(Scene || (Scene = {}));
 var EventQueue = (function () {
     function EventQueue() {
@@ -3551,6 +3614,7 @@ var HtmlView = (function () {
         this.deck_maker = new deck_maker_1.DeckMaker();
         this.deck_char_view = null;
         this.deck_cards_view = null;
+        this.list_cards_view = null;
         this.clicked_field = [-1, -1];
         this.cards_view = null;
         this.back_button_view = null;
@@ -3610,6 +3674,7 @@ var HtmlView = (function () {
         // Add click listeners.
         // Matching.
         document.getElementById("matching_button_deck").addEventListener("click", function () { _this.switchScene(Scene.Deck); });
+        document.getElementById("home_list").addEventListener("click", function () { _this.switchScene(Scene.List); });
         document.getElementById("matching_button_offline_2").addEventListener("click", function () { _this.onClickMatching(protocol_1.GameMode.OffLine_2); });
         document.getElementById("matching_button_offline_3").addEventListener("click", function () { _this.onClickMatching(protocol_1.GameMode.OffLine_3); });
         document.getElementById("matching_button_offline_4").addEventListener("click", function () { _this.onClickMatching(protocol_1.GameMode.OffLine_4); });
@@ -3665,9 +3730,10 @@ var HtmlView = (function () {
         this.deck_char_view.callback = function (x) {
             _this.onClickDeckField(x, -1);
         };
-        var deck_cards_size = 10;
         this.deck_cards_view = new html_view_parts_1.HtmlDeckCardsView("deck_cards");
         this.deck_cards_view.callback = function (data_id) { _this.onClickDeckCard(data_id); };
+        // List
+        this.list_cards_view = new html_view_parts_1.HtmlDeckCardsView("list_cards");
         // HtmlCardsView
         this.cards_view = new html_view_parts_1.HtmlCardsView("card_0");
         // Landmark cards
@@ -3709,6 +3775,7 @@ var HtmlView = (function () {
         this.board_view.none();
         this.deck_char_view.none();
         this.deck_cards_view.none();
+        this.list_cards_view.none();
         this.chat_button_view.none();
         this.watchers_view.none();
         this.buttons_view.none();
@@ -3731,6 +3798,16 @@ var HtmlView = (function () {
             this.deck_char_view.show();
             this.drawDeckBoard();
             this.deck_cards_view.show();
+            return;
+        }
+        if (scene === Scene.List) {
+            this.back_button_view.show();
+            this.list_cards_view.show();
+            var data_ids = [];
+            Array.prototype.push.apply(data_ids, facility_1.CardData.getAvailableCharacters());
+            Array.prototype.push.apply(data_ids, facility_1.CardData.getAvailableFacilities(0));
+            Array.prototype.push.apply(data_ids, facility_1.CardData.getAvailableLandmarks());
+            this.list_cards_view.draw(data_ids);
             return;
         }
         if (scene === Scene.Matching) {

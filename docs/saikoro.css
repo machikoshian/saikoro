@@ -42,9 +42,11 @@ body.evening {
     -2px -2px 3px #444;
 }
 
+/* ---- Home ---- */
+
 #home {
     width: 590px;
-    margin: 70px;
+    margin: 20px 70px;
 }
 #home small {
     font-size: 12px;
@@ -129,6 +131,10 @@ body.evening {
 }
 #matching_button_deck {
     width: 100px;
+}
+
+#home_menu {
+    height: calc(100vh - 280px);
 }
 
 table.player { width: 160px; }
@@ -271,16 +277,23 @@ table.player { width: 160px; }
     width: 650px;
     height: 150px;
 }
+#list_cards {
+    height: calc(100vh - 100px);
+    position: relative;
+}
 #deck_cards {
     height: calc(100vh - 520px);
     position: relative;
+}
+
+.scrollable {
     overflow-y: scroll;
 }
-#deck_cards::-webkit-scrollbar {
+.scrollable::-webkit-scrollbar {
     width: 7px;
     background: transparent;
 }
-#deck_cards::-webkit-scrollbar-thumb {
+.scrollable::-webkit-scrollbar-thumb {
     background: rgba(100, 100, 100, 0.5);
 }
 
