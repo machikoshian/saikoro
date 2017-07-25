@@ -409,7 +409,7 @@ var Facility = (function () {
                 else {
                     descriptions.push(this.value + "\u30B3\u30A4\u30F3\u596A\u3046");
                 }
-                descriptions.push("相手ターンのみ");
+                descriptions.push("自分ターンのみ");
                 break;
         }
         var multi = this.property.multi;
