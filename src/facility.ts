@@ -376,7 +376,7 @@ export class Facility {
                 else {
                     descriptions.push(`${this.value}コイン奪う`);
                 }
-                descriptions.push("相手ターンのみ");
+                descriptions.push("自分ターンのみ");
                 break;
         }
         const multi: number = this.property.multi;
