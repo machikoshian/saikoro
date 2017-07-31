@@ -23,9 +23,11 @@
   },
   "devDependencies": {
     "@google-cloud/nodejs-repo-tools": "1.4.7",
+    "@types/node": "^8.0.17",
     "source-map-loader": "^0.2.1"
   },
   "dependencies": {
+    "@types/node": "^8.0.17",
     "firebase": "^3.9.0",
     "firebase-admin": "^4.2.1",
     "memjs": "0.10.0",
