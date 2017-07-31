@@ -95,6 +95,7 @@ export interface FacilityProperty {
     multi?: number,
     effect?: CharacterType,  // For Landmark effect
     type?: SelectType,       // For Landmark effect
+    boost?: number,          // For Landmark effect
 }
 
 export class FacilityData {
@@ -195,10 +196,10 @@ const LANDMARK_DATA: FacilityData[] = [
     LandmarkData(2, "🏰", {effect: CharacterType.Close, type: SelectType.Green}),
     LandmarkData(1, "🗼", {effect: CharacterType.Close, type: SelectType.Red}),
     LandmarkData(1, "🗽", {effect: CharacterType.Close, type: SelectType.Purple}),
-    LandmarkData(1, "🚉", {}),
-    LandmarkData(2, "✈️", {}),
-    LandmarkData(1, "🚂", {}),
-    LandmarkData(2, "️🚅", {}),
+    LandmarkData(1, "🚉", {effect: CharacterType.Boost, type: SelectType.Blue,   boost: -0.5}),
+    LandmarkData(1, "🚂", {effect: CharacterType.Boost, type: SelectType.Green,  boost: -0.5}),
+    LandmarkData(2, "✈️", {effect: CharacterType.Boost, type: SelectType.Red,    boost: -0.5}),
+    LandmarkData(2, "🚅", {effect: CharacterType.Boost, type: SelectType.Purple, boost: -0.5}),
     LandmarkData(1, "🏫", {}),
     LandmarkData(2, "🏣", {}),
 ];
@@ -327,22 +328,34 @@ export class Facility {
         return this.value;
     }
 
-    public getLandmarkDescription(): string {
-        if (this.property.effect === CharacterType.Close) {
-            if (this.property.type === SelectType.Blue) {
-                return "青施設は発動後、休業する";
-            }
-            if (this.property.type === SelectType.Green) {
-                return "緑施設は発動後、休業する";
-            }
-            if (this.property.type === SelectType.Red) {
-                return "赤施設は発動後、休業する";
-            }
-            if (this.property.type === SelectType.Purple) {
-                return "紫施設は発動後、休業する";
-            }
+    public getSelectTypeDscription(type: SelectType) {
+        switch (this.property.type) {
+            case SelectType.Blue:
+                return "青施設";
+            case SelectType.Green:
+                return "緑施設";
+            case SelectType.Red:
+                return "赤施設";
+            case SelectType.Purple:
+                return "紫施設";
         }
-        return "";
+    }
+
+    public getLandmarkDescription(): string {
+        switch (this.property.effect) {
+            case CharacterType.Close: {
+                return this.getSelectTypeDscription(this.property.type) + "は発動後、休業する";
+            }
+
+            case CharacterType.Boost: {
+                const boost: number = this.property.boost * 100;
+                const boost_str: string = ((boost > 0) ? "+" : "") + boost;
+                return this.getSelectTypeDscription(this.property.type) + `の収入を${boost_str}%する`;
+            }
+
+            default:
+                return "";
+        }
     }
 
     public getDescription(): string {

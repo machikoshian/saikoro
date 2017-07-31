@@ -564,13 +564,7 @@ export class Session {
     public getFacilityValue(card_id: CardId): number {
         const facility: Facility = this.getFacility(card_id);
         const value: number = facility.getValue();
-        const boost: number = Math.max(0, 1.0 + this.effect_manager.getBoost(card_id));
-
-        let lmboost: number = 1.0;
-        if (facility.property.lmboost != undefined &&
-            this.card_manager.getBuiltLandmarks().length >= 2) {
-                lmboost = facility.property.lmboost;
-        }
+        let boost: number = Math.max(0, 1.0 + this.effect_manager.getBoost(card_id));
 
         let multi: number = 1.0;
         if (facility.property.multi != undefined) {
@@ -581,6 +575,31 @@ export class Session {
             const card_ids: CardId[] = this.queryCards(card_query);
             if (card_ids.length > 1) {
                 multi = facility.property.multi;
+            }
+        }
+
+        const landmark_ids: CardId[] = this.card_manager.getBuiltLandmarks();
+
+
+        let lmboost: number = 1.0;
+        if (facility.property.lmboost != undefined && landmark_ids.length >= 2) {
+            lmboost = facility.property.lmboost;
+        }
+
+        // TODO: Merge landmark related logics.
+        for (let landmark_id of landmark_ids) {
+            const landmark: Facility = this.getFacility(landmark_id);
+            if (landmark.property.effect !== CharacterType.Boost) {
+                continue;
+            }
+            const card_query: CardManagerQuery = {
+                card_type: CardType.Facility,
+                facility_type: ConvertToFacilityType(landmark.property.type),
+                state: CardState.Field,
+            };
+            const card_ids: CardId[] = this.queryCards(card_query);
+            if (card_ids.indexOf(card_id) !== -1) {
+                boost += landmark.property.boost;
             }
         }
 
@@ -696,6 +715,7 @@ export class Session {
         if (facility.property.close === true) {
             return true;
         }
+        // TODO: Merge landmark related logics.
         const landmark_ids: CardId[] = this.card_manager.getBuiltLandmarks();
         for (let landmark_id of landmark_ids) {
             const landmark: Facility = this.getFacility(landmark_id);
