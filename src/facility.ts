@@ -202,8 +202,8 @@ const LANDMARK_DATA: FacilityData[] = [
     LandmarkData(1, "🚂", {effect: CharacterType.Boost, type: SelectType.Green,  boost: -0.5}),
     LandmarkData(2, "✈️", {effect: CharacterType.Boost, type: SelectType.Red,    boost: -0.5}),
     LandmarkData(2, "🚅", {effect: CharacterType.Boost, type: SelectType.Purple, boost: -0.5}),
-    LandmarkData(1, "🏫", {}),
-    LandmarkData(2, "🏣", {}),
+    LandmarkData(1, "🏫", {effect: CharacterType.SalaryFactor, boost: 0.5}),
+    LandmarkData(2, "🏣", {effect: CharacterType.SalaryFactor, boost: -0.5}),
 ];
 
 export class CardData {
@@ -353,6 +353,12 @@ export class Facility {
                 const boost: number = this.property.boost * 100;
                 const boost_str: string = ((boost > 0) ? "+" : "") + boost;
                 return this.getSelectTypeDscription(this.property.type) + `の収入を${boost_str}%する`;
+            }
+
+            case CharacterType.SalaryFactor: {
+                const boost: number = this.property.boost * 100;
+                const boost_str: string = ((boost > 0) ? "+" : "") + boost;
+                return `給料を${boost_str}%する`;
             }
 
             default:

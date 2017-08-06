@@ -580,11 +580,21 @@ export class Session {
 
         const landmark_ids: CardId[] = this.card_manager.getBuiltLandmarks();
 
-
+        // Boost by number of built landmarks.
         let lmboost: number = 1.0;
         if (facility.property.lmboost != undefined && landmark_ids.length >= 2) {
             lmboost = facility.property.lmboost;
         }
+
+        // Boost by effects of built landmarks.
+        boost += this.getBoostByBuiltLandmark(card_id);
+
+        return value * boost * lmboost * multi;
+    }
+
+    public getBoostByBuiltLandmark(card_id: CardId): number {
+        const landmark_ids: CardId[] = this.card_manager.getBuiltLandmarks();
+        let boost: number = 0.0;
 
         // TODO: Merge landmark related logics.
         for (let landmark_id of landmark_ids) {
@@ -602,8 +612,7 @@ export class Session {
                 boost += landmark.property.boost;
             }
         }
-
-        return value * boost * lmboost * multi;
+        return boost;
     }
 
     public getEventFacilityAction(player_id: PlayerId, card_id: CardId): Event {
@@ -1263,7 +1272,21 @@ export class Session {
     }
 
     public getSalaryBoost(): number {
-        const boost: number = Math.max(0, 1.0 + this.effect_manager.getSalaryBoost());
+        const boost: number =
+            1.0 + this.effect_manager.getSalaryBoost() + this.getSalaryBoostByBuiltLandmark();
+        return Math.max(0, boost);
+    }
+
+    public getSalaryBoostByBuiltLandmark(): number {
+        const landmark_ids: CardId[] = this.card_manager.getBuiltLandmarks();
+        let boost: number = 0.0;
+
+        for (let landmark_id of landmark_ids) {
+            const landmark: Facility = this.getFacility(landmark_id);
+            if (landmark.property.effect === CharacterType.SalaryFactor) {
+                boost += landmark.property.boost;
+            }
+        }
         return boost;
     }
 
