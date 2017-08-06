@@ -1181,6 +1181,10 @@ export class HtmlView {
                 this.message_view.drawMessage("次のサイコロの合計値が奇数になります", color);
                 handled = true;
             }
+            if (type === CharacterType.SalaryFactor) {
+                this.message_view.drawMessage("給料の金額が変わりました");
+                handled = true;
+            }
             if (type === CharacterType.MoveMoney) {
                 for (let pid = 0; pid < event.moneys.length; pid++) {
                     const money: number = event.moneys[pid];

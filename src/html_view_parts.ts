@@ -665,7 +665,12 @@ export class HtmlPlayerView extends HtmlViewObject {
         this.element_avatar.innerText = avatar;
 
         this.element_name.innerText = player.name;
-        this.element_salary.innerHTML = String(player.salary);
+
+        // Salary
+        const boost: number = session.getSalaryBoost();
+        this.element_salary.innerHTML = String(player.salary * boost);
+        this.element_salary.classList.toggle("boosted", (boost !== 1.0));
+
         let cards: PlayerCards = session.getPlayerCards(this.player_id);
         this.element_hand.innerHTML = String(cards.getHandSize());
         this.element_talon.innerHTML = String(cards.getTalonSize());

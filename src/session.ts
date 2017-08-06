@@ -1262,15 +1262,19 @@ export class Session {
         return this.processEventPaySalary(event);
     }
 
-    public getEventPaySalary(player_id: PlayerId): Event {
+    public getSalaryBoost(): number {
         const boost: number = Math.max(0, 1.0 + this.effect_manager.getSalaryBoost());
+        return boost;
+    }
+
+    public getEventPaySalary(player_id: PlayerId): Event {
+        const boost: number = this.getSalaryBoost();
         const salary: number = this.getPlayer(player_id).salary * boost;
 
         let event: Event = this.newEvent();
         event.type = EventType.Salary;
         event.player_id = player_id;
         event.moneys[player_id] += salary;
-
         return event;
     }
 
