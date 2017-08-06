@@ -1258,15 +1258,25 @@ export class Session {
     }
 
     public paySalary(): boolean {
+        const event: Event = this.getEventPaySalary(this.current_player_id);
+        return this.processEventPaySalary(event);
+    }
+
+    public getEventPaySalary(player_id: PlayerId): Event {
         const boost: number = Math.max(0, 1.0 + this.effect_manager.getSalaryBoost());
-        const salary: number = this.getCurrentPlayer().paySalary(boost);
+        const salary: number = this.getPlayer(player_id).salary * boost;
 
-        let event: Event = new Event();
-        this.events.push(event);
-        event.step = this.step;
+        let event: Event = this.newEvent();
         event.type = EventType.Salary;
-        event.moneys[this.current_player_id] += salary;
+        event.player_id = player_id;
+        event.moneys[player_id] += salary;
 
+        return event;
+    }
+
+    public processEventPaySalary(event: Event): boolean {
+        this.events.push(event);
+        this.getPlayer(event.player_id).addMoney(event.moneys[event.player_id]);
         this.done(Phase.PaySalary);
         return true;
     }

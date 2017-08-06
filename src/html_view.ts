@@ -1200,17 +1200,15 @@ export class HtmlView {
         }
 
         if (event.type === EventType.Salary) {
-            for (let pid = 0; pid < event.moneys.length; pid++) {
-                let money: number = event.moneys[pid];
-                if (money === 0) {
-                    continue;
-                }
-                this.players_view.players[pid].addMoney(money);
-                let name: string = this.session.getPlayer(pid).name;
-                let message = `${name} に給料 ${money} が入りました`;
-                let color: string = this.getPlayerColor(pid);
-                this.message_view.drawMessage(message, color);
-            }
+            this.prev_session.processEventPaySalary(event);
+            const player_id: PlayerId = event.player_id;
+            const money: number = event.moneys[event.player_id];
+
+            this.players_view.players[player_id].addMoney(money);
+            const name: string = this.session.getPlayer(player_id).name;
+            const message = `${name} に給料 ${money} が入りました`;
+            const color: string = this.getPlayerColor(player_id);
+            this.message_view.drawMessage(message, color);
             return true;
         }
 
