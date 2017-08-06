@@ -1240,6 +1240,7 @@ export class HtmlView {
 
             // Draw the board after money motion.
             window.setTimeout(() => {
+                this.players_view.draw(this.prev_session);
                 this.drawCards(this.prev_session);
                 this.drawBoard(this.prev_session);
             }, 1000);

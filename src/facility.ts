@@ -198,12 +198,16 @@ const LANDMARK_DATA: FacilityData[] = [
     LandmarkData(2, "🏰", {effect: CharacterType.Close, type: SelectType.Green}),
     LandmarkData(1, "🗼", {effect: CharacterType.Close, type: SelectType.Red}),
     LandmarkData(1, "🗽", {effect: CharacterType.Close, type: SelectType.Purple}),
-    LandmarkData(1, "🚉", {effect: CharacterType.Boost, type: SelectType.Blue,   boost: -0.5}),
-    LandmarkData(1, "🚂", {effect: CharacterType.Boost, type: SelectType.Green,  boost: -0.5}),
-    LandmarkData(2, "✈️", {effect: CharacterType.Boost, type: SelectType.Red,    boost: -0.5}),
-    LandmarkData(2, "🚅", {effect: CharacterType.Boost, type: SelectType.Purple, boost: -0.5}),
-    LandmarkData(1, "🏫", {effect: CharacterType.SalaryFactor, boost: 0.5}),
-    LandmarkData(2, "🏣", {effect: CharacterType.SalaryFactor, boost: -0.5}),
+    LandmarkData(1, "🌾", {effect: CharacterType.Boost, type: SelectType.Blue,   boost: -0.5}),
+    LandmarkData(1, "🏬", {effect: CharacterType.Boost, type: SelectType.Green,  boost: -0.5}),
+    LandmarkData(1, "🍳", {effect: CharacterType.Boost, type: SelectType.Red,    boost: -0.5}),
+    LandmarkData(1, "💼", {effect: CharacterType.Boost, type: SelectType.Purple, boost: -0.5}),
+    LandmarkData(2, "🌾", {effect: CharacterType.Boost, type: SelectType.Blue,   boost: 0.5}),
+    LandmarkData(2, "🏬", {effect: CharacterType.Boost, type: SelectType.Green,  boost: 0.5}),
+    LandmarkData(2, "🍳", {effect: CharacterType.Boost, type: SelectType.Red,    boost: 0.5}),
+    LandmarkData(2, "💼", {effect: CharacterType.Boost, type: SelectType.Purple, boost: 0.5}),
+    LandmarkData(1, "🏦", {effect: CharacterType.SalaryFactor, boost: -0.5}),
+    LandmarkData(2, "🏦", {effect: CharacterType.SalaryFactor, boost: 0.5}),
 ];
 
 export class CardData {
