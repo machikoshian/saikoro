@@ -6,6 +6,7 @@ import { shuffle } from "./utils";
 import { CardState, CardManager, CardManagerQuery, EffectManager, PlayerCards } from "./card_manager";
 import * as Query from "./query";
 import { DiceEvenOdd, DiceNum, DiceEffects } from "./types";
+import { GameMode, Protocol } from "./protocol";
 
 export enum Phase {
     StartGame,
@@ -129,7 +130,7 @@ export class Session {
     private dice_result: DiceResult;  // TODO: change it to Events.
     private watcher_user_ids: string[] = [];
 
-    constructor(readonly session_id: number = -1) {
+    constructor(readonly session_id: number, readonly mode: GameMode) {
         this.board = new Board();
         this.players = [];
         this.card_manager = new CardManager();
@@ -149,6 +150,7 @@ export class Session {
         return {
             class_name: "Session",
             session_id: this.session_id,
+            mode: this.mode,
             board: this.board.toJSON(),
             players: this.players.map(player => { return player.toJSON(); }),
             card_manager: this.card_manager.toJSON(),
@@ -169,7 +171,7 @@ export class Session {
     static fromJSON(json): Session {
         let board: Board = Board.fromJSON(json.board);
         let players: Player[] = json.players.map(player => { return Player.fromJSON(player); });
-        let session: Session = new Session(json.session_id);
+        let session: Session = new Session(json.session_id, json.mode);
         session.board = board;
         session.players = players;
         session.card_manager = CardManager.fromJSON(json.card_manager);
@@ -259,14 +261,14 @@ export class Session {
 
             case Phase.BuildFacility:
                 // Check EndGame
-                let landmarks: CardId[] = this.card_manager.getLandmarks();
+                const landmarks: CardId[] = this.card_manager.getLandmarks();
+                const team_id: number = this.getTeamId(this.current_player_id);
                 let num_landmarks: number = 0;
                 for (let landmark of landmarks) {
-                    if (this.card_manager.getOwner(landmark) === this.current_player_id) {
+                    if (this.getTeamId(this.card_manager.getOwner(landmark)) === team_id) {
                         num_landmarks++;
                     }
                 }
-                // TODO: support multiple landmarks.
                 if (num_landmarks > (landmarks.length / this.players.length)) {
                     this.winner = this.current_player_id;
                     this.phase = Phase.EndGame;
@@ -317,13 +319,18 @@ export class Session {
 
     public addPlayer(user_id: string, name: string, money: number, salary: number,
                      is_auto: boolean): number {
-        let player_id: PlayerId = this.players.length;
+        const player_id: PlayerId = this.players.length;
         if (player_id > 4) {
             return -1;
         }
-        // team === player_id (no 2vs2 so far).
-        this.players.push(new Player(user_id, player_id, name, money, salary, player_id, is_auto));
+
+        const team_id: number = this.getTeamId(player_id);
+        this.players.push(new Player(user_id, player_id, name, money, salary, team_id, is_auto));
         return player_id;
+    }
+
+    public getTeamId(player_id: PlayerId): number {
+        return player_id % Protocol.getTeamCount(this.mode);
     }
 
     public addFacility(player_id: PlayerId, facility_data_id: CardDataId): boolean {

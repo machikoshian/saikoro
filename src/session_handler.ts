@@ -158,7 +158,7 @@ export class SessionHandler {
     }
 
     private createSession(session_id: number, mode: GameMode, player_infos: any[]): Session {
-        let session: Session = new Session(session_id);
+        let session: Session = new Session(session_id, mode);
         for (let info of player_infos) {
             this.addNewPlayer(session, info.user_id, info.name, info.deck, false);
         }

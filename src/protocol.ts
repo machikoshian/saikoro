@@ -3,6 +3,7 @@ export enum GameMode {
     OffLine_2,
     OffLine_3,
     OffLine_4,
+    OffLine_2vs2,
     OffLine_2_Matching,
     OnLineSingle_2,
     OnLineSingle_3,
@@ -43,6 +44,8 @@ export class Protocol {
                 return "4人バトル 😺 👻 👾 🗿";
             case GameMode.OffLine_2_Matching:
                 return "2人バトル 😺 👻";
+            case GameMode.OffLine_2vs2:
+                return "2vs2バトル 😺👻vs👾🗿";
             case GameMode.OnLineSingle_2:
                 return "2人バトル 😺 👻";
             case GameMode.OnLineSingle_3:
@@ -71,6 +74,7 @@ export class Protocol {
                 return 2;
             case GameMode.OffLine_4:
             case GameMode.OnLineSingle_4:
+            case GameMode.OffLine_2vs2:
                 return 3;
             case GameMode.OnLine2Players:
             case GameMode.OnLineWatch:
@@ -87,6 +91,7 @@ export class Protocol {
             case GameMode.OffLine_2_Matching:
             case GameMode.OnLineSingle_2:
             case GameMode.OffLine_3:
+            case GameMode.OffLine_2vs2:
             case GameMode.OnLineSingle_3:
             case GameMode.OffLine_4:
             case GameMode.OnLineSingle_4:
@@ -95,6 +100,30 @@ export class Protocol {
                 return 2;
             case GameMode.OnLineWatch:
                 return 0;
+            case GameMode.None:
+            default:
+                return -1;
+        }
+    }
+
+    static getTeamCount(mode: GameMode): number {
+        switch (mode) {
+            case GameMode.OffLine_2:
+            case GameMode.OffLine_2_Matching:
+            case GameMode.OffLine_2vs2:
+            case GameMode.OnLineSingle_2:
+            case GameMode.OnLine2Players:
+                return 2;
+
+            case GameMode.OffLine_3:
+            case GameMode.OnLineSingle_3:
+                return 3;
+
+            case GameMode.OffLine_4:
+            case GameMode.OnLineSingle_4:
+                return 4;
+
+            case GameMode.OnLineWatch:
             case GameMode.None:
             default:
                 return -1;

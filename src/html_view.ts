@@ -872,7 +872,7 @@ export class HtmlView {
 
     private resetBoard(): void {
         // TODO: Do more efficient way.
-        this.drawBoard(new Session(-1));
+        this.drawBoard(new Session(-1, -1));  // SessionId = -1, GameMode = -1
     }
 
     public drawBoard(session: Session): void {  // session may take a different value.
