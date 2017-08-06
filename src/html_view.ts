@@ -164,8 +164,8 @@ export class HtmlView {
 
         document.getElementById("matching_button_offline_2").addEventListener(
             "click", () => { this.onClickMatching(GameMode.OffLine_2); });
-        document.getElementById("matching_button_offline_3").addEventListener(
-            "click", () => { this.onClickMatching(GameMode.OffLine_3); });
+        document.getElementById("matching_button_offline_2vs2").addEventListener(
+            "click", () => { this.onClickMatching(GameMode.OffLine_2vs2); });
         document.getElementById("matching_button_offline_4").addEventListener(
             "click", () => { this.onClickMatching(GameMode.OffLine_4); });
 

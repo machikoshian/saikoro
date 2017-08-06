@@ -45,7 +45,7 @@ export class Protocol {
             case GameMode.OffLine_2_Matching:
                 return "2人バトル 😺 👻";
             case GameMode.OffLine_2vs2:
-                return "2vs2バトル 😺👻vs👾🗿";
+                return "2vs2バトル 😺👾vs👻🗿";
             case GameMode.OnLineSingle_2:
                 return "2人バトル 😺 👻";
             case GameMode.OnLineSingle_3:
