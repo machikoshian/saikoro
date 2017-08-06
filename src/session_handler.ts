@@ -157,18 +157,36 @@ export class SessionHandler {
         // TODO: Possible to delete "session/session_id" after 10mins?
     }
 
-    private createSession(session_id: number, mode: GameMode, player_infos: any[]): Session {
-        let session: Session = new Session(session_id, mode);
-        for (let info of player_infos) {
-            this.addNewPlayer(session, info.user_id, info.name, info.deck, false);
-        }
-
-        // Add NPC.
+    private getNpcName(): string {
         const NPC_NAMES = ["ごましお", "グラ", "ヂータ", "エル", "茜", "ベリー", "兼石", "ハルカ"];
-        const num_npc: number = Protocol.getNpcCount(mode);
-        for (let i: number = 0; i < num_npc; ++i) {
-            let npc_name: string = NPC_NAMES[Math.floor(Math.random() * NPC_NAMES.length)];
-            this.addNewPlayer(session, `${i}`, npc_name + " (NPC)", [], true);
+        return NPC_NAMES[Math.floor(Math.random() * NPC_NAMES.length)] + " (NPC)";
+    }
+
+    private createSession(session_id: number, mode: GameMode,
+                          player_infos: MatchingPlayerInfo[]): Session {
+        let session: Session = new Session(session_id, mode);
+
+        if (mode === GameMode.OnLine2Players_2vs2) {
+            let npc_user_id: number = 0;
+            for (let info of player_infos) {
+                // Add a human player.
+                this.addNewPlayer(session, info.user_id, info.name, info.deck, false);
+                // Add an NPC player.
+                this.addNewPlayer(session, `${npc_user_id}`, this.getNpcName(), [], true);
+                npc_user_id++;
+            }
+        }
+        else {
+            // Add human players.
+            for (let info of player_infos) {
+                this.addNewPlayer(session, info.user_id, info.name, info.deck, false);
+            }
+
+            // Add NPC players.
+            const num_npc: number = Protocol.getNpcCount(mode);
+            for (let i: number = 0; i < num_npc; ++i) {
+                this.addNewPlayer(session, `${i}`, this.getNpcName(), [], true);
+            }
         }
 
         session.startGame();

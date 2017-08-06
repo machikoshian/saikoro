@@ -179,9 +179,9 @@ export class HtmlView {
 
         document.getElementById("matching_button_multi_2").addEventListener(
             "click", () => { this.onClickMatching(GameMode.OnLine2Players); });
-        // 3 and 4 players are not supported yet.
-        // document.getElementById("matching_button_multi_3").addEventListener(
-        //     "click", () => { this.onClickMatching(GameMode.OnLine2Players); });
+        document.getElementById("matching_button_multi_2vs2").addEventListener(
+            "click", () => { this.onClickMatching(GameMode.OnLine2Players_2vs2); });
+        // 4 players are not supported yet.
         // document.getElementById("matching_button_multi_4").addEventListener(
         //     "click", () => { this.onClickMatching(GameMode.OnLine2Players); });
 
@@ -275,8 +275,6 @@ export class HtmlView {
             element.classList.add("inactive");
         }
         document.getElementById("matching_button_multi_2").classList.remove("promote");
-        document.getElementById("matching_button_multi_3").classList.remove("promote");
-        document.getElementById("matching_button_multi_3").classList.add("inactive");
         document.getElementById("matching_button_multi_4").classList.remove("promote");
         document.getElementById("matching_button_multi_4").classList.add("inactive");
         document.getElementById("matching_button_watch_1").classList.add("inactive");

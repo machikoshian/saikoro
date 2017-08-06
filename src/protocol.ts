@@ -10,6 +10,7 @@ export enum GameMode {
     OnLineSingle_4,
     OnLineSingle_2vs2,
     OnLine2Players,
+    OnLine2Players_2vs2,
     OnLineWatch,
 };
 
@@ -31,7 +32,8 @@ export class Protocol {
     static isOnlineMode(mode: GameMode): boolean {
         const onlines: GameMode[] = [
             GameMode.OnLineSingle_2, GameMode.OnLineSingle_3, GameMode.OnLineSingle_4,
-            GameMode.OnLineSingle_2vs2, GameMode.OnLine2Players, GameMode.OnLineWatch ];
+            GameMode.OnLineSingle_2vs2, GameMode.OnLine2Players_2vs2,
+            GameMode.OnLine2Players, GameMode.OnLineWatch ];
         return (onlines.indexOf(mode) !== -1);
     }
 
@@ -57,6 +59,8 @@ export class Protocol {
                 return "2vs2バトル 😺👾vs👻🗿";
             case GameMode.OnLine2Players:
                 return "2人バトル 😺 😺";
+            case GameMode.OnLine2Players_2vs2:
+                return "2vs2バトル 😺😺vs👻🗿";
             case GameMode.OnLineWatch:
                 return "観戦モード";
             case GameMode.None:
@@ -74,6 +78,7 @@ export class Protocol {
                 return 1;
             case GameMode.OffLine_3:
             case GameMode.OnLineSingle_3:
+            case GameMode.OnLine2Players_2vs2:
                 return 2;
             case GameMode.OffLine_4:
             case GameMode.OnLineSingle_4:
@@ -102,6 +107,7 @@ export class Protocol {
             case GameMode.OnLineSingle_2vs2:
                 return 1;
             case GameMode.OnLine2Players:
+            case GameMode.OnLine2Players_2vs2:
                 return 2;
             case GameMode.OnLineWatch:
                 return 0;
@@ -119,6 +125,7 @@ export class Protocol {
             case GameMode.OnLineSingle_2:
             case GameMode.OnLineSingle_2vs2:
             case GameMode.OnLine2Players:
+            case GameMode.OnLine2Players_2vs2:
                 return 2;
 
             case GameMode.OffLine_3:
