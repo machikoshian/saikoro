@@ -304,7 +304,8 @@ export class SessionHandler {
 
     public addNewPlayer(session: Session, user_id: string, name: string,
                         deck: CardDataId[], is_auto: boolean): PlayerId {
-        const player_id: PlayerId = session.addPlayer(user_id, name, 1200, 250, is_auto);
+        const salary: number = is_auto ? 350 : 250;
+        const player_id: PlayerId = session.addPlayer(user_id, name, 1200, salary, is_auto);
 
         // # of facility cards should be >= 10.
         // # of character cards should be <= 5.
