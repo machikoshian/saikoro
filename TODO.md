@@ -1,5 +1,4 @@
-* 給料のイベントのタイミング
-
+* ...ByBuiltLandmarks を effect manager へ移行
 * dice1, dice2 を配列に
 * html_view.ts のリファクタリング
 * 各イベントの同期
