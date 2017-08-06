@@ -12,6 +12,7 @@ import { PlayerIdCallback, HtmlViewObject, HtmlCardsView, HtmlCardView, HtmlPlay
          HtmlDeckCharView, HtmlBoardView, HtmlDiceView,
          HtmlChatButtonView, HtmlDeckCardsView } from "./html_view_parts";
 import { DiceEffects, DiceNum, DiceEvenOdd } from "./types";
+import { AutoPlay } from "./auto_play";
 import * as Query from "./query";
 
 const COLOR_FIELD: string = "#FFF8E1";
@@ -916,7 +917,7 @@ export class HtmlView {
                 let event: Event = session.getEventFacilityAction(player_id, card_id);
                 if (event.type === EventType.Interaction) {
                     // TODO: Should be able to select other players.
-                    const target_id: PlayerId = (player_id === 0) ? 1 : 0;
+                    const target_id: PlayerId = AutoPlay.getTargetPlayer(session, player_id);
                     event = session.getEventInteractCommand(
                         this.client.createInteractQuery(event.card_id, target_id));
                 }

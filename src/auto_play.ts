@@ -33,10 +33,33 @@ export class AutoPlay {
         return query;
     }
 
+    // Find the most rich target.
+    static getTargetPlayer(session: Session, player_id: PlayerId): PlayerId {
+        let money: number = -1;
+        let target_id: PlayerId = -1;
+        const team_id: number = session.getTeamId(player_id);
+        const players: Player[] = session.getPlayers();
+        for (let player of players) {
+            if (player.team === team_id) {
+                continue;
+            }
+            if (player.getMoney() > money) {
+                money = player.getMoney();
+                target_id = player.id;
+            }
+        }
+
+        if (target_id === -1) {
+            console.error("No valid target found.");
+            target_id = (player_id === 0) ? 1 : 0;
+        }
+        return target_id;
+    }
+
     static getInteractQuery(session: Session): Query.InteractQuery {
         let player_id: PlayerId = session.getCurrentPlayerId();
         let target_facilities: CardId[] = session.getTargetFacilities();
-        let target_id: PlayerId = (player_id === 0) ? 1 : 0;  // TODO: Fixme :)
+        let target_id: PlayerId = AutoPlay.getTargetPlayer(session, player_id);
 
         if (target_facilities.length === 0) {
             return null;
