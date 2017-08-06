@@ -392,7 +392,7 @@ export class Session {
         if (!this.isValid(player_id, Phase.DiceRoll)) {
             return false;
         }
-        const effects: DiceEffects = this.effect_manager.getDiceEffects();
+        const effects: DiceEffects = this.getDiceEffects();
         this.dice_result = Dice.roll(query.dice_num, aim, effects);
 
         // TODO: Move this to other place?
@@ -1359,6 +1359,18 @@ export class Session {
         return this.quit(player_id);
     }
 
+    public getDiceDeltaByBuiltLandmark(): number {
+        let delta: number = 0;
+        const landmark_ids: CardId[] = this.card_manager.getBuiltLandmarks();
+        for (let landmark_id of landmark_ids) {
+            const landmark: Facility = this.getFacility(landmark_id);
+            if (landmark.property.effect === CharacterType.DiceDelta) {
+                delta += landmark.property.delta;
+            }
+        }
+        return delta;
+    }
+
     public getEvents(): Event[] {
         return this.events;
     }
@@ -1443,11 +1455,10 @@ export class Session {
     public getCharacter(card_id: CardId): Character {
         return this.card_manager.getCharacter(card_id);
     }
-    public getDiceDelta(): number {
-        return this.effect_manager.getDiceDelta();
-    }
     public getDiceEffects(): DiceEffects {
-        return this.effect_manager.getDiceEffects();
+        let effects: DiceEffects = this.effect_manager.getDiceEffects();
+        effects.delta += this.getDiceDeltaByBuiltLandmark();
+        return effects;
     }
     public getTargetFacilities(): CardId[] {
         return this.target_facilities;

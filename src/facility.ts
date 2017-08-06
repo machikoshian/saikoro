@@ -98,6 +98,7 @@ export interface FacilityProperty {
     effect?: CharacterType,  // For Landmark effect
     type?: SelectType,       // For Landmark effect
     boost?: number,          // For Landmark effect
+    delta?: number,          // For Landmark effect
 }
 
 export class FacilityData {
@@ -208,6 +209,11 @@ const LANDMARK_DATA: FacilityData[] = [
     LandmarkData(2, "💼", {effect: CharacterType.Boost, type: SelectType.Purple, boost: 0.5}),
     LandmarkData(1, "🏦", {effect: CharacterType.SalaryFactor, boost: -0.5}),
     LandmarkData(2, "🏦", {effect: CharacterType.SalaryFactor, boost: 0.5}),
+    LandmarkData(1, "📛", {effect: CharacterType.DiceDelta, delta: -2}),
+    LandmarkData(1, "🎒", {effect: CharacterType.DiceDelta, delta: -1}),
+    LandmarkData(1, "💯", {effect: CharacterType.DiceDelta, delta: 1}),
+    LandmarkData(1, "📈", {effect: CharacterType.DiceDelta, delta: 2}),
+    LandmarkData(1, "🎓", {effect: CharacterType.DiceDelta, delta: 3}),
 ];
 
 export class CardData {
@@ -363,6 +369,12 @@ export class Facility {
                 const boost: number = this.property.boost * 100;
                 const boost_str: string = ((boost > 0) ? "+" : "") + boost;
                 return `給料を${boost_str}%する`;
+            }
+
+            case CharacterType.DiceDelta: {
+                const delta: number = this.property.delta;
+                const delta_str: string = ((delta > 0) ? "+" : "") + delta;
+                return `サイコロの目を${delta_str}する`;
             }
 
             default:
