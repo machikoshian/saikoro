@@ -57,9 +57,10 @@ export class Player {
         return money;  // can be less than money.
     }
 
-    public paySalary(): number {
-        this.money += this.salary;
-        return this.salary;
+    public paySalary(boost: number = 1.0): number {
+        const salary: number = this.salary * boost;
+        this.money += salary;
+        return salary;
     }
 
     public isAuto(): boolean {

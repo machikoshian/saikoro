@@ -84,6 +84,8 @@ const CHARACTER_DATA: CharacterData[] = [
     new CharacterData("解体屋", CharacterType.Boost, 1, {"type": SelectType.Green, "boost": -2.0}),
     new CharacterData("大食い王", CharacterType.Boost, 1, {"type": SelectType.Red, "boost": -2.0}),
     new CharacterData("ロッカー", CharacterType.Boost, 1, {"type": SelectType.Purple, "boost": -2.0}),
+    new CharacterData("エンジニア", CharacterType.SalaryFactor, 1, {"boost": 1.0}),
+    new CharacterData("税理士", CharacterType.SalaryFactor, 1, {"boost": -1.0}),
 ];
 
 export type CardDataId = number;
@@ -517,6 +519,11 @@ export class Character {
                     case SelectType.Purple:
                         return `${target}の紫施設の収入を${boost_str}%する\n${this.round}ラウンド`;
                 }
+            }
+            case CharacterType.SalaryFactor: {
+                const boost: number = this.property.boost * 100;
+                const boost_str: string = ((boost > 0) ? "+" : "") + boost;
+                return `全プレイヤーの給料を${boost_str}%する\n${this.round}ラウンド`;
             }
         }
         return "";

@@ -941,7 +941,8 @@ export class Session {
             case CharacterType.DiceOne:
             case CharacterType.DiceTwo:
             case CharacterType.DiceEven:
-            case CharacterType.DiceOdd: {
+            case CharacterType.DiceOdd:
+            case CharacterType.SalaryFactor: {
                 return event;
             }
             case CharacterType.Boost: {
@@ -1024,7 +1025,8 @@ export class Session {
             case CharacterType.DiceOne:
             case CharacterType.DiceTwo:
             case CharacterType.DiceEven:
-            case CharacterType.DiceOdd: {
+            case CharacterType.DiceOdd:
+            case CharacterType.SalaryFactor: {
                 this.effect_manager.addCard(character.data_id, event.round, event.turn);
                 break;
             }
@@ -1256,7 +1258,8 @@ export class Session {
     }
 
     public paySalary(): boolean {
-        let salary: number = this.getCurrentPlayer().paySalary();
+        const boost: number = Math.max(0, 1.0 + this.effect_manager.getSalaryBoost());
+        const salary: number = this.getCurrentPlayer().paySalary(boost);
 
         let event: Event = new Event();
         this.events.push(event);

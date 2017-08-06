@@ -671,4 +671,14 @@ export class EffectManager {
         }
         return boost;
     }
+
+    public getSalaryBoost(): number {
+        let boost: number = 0;
+        for (let card of this.cards) {
+            if (card.character.type === CharacterType.SalaryFactor) {
+                boost += card.character.property.boost;
+            }
+        }
+        return boost;
+    }
 }
