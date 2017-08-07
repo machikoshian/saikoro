@@ -2087,6 +2087,17 @@ function shuffle(array) {
     var _a;
 }
 exports.shuffle = shuffle;
+function difference(base, others) {
+    var result = [];
+    for (var _i = 0, base_1 = base; _i < base_1.length; _i++) {
+        var item = base_1[_i];
+        if (others.indexOf(item) === -1) {
+            result.push(item);
+        }
+    }
+    return result;
+}
+exports.difference = difference;
 
 
 /***/ }),
@@ -3829,6 +3840,7 @@ var HtmlView = (function () {
         this.buttons_view.reset();
         this.cards_view.reset();
         this.landmarks_view.reset();
+        this.chat_button_view.reset();
     };
     HtmlView.prototype.readyGame = function () {
         this.resetGame();
@@ -6024,6 +6036,10 @@ var HtmlChatButtonView = (function (_super) {
         }
         return _this;
     }
+    HtmlChatButtonView.prototype.reset = function () {
+        this.showStampBox(false);
+        this.prev_stamps = {};
+    };
     HtmlChatButtonView.prototype.showStampAt = function (index, element_id) {
         var _this = this;
         var stamp = this.stamps[index].clone();
@@ -6226,12 +6242,11 @@ var SessionHandler = (function () {
         this.storage.delete("live/session_" + session.session_id);
         // TODO: Possible to delete "session/session_id" after 10mins?
     };
-    SessionHandler.prototype.getNpcName = function () {
-        var NPC_NAMES = ["ごましお", "グラ", "ヂータ", "エル", "茜", "ベリー", "兼石", "ハルカ"];
-        return NPC_NAMES[Math.floor(Math.random() * NPC_NAMES.length)] + " (NPC)";
-    };
     SessionHandler.prototype.createSession = function (session_id, mode, player_infos) {
         var session = new session_1.Session(session_id, mode);
+        var NPC_NAMES = ["ごましお", "グラ", "ヂータ", "エル", "茜", "ベリー", "兼石", "ハルカ"];
+        var used_names = player_infos.map(function (info) { return info.name; });
+        var names = Utils.shuffle(Utils.difference(NPC_NAMES, used_names));
         if (mode === protocol_1.GameMode.OnLine2Players_2vs2) {
             var npc_user_id = 0;
             for (var _i = 0, player_infos_1 = player_infos; _i < player_infos_1.length; _i++) {
@@ -6239,7 +6254,8 @@ var SessionHandler = (function () {
                 // Add a human player.
                 this.addNewPlayer(session, info.user_id, info.name, info.deck, false);
                 // Add an NPC player.
-                this.addNewPlayer(session, "" + npc_user_id, this.getNpcName(), [], true);
+                var name_1 = names.pop() + "(NPC)";
+                this.addNewPlayer(session, "" + npc_user_id, name_1, [], true);
                 npc_user_id++;
             }
         }
@@ -6252,7 +6268,8 @@ var SessionHandler = (function () {
             // Add NPC players.
             var num_npc = protocol_1.Protocol.getNpcCount(mode);
             for (var i = 0; i < num_npc; ++i) {
-                this.addNewPlayer(session, "" + i, this.getNpcName(), [], true);
+                var name_2 = names.pop() + "(NPC)";
+                this.addNewPlayer(session, "" + i, name_2, [], true);
             }
         }
         session.startGame();
