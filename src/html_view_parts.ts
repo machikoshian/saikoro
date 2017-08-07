@@ -12,7 +12,6 @@ const COLOR_CLICKABLE: string = "#FFCA28";
 const COLOR_INACTIVE: string = "#EEEEEE";
 const COLOR_HIGHTLIGHT_CARD: string = "#FFE082";
 const COLOR_CHARACTER: string = "#FFF9C4";
-const COLOR_PLAYERS: string[] = ["#909CC2", "#D9BDC5", "#90C290", "#9D8189"];
 const COLOR_GRAY: string = "#B0BEC5";
 const COLOR_BLUE: string = "#90CAF9";
 const COLOR_GREEN: string = "#A5D6A7";
@@ -41,13 +40,6 @@ function getFacilityColor(facility: Facility): string {
         case FacilityType.Purple:
             return COLOR_PURPLE;
     }
-}
-
-function getPlayerColor(player_id: PlayerId): string {
-    if (player_id === -1 || player_id > COLOR_PLAYERS.length) {
-        return COLOR_FIELD;
-    }
-    return COLOR_PLAYERS[player_id];
 }
 
 export enum Visibility {
@@ -508,8 +500,21 @@ export class HtmlCardBaseView extends HtmlViewObject {
 
     public setOwnerId(owner_id: PlayerId): void {
         this.owner_id = owner_id;
-        if (owner_id !== -1 && CardData.isLandmark(this.data_id)) {
-            this.element.style.backgroundColor = getPlayerColor(owner_id);
+        if (!CardData.isLandmark(this.data_id)) {
+            return;
+        }
+
+        this.element.classList.remove("player_0");
+        this.element.classList.remove("player_1");
+        this.element.classList.remove("player_2");
+        this.element.classList.remove("player_3");
+
+        if (owner_id === -1) {
+            this.element.style.backgroundColor = COLOR_LANDMARK;
+        }
+        else {
+            this.element.style.backgroundColor = null;
+            this.element.classList.add(`player_${owner_id}`);
         }
     }
 
@@ -532,11 +537,7 @@ export class HtmlCardBaseView extends HtmlViewObject {
         this.element_name.innerText = landmark.getName();
         this.element_cost.innerText = String(landmark.getCost());
         this.element_description.innerText = landmark.getDescription();
-        if (owner_id === -1) {
-            this.element.style.backgroundColor = getFacilityColor(landmark);
-        } else {
-            this.element.style.backgroundColor = getPlayerColor(owner_id);
-        }
+        this.setOwnerId(owner_id);
     }
 
     public setHighlight(is_highlight: boolean): void {
@@ -683,7 +684,7 @@ export class HtmlPlayerView extends HtmlViewObject {
         if (is_clickable) {
             this.element.style.backgroundColor = COLOR_CLICKABLE;
         } else {
-            this.element.style.backgroundColor = getPlayerColor(this.player_id);
+            this.element.style.backgroundColor = null;
         }
     }
 
