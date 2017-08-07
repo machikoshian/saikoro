@@ -142,6 +142,7 @@ export class HtmlView {
         this.buttons_view.reset();
         this.cards_view.reset();
         this.landmarks_view.reset();
+        this.chat_button_view.reset();
     }
 
     public readyGame(): void {

@@ -1114,6 +1114,11 @@ export class HtmlChatButtonView extends HtmlViewObject {
         }
     }
 
+    public reset(): void {
+        this.showStampBox(false);
+        this.prev_stamps = {};
+    }
+
     public showStampAt(index: number, element_id: string): void {
         let stamp: HtmlViewObject = this.stamps[index].clone();
         stamp.show();
