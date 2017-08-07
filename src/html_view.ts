@@ -651,6 +651,7 @@ export class HtmlView {
             element.classList.add("inactive");
         }
         document.getElementById("matching_button_multi_2").classList.remove("promote");
+        document.getElementById("matching_button_multi_2vs2").classList.remove("promote");
 
         if (response == null) {
             return;
@@ -678,6 +679,9 @@ export class HtmlView {
             }
             else if (matching_info.mode === GameMode.OnLine2Players) {
                 document.getElementById("matching_button_multi_2").classList.add("promote");
+            }
+            else if (matching_info.mode === GameMode.OnLine2Players_2vs2) {
+                document.getElementById("matching_button_multi_2vs2").classList.add("promote");
             }
         }
     }
