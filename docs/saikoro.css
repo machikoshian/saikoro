@@ -148,6 +148,9 @@ table.player { width: 160px; }
 .player_salary {
     font-size: smaller;
 }
+.player_salary.boosted {
+    font-weight: bold;
+}
 .player_talon {
     font-size: smaller;
 }

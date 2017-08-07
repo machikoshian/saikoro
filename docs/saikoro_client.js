@@ -123,35 +123,37 @@ var SelectType;
 })(SelectType = exports.SelectType || (exports.SelectType = {}));
 var CHARACTER_DATA_BASE = 1000;
 var CHARACTER_DATA = [
-    new CharacterData("幼稚園児", CharacterType.DiceDelta, 2, { "delta": -2 }),
-    new CharacterData("小学生", CharacterType.DiceDelta, 2, { "delta": -1 }),
-    new CharacterData("中学生", CharacterType.DiceDelta, 2, { "delta": 1 }),
-    new CharacterData("高校生", CharacterType.DiceDelta, 2, { "delta": 2 }),
-    new CharacterData("大学生", CharacterType.DiceDelta, 2, { "delta": 3 }),
-    new CharacterData("執事", CharacterType.DrawCards, 0, { "value": 5 }),
-    new CharacterData("市長秘書", CharacterType.DrawCards, 0, { "value": 3 }),
-    new CharacterData("有能秘書", CharacterType.MoveMoney, 0, { "money": 500 }),
+    new CharacterData("幼稚園児", CharacterType.DiceDelta, 2, { delta: -2 }),
+    new CharacterData("小学生", CharacterType.DiceDelta, 2, { delta: -1 }),
+    new CharacterData("中学生", CharacterType.DiceDelta, 2, { delta: 1 }),
+    new CharacterData("高校生", CharacterType.DiceDelta, 2, { delta: 2 }),
+    new CharacterData("大学生", CharacterType.DiceDelta, 2, { delta: 3 }),
+    new CharacterData("執事", CharacterType.DrawCards, 0, { value: 5 }),
+    new CharacterData("市長秘書", CharacterType.DrawCards, 0, { value: 3 }),
+    new CharacterData("有能秘書", CharacterType.MoveMoney, 0, { money: 500 }),
     new CharacterData("白奴", CharacterType.DiceEven, 0, {}),
     new CharacterData("黒奴", CharacterType.DiceOdd, 0, {}),
     new CharacterData("鉄道員", CharacterType.DiceOne, 3, {}),
     new CharacterData("CA", CharacterType.DiceTwo, 3, {}),
-    new CharacterData("気象予報士", CharacterType.Close, 0, { "type": SelectType.Blue }),
-    new CharacterData("消防士", CharacterType.Close, 0, { "type": SelectType.Green }),
-    new CharacterData("保健所員", CharacterType.Close, 0, { "type": SelectType.Red }),
-    new CharacterData("警察官", CharacterType.Close, 0, { "type": SelectType.Purple }),
-    new CharacterData("踊り子", CharacterType.Close, 0, { "type": SelectType.Facility }),
+    new CharacterData("気象予報士", CharacterType.Close, 0, { type: SelectType.Blue }),
+    new CharacterData("消防士", CharacterType.Close, 0, { type: SelectType.Green }),
+    new CharacterData("保健所員", CharacterType.Close, 0, { type: SelectType.Red }),
+    new CharacterData("警察官", CharacterType.Close, 0, { type: SelectType.Purple }),
+    new CharacterData("踊り子", CharacterType.Close, 0, { type: SelectType.Facility }),
     new CharacterData("医者", CharacterType.Open, 0, {}),
-    new CharacterData("残念秘書", CharacterType.Boost, 2, { "type": SelectType.Facility, "boost": -1.5 }),
-    new CharacterData("社長秘書", CharacterType.Boost, 2, { "type": SelectType.Facility, "boost": 1.5 }),
-    new CharacterData("市長", CharacterType.Boost, 2, { "type": SelectType.Facility, "boost": 0.8 }),
-    new CharacterData("農家", CharacterType.Boost, 1, { "type": SelectType.Blue, "boost": 2.0 }),
-    new CharacterData("看板娘", CharacterType.Boost, 1, { "type": SelectType.Green, "boost": 2.0 }),
-    new CharacterData("給仕", CharacterType.Boost, 1, { "type": SelectType.Red, "boost": 2.0 }),
-    new CharacterData("レポーター", CharacterType.Boost, 1, { "type": SelectType.Purple, "boost": 2.0 }),
-    new CharacterData("土木作業員", CharacterType.Boost, 1, { "type": SelectType.Blue, "boost": -2.0 }),
-    new CharacterData("解体屋", CharacterType.Boost, 1, { "type": SelectType.Green, "boost": -2.0 }),
-    new CharacterData("大食い王", CharacterType.Boost, 1, { "type": SelectType.Red, "boost": -2.0 }),
-    new CharacterData("ロッカー", CharacterType.Boost, 1, { "type": SelectType.Purple, "boost": -2.0 }),
+    new CharacterData("残念秘書", CharacterType.Boost, 2, { type: SelectType.Facility, boost: -1.5 }),
+    new CharacterData("社長秘書", CharacterType.Boost, 2, { type: SelectType.Facility, boost: 1.5 }),
+    new CharacterData("市長", CharacterType.Boost, 2, { type: SelectType.Facility, boost: 0.8 }),
+    new CharacterData("農家", CharacterType.Boost, 1, { type: SelectType.Blue, boost: 2.0 }),
+    new CharacterData("看板娘", CharacterType.Boost, 1, { type: SelectType.Green, boost: 2.0 }),
+    new CharacterData("給仕", CharacterType.Boost, 1, { type: SelectType.Red, boost: 2.0 }),
+    new CharacterData("レポーター", CharacterType.Boost, 1, { type: SelectType.Purple, boost: 2.0 }),
+    new CharacterData("土木作業員", CharacterType.Boost, 1, { type: SelectType.Blue, boost: -2.0 }),
+    new CharacterData("解体屋", CharacterType.Boost, 1, { type: SelectType.Green, boost: -2.0 }),
+    new CharacterData("大食い王", CharacterType.Boost, 1, { type: SelectType.Red, boost: -2.0 }),
+    new CharacterData("ロッカー", CharacterType.Boost, 1, { type: SelectType.Purple, boost: -2.0 }),
+    new CharacterData("エンジニア", CharacterType.SalaryFactor, 1, { boost: 1.0 }),
+    new CharacterData("税理士", CharacterType.SalaryFactor, 1, { boost: -1.0 }),
 ];
 var FacilityData = (function () {
     function FacilityData(size, area, name, cost, type, value, property) {
@@ -247,12 +249,21 @@ var LANDMARK_DATA = [
     LandmarkData(2, "🏰", { effect: CharacterType.Close, type: SelectType.Green }),
     LandmarkData(1, "🗼", { effect: CharacterType.Close, type: SelectType.Red }),
     LandmarkData(1, "🗽", { effect: CharacterType.Close, type: SelectType.Purple }),
-    LandmarkData(1, "🚉", {}),
-    LandmarkData(2, "✈️", {}),
-    LandmarkData(1, "🚂", {}),
-    LandmarkData(2, "️🚅", {}),
-    LandmarkData(1, "🏫", {}),
-    LandmarkData(2, "🏣", {}),
+    LandmarkData(1, "🌾", { effect: CharacterType.Boost, type: SelectType.Blue, boost: -0.5 }),
+    LandmarkData(1, "🏬", { effect: CharacterType.Boost, type: SelectType.Green, boost: -0.5 }),
+    LandmarkData(1, "🍳", { effect: CharacterType.Boost, type: SelectType.Red, boost: -0.5 }),
+    LandmarkData(1, "💼", { effect: CharacterType.Boost, type: SelectType.Purple, boost: -0.5 }),
+    LandmarkData(2, "🌾", { effect: CharacterType.Boost, type: SelectType.Blue, boost: 0.5 }),
+    LandmarkData(2, "🏬", { effect: CharacterType.Boost, type: SelectType.Green, boost: 0.5 }),
+    LandmarkData(2, "🍳", { effect: CharacterType.Boost, type: SelectType.Red, boost: 0.5 }),
+    LandmarkData(2, "💼", { effect: CharacterType.Boost, type: SelectType.Purple, boost: 0.5 }),
+    LandmarkData(1, "🏦", { effect: CharacterType.SalaryFactor, boost: -0.5 }),
+    LandmarkData(2, "🏦", { effect: CharacterType.SalaryFactor, boost: 0.5 }),
+    LandmarkData(1, "📛", { effect: CharacterType.DiceDelta, delta: -2 }),
+    LandmarkData(1, "🎒", { effect: CharacterType.DiceDelta, delta: -1 }),
+    LandmarkData(1, "💯", { effect: CharacterType.DiceDelta, delta: 1 }),
+    LandmarkData(1, "📈", { effect: CharacterType.DiceDelta, delta: 2 }),
+    LandmarkData(1, "🎓", { effect: CharacterType.DiceDelta, delta: 3 }),
 ];
 var CardData = (function () {
     function CardData() {
@@ -361,22 +372,41 @@ var Facility = (function () {
     Facility.prototype.getValue = function () {
         return this.value;
     };
-    Facility.prototype.getLandmarkDescription = function () {
-        if (this.property.effect === CharacterType.Close) {
-            if (this.property.type === SelectType.Blue) {
-                return "青施設は発動後、休業する";
-            }
-            if (this.property.type === SelectType.Green) {
-                return "緑施設は発動後、休業する";
-            }
-            if (this.property.type === SelectType.Red) {
-                return "赤施設は発動後、休業する";
-            }
-            if (this.property.type === SelectType.Purple) {
-                return "紫施設は発動後、休業する";
-            }
+    Facility.prototype.getSelectTypeDscription = function (type) {
+        switch (this.property.type) {
+            case SelectType.Blue:
+                return "青施設";
+            case SelectType.Green:
+                return "緑施設";
+            case SelectType.Red:
+                return "赤施設";
+            case SelectType.Purple:
+                return "紫施設";
         }
-        return "";
+    };
+    Facility.prototype.getLandmarkDescription = function () {
+        switch (this.property.effect) {
+            case CharacterType.Close: {
+                return this.getSelectTypeDscription(this.property.type) + "は発動後、休業する";
+            }
+            case CharacterType.Boost: {
+                var boost = this.property.boost * 100;
+                var boost_str = ((boost > 0) ? "+" : "") + boost;
+                return this.getSelectTypeDscription(this.property.type) + ("\u306E\u53CE\u5165\u3092" + boost_str + "%\u3059\u308B");
+            }
+            case CharacterType.SalaryFactor: {
+                var boost = this.property.boost * 100;
+                var boost_str = ((boost > 0) ? "+" : "") + boost;
+                return "\u7D66\u6599\u3092" + boost_str + "%\u3059\u308B";
+            }
+            case CharacterType.DiceDelta: {
+                var delta = this.property.delta;
+                var delta_str = ((delta > 0) ? "+" : "") + delta;
+                return "\u30B5\u30A4\u30B3\u30ED\u306E\u76EE\u3092" + delta_str + "\u3059\u308B";
+            }
+            default:
+                return "";
+        }
     };
     Facility.prototype.getDescription = function () {
         var descriptions = [];
@@ -529,6 +559,11 @@ var Character = (function () {
                         return target + "\u306E\u7D2B\u65BD\u8A2D\u306E\u53CE\u5165\u3092" + boost_str + "%\u3059\u308B\n" + this.round + "\u30E9\u30A6\u30F3\u30C9";
                 }
             }
+            case CharacterType.SalaryFactor: {
+                var boost = this.property.boost * 100;
+                var boost_str = ((boost > 0) ? "+" : "") + boost;
+                return "\u5168\u30D7\u30EC\u30A4\u30E4\u30FC\u306E\u7D66\u6599\u3092" + boost_str + "%\u3059\u308B\n" + this.round + "\u30E9\u30A6\u30F3\u30C9";
+            }
         }
         return "";
     };
@@ -544,11 +579,151 @@ exports.Character = Character;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+var GameMode;
+(function (GameMode) {
+    GameMode[GameMode["None"] = 0] = "None";
+    GameMode[GameMode["OffLine_2"] = 1] = "OffLine_2";
+    GameMode[GameMode["OffLine_3"] = 2] = "OffLine_3";
+    GameMode[GameMode["OffLine_4"] = 3] = "OffLine_4";
+    GameMode[GameMode["OffLine_2vs2"] = 4] = "OffLine_2vs2";
+    GameMode[GameMode["OffLine_2_Matching"] = 5] = "OffLine_2_Matching";
+    GameMode[GameMode["OnLineSingle_2"] = 6] = "OnLineSingle_2";
+    GameMode[GameMode["OnLineSingle_3"] = 7] = "OnLineSingle_3";
+    GameMode[GameMode["OnLineSingle_4"] = 8] = "OnLineSingle_4";
+    GameMode[GameMode["OnLineSingle_2vs2"] = 9] = "OnLineSingle_2vs2";
+    GameMode[GameMode["OnLine2Players"] = 10] = "OnLine2Players";
+    GameMode[GameMode["OnLine2Players_2vs2"] = 11] = "OnLine2Players_2vs2";
+    GameMode[GameMode["OnLineWatch"] = 12] = "OnLineWatch";
+})(GameMode = exports.GameMode || (exports.GameMode = {}));
+;
+var Protocol = (function () {
+    function Protocol() {
+    }
+    Protocol.isOnlineMode = function (mode) {
+        var onlines = [
+            GameMode.OnLineSingle_2, GameMode.OnLineSingle_3, GameMode.OnLineSingle_4,
+            GameMode.OnLineSingle_2vs2, GameMode.OnLine2Players_2vs2,
+            GameMode.OnLine2Players, GameMode.OnLineWatch
+        ];
+        return (onlines.indexOf(mode) !== -1);
+    };
+    Protocol.getGameModeName = function (mode) {
+        switch (mode) {
+            case GameMode.OffLine_2:
+                return "2人バトル 😺 👻";
+            case GameMode.OffLine_3:
+                return "3人バトル 😺 👻 👾";
+            case GameMode.OffLine_4:
+                return "4人バトル 😺 👻 👾 🗿";
+            case GameMode.OffLine_2_Matching:
+                return "2人バトル 😺 👻";
+            case GameMode.OffLine_2vs2:
+                return "2vs2バトル 😺👾vs👻🗿";
+            case GameMode.OnLineSingle_2:
+                return "2人バトル 😺 👻";
+            case GameMode.OnLineSingle_3:
+                return "3人バトル 😺 👻 👾";
+            case GameMode.OnLineSingle_4:
+                return "4人バトル 😺 👻 👾 🗿";
+            case GameMode.OnLineSingle_2vs2:
+                return "2vs2バトル 😺👾vs👻🗿";
+            case GameMode.OnLine2Players:
+                return "2人バトル 😺 😺";
+            case GameMode.OnLine2Players_2vs2:
+                return "2vs2バトル 😺😺vs👻🗿";
+            case GameMode.OnLineWatch:
+                return "観戦モード";
+            case GameMode.None:
+                return "";
+            default:
+                return "";
+        }
+    };
+    Protocol.getNpcCount = function (mode) {
+        switch (mode) {
+            case GameMode.OffLine_2:
+            case GameMode.OffLine_2_Matching:
+            case GameMode.OnLineSingle_2:
+                return 1;
+            case GameMode.OffLine_3:
+            case GameMode.OnLineSingle_3:
+            case GameMode.OnLine2Players_2vs2:
+                return 2;
+            case GameMode.OffLine_4:
+            case GameMode.OnLineSingle_4:
+            case GameMode.OffLine_2vs2:
+            case GameMode.OnLineSingle_2vs2:
+                return 3;
+            case GameMode.OnLine2Players:
+            case GameMode.OnLineWatch:
+                return 0;
+            case GameMode.None:
+            default:
+                return -1;
+        }
+    };
+    Protocol.getPlayerCount = function (mode) {
+        switch (mode) {
+            case GameMode.OffLine_2:
+            case GameMode.OffLine_2_Matching:
+            case GameMode.OnLineSingle_2:
+            case GameMode.OffLine_3:
+            case GameMode.OffLine_2vs2:
+            case GameMode.OnLineSingle_3:
+            case GameMode.OffLine_4:
+            case GameMode.OnLineSingle_4:
+            case GameMode.OnLineSingle_2vs2:
+                return 1;
+            case GameMode.OnLine2Players:
+            case GameMode.OnLine2Players_2vs2:
+                return 2;
+            case GameMode.OnLineWatch:
+                return 0;
+            case GameMode.None:
+            default:
+                return -1;
+        }
+    };
+    Protocol.getTeamCount = function (mode) {
+        switch (mode) {
+            case GameMode.OffLine_2:
+            case GameMode.OffLine_2_Matching:
+            case GameMode.OffLine_2vs2:
+            case GameMode.OnLineSingle_2:
+            case GameMode.OnLineSingle_2vs2:
+            case GameMode.OnLine2Players:
+            case GameMode.OnLine2Players_2vs2:
+                return 2;
+            case GameMode.OffLine_3:
+            case GameMode.OnLineSingle_3:
+                return 3;
+            case GameMode.OffLine_4:
+            case GameMode.OnLineSingle_4:
+                return 4;
+            case GameMode.OnLineWatch:
+            case GameMode.None:
+            default:
+                return -1;
+        }
+    };
+    return Protocol;
+}());
+exports.Protocol = Protocol;
+
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
 var dice_1 = __webpack_require__(13);
-var board_1 = __webpack_require__(6);
+var board_1 = __webpack_require__(7);
 var facility_1 = __webpack_require__(0);
 var utils_1 = __webpack_require__(4);
 var card_manager_1 = __webpack_require__(11);
+var protocol_1 = __webpack_require__(1);
 var Phase;
 (function (Phase) {
     Phase[Phase["StartGame"] = 0] = "StartGame";
@@ -656,9 +831,9 @@ function ConvertToFacilityType(type) {
     }
 }
 var Session = (function () {
-    function Session(session_id) {
-        if (session_id === void 0) { session_id = -1; }
+    function Session(session_id, mode) {
         this.session_id = session_id;
+        this.mode = mode;
         this.watcher_user_ids = [];
         this.board = new board_1.Board();
         this.players = [];
@@ -678,6 +853,7 @@ var Session = (function () {
         return {
             class_name: "Session",
             session_id: this.session_id,
+            mode: this.mode,
             board: this.board.toJSON(),
             players: this.players.map(function (player) { return player.toJSON(); }),
             card_manager: this.card_manager.toJSON(),
@@ -697,7 +873,7 @@ var Session = (function () {
     Session.fromJSON = function (json) {
         var board = board_1.Board.fromJSON(json.board);
         var players = json.players.map(function (player) { return board_1.Player.fromJSON(player); });
-        var session = new Session(json.session_id);
+        var session = new Session(json.session_id, json.mode);
         session.board = board;
         session.players = players;
         session.card_manager = card_manager_1.CardManager.fromJSON(json.card_manager);
@@ -776,14 +952,14 @@ var Session = (function () {
             case Phase.BuildFacility:
                 // Check EndGame
                 var landmarks = this.card_manager.getLandmarks();
+                var team_id = this.getTeamId(this.current_player_id);
                 var num_landmarks = 0;
                 for (var _i = 0, landmarks_1 = landmarks; _i < landmarks_1.length; _i++) {
                     var landmark = landmarks_1[_i];
-                    if (this.card_manager.getOwner(landmark) === this.current_player_id) {
+                    if (this.getTeamId(this.card_manager.getOwner(landmark)) === team_id) {
                         num_landmarks++;
                     }
                 }
-                // TODO: support multiple landmarks.
                 if (num_landmarks > (landmarks.length / this.players.length)) {
                     this.winner = this.current_player_id;
                     this.phase = Phase.EndGame;
@@ -833,9 +1009,12 @@ var Session = (function () {
         if (player_id > 4) {
             return -1;
         }
-        // team === player_id (no 2vs2 so far).
-        this.players.push(new board_1.Player(user_id, player_id, name, money, salary, player_id, is_auto));
+        var team_id = this.getTeamId(player_id);
+        this.players.push(new board_1.Player(user_id, player_id, name, money, salary, team_id, is_auto));
         return player_id;
+    };
+    Session.prototype.getTeamId = function (player_id) {
+        return player_id % protocol_1.Protocol.getTeamCount(this.mode);
     };
     Session.prototype.addFacility = function (player_id, facility_data_id) {
         return this.card_manager.addFacility(player_id, facility_data_id);
@@ -888,7 +1067,7 @@ var Session = (function () {
         if (!this.isValid(player_id, Phase.DiceRoll)) {
             return false;
         }
-        var effects = this.effect_manager.getDiceEffects();
+        var effects = this.getDiceEffects();
         this.dice_result = dice_1.Dice.roll(query.dice_num, aim, effects);
         // TODO: Move this to other place?
         this.target_facilities = this.getFacilitiesInArea(this.dice_result.result());
@@ -1039,11 +1218,6 @@ var Session = (function () {
         var facility = this.getFacility(card_id);
         var value = facility.getValue();
         var boost = Math.max(0, 1.0 + this.effect_manager.getBoost(card_id));
-        var lmboost = 1.0;
-        if (facility.property.lmboost != undefined &&
-            this.card_manager.getBuiltLandmarks().length >= 2) {
-            lmboost = facility.property.lmboost;
-        }
         var multi = 1.0;
         if (facility.property.multi != undefined) {
             var card_query = {
@@ -1055,7 +1229,37 @@ var Session = (function () {
                 multi = facility.property.multi;
             }
         }
+        var landmark_ids = this.card_manager.getBuiltLandmarks();
+        // Boost by number of built landmarks.
+        var lmboost = 1.0;
+        if (facility.property.lmboost != undefined && landmark_ids.length >= 2) {
+            lmboost = facility.property.lmboost;
+        }
+        // Boost by effects of built landmarks.
+        boost += this.getBoostByBuiltLandmark(card_id);
         return value * boost * lmboost * multi;
+    };
+    Session.prototype.getBoostByBuiltLandmark = function (card_id) {
+        var landmark_ids = this.card_manager.getBuiltLandmarks();
+        var boost = 0.0;
+        // TODO: Merge landmark related logics.
+        for (var _i = 0, landmark_ids_1 = landmark_ids; _i < landmark_ids_1.length; _i++) {
+            var landmark_id = landmark_ids_1[_i];
+            var landmark = this.getFacility(landmark_id);
+            if (landmark.property.effect !== facility_1.CharacterType.Boost) {
+                continue;
+            }
+            var card_query = {
+                card_type: facility_1.CardType.Facility,
+                facility_type: ConvertToFacilityType(landmark.property.type),
+                state: card_manager_1.CardState.Field,
+            };
+            var card_ids = this.queryCards(card_query);
+            if (card_ids.indexOf(card_id) !== -1) {
+                boost += landmark.property.boost;
+            }
+        }
+        return boost;
     };
     Session.prototype.getEventFacilityAction = function (player_id, card_id) {
         var facility = this.getFacility(card_id);
@@ -1159,9 +1363,10 @@ var Session = (function () {
         if (facility.property.close === true) {
             return true;
         }
+        // TODO: Merge landmark related logics.
         var landmark_ids = this.card_manager.getBuiltLandmarks();
-        for (var _i = 0, landmark_ids_1 = landmark_ids; _i < landmark_ids_1.length; _i++) {
-            var landmark_id = landmark_ids_1[_i];
+        for (var _i = 0, landmark_ids_2 = landmark_ids; _i < landmark_ids_2.length; _i++) {
+            var landmark_id = landmark_ids_2[_i];
             var landmark = this.getFacility(landmark_id);
             if (landmark.property.effect !== facility_1.CharacterType.Close) {
                 continue;
@@ -1363,7 +1568,8 @@ var Session = (function () {
             case facility_1.CharacterType.DiceOne:
             case facility_1.CharacterType.DiceTwo:
             case facility_1.CharacterType.DiceEven:
-            case facility_1.CharacterType.DiceOdd: {
+            case facility_1.CharacterType.DiceOdd:
+            case facility_1.CharacterType.SalaryFactor: {
                 return event;
             }
             case facility_1.CharacterType.Boost: {
@@ -1443,7 +1649,8 @@ var Session = (function () {
             case facility_1.CharacterType.DiceOne:
             case facility_1.CharacterType.DiceTwo:
             case facility_1.CharacterType.DiceEven:
-            case facility_1.CharacterType.DiceOdd: {
+            case facility_1.CharacterType.DiceOdd:
+            case facility_1.CharacterType.SalaryFactor: {
                 this.effect_manager.addCard(character.data_id, event.round, event.turn);
                 break;
             }
@@ -1640,12 +1847,37 @@ var Session = (function () {
         return true;
     };
     Session.prototype.paySalary = function () {
-        var salary = this.getCurrentPlayer().paySalary();
-        var event = new Event();
-        this.events.push(event);
-        event.step = this.step;
+        var event = this.getEventPaySalary(this.current_player_id);
+        return this.processEventPaySalary(event);
+    };
+    Session.prototype.getSalaryBoost = function () {
+        var boost = 1.0 + this.effect_manager.getSalaryBoost() + this.getSalaryBoostByBuiltLandmark();
+        return Math.max(0, boost);
+    };
+    Session.prototype.getSalaryBoostByBuiltLandmark = function () {
+        var landmark_ids = this.card_manager.getBuiltLandmarks();
+        var boost = 0.0;
+        for (var _i = 0, landmark_ids_3 = landmark_ids; _i < landmark_ids_3.length; _i++) {
+            var landmark_id = landmark_ids_3[_i];
+            var landmark = this.getFacility(landmark_id);
+            if (landmark.property.effect === facility_1.CharacterType.SalaryFactor) {
+                boost += landmark.property.boost;
+            }
+        }
+        return boost;
+    };
+    Session.prototype.getEventPaySalary = function (player_id) {
+        var boost = this.getSalaryBoost();
+        var salary = this.getPlayer(player_id).salary * boost;
+        var event = this.newEvent();
         event.type = EventType.Salary;
-        event.moneys[this.current_player_id] += salary;
+        event.player_id = player_id;
+        event.moneys[player_id] += salary;
+        return event;
+    };
+    Session.prototype.processEventPaySalary = function (event) {
+        this.events.push(event);
+        this.getPlayer(event.player_id).addMoney(event.moneys[event.player_id]);
         this.done(Phase.PaySalary);
         return true;
     };
@@ -1686,6 +1918,18 @@ var Session = (function () {
             return false;
         }
         return this.quit(player_id);
+    };
+    Session.prototype.getDiceDeltaByBuiltLandmark = function () {
+        var delta = 0;
+        var landmark_ids = this.card_manager.getBuiltLandmarks();
+        for (var _i = 0, landmark_ids_4 = landmark_ids; _i < landmark_ids_4.length; _i++) {
+            var landmark_id = landmark_ids_4[_i];
+            var landmark = this.getFacility(landmark_id);
+            if (landmark.property.effect === facility_1.CharacterType.DiceDelta) {
+                delta += landmark.property.delta;
+            }
+        }
+        return delta;
     };
     Session.prototype.getEvents = function () {
         return this.events;
@@ -1770,11 +2014,10 @@ var Session = (function () {
     Session.prototype.getCharacter = function (card_id) {
         return this.card_manager.getCharacter(card_id);
     };
-    Session.prototype.getDiceDelta = function () {
-        return this.effect_manager.getDiceDelta();
-    };
     Session.prototype.getDiceEffects = function () {
-        return this.effect_manager.getDiceEffects();
+        var effects = this.effect_manager.getDiceEffects();
+        effects.delta += this.getDiceDeltaByBuiltLandmark();
+        return effects;
     };
     Session.prototype.getTargetFacilities = function () {
         return this.target_facilities;
@@ -1804,107 +2047,6 @@ var Session = (function () {
     return Session;
 }());
 exports.Session = Session;
-
-
-/***/ }),
-/* 2 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var GameMode;
-(function (GameMode) {
-    GameMode[GameMode["None"] = 0] = "None";
-    GameMode[GameMode["OffLine_2"] = 1] = "OffLine_2";
-    GameMode[GameMode["OffLine_3"] = 2] = "OffLine_3";
-    GameMode[GameMode["OffLine_4"] = 3] = "OffLine_4";
-    GameMode[GameMode["OffLine_2_Matching"] = 4] = "OffLine_2_Matching";
-    GameMode[GameMode["OnLineSingle_2"] = 5] = "OnLineSingle_2";
-    GameMode[GameMode["OnLineSingle_3"] = 6] = "OnLineSingle_3";
-    GameMode[GameMode["OnLineSingle_4"] = 7] = "OnLineSingle_4";
-    GameMode[GameMode["OnLine2Players"] = 8] = "OnLine2Players";
-    GameMode[GameMode["OnLineWatch"] = 9] = "OnLineWatch";
-})(GameMode = exports.GameMode || (exports.GameMode = {}));
-;
-var Protocol = (function () {
-    function Protocol() {
-    }
-    Protocol.isOnlineMode = function (mode) {
-        var onlines = [
-            GameMode.OnLineSingle_2, GameMode.OnLineSingle_3, GameMode.OnLineSingle_4,
-            GameMode.OnLine2Players, GameMode.OnLineWatch
-        ];
-        return (onlines.indexOf(mode) !== -1);
-    };
-    Protocol.getGameModeName = function (mode) {
-        switch (mode) {
-            case GameMode.OffLine_2:
-                return "2人バトル 😺 👻";
-            case GameMode.OffLine_3:
-                return "3人バトル 😺 👻 👾";
-            case GameMode.OffLine_4:
-                return "4人バトル 😺 👻 👾 🗿";
-            case GameMode.OffLine_2_Matching:
-                return "2人バトル 😺 👻";
-            case GameMode.OnLineSingle_2:
-                return "2人バトル 😺 👻";
-            case GameMode.OnLineSingle_3:
-                return "3人バトル 😺 👻 👾";
-            case GameMode.OnLineSingle_4:
-                return "4人バトル 😺 👻 👾 🗿";
-            case GameMode.OnLine2Players:
-                return "2人バトル 😺 😺";
-            case GameMode.OnLineWatch:
-                return "観戦モード";
-            case GameMode.None:
-                return "";
-            default:
-                return "";
-        }
-    };
-    Protocol.getNpcCount = function (mode) {
-        switch (mode) {
-            case GameMode.OffLine_2:
-            case GameMode.OffLine_2_Matching:
-            case GameMode.OnLineSingle_2:
-                return 1;
-            case GameMode.OffLine_3:
-            case GameMode.OnLineSingle_3:
-                return 2;
-            case GameMode.OffLine_4:
-            case GameMode.OnLineSingle_4:
-                return 3;
-            case GameMode.OnLine2Players:
-            case GameMode.OnLineWatch:
-                return 0;
-            case GameMode.None:
-            default:
-                return -1;
-        }
-    };
-    Protocol.getPlayerCount = function (mode) {
-        switch (mode) {
-            case GameMode.OffLine_2:
-            case GameMode.OffLine_2_Matching:
-            case GameMode.OnLineSingle_2:
-            case GameMode.OffLine_3:
-            case GameMode.OnLineSingle_3:
-            case GameMode.OffLine_4:
-            case GameMode.OnLineSingle_4:
-                return 1;
-            case GameMode.OnLine2Players:
-                return 2;
-            case GameMode.OnLineWatch:
-                return 0;
-            case GameMode.None:
-            default:
-                return -1;
-        }
-    };
-    return Protocol;
-}());
-exports.Protocol = Protocol;
 
 
 /***/ }),
@@ -1964,9 +2106,9 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-var client_1 = __webpack_require__(7);
+var client_1 = __webpack_require__(8);
 var session_handler_1 = __webpack_require__(17);
-var storage_1 = __webpack_require__(8);
+var storage_1 = __webpack_require__(9);
 var storage = new storage_1.LocalStorage();
 var session_handler = new session_handler_1.SessionHandler(storage);
 var StandaloneConnection = (function (_super) {
@@ -2020,6 +2162,138 @@ exports.StandaloneConnection = StandaloneConnection;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+var session_1 = __webpack_require__(2);
+var utils_1 = __webpack_require__(4);
+var AutoPlay = (function () {
+    function AutoPlay() {
+    }
+    AutoPlay.getQuery = function (session) {
+        var player_id = session.getCurrentPlayerId();
+        switch (session.getPhase()) {
+            case session_1.Phase.CharacterCard:
+            case session_1.Phase.DiceRoll:
+                return AutoPlay.getDiceQuery(session);
+            case session_1.Phase.BuildFacility:
+                return AutoPlay.getBuildQuery(session);
+            case session_1.Phase.FacilityActionWithInteraction:
+                return AutoPlay.getInteractQuery(session);
+        }
+        return null;
+    };
+    AutoPlay.getDiceQuery = function (session) {
+        var player_id = session.getCurrentPlayerId();
+        var query = {
+            command: "dice",
+            user_id: session.getPlayer(player_id).user_id,
+            session_id: session.session_id,
+            player_id: player_id,
+            mode: -1,
+            dice_num: 2,
+            aim: 0,
+        };
+        return query;
+    };
+    // Find the most rich target.
+    AutoPlay.getTargetPlayer = function (session, player_id) {
+        var money = -1;
+        var target_id = -1;
+        var team_id = session.getTeamId(player_id);
+        var players = session.getPlayers();
+        for (var _i = 0, players_1 = players; _i < players_1.length; _i++) {
+            var player = players_1[_i];
+            if (player.team === team_id) {
+                continue;
+            }
+            if (player.getMoney() > money) {
+                money = player.getMoney();
+                target_id = player.id;
+            }
+        }
+        if (target_id === -1) {
+            console.error("No valid target found.");
+            target_id = (player_id === 0) ? 1 : 0;
+        }
+        return target_id;
+    };
+    AutoPlay.getInteractQuery = function (session) {
+        var player_id = session.getCurrentPlayerId();
+        var target_facilities = session.getTargetFacilities();
+        var target_id = AutoPlay.getTargetPlayer(session, player_id);
+        if (target_facilities.length === 0) {
+            return null;
+        }
+        var query = {
+            command: "interact",
+            user_id: session.getPlayer(player_id).user_id,
+            session_id: session.session_id,
+            player_id: player_id,
+            mode: -1,
+            card_id: target_facilities[0],
+            target_player_id: target_id,
+        };
+        return query;
+    };
+    AutoPlay.getBuildQuery = function (session) {
+        var landmarks = session.getLandmarks();
+        var player_id = session.getCurrentPlayerId();
+        var player = session.getPlayer(player_id);
+        var money = player.getMoney();
+        var query = {
+            command: "build",
+            user_id: session.getPlayer(player_id).user_id,
+            session_id: session.session_id,
+            player_id: player_id,
+            mode: -1,
+            x: -1,
+            y: -1,
+            card_id: -1,
+        };
+        for (var _i = 0, landmarks_1 = landmarks; _i < landmarks_1.length; _i++) {
+            var landmark = landmarks_1[_i];
+            if (session.getOwnerId(landmark) !== -1) {
+                continue;
+            }
+            if (money >= session.getFacility(landmark).getCost()) {
+                query.card_id = landmark;
+                return query;
+            }
+        }
+        var card_ids = session.getPlayerCards(player_id).getHand();
+        for (var _a = 0, card_ids_1 = card_ids; _a < card_ids_1.length; _a++) {
+            var card_id = card_ids_1[_a];
+            if (session.isCharacter(card_id)) {
+                continue;
+            }
+            var facility = session.getFacility(card_id);
+            if (money < facility.getCost()) {
+                continue;
+            }
+            // TODO: Enabled to overwrite existing facilities.
+            // availablePosition does not return overwritable facilities.
+            var positions = utils_1.shuffle(session.availablePosition(card_id));
+            if (positions.length === 0) {
+                continue;
+            }
+            var _b = positions[0], x = _b[0], y = _b[1];
+            query.x = x;
+            query.y = y;
+            query.card_id = card_id;
+            return query;
+        }
+        return query;
+    };
+    return AutoPlay;
+}());
+exports.AutoPlay = AutoPlay;
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
 var Player = (function () {
     function Player(user_id, id, name, money, salary, team, is_auto) {
         if (is_auto === void 0) { is_auto = false; }
@@ -2058,10 +2332,6 @@ var Player = (function () {
         }
         this.money += money;
         return money; // can be less than money.
-    };
-    Player.prototype.paySalary = function () {
-        this.money += this.salary;
-        return this.salary;
     };
     Player.prototype.isAuto = function () {
         return this.is_auto;
@@ -2179,13 +2449,13 @@ exports.Board = Board;
 
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var protocol_1 = __webpack_require__(2);
+var protocol_1 = __webpack_require__(1);
 var Connection = (function () {
     function Connection() {
     }
@@ -2305,7 +2575,7 @@ exports.Client = Client;
 
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2449,7 +2719,7 @@ exports.LocalStorage = LocalStorage;
 
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2465,10 +2735,10 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-var client_1 = __webpack_require__(7);
-var session_1 = __webpack_require__(1);
+var client_1 = __webpack_require__(8);
+var session_1 = __webpack_require__(2);
 var html_view_1 = __webpack_require__(14);
-var protocol_1 = __webpack_require__(2);
+var protocol_1 = __webpack_require__(1);
 var standalone_connection_1 = __webpack_require__(5);
 // TODO: can be merged with Client?
 var WebClient = (function (_super) {
@@ -2638,116 +2908,6 @@ var WebClient = (function (_super) {
     return WebClient;
 }(client_1.Client));
 exports.WebClient = WebClient;
-
-
-/***/ }),
-/* 10 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var session_1 = __webpack_require__(1);
-var utils_1 = __webpack_require__(4);
-var AutoPlay = (function () {
-    function AutoPlay() {
-    }
-    AutoPlay.getQuery = function (session) {
-        var player_id = session.getCurrentPlayerId();
-        switch (session.getPhase()) {
-            case session_1.Phase.CharacterCard:
-            case session_1.Phase.DiceRoll:
-                return AutoPlay.getDiceQuery(session);
-            case session_1.Phase.BuildFacility:
-                return AutoPlay.getBuildQuery(session);
-            case session_1.Phase.FacilityActionWithInteraction:
-                return AutoPlay.getInteractQuery(session);
-        }
-        return null;
-    };
-    AutoPlay.getDiceQuery = function (session) {
-        var player_id = session.getCurrentPlayerId();
-        var query = {
-            command: "dice",
-            user_id: session.getPlayer(player_id).user_id,
-            session_id: session.session_id,
-            player_id: player_id,
-            mode: -1,
-            dice_num: 2,
-            aim: 0,
-        };
-        return query;
-    };
-    AutoPlay.getInteractQuery = function (session) {
-        var player_id = session.getCurrentPlayerId();
-        var target_facilities = session.getTargetFacilities();
-        var target_id = (player_id === 0) ? 1 : 0; // TODO: Fixme :)
-        if (target_facilities.length === 0) {
-            return null;
-        }
-        var query = {
-            command: "interact",
-            user_id: session.getPlayer(player_id).user_id,
-            session_id: session.session_id,
-            player_id: player_id,
-            mode: -1,
-            card_id: target_facilities[0],
-            target_player_id: target_id,
-        };
-        return query;
-    };
-    AutoPlay.getBuildQuery = function (session) {
-        var landmarks = session.getLandmarks();
-        var player_id = session.getCurrentPlayerId();
-        var player = session.getPlayer(player_id);
-        var money = player.getMoney();
-        var query = {
-            command: "build",
-            user_id: session.getPlayer(player_id).user_id,
-            session_id: session.session_id,
-            player_id: player_id,
-            mode: -1,
-            x: -1,
-            y: -1,
-            card_id: -1,
-        };
-        for (var _i = 0, landmarks_1 = landmarks; _i < landmarks_1.length; _i++) {
-            var landmark = landmarks_1[_i];
-            if (session.getOwnerId(landmark) !== -1) {
-                continue;
-            }
-            if (money >= session.getFacility(landmark).getCost()) {
-                query.card_id = landmark;
-                return query;
-            }
-        }
-        var card_ids = session.getPlayerCards(player_id).getHand();
-        for (var _a = 0, card_ids_1 = card_ids; _a < card_ids_1.length; _a++) {
-            var card_id = card_ids_1[_a];
-            if (session.isCharacter(card_id)) {
-                continue;
-            }
-            var facility = session.getFacility(card_id);
-            if (money < facility.getCost()) {
-                continue;
-            }
-            // TODO: Enabled to overwrite existing facilities.
-            // availablePosition does not return overwritable facilities.
-            var positions = utils_1.shuffle(session.availablePosition(card_id));
-            if (positions.length === 0) {
-                continue;
-            }
-            var _b = positions[0], x = _b[0], y = _b[1];
-            query.x = x;
-            query.y = y;
-            query.card_id = card_id;
-            return query;
-        }
-        return query;
-    };
-    return AutoPlay;
-}());
-exports.AutoPlay = AutoPlay;
 
 
 /***/ }),
@@ -3343,6 +3503,16 @@ var EffectManager = (function () {
         }
         return boost;
     };
+    EffectManager.prototype.getSalaryBoost = function () {
+        var boost = 0;
+        for (var _i = 0, _a = this.cards; _i < _a.length; _i++) {
+            var card = _a[_i];
+            if (card.character.type === facility_1.CharacterType.SalaryFactor) {
+                boost += card.character.property.boost;
+            }
+        }
+        return boost;
+    };
     return EffectManager;
 }());
 exports.EffectManager = EffectManager;
@@ -3356,7 +3526,7 @@ exports.EffectManager = EffectManager;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var facility_1 = __webpack_require__(0);
-var board_1 = __webpack_require__(6);
+var board_1 = __webpack_require__(7);
 var DeckMaker = (function () {
     function DeckMaker() {
         this.cards = {}; // key is CardId.
@@ -3536,12 +3706,13 @@ exports.Dice = Dice;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var session_1 = __webpack_require__(1);
+var session_1 = __webpack_require__(2);
 var facility_1 = __webpack_require__(0);
 var deck_maker_1 = __webpack_require__(12);
-var protocol_1 = __webpack_require__(2);
+var protocol_1 = __webpack_require__(1);
 var html_view_parts_1 = __webpack_require__(15);
 var types_1 = __webpack_require__(3);
+var auto_play_1 = __webpack_require__(6);
 var COLOR_FIELD = "#FFF8E1";
 var COLOR_LANDMARK = "#B0BEC5";
 var COLOR_CLICKABLE = "#FFCA28";
@@ -3676,15 +3847,14 @@ var HtmlView = (function () {
         document.getElementById("matching_button_deck").addEventListener("click", function () { _this.switchScene(Scene.Deck); });
         document.getElementById("home_list").addEventListener("click", function () { _this.switchScene(Scene.List); });
         document.getElementById("matching_button_offline_2").addEventListener("click", function () { _this.onClickMatching(protocol_1.GameMode.OffLine_2); });
-        document.getElementById("matching_button_offline_3").addEventListener("click", function () { _this.onClickMatching(protocol_1.GameMode.OffLine_3); });
+        document.getElementById("matching_button_offline_2vs2").addEventListener("click", function () { _this.onClickMatching(protocol_1.GameMode.OffLine_2vs2); });
         document.getElementById("matching_button_offline_4").addEventListener("click", function () { _this.onClickMatching(protocol_1.GameMode.OffLine_4); });
         document.getElementById("matching_button_online_2").addEventListener("click", function () { _this.onClickMatching(protocol_1.GameMode.OnLineSingle_2); });
-        document.getElementById("matching_button_online_3").addEventListener("click", function () { _this.onClickMatching(protocol_1.GameMode.OnLineSingle_3); });
+        document.getElementById("matching_button_online_2vs2").addEventListener("click", function () { _this.onClickMatching(protocol_1.GameMode.OnLineSingle_2vs2); });
         document.getElementById("matching_button_online_4").addEventListener("click", function () { _this.onClickMatching(protocol_1.GameMode.OnLineSingle_4); });
         document.getElementById("matching_button_multi_2").addEventListener("click", function () { _this.onClickMatching(protocol_1.GameMode.OnLine2Players); });
-        // 3 and 4 players are not supported yet.
-        // document.getElementById("matching_button_multi_3").addEventListener(
-        //     "click", () => { this.onClickMatching(GameMode.OnLine2Players); });
+        document.getElementById("matching_button_multi_2vs2").addEventListener("click", function () { _this.onClickMatching(protocol_1.GameMode.OnLine2Players_2vs2); });
+        // 4 players are not supported yet.
         // document.getElementById("matching_button_multi_4").addEventListener(
         //     "click", () => { this.onClickMatching(GameMode.OnLine2Players); });
         document.getElementById("matching_button_watch_1").addEventListener("click", function () { _this.onClickWatch(0); });
@@ -3752,8 +3922,6 @@ var HtmlView = (function () {
             element.classList.add("inactive");
         }
         document.getElementById("matching_button_multi_2").classList.remove("promote");
-        document.getElementById("matching_button_multi_3").classList.remove("promote");
-        document.getElementById("matching_button_multi_3").classList.add("inactive");
         document.getElementById("matching_button_multi_4").classList.remove("promote");
         document.getElementById("matching_button_multi_4").classList.add("inactive");
         document.getElementById("matching_button_watch_1").classList.add("inactive");
@@ -4282,7 +4450,7 @@ var HtmlView = (function () {
     };
     HtmlView.prototype.resetBoard = function () {
         // TODO: Do more efficient way.
-        this.drawBoard(new session_1.Session(-1));
+        this.drawBoard(new session_1.Session(-1, -1)); // SessionId = -1, GameMode = -1
     };
     HtmlView.prototype.drawBoard = function (session) {
         this.board_view.clearEffects();
@@ -4319,7 +4487,7 @@ var HtmlView = (function () {
                 var event_2 = session.getEventFacilityAction(player_id, card_id);
                 if (event_2.type === session_1.EventType.Interaction) {
                     // TODO: Should be able to select other players.
-                    var target_id = (player_id === 0) ? 1 : 0;
+                    var target_id = auto_play_1.AutoPlay.getTargetPlayer(session, player_id);
                     event_2 = session.getEventInteractCommand(this.client.createInteractQuery(event_2.card_id, target_id));
                 }
                 var money = event_2.moneys[player_id];
@@ -4560,6 +4728,10 @@ var HtmlView = (function () {
                 this.message_view.drawMessage("次のサイコロの合計値が奇数になります", color);
                 handled = true;
             }
+            if (type === facility_1.CharacterType.SalaryFactor) {
+                this.message_view.drawMessage("給料の金額が変わりました");
+                handled = true;
+            }
             if (type === facility_1.CharacterType.MoveMoney) {
                 var _loop_2 = function (pid) {
                     var money = event.moneys[pid];
@@ -4581,17 +4753,14 @@ var HtmlView = (function () {
             return handled;
         }
         if (event.type === session_1.EventType.Salary) {
-            for (var pid = 0; pid < event.moneys.length; pid++) {
-                var money = event.moneys[pid];
-                if (money === 0) {
-                    continue;
-                }
-                this.players_view.players[pid].addMoney(money);
-                var name_1 = this.session.getPlayer(pid).name;
-                var message = name_1 + " \u306B\u7D66\u6599 " + money + " \u304C\u5165\u308A\u307E\u3057\u305F";
-                var color = this.getPlayerColor(pid);
-                this.message_view.drawMessage(message, color);
-            }
+            this.prev_session.processEventPaySalary(event);
+            var player_id = event.player_id;
+            var money = event.moneys[event.player_id];
+            this.players_view.players[player_id].addMoney(money);
+            var name_1 = this.session.getPlayer(player_id).name;
+            var message = name_1 + " \u306B\u7D66\u6599 " + money + " \u304C\u5165\u308A\u307E\u3057\u305F";
+            var color = this.getPlayerColor(player_id);
+            this.message_view.drawMessage(message, color);
             return true;
         }
         if (event.type === session_1.EventType.Open) {
@@ -4615,6 +4784,7 @@ var HtmlView = (function () {
             this.prev_session.processEventBuild(event);
             // Draw the board after money motion.
             window.setTimeout(function () {
+                _this.players_view.draw(_this.prev_session);
                 _this.drawCards(_this.prev_session);
                 _this.drawBoard(_this.prev_session);
             }, 1000);
@@ -4801,7 +4971,7 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var facility_1 = __webpack_require__(0);
-var session_1 = __webpack_require__(1);
+var session_1 = __webpack_require__(2);
 var types_1 = __webpack_require__(3);
 // TODO: Move it to a new file for util.
 var COLOR_FIELD = "#FFE082";
@@ -5414,7 +5584,10 @@ var HtmlPlayerView = (function (_super) {
         }
         this.element_avatar.innerText = avatar;
         this.element_name.innerText = player.name;
-        this.element_salary.innerHTML = String(player.salary);
+        // Salary
+        var boost = session.getSalaryBoost();
+        this.element_salary.innerHTML = String(player.salary * boost);
+        this.element_salary.classList.toggle("boosted", (boost !== 1.0));
         var cards = session.getPlayerCards(this.player_id);
         this.element_hand.innerHTML = String(cards.getHandSize());
         this.element_talon.innerHTML = String(cards.getTalonSize());
@@ -5891,7 +6064,7 @@ exports.HtmlChatButtonView = HtmlChatButtonView;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var standalone_connection_1 = __webpack_require__(5);
-var saikoro_1 = __webpack_require__(9);
+var saikoro_1 = __webpack_require__(10);
 var delay = 0; // msec
 var connection = new standalone_connection_1.StandaloneConnection(delay);
 var client = new saikoro_1.WebClient(connection);
@@ -5905,11 +6078,11 @@ document.addEventListener("DOMContentLoaded", function () { client.initBoard(); 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var session_1 = __webpack_require__(1);
+var session_1 = __webpack_require__(2);
 var facility_1 = __webpack_require__(0);
-var auto_play_1 = __webpack_require__(10);
-var protocol_1 = __webpack_require__(2);
-var storage_1 = __webpack_require__(8);
+var auto_play_1 = __webpack_require__(6);
+var protocol_1 = __webpack_require__(1);
+var storage_1 = __webpack_require__(9);
 var Utils = __webpack_require__(4);
 var MatchedData = (function () {
     function MatchedData(matching_id, session_id, player_id) {
@@ -6049,18 +6222,34 @@ var SessionHandler = (function () {
         this.storage.delete("live/session_" + session.session_id);
         // TODO: Possible to delete "session/session_id" after 10mins?
     };
-    SessionHandler.prototype.createSession = function (session_id, mode, player_infos) {
-        var session = new session_1.Session(session_id);
-        for (var _i = 0, player_infos_1 = player_infos; _i < player_infos_1.length; _i++) {
-            var info = player_infos_1[_i];
-            this.addNewPlayer(session, info.user_id, info.name, info.deck, false);
-        }
-        // Add NPC.
+    SessionHandler.prototype.getNpcName = function () {
         var NPC_NAMES = ["ごましお", "グラ", "ヂータ", "エル", "茜", "ベリー", "兼石", "ハルカ"];
-        var num_npc = protocol_1.Protocol.getNpcCount(mode);
-        for (var i = 0; i < num_npc; ++i) {
-            var npc_name = NPC_NAMES[Math.floor(Math.random() * NPC_NAMES.length)];
-            this.addNewPlayer(session, "" + i, npc_name + " (NPC)", [], true);
+        return NPC_NAMES[Math.floor(Math.random() * NPC_NAMES.length)] + " (NPC)";
+    };
+    SessionHandler.prototype.createSession = function (session_id, mode, player_infos) {
+        var session = new session_1.Session(session_id, mode);
+        if (mode === protocol_1.GameMode.OnLine2Players_2vs2) {
+            var npc_user_id = 0;
+            for (var _i = 0, player_infos_1 = player_infos; _i < player_infos_1.length; _i++) {
+                var info = player_infos_1[_i];
+                // Add a human player.
+                this.addNewPlayer(session, info.user_id, info.name, info.deck, false);
+                // Add an NPC player.
+                this.addNewPlayer(session, "" + npc_user_id, this.getNpcName(), [], true);
+                npc_user_id++;
+            }
+        }
+        else {
+            // Add human players.
+            for (var _a = 0, player_infos_2 = player_infos; _a < player_infos_2.length; _a++) {
+                var info = player_infos_2[_a];
+                this.addNewPlayer(session, info.user_id, info.name, info.deck, false);
+            }
+            // Add NPC players.
+            var num_npc = protocol_1.Protocol.getNpcCount(mode);
+            for (var i = 0; i < num_npc; ++i) {
+                this.addNewPlayer(session, "" + i, this.getNpcName(), [], true);
+            }
         }
         session.startGame();
         this.doNext(session);
@@ -6162,7 +6351,8 @@ var SessionHandler = (function () {
         });
     };
     SessionHandler.prototype.addNewPlayer = function (session, user_id, name, deck, is_auto) {
-        var player_id = session.addPlayer(user_id, name, 1200, 250, is_auto);
+        var salary = is_auto ? 350 : 250;
+        var player_id = session.addPlayer(user_id, name, 1200, salary, is_auto);
         // # of facility cards should be >= 10.
         // # of character cards should be <= 5.
         var num_facilities = 10;
