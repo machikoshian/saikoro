@@ -6,3 +6,13 @@ export function shuffle(array: any[]): any[] {
     }
     return shuffled_array;
 }
+
+export function difference(base: any[], others: any[]): any[] {
+    let result = [];
+    for (let item of base) {
+        if (others.indexOf(item) === -1) {
+            result.push(item);
+        }
+    }
+    return result;
+}

@@ -657,7 +657,7 @@ export class HtmlPlayerView extends HtmlViewObject {
         let player: Player = session.getPlayer(this.player_id);
 
         // Avatar
-        const npc_avatars: string[] = ["⛄", "👻",  "👾", "🗿"];
+        const npc_avatars: string[] = ["⛄", "👻", "👾", "🗿"];
         let avatar: string = "😺";
         if (player.isAuto()) {
             avatar = npc_avatars[this.player_id];

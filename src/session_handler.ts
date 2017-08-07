@@ -157,22 +157,23 @@ export class SessionHandler {
         // TODO: Possible to delete "session/session_id" after 10mins?
     }
 
-    private getNpcName(): string {
-        const NPC_NAMES = ["ごましお", "グラ", "ヂータ", "エル", "茜", "ベリー", "兼石", "ハルカ"];
-        return NPC_NAMES[Math.floor(Math.random() * NPC_NAMES.length)] + " (NPC)";
-    }
-
     private createSession(session_id: number, mode: GameMode,
                           player_infos: MatchingPlayerInfo[]): Session {
         let session: Session = new Session(session_id, mode);
+
+        const NPC_NAMES: string[] = ["ごましお", "グラ", "ヂータ", "エル", "茜", "ベリー", "兼石", "ハルカ"];
+        let used_names: string[] = player_infos.map(info => { return info.name; });
+        let names: string[] = Utils.shuffle(Utils.difference(NPC_NAMES, used_names));
 
         if (mode === GameMode.OnLine2Players_2vs2) {
             let npc_user_id: number = 0;
             for (let info of player_infos) {
                 // Add a human player.
                 this.addNewPlayer(session, info.user_id, info.name, info.deck, false);
+
                 // Add an NPC player.
-                this.addNewPlayer(session, `${npc_user_id}`, this.getNpcName(), [], true);
+                const name: string = names.pop() + "(NPC)";
+                this.addNewPlayer(session, `${npc_user_id}`, name, [], true);
                 npc_user_id++;
             }
         }
@@ -185,7 +186,8 @@ export class SessionHandler {
             // Add NPC players.
             const num_npc: number = Protocol.getNpcCount(mode);
             for (let i: number = 0; i < num_npc; ++i) {
-                this.addNewPlayer(session, `${i}`, this.getNpcName(), [], true);
+                const name: string = names.pop() + "(NPC)";
+                this.addNewPlayer(session, `${i}`, name, [], true);
             }
         }
 
