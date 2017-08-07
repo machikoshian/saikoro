@@ -692,7 +692,7 @@ export class HtmlView {
             return;
         }
         this.switchScene(Scene.Matching);
-        this.message_view.drawMessage("通信中です", this.getPlayerColor(this.client.player_id));
+        this.message_view.drawMessage("通信中です", this.client.player_id);
         this.client.watchGame(this.live_session_ids[index]);
     }
 
@@ -821,7 +821,7 @@ export class HtmlView {
         else {
             message = "準備中です";
         }
-        this.message_view.drawMessage(message, this.getPlayerColor(this.client.player_id));
+        this.message_view.drawMessage(message, this.client.player_id);
     }
 
     public drawCards(session: Session): void {
@@ -999,27 +999,26 @@ export class HtmlView {
         let name: string =  current_player.name;
         let phase: Phase = session.getPhase();
         let message: string = "";
-        let color: string = this.getPlayerColor(player_id);
         if (phase === Phase.StartGame) {
             message = "マッチング中です";
-            this.message_view.drawMessage(message, color);
+            this.message_view.drawMessage(message, player_id);
             return true;
         }
         if (phase === Phase.CharacterCard) {
             const effects: string = this.getDiceEffectsMessage(session.getDiceEffects());
             message = `${name} のキャラカードまたはサイコロ${effects}です`;
-            this.message_view.drawMessage(message, color);
+            this.message_view.drawMessage(message, player_id);
             return true;
         }
         if (phase === Phase.DiceRoll) {
             const effects: string = this.getDiceEffectsMessage(session.getDiceEffects());
             message = `${name} のサイコロ${effects}です`;
-            this.message_view.drawMessage(message, color);
+            this.message_view.drawMessage(message, player_id);
             return true;
         }
         if (phase === Phase.BuildFacility) {
             message = `${name} の建設です`;
-            this.message_view.drawMessage(message, color);
+            this.message_view.drawMessage(message, player_id);
             return true;
         }
         if (phase === Phase.EndGame) {
@@ -1027,14 +1026,14 @@ export class HtmlView {
             for (let event of events) {
                 if (event.type === EventType.Quit) {
                     message = `${players[event.player_id].name} が切断しました`;
-                    this.message_view.drawMessage(message, this.getPlayerColor(event.player_id));
+                    this.message_view.drawMessage(message, event.player_id);
                     return true;
                 }
             }
 
             let winner: string = session.getPlayer(session.getWinner()).name;
             message = `${name} の勝ちです`;
-            this.message_view.drawMessage(message, this.getPlayerColor(session.getWinner()));
+            this.message_view.drawMessage(message, session.getWinner());
             this.reset_button_view.show();
             return true;
         }
@@ -1125,8 +1124,7 @@ export class HtmlView {
         if (event.type === EventType.Draw) {  // TODO: Change the event type to StartTurn?
             let current_player: Player = this.prev_session.getPlayer(event.player_id);
             let message = `${current_player.name} のターンです`;
-            let color: string = this.getPlayerColor(event.player_id);
-            this.message_view.drawMessage(message, color);
+            this.message_view.drawMessage(message, event.player_id);
             this.drawFacilityValues(this.prev_session, event.player_id);
             this.effectCardDeals(event.player_id, event.target_card_ids);
 
@@ -1154,7 +1152,7 @@ export class HtmlView {
             let color: string = this.getPlayerColor(event.player_id);
             window.setTimeout(() => {
                 this.board_view.animateDiceResult(event.dice.result(), color);
-                this.message_view.drawMessage(message, color);
+                this.message_view.drawMessage(message, event.player_id);
             }, 1500);
             return true;
         }
@@ -1170,19 +1168,16 @@ export class HtmlView {
             const type: CharacterType = this.session.getCharacter(event.card_id).type;
             if (type === CharacterType.DrawCards) {
                 const message: string = `山札から${event.target_card_ids.length}枚カードを引きました。`;
-                const color: string = this.getPlayerColor(event.player_id);
-                this.message_view.drawMessage(message, color);
+                this.message_view.drawMessage(message, event.player_id);
                 this.effectCardDeals(event.player_id, event.target_card_ids);
                 handled = true;
             }
             if (type === CharacterType.DiceEven) {
-                const color: string = this.getPlayerColor(event.player_id);
-                this.message_view.drawMessage("次のサイコロの合計値が偶数になります", color);
+                this.message_view.drawMessage("次のサイコロの合計値が偶数になります", event.player_id);
                 handled = true;
             }
             if (type === CharacterType.DiceOdd) {
-                const color: string = this.getPlayerColor(event.player_id);
-                this.message_view.drawMessage("次のサイコロの合計値が奇数になります", color);
+                this.message_view.drawMessage("次のサイコロの合計値が奇数になります", event.player_id);
                 handled = true;
             }
             if (type === CharacterType.SalaryFactor) {
@@ -1215,8 +1210,7 @@ export class HtmlView {
             this.players_view.players[player_id].addMoney(money);
             const name: string = this.session.getPlayer(player_id).name;
             const message = `${name} に給料 ${money} が入りました`;
-            const color: string = this.getPlayerColor(player_id);
-            this.message_view.drawMessage(message, color);
+            this.message_view.drawMessage(message, player_id);
             return true;
         }
 
@@ -1232,8 +1226,7 @@ export class HtmlView {
             if (event.card_id === -1) {  // Pass.
                 let name: string = this.prev_session.getPlayer(event.player_id).name;
                 let message = `${name} は何も建設しませんでした。`;
-                let color: string = this.getPlayerColor(event.player_id);
-                this.message_view.drawMessage(message, color);
+                this.message_view.drawMessage(message, event.player_id);
                 this.drawCards(this.prev_session);
                 return true;
             }
@@ -1286,8 +1279,7 @@ export class HtmlView {
                 });
             }
             else {
-                const color: string = this.getPlayerColor(event.player_id);
-                this.message_view.drawMessage("対象プレイヤーを選択中です", color);
+                this.message_view.drawMessage("対象プレイヤーを選択中です", event.player_id);
             }
         }
         return true;
@@ -1325,21 +1317,18 @@ export class HtmlView {
     }
 
     private dialogSelectFacilityPosition(callback: ([x, y]: [number, number]) => void): void {
-        const color: string = this.getPlayerColor(this.client.player_id);
-        this.message_view.drawMessage("対象施設を選択してください", color);
+        this.message_view.drawMessage("対象施設を選択してください", this.client.player_id);
         this.board_view.setFacilitiesClickable(this.session, callback);
     }
 
     private dialogSelectPlayer(callback: PlayerIdCallback): void {
-        const color: string = this.getPlayerColor(this.client.player_id);
-        this.message_view.drawMessage("対象プレイヤーを選択してください", color);
+        this.message_view.drawMessage("対象プレイヤーを選択してください", this.client.player_id);
         this.players_view.setClickableForPlayer(this.client.player_id, callback);
     }
 
     private dialogSelectCharCard(is_open: boolean, callback: (card_id: CardId) => void): void {
         if (is_open) {
-            const color: string = this.getPlayerColor(this.client.player_id);
-            this.message_view.drawMessage("キャラカードを選択してください", color);
+            this.message_view.drawMessage("キャラカードを選択してください", this.client.player_id);
             this.cards_view.setCharCardsClickable((card_id: CardId) => {
                 this.cards_view.useCard(card_id, "board");
                 callback(card_id);

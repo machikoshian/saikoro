@@ -504,18 +504,10 @@ export class HtmlCardBaseView extends HtmlViewObject {
             return;
         }
 
-        this.element.classList.remove("player_0");
-        this.element.classList.remove("player_1");
-        this.element.classList.remove("player_2");
-        this.element.classList.remove("player_3");
-
-        if (owner_id === -1) {
-            this.element.style.backgroundColor = COLOR_LANDMARK;
+        for (let i: number = 0; i < 4; ++i) {
+            this.element.classList.toggle(`player_${i}`, (owner_id === i));
         }
-        else {
-            this.element.style.backgroundColor = null;
-            this.element.classList.add(`player_${owner_id}`);
-        }
+        this.element.style.backgroundColor = (owner_id === -1) ? COLOR_LANDMARK : null;
     }
 
     public setFacilityCard(facility: Facility): void {
@@ -723,16 +715,20 @@ export class HtmlPlayerView extends HtmlViewObject {
 }
 
 export class HtmlMessageView extends HtmlViewObject {
-    private messages: [string, string][] = [];
+    private messages: [string, PlayerId][] = [];
 
     constructor(element_id: string) {
         super(document.getElementById(element_id));
     }
 
-    public drawMessage(message: string, color: string = COLOR_FIELD): void {
-        this.messages.push([message, color]);
+    public drawMessage(message: string, player_id: PlayerId = -1): void {
+        this.messages.push([message, player_id]);
         this.element.innerText = `🎲 ${message} 🎲`;
-        this.element.style.backgroundColor = color;
+
+        for (let i: number = 0; i < 4; ++i) {
+            this.element.classList.toggle(`player_${i}`, (player_id === i));
+        }
+        this.element.style.backgroundColor = (player_id === -1) ? COLOR_FIELD : null;
     }
 
     public revertMessage(): void {
@@ -742,8 +738,8 @@ export class HtmlMessageView extends HtmlViewObject {
             return;
         }
         this.messages.pop();
-        const [message, color]: [string, string] = this.messages.pop();
-        this.drawMessage(message, color);
+        const [message, player_id]: [string, PlayerId] = this.messages.pop();
+        this.drawMessage(message, player_id);
     }
 }
 

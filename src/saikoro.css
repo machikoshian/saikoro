@@ -44,10 +44,10 @@ body.evening {
 
 /* ---- Player colors ---- */
 
-.player_0 { background-color: #909CC2; }
-.player_1 { background-color: #D9BDC5; }
-.player_2 { background-color: #90C290; }
-.player_3 { background-color: #9D8189; }
+.player_0 { background-color: #909CC2 !important; }
+.player_1 { background-color: #D9BDC5 !important; }
+.player_2 { background-color: #90C290 !important; }
+.player_3 { background-color: #9D8189 !important; }
 
 /* ---- Home ---- */
 
