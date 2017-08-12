@@ -975,17 +975,19 @@ export class HtmlView {
             return;
         }
 
-        // (ownder_id === -1) means a prebuild landmark.
-        let owner_color: string =
-            (owner_id === -1) ? COLOR_LANDMARK : this.getPlayerColor(owner_id);
-
         field.innerText = facility.getName();
         if (!facility.is_open) {
             field.innerText += "💤";
         }
         field.style.display = "";
-        field.style.backgroundColor = owner_color;
         field.style.borderColor = this.getFacilityColor(facility);
+
+        field.style.backgroundColor = null;
+        // (ownder_id === -1) means a prebuild landmark.
+        field.classList.toggle("landmark", (owner_id === -1));
+        for (let i: number = 0; i < 4; ++i) {
+            field.classList.toggle(`player_${i}`, (owner_id === i));
+        }
 
         (<HTMLTableCellElement>field).colSpan = facility.size;
     }

@@ -174,6 +174,12 @@ table.player {
     width: 50px; height: 40px; background-color: #FFF8E1; text-align: center;
     border-bottom: solid 10px #FFF8E1;
 }
+#board .field .landmark { background-color: #B0BEC5 }
+#board .field .player_0 { background-color: #909CC2 }
+#board .field .player_1 { background-color: #D9BDC5 }
+#board .field .player_2 { background-color: #90C290 }
+#board .field .player_3 { background-color: #9D8189 }
+
 .click {
     position: absolute; top: 0px; left: 0px;
 }
