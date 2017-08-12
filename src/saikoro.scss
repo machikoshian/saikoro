@@ -2,17 +2,21 @@ $color_player_0: #909CC2;
 $color_player_1: #D9BDC5;
 $color_player_2: #90C290;
 $color_player_3: #9D8189;
+$color_landmark: #B0BEC5;
+
 @mixin player_colors($attribute: background-color) {
     @if $attribute == border-color {
         &.player_0 { border-color: $color_player_0; }
         &.player_1 { border-color: $color_player_1; }
         &.player_2 { border-color: $color_player_2; }
         &.player_3 { border-color: $color_player_3; }
+        &.landmark { border-color: $color_landmark; }
     } @else {
         &.player_0 { background-color: $color_player_0; }
         &.player_1 { background-color: $color_player_1; }
         &.player_2 { background-color: $color_player_2; }
         &.player_3 { background-color: $color_player_3; }
+        &.landmark { background-color: $color_landmark; }
     }
 }
 
@@ -61,22 +65,19 @@ body.evening {
     -2px -2px 3px #444;
 }
 
-/* ---- Player colors ---- */
-
-.player_0 { background-color: #909CC2; }
-.player_1 { background-color: #D9BDC5; }
-.player_2 { background-color: #90C290; }
-.player_3 { background-color: #9D8189; }
-
 /* ---- Home ---- */
 
 #home {
     width: 590px;
     margin: 20px 60px;
-}
-#home small {
-    font-size: 12px;
-    margin-left: 1em;
+    small {
+        font-size: 12px;
+        margin-left: 1em;
+    }
+    hr {
+        margin-left: 5px;
+        width: 510px;
+    }
 }
 
 #matching_name_box {
@@ -86,10 +87,6 @@ body.evening {
 }
 #matching_name {
     font-size: 20px;
-}
-#home hr {
-    margin-left: 5px;
-    width: 510px;
 }
 .menu_button {
     font-size: 20px;
@@ -166,6 +163,7 @@ body.evening {
 table.player {
     width: 160px;
     border-radius: 5px;
+    @include player_colors();
 }
 .player td {
     vertical-align: bottom; 
@@ -192,9 +190,6 @@ table.player {
 #board .field td {
     width: 50px; height: 40px; background-color: #FFF8E1; text-align: center;
     border-bottom: solid 10px #FFF8E1;
-}
-#board .field .landmark { background-color: #B0BEC5 }
-#board .field td {
     @include player_colors();
 }
 
@@ -228,8 +223,6 @@ table.player {
     width: 640px; height: 30px; margin: 10px 0px; padding: 5px;
     background-color: #EEEEEE; text-align: center;
     border-style: none; border-radius: 5px; border-width: 1px;
-}
-#message {
     @include player_colors();
 }
 
@@ -344,9 +337,6 @@ table.card {
     border: solid 3px #EEEEEE;
     border-radius: 3px;
     margin: 0px;
-}
-table.card.landmark { background-color: #B0BEC5 }
-table.card {
     @include player_colors();
 }
 .card_description {
