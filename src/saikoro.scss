@@ -1,8 +1,9 @@
-$color_player_0: #909CC2;
-$color_player_1: #D9BDC5;
-$color_player_2: #90C290;
-$color_player_3: #9D8189;
-$color_landmark: #B0BEC5;
+$color_player_0:  #909CC2;
+$color_player_1:  #D9BDC5;
+$color_player_2:  #90C290;
+$color_player_3:  #9D8189;
+$color_landmark:  #B0BEC5;
+$color_clickable: #FFCA28;
 
 @mixin player_colors($attribute: background-color) {
     @if $attribute == border-color {
@@ -20,6 +21,11 @@ $color_landmark: #B0BEC5;
     }
 }
 
+@mixin background_image($color1, $color2) {
+    background-color: $color1;
+    background-image:
+        repeating-linear-gradient(45deg, $color1, $color1 25px, $color2 25px, $color2 50px);
+}
 
 .none { display: none; }
 .devinfo {
@@ -32,27 +38,22 @@ $color_landmark: #B0BEC5;
     padding: 4px 8px;
     color: #666666;
     border-radius: 7px;
-    background-color: #FFE082;
     display: inline-block;
-}
-.ui_box.watch {
-    background-color: #C5E1A5;
+    background-color: #FFE082;
+    &.watch {
+        background-color: #C5E1A5;
+    }
 }
 
 body {
+    user-select: none;
     font-family: sans-serif;
     width: 660px;
     color: #222;
-    background-color: #82B1FF;
-    background-image:
-        repeating-linear-gradient(45deg, #82B1FF, #82B1FF 25px, #86B7FF 25px, #86B7FF 50px);
-    user-select: none;
-}
-
-body.evening {
-    background-color: #FF9E80;
-    background-image:
-        repeating-linear-gradient(45deg, #FF9E80, #FF9E80 25px, #FFA685 25px, #FFA685 50px);
+    @include background_image(#82B1FF, #86B7FF);
+    &.evening {
+        @include background_image(#FF9E80, #FFA685);
+    }
 }
 
 .title {
@@ -64,6 +65,8 @@ body.evening {
     2px -2px 3px #444,
     -2px -2px 3px #444;
 }
+
+.relative { position: relative; }
 
 /* ---- Home ---- */
 
@@ -92,14 +95,13 @@ body.evening {
     font-size: 20px;
     margin: 5px;
     padding: 10px;
-    padding-left: 10px;
     vertical-align: middle;
     color: #666666;
     display: inline-block;
     width: 130px;
     height: 60px;
     border-radius:7px;
-    background-color: #FFCA28;
+    background-color: $color_clickable;
     border-style: solid;
     border-width: 5px;
     border-color: #FF9800;
@@ -110,6 +112,16 @@ body.evening {
         -2px  2px 2px #FFD54F,
          2px -2px 2px #FFD54F,
         -2px -2px 2px #FFD54F;
+
+    &.promote {
+        animation: promote 7s infinite;
+    }
+}
+
+@keyframes promote {
+    0% { background-color: $color_clickable; }
+   50% { background-color: #FF9800; text-shadow: none; }
+  100% { background-color: $color_clickable; }
 }
 
 .watch .menu_button {
@@ -118,17 +130,7 @@ body.evening {
     text-shadow: none;
 }
 
-.menu_button.promote {
-    animation: promote 7s infinite;
-}
-
-@keyframes promote {
-    0% { background-color: #FFCA28; }
-   50% { background-color: #FF9800; text-shadow: none; }
-  100% { background-color: #FFCA28; }
-}
-
-.menu_button.inactive {
+.menu_button.inactive {  // This should be after ".watch .menu_button".
     color: #607D8B;
     border-color: #90A4AE;
     background-color: #B0BEC5;
@@ -142,7 +144,7 @@ body.evening {
     color: #666;
     display: inline-block;
     border-radius:7px;
-    background-color: #FFCA28;
+    background-color: $color_clickable;
     text-align: center;
 
     font-weight: bold;
@@ -160,13 +162,15 @@ body.evening {
     height: calc(100vh - 280px);
 }
 
+/* -- Player -- */
+
 table.player {
     width: 160px;
     border-radius: 5px;
     @include player_colors();
-}
-.player td {
-    vertical-align: bottom; 
+    td {
+        vertical-align: bottom;
+    }
 }
 .player_salary {
     font-size: smaller;
@@ -178,47 +182,48 @@ table.player {
     font-size: smaller;
 }
 
-#board { position: relative; }
-.relative { position: relative; }
-#board table {
-    border-style: solid; border-width: 1px;
-    border-radius: 7px;
-}
-.field {
-    background-color: #FFE082;
-}
-#board .field td {
-    width: 50px; height: 40px; background-color: #FFF8E1; text-align: center;
-    border-bottom: solid 10px #FFF8E1;
-    @include player_colors();
+/* -- Board -- */
+
+#board {
+    position: relative;
+    table {
+        border-style: solid; border-width: 1px;
+        border-radius: 7px;
+    }
+    th {
+        width: 50px; height: 25px;
+    }
+    .field {
+        background-color: #FFE082;
+        td {
+            width: 50px; height: 40px; background-color: #FFF8E1; text-align: center;
+            border-bottom: solid 10px #FFF8E1;
+            @include player_colors();
+        }
+    }
+
+    .click {
+        position: absolute; top: 0px; left: 0px;
+        td {
+            width: 40px; height: 40px; border: 5px solid $color_clickable;
+            border-color: transparent;
+            z-index: 1;
+            background-color: transparent; text-align: center;
+
+            font-size: 13px;
+            vertical-align: bottom;
+            font-weight: bold;
+            color: rgba(0, 0, 0, 0.5);
+            text-shadow:
+              1px 1px 1px rgba(255, 255, 255, 0.5),
+             -1px 1px 1px rgba(255, 255, 255, 0.5),
+             1px -1px 1px rgba(255, 255, 255, 0.5),
+            -1px -1px 1px rgba(255, 255, 255, 0.5);
+            @include player_colors(border-color);
+        }
+    }
 }
 
-.click {
-    position: absolute; top: 0px; left: 0px;
-}
-.click td {
-    width: 40px; height: 40px; border: 5px solid #FFCA28;
-    border-color: transparent;
-    z-index: 1;
-    background-color: transparent; text-align: center;
-
-    font-size: 13px;
-    vertical-align: bottom;
-    font-weight: bold;
-    color: rgba(0, 0, 0, 0.5);
-    text-shadow:
-      1px 1px 1px rgba(255, 255, 255, 0.5),
-     -1px 1px 1px rgba(255, 255, 255, 0.5),
-     1px -1px 1px rgba(255, 255, 255, 0.5),
-    -1px -1px 1px rgba(255, 255, 255, 0.5);
-}
-.click td {
-    @include player_colors(border-color);
-}
-
-#board th {
-    width: 50px; height: 25px;
-}
 #message {
     width: 640px; height: 30px; margin: 10px 0px; padding: 5px;
     background-color: #EEEEEE; text-align: center;
@@ -240,10 +245,10 @@ table.player {
 #buttons {
     display: inline-block;
     width: 460px;
-}
-#buttons div {
-    display: inline-block;
-    vertical-align: top;
+    div {
+        display: inline-block;
+        vertical-align: top;
+    }
 }
 
 #chat {
@@ -253,7 +258,7 @@ table.player {
     height: 40px;
     padding: 20px;
     font-size: 25px;
-    background-color: #FFCA28;
+    background-color: $color_clickable;
     border-radius: 10px;
 }
 #watchers {
@@ -270,7 +275,7 @@ table.player {
     width: 120px; height: 80px; padding: 0px;
     font-size: 40px;
     border-radius: 10px;
-    background-color: #FFCA28;
+    background-color: $color_clickable;
 }
 
 #buttons_dice1_1 {
@@ -293,13 +298,13 @@ table.player {
     width: 80px; height: 55px; padding: 10px; padding-top: 15px;
     text-align: center;
     border-radius: 10px;
-    background-color: #FFCA28;
+    background-color: $color_clickable;
 }
 #buttons_end_turn {
     width: 70px; height: 55px; padding: 10px; padding-top: 15px;
     text-align: center;
     border-radius: 10px;
-    background-color: #FFCA28;
+    background-color: $color_clickable;
 }
 
 /* Motion elements should have width and height. */
@@ -322,13 +327,13 @@ table.player {
 
 .scrollable {
     overflow-y: scroll;
-}
-.scrollable::-webkit-scrollbar {
-    width: 7px;
-    background: transparent;
-}
-.scrollable::-webkit-scrollbar-thumb {
-    background: rgba(100, 100, 100, 0.5);
+    ::-webkit-scrollbar {
+        width: 7px;
+        background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: rgba(100, 100, 100, 0.5);
+    }
 }
 
 table.card {
