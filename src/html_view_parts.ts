@@ -4,6 +4,7 @@ import { Phase, Event, EventType, Session } from "./session";
 import { PlayerCards } from "./card_manager";
 import { DiceResult } from "./dice";
 import { DiceEffects, DiceNum, Position } from "./types";
+import { Protocol } from "./protocol";
 
 // TODO: Move it to a new file for util.
 const COLOR_FIELD: string = "#FFE082";
@@ -586,6 +587,12 @@ export class HtmlPlayersView extends HtmlViewObject {
         }
     }
 
+    public reset(): void {
+        for (let player of this.players) {
+            player.reset();
+        }
+    }
+
     private onClick(player_id: PlayerId): void {
         for (let player of this.players) {
             player.setClickable(false);
@@ -644,10 +651,21 @@ export class HtmlPlayerView extends HtmlViewObject {
         }
     }
 
+    public reset(): void {
+        this.element.classList.remove("team_0");
+        this.element.classList.remove("team_1");
+    }
+
     public draw(session: Session): void {
         this.show();
 
         let player: Player = session.getPlayer(this.player_id);
+
+        // Team
+        if (Protocol.isTeamMatch(session.mode)) {
+            this.element.classList.toggle("team_0", player.team === 0);
+            this.element.classList.toggle("team_1", player.team === 1);
+        }
 
         // Avatar
         const npc_avatars: string[] = ["⛄", "👻", "👾", "🗿"];

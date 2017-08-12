@@ -4,6 +4,10 @@ $color_player_1:  #D9BDC5;
 //$color_player_2_team_0: #8dbfbb;
 $color_player_2:  #8dbfbb;
 $color_player_3:  #9D8189;
+
+$color_team_0: #7986CB;
+$color_team_1: #E57373;
+
 $color_landmark:  #B0BEC5;
 $color_clickable: #FFCA28;
 
@@ -27,6 +31,11 @@ $color_clickable: #FFCA28;
     background-color: $color1;
     background-image:
         repeating-linear-gradient(45deg, $color1, $color1 25px, $color2 25px, $color2 50px);
+}
+
+@mixin team_background($color) {
+    background-image:
+        linear-gradient(25deg, transparent, transparent 84%, $color 84%, $color 94%, transparent 94%);
 }
 
 .none { display: none; }
@@ -170,6 +179,9 @@ table.player {
     width: 160px;
     border-radius: 5px;
     @include player_colors();
+    &.team_0 { @include team_background($color_team_0); }
+    &.team_1 { @include team_background($color_team_1); }
+
     td {
         vertical-align: bottom;
     }
@@ -203,26 +215,26 @@ table.player {
             @include player_colors();
         }
     }
+}
 
-    .click {
-        position: absolute; top: 0px; left: 0px;
-        td {
-            width: 40px; height: 40px; border: 5px solid $color_clickable;
-            border-color: transparent;
-            z-index: 1;
-            background-color: transparent; text-align: center;
+.click {
+    position: absolute; top: 0px; left: 0px;
+    td {
+        width: 40px; height: 40px; border: 5px solid $color_clickable;
+        border-color: transparent;
+        z-index: 1;
+        background-color: transparent; text-align: center;
 
-            font-size: 13px;
-            vertical-align: bottom;
-            font-weight: bold;
-            color: rgba(0, 0, 0, 0.5);
-            text-shadow:
-              1px 1px 1px rgba(255, 255, 255, 0.5),
-             -1px 1px 1px rgba(255, 255, 255, 0.5),
-             1px -1px 1px rgba(255, 255, 255, 0.5),
-            -1px -1px 1px rgba(255, 255, 255, 0.5);
-            @include player_colors(border-color);
-        }
+        font-size: 13px;
+        vertical-align: bottom;
+        font-weight: bold;
+        color: rgba(0, 0, 0, 0.5);
+        text-shadow:
+        1px 1px 1px rgba(255, 255, 255, 0.5),
+        -1px 1px 1px rgba(255, 255, 255, 0.5),
+        1px -1px 1px rgba(255, 255, 255, 0.5),
+        -1px -1px 1px rgba(255, 255, 255, 0.5);
+        @include player_colors(border-color);
     }
 }
 
@@ -329,12 +341,12 @@ table.player {
 
 .scrollable {
     overflow-y: scroll;
-    ::-webkit-scrollbar {
+    &::-webkit-scrollbar-thumb {
+        background: rgba(100, 100, 100, 0.5);
+    }
+    &::-webkit-scrollbar {
         width: 7px;
         background: transparent;
-    }
-    ::-webkit-scrollbar-thumb {
-        background: rgba(100, 100, 100, 0.5);
     }
 }
 

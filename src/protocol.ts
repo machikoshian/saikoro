@@ -70,6 +70,11 @@ export class Protocol {
         }
     }
 
+    static isTeamMatch(mode: GameMode): boolean {
+        const players: number = Protocol.getNpcCount(mode) + Protocol.getPlayerCount(mode);
+        return (Protocol.getTeamCount(mode) !== players);
+    }
+
     static getNpcCount(mode: GameMode): number {
         switch (mode) {
             case GameMode.OffLine_2:

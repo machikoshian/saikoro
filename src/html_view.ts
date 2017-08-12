@@ -139,6 +139,7 @@ export class HtmlView {
     }
 
     private resetViews(): void {
+        this.players_view.reset();
         this.buttons_view.reset();
         this.cards_view.reset();
         this.landmarks_view.reset();
