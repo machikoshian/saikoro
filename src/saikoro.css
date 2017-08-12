@@ -44,10 +44,10 @@ body.evening {
 
 /* ---- Player colors ---- */
 
-.player_0 { background-color: #909CC2 !important; }
-.player_1 { background-color: #D9BDC5 !important; }
-.player_2 { background-color: #90C290 !important; }
-.player_3 { background-color: #9D8189 !important; }
+.player_0 { background-color: #909CC2; }
+.player_1 { background-color: #D9BDC5; }
+.player_2 { background-color: #90C290; }
+.player_3 { background-color: #9D8189; }
 
 /* ---- Home ---- */
 
@@ -199,6 +199,11 @@ table.player {
      1px -1px 1px rgba(255, 255, 255, 0.5),
     -1px -1px 1px rgba(255, 255, 255, 0.5);
 }
+.click td.player_0 { border-color: #909CC2 }
+.click td.player_1 { border-color: #D9BDC5 }
+.click td.player_2 { border-color: #90C290 }
+.click td.player_3 { border-color: #9D8189 }
+
 #board th {
     width: 50px; height: 25px;
 }
@@ -207,6 +212,11 @@ table.player {
     background-color: #EEEEEE; text-align: center;
     border-style: none; border-radius: 5px; border-width: 1px;
 }
+#message.player_0 { background-color: #909CC2 }
+#message.player_1 { background-color: #D9BDC5 }
+#message.player_2 { background-color: #90C290 }
+#message.player_3 { background-color: #9D8189 }
+
 #deck_char {
     width: 260px;
     margin-bottom: 10px;
@@ -319,6 +329,12 @@ table.card {
     border-radius: 3px;
     margin: 0px;
 }
+table.card.landmark { background-color: #B0BEC5 }
+table.card.player_0 { background-color: #909CC2 }
+table.card.player_1 { background-color: #D9BDC5 }
+table.card.player_2 { background-color: #90C290 }
+table.card.player_3 { background-color: #9D8189 }
+
 .card_description {
     font-size: 12px; height: 70px;
 }

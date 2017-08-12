@@ -716,13 +716,6 @@ export class HtmlView {
         this.drawDeckBoard();
     }
 
-    private getPlayerColor(player_id: PlayerId): string {
-        if (player_id === -1 || player_id > COLOR_PLAYERS.length) {
-            return COLOR_FIELD;
-        }
-        return COLOR_PLAYERS[player_id];
-    }
-
     private getFacilityColor(facility: Facility): string {
         if (!facility) {
             return COLOR_FIELD;
@@ -1151,9 +1144,8 @@ export class HtmlView {
             }
 
             let message: string = this.getDiceResultMessage(event.dice, event.player_id);
-            let color: string = this.getPlayerColor(event.player_id);
             window.setTimeout(() => {
-                this.board_view.animateDiceResult(event.dice.result(), color);
+                this.board_view.animateDiceResult(event.dice.result(), event.player_id);
                 this.message_view.drawMessage(message, event.player_id);
             }, 1500);
             return true;

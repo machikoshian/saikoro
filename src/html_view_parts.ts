@@ -806,8 +806,8 @@ export class HtmlBoardView extends HtmlViewObject {
         this.dialogCallback = callback;
     }
 
-    public animateDiceResult(result: number, color: string): void {
-        this.clickable_fields.animateDiceResult(result, color);
+    public animateDiceResult(result: number, player_id: PlayerId): void {
+        this.clickable_fields.animateDiceResult(result, player_id);
     }
 }
 
@@ -862,18 +862,17 @@ export class HtmlClickableFieldsView extends HtmlViewObject {
         this.fields[x][y].showCost(cost);
     }
 
-    public animateDiceResult(pip: number, color: string): void {
-        let x: number = pip - 1;
+    public animateDiceResult(pip: number, player_id: PlayerId): void {
+        const x: number = pip - 1;
         if (x < 0 || 11 < x) {
             return;
         }
         let delay: number = 0;
         for (let i: number = 0; i < this.row; ++i) {
-            let y = this.row - 1 - i;
+            const y = this.row - 1 - i;
             window.setTimeout(() => {
-                this.fields[x][y].setColor(color);
-                window.setTimeout(() => {
-                    this.fields[x][y].setColor("transparent"); }, 1500);
+                this.fields[x][y].setPlayer(player_id);
+                window.setTimeout(() => { this.fields[x][y].setPlayer(-1); }, 1500);
             }, delay);
             delay = delay + 10 * i;  // 0, 10, 30, 60, 100, ...
         }
@@ -905,6 +904,13 @@ export class HtmlClickableFieldView extends HtmlViewObject {
 
     public setColor(color: string): void {
         this.element.style.borderColor = color;
+    }
+
+    public setPlayer(player_id: PlayerId): void {
+        this.element.style.borderColor = null;
+        for (let i: number = 0; i < 4; ++i) {
+            this.element.classList.toggle(`player_${i}`, (player_id === i));
+        }
     }
 
     public showCost(cost: number): void {
