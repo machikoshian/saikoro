@@ -6,7 +6,7 @@ CLIENT_DIR=./out/standalone
 echo "Building standalone client"
 webpack --config webpack.config.standalone.js || exit
 ./src/replace_keywords.sh ./src/saikoro.html > $CLIENT_DIR/index.html
-cp ./src/saikoro.css $CLIENT_DIR/
+sass ./src/saikoro.scss $CLIENT_DIR/saikoro.css
 cp ./src/icon.png $CLIENT_DIR/
 
 if [ "$1" != "build" ]; then

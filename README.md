@@ -2,6 +2,7 @@
 
 * Typescript
 * Node.js
+* Sass
 * yarn
 * webpack
 * Google Firebase
@@ -15,6 +16,7 @@
 * npm link typescript
 * npm install webpack --global
 * npm install firebase-tools --global
+* gem install sass
 * cd <Dir_of_this_README.md>
 * yarn install
 

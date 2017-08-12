@@ -1,3 +1,22 @@
+$color_player_0: #909CC2;
+$color_player_1: #D9BDC5;
+$color_player_2: #90C290;
+$color_player_3: #9D8189;
+@mixin player_colors($attribute: background-color) {
+    @if $attribute == border-color {
+        &.player_0 { border-color: $color_player_0; }
+        &.player_1 { border-color: $color_player_1; }
+        &.player_2 { border-color: $color_player_2; }
+        &.player_3 { border-color: $color_player_3; }
+    } @else {
+        &.player_0 { background-color: $color_player_0; }
+        &.player_1 { background-color: $color_player_1; }
+        &.player_2 { background-color: $color_player_2; }
+        &.player_3 { background-color: $color_player_3; }
+    }
+}
+
+
 .none { display: none; }
 .devinfo {
     font-size: smaller;
@@ -175,10 +194,9 @@ table.player {
     border-bottom: solid 10px #FFF8E1;
 }
 #board .field .landmark { background-color: #B0BEC5 }
-#board .field .player_0 { background-color: #909CC2 }
-#board .field .player_1 { background-color: #D9BDC5 }
-#board .field .player_2 { background-color: #90C290 }
-#board .field .player_3 { background-color: #9D8189 }
+#board .field td {
+    @include player_colors();
+}
 
 .click {
     position: absolute; top: 0px; left: 0px;
@@ -199,10 +217,9 @@ table.player {
      1px -1px 1px rgba(255, 255, 255, 0.5),
     -1px -1px 1px rgba(255, 255, 255, 0.5);
 }
-.click td.player_0 { border-color: #909CC2 }
-.click td.player_1 { border-color: #D9BDC5 }
-.click td.player_2 { border-color: #90C290 }
-.click td.player_3 { border-color: #9D8189 }
+.click td {
+    @include player_colors(border-color);
+}
 
 #board th {
     width: 50px; height: 25px;
@@ -212,10 +229,9 @@ table.player {
     background-color: #EEEEEE; text-align: center;
     border-style: none; border-radius: 5px; border-width: 1px;
 }
-#message.player_0 { background-color: #909CC2 }
-#message.player_1 { background-color: #D9BDC5 }
-#message.player_2 { background-color: #90C290 }
-#message.player_3 { background-color: #9D8189 }
+#message {
+    @include player_colors();
+}
 
 #deck_char {
     width: 260px;
