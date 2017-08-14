@@ -1,608 +1,574 @@
-.none { display: none; }
+.none {
+  display: none; }
+
 .devinfo {
-    font-size: smaller;
-    color: rgba(200, 200, 200, 0.4);
-}
+  font-size: smaller;
+  color: rgba(200, 200, 200, 0.4); }
+
 .ui_box {
-    font-size: 20px;
-    margin-top: 10px;
-    padding: 4px 8px;
-    color: #666666;
-    border-radius: 7px;
-    background-color: #FFE082;
-    display: inline-block;
-}
-.ui_box.watch {
-    background-color: #C5E1A5;
-}
+  font-size: 20px;
+  margin-top: 10px;
+  padding: 4px 8px;
+  color: #666666;
+  border-radius: 7px;
+  display: inline-block;
+  background-color: #FFE082; }
+  .ui_box.watch {
+    background-color: #C5E1A5; }
 
 body {
-    font-family: sans-serif;
-    width: 660px;
-    color: #222;
-    background-color: #82B1FF;
-    background-image:
-        repeating-linear-gradient(45deg, #82B1FF, #82B1FF 25px, #86B7FF 25px, #86B7FF 50px);
-    user-select: none;
-}
-
-body.evening {
+  user-select: none;
+  font-family: sans-serif;
+  width: 660px;
+  color: #222;
+  background-color: #82B1FF;
+  background-image: repeating-linear-gradient(45deg, #82B1FF, #82B1FF 25px, #86B7FF 25px, #86B7FF 50px); }
+  body.evening {
     background-color: #FF9E80;
-    background-image:
-        repeating-linear-gradient(45deg, #FF9E80, #FF9E80 25px, #FFA685 25px, #FFA685 50px);
-}
+    background-image: repeating-linear-gradient(45deg, #FF9E80, #FF9E80 25px, #FFA685 25px, #FFA685 50px); }
 
 .title {
-    color: white;
-    font-weight: bold;
-    font-size: 50px;
-    text-shadow: 2px 2px 3px #444,
-    -2px 2px 3px #444,
-    2px -2px 3px #444,
-    -2px -2px 3px #444;
-}
+  color: white;
+  font-weight: bold;
+  font-size: 50px;
+  text-shadow: 2px 2px 3px #444, -2px 2px 3px #444, 2px -2px 3px #444, -2px -2px 3px #444; }
+
+.relative {
+  position: relative; }
 
 /* ---- Home ---- */
-
 #home {
-    width: 590px;
-    margin: 20px 60px;
-}
-#home small {
+  width: 590px;
+  margin: 20px 60px; }
+  #home small {
     font-size: 12px;
-    margin-left: 1em;
-}
+    margin-left: 1em; }
+  #home hr {
+    margin-left: 5px;
+    width: 510px; }
 
 #matching_name_box {
-    margin: 5px;
-    padding: 10px;
-    width: 350px;
-}
+  margin: 5px;
+  padding: 10px;
+  width: 350px; }
+
 #matching_name {
-    font-size: 20px;
-}
-#home hr {
-    margin-left: 5px;
-    width: 510px;
-}
+  font-size: 20px; }
+
 .menu_button {
-    font-size: 20px;
-    margin: 5px;
-    padding: 10px;
-    padding-left: 10px;
-    vertical-align: middle;
-    color: #666666;
-    display: inline-block;
-    width: 130px;
-    height: 60px;
-    border-radius:7px;
-    background-color: #FFCA28;
-    border-style: solid;
-    border-width: 5px;
-    border-color: #FF9800;
-
-    font-weight: bold;
-    text-shadow:
-         2px  2px 2px #FFD54F,
-        -2px  2px 2px #FFD54F,
-         2px -2px 2px #FFD54F,
-        -2px -2px 2px #FFD54F;
-}
-
-.watch .menu_button {
-    border-color: #7CB342;
-    background-color: #8BC34A;
-    text-shadow: none;
-}
-
-.menu_button.promote {
-    animation: promote 7s infinite;
-}
+  font-size: 20px;
+  margin: 5px;
+  padding: 10px;
+  vertical-align: middle;
+  color: #666666;
+  display: inline-block;
+  width: 130px;
+  height: 60px;
+  border-radius: 7px;
+  background-color: #FFCA28;
+  border-style: solid;
+  border-width: 5px;
+  border-color: #FF9800;
+  font-weight: bold;
+  text-shadow: 2px  2px 2px #FFD54F, -2px  2px 2px #FFD54F, 2px -2px 2px #FFD54F, -2px -2px 2px #FFD54F; }
+  .menu_button.promote {
+    animation: promote 7s infinite; }
 
 @keyframes promote {
-    0% { background-color: #FFCA28; }
-   50% { background-color: #FF9800; text-shadow: none; }
-  100% { background-color: #FFCA28; }
-}
+  0% {
+    background-color: #FFCA28; }
+  50% {
+    background-color: #FF9800;
+    text-shadow: none; }
+  100% {
+    background-color: #FFCA28; } }
+.watch .menu_button {
+  border-color: #7CB342;
+  background-color: #8BC34A;
+  text-shadow: none; }
 
 .menu_button.inactive {
-    color: #607D8B;
-    border-color: #90A4AE;
-    background-color: #B0BEC5;
-    text-shadow: none;
-}
+  color: #607D8B;
+  border-color: #90A4AE;
+  background-color: #B0BEC5;
+  text-shadow: none; }
 
 .ui_button {
-    font-size: 20px;
-    margin: 5px;
-    padding: 10px;
-    color: #666;
-    display: inline-block;
-    border-radius:7px;
-    background-color: #FFCA28;
-    text-align: center;
+  font-size: 20px;
+  margin: 5px;
+  padding: 10px;
+  color: #666;
+  display: inline-block;
+  border-radius: 7px;
+  background-color: #FFCA28;
+  text-align: center;
+  font-weight: bold;
+  text-shadow: 2px  2px 2px #FFD54F, -2px  2px 2px #FFD54F, 2px -2px 2px #FFD54F, -2px -2px 2px #FFD54F; }
 
-    font-weight: bold;
-    text-shadow:
-         2px  2px 2px #FFD54F,
-        -2px  2px 2px #FFD54F,
-         2px -2px 2px #FFD54F,
-        -2px -2px 2px #FFD54F;
-}
 #matching_button_deck {
-    width: 100px;
-}
+  width: 100px; }
 
 #home_menu {
-    height: calc(100vh - 280px);
-}
+  height: calc(100vh - 280px); }
 
-table.player { width: 160px; }
-#player_0 { background-color: #909CC2; border-radius: 5px; }
-#player_1 { background-color: #D9BDC5; border-radius: 5px; }
-#player_2 { background-color: #90C290; border-radius: 5px; }
-#player_3 { background-color: #9D8189; border-radius: 5px; }
-.player td {
-    vertical-align: bottom; 
-}
+/* -- Player -- */
+table.player {
+  width: 160px;
+  border-radius: 5px; }
+  table.player.player_0 {
+    background-color: #909CC2; }
+  table.player.player_1 {
+    background-color: #D9BDC5; }
+  table.player.player_2 {
+    background-color: #8dbfbb; }
+  table.player.player_3 {
+    background-color: #9D8189; }
+  table.player.landmark {
+    background-color: #B0BEC5; }
+  table.player.team_0 {
+    background-image: linear-gradient(25deg, transparent, transparent 84%, #7986CB 84%, #7986CB 94%, transparent 94%); }
+  table.player.team_1 {
+    background-image: linear-gradient(25deg, transparent, transparent 84%, #E57373 84%, #E57373 94%, transparent 94%); }
+  table.player td {
+    vertical-align: bottom; }
+
 .player_salary {
-    font-size: smaller;
-}
-.player_salary.boosted {
-    font-weight: bold;
-}
-.player_talon {
-    font-size: smaller;
-}
+  font-size: smaller; }
 
-#board { position: relative; }
-.relative { position: relative; }
-#board table {
-    border-style: solid; border-width: 1px;
-    border-radius: 7px;
-}
-.field {
-    background-color: #FFE082;
-}
-#board .field td {
-    width: 50px; height: 40px; background-color: #FFF8E1; text-align: center;
-    border-bottom: solid 10px #FFF8E1;
-}
+.player_salary.boosted {
+  font-weight: bold; }
+
+.player_talon {
+  font-size: smaller; }
+
+/* -- Board -- */
+#board {
+  position: relative; }
+  #board table {
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 7px; }
+  #board th {
+    width: 50px;
+    height: 25px; }
+  #board .field {
+    background-color: #FFE082; }
+    #board .field td {
+      width: 50px;
+      height: 40px;
+      background-color: #FFF8E1;
+      text-align: center;
+      border-bottom: solid 10px #FFF8E1; }
+      #board .field td.player_0 {
+        background-color: #909CC2; }
+      #board .field td.player_1 {
+        background-color: #D9BDC5; }
+      #board .field td.player_2 {
+        background-color: #8dbfbb; }
+      #board .field td.player_3 {
+        background-color: #9D8189; }
+      #board .field td.landmark {
+        background-color: #B0BEC5; }
+
 .click {
-    position: absolute; top: 0px; left: 0px;
-}
-.click td {
-    width: 40px; height: 40px; border: 5px solid #FFCA28;
+  position: absolute;
+  top: 0px;
+  left: 0px; }
+  .click td {
+    width: 40px;
+    height: 40px;
+    border: 5px solid #FFCA28;
     border-color: transparent;
     z-index: 1;
-    background-color: transparent; text-align: center;
-
+    background-color: transparent;
+    text-align: center;
     font-size: 13px;
     vertical-align: bottom;
     font-weight: bold;
     color: rgba(0, 0, 0, 0.5);
-    text-shadow:
-      1px 1px 1px rgba(255, 255, 255, 0.5),
-     -1px 1px 1px rgba(255, 255, 255, 0.5),
-     1px -1px 1px rgba(255, 255, 255, 0.5),
-    -1px -1px 1px rgba(255, 255, 255, 0.5);
-}
-#board th {
-    width: 50px; height: 25px;
-}
+    text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.5), -1px 1px 1px rgba(255, 255, 255, 0.5), 1px -1px 1px rgba(255, 255, 255, 0.5), -1px -1px 1px rgba(255, 255, 255, 0.5); }
+    .click td.player_0 {
+      border-color: #909CC2; }
+    .click td.player_1 {
+      border-color: #D9BDC5; }
+    .click td.player_2 {
+      border-color: #8dbfbb; }
+    .click td.player_3 {
+      border-color: #9D8189; }
+    .click td.landmark {
+      border-color: #B0BEC5; }
+
 #message {
-    width: 640px; height: 30px; margin: 10px 0px; padding: 5px;
-    background-color: #EEEEEE; text-align: center;
-    border-style: none; border-radius: 5px; border-width: 1px;
-}
+  width: 640px;
+  height: 30px;
+  margin: 10px 0px;
+  padding: 5px;
+  background-color: #EEEEEE;
+  text-align: center;
+  border-style: none;
+  border-radius: 5px;
+  border-width: 1px; }
+  #message.player_0 {
+    background-color: #909CC2; }
+  #message.player_1 {
+    background-color: #D9BDC5; }
+  #message.player_2 {
+    background-color: #8dbfbb; }
+  #message.player_3 {
+    background-color: #9D8189; }
+  #message.landmark {
+    background-color: #B0BEC5; }
+
 #deck_char {
-    width: 260px;
-    margin-bottom: 10px;
-}
+  width: 260px;
+  margin-bottom: 10px; }
+
 .deck_char {
-    width: 50px; height: 50px; background-color: #FFF8E1;
-    font-size: 15px;
-    text-align: center;
-    vertical-align: top;
-}
+  width: 50px;
+  height: 50px;
+  background-color: #FFF8E1;
+  font-size: 15px;
+  text-align: center;
+  vertical-align: top; }
 
 #buttons {
+  display: inline-block;
+  width: 460px; }
+  #buttons div {
     display: inline-block;
-    width: 460px;
-}
-#buttons div {
-    display: inline-block;
-    vertical-align: top;
-}
+    vertical-align: top; }
 
 #chat {
-    display: inline-block;
-    vertical-align: top;
-    width: 20px;
-    height: 40px;
-    padding: 20px;
-    font-size: 25px;
-    background-color: #FFCA28;
-    border-radius: 10px;
-}
+  display: inline-block;
+  vertical-align: top;
+  width: 20px;
+  height: 40px;
+  padding: 20px;
+  font-size: 25px;
+  background-color: #FFCA28;
+  border-radius: 10px; }
+
 #watchers {
-    display: inline-block;
-    vertical-align: top;
-    width: 85px;
-    height: 40px;
-    padding: 20px;
-    background-color: rgba(200, 200, 200, 0.4);
-    border-radius: 10px;
-}
+  display: inline-block;
+  vertical-align: top;
+  width: 85px;
+  height: 40px;
+  padding: 20px;
+  background-color: rgba(200, 200, 200, 0.4);
+  border-radius: 10px; }
+
 .dice_button {
-    position: relative;
-    width: 120px; height: 80px; padding: 0px;
-    font-size: 40px;
-    border-radius: 10px;
-    background-color: #FFCA28;
-}
+  position: relative;
+  width: 120px;
+  height: 80px;
+  padding: 0px;
+  font-size: 40px;
+  border-radius: 10px;
+  background-color: #FFCA28; }
 
 #buttons_dice1_1 {
-    position: absolute;
-    top: 13px;
-    left: 32px;
-}
+  position: absolute;
+  top: 13px;
+  left: 32px; }
+
 #buttons_dice2_1 {
-    position: absolute;
-    top: 7px;
-    left: 5px;
-}
+  position: absolute;
+  top: 7px;
+  left: 5px; }
+
 #buttons_dice2_2 {
-    position: absolute;
-    top: 16px;
-    left: 54px;
-}
+  position: absolute;
+  top: 16px;
+  left: 54px; }
 
 #buttons_char_card {
-    width: 80px; height: 55px; padding: 10px; padding-top: 15px;
-    text-align: center;
-    border-radius: 10px;
-    background-color: #FFCA28;
-}
+  width: 80px;
+  height: 55px;
+  padding: 10px;
+  padding-top: 15px;
+  text-align: center;
+  border-radius: 10px;
+  background-color: #FFCA28; }
+
 #buttons_end_turn {
-    width: 70px; height: 55px; padding: 10px; padding-top: 15px;
-    text-align: center;
-    border-radius: 10px;
-    background-color: #FFCA28;
-}
+  width: 70px;
+  height: 55px;
+  padding: 10px;
+  padding-top: 15px;
+  text-align: center;
+  border-radius: 10px;
+  background-color: #FFCA28; }
 
 /* Motion elements should have width and height. */
 #money_motion {
-    width: 40px; height: 40px;
-}
+  width: 40px;
+  height: 40px; }
 
 .card_area {
-    width: 650px;
-    height: 150px;
-}
+  width: 650px;
+  height: 150px; }
+
 #list_cards {
-    height: calc(100vh - 100px);
-    position: relative;
-}
+  height: calc(100vh - 100px);
+  position: relative; }
+
 #deck_cards {
-    height: calc(100vh - 520px);
-    position: relative;
-}
+  height: calc(100vh - 520px);
+  position: relative; }
 
 .scrollable {
-    overflow-y: scroll;
-}
-.scrollable::-webkit-scrollbar {
+  overflow-y: scroll; }
+  .scrollable::-webkit-scrollbar-thumb {
+    background: rgba(100, 100, 100, 0.5); }
+  .scrollable::-webkit-scrollbar {
     width: 7px;
-    background: transparent;
-}
-.scrollable::-webkit-scrollbar-thumb {
-    background: rgba(100, 100, 100, 0.5);
-}
+    background: transparent; }
 
 table.card {
-    display: inline-block;
-    width: 98px; height: 140px;
-    background-color: #90CAF9;
-    border: solid 3px #EEEEEE;
-    border-radius: 3px;
-    margin: 0px;
-}
+  display: inline-block;
+  width: 98px;
+  height: 140px;
+  border: solid 3px #EEEEEE;
+  border-radius: 3px;
+  margin: 0px; }
+  table.card.player_0 {
+    background-color: #909CC2; }
+  table.card.player_1 {
+    background-color: #D9BDC5; }
+  table.card.player_2 {
+    background-color: #8dbfbb; }
+  table.card.player_3 {
+    background-color: #9D8189; }
+  table.card.landmark {
+    background-color: #B0BEC5; }
+
 .card_description {
-    font-size: 12px; height: 70px;
-}
+  font-size: 12px;
+  height: 70px; }
 
 /* ---- Stamps ---- */
-
+/* ---- Stamps ---- */
 .stamp_box {
-    width: 470px;
-    height: 230px;
-    background-color: rgba(0, 0, 0, 0.1);
-    padding: 10px;
-    border-radius: 10px;
-    border-style: solid;
-    border-width: 3px;
-    border-color: rgba(0, 0, 0, 0.2);
-}
+  width: 470px;
+  height: 230px;
+  background-color: rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  border-radius: 10px;
+  border-style: solid;
+  border-width: 3px;
+  border-color: rgba(0, 0, 0, 0.2); }
 
 .stamp_box .stamp {
-    display: inline-block;
-}
+  display: inline-block; }
 
 .stamp {
-    width: 140px;
-    height: 60px;
-    font-size: 18px;
-    padding-top: 5px;
-    text-align: center;
-    color: #222;
-    background-color: rgba(255, 255, 255, 0.8);
-    border-radius: 10px;
-    font-weight: bold;
-    margin: 5px;
-}
+  width: 140px;
+  height: 60px;
+  font-size: 18px;
+  padding-top: 5px;
+  text-align: center;
+  color: #222;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 10px;
+  font-weight: bold;
+  margin: 5px; }
 
 .konnichiwa {
-    color: red;
-    text-shadow:
-      1px 1px 1px white,
-     -1px 1px 1px white,
-     1px -1px 1px white,
-    -1px -1px 1px white;
-}
+  color: red;
+  text-shadow: 1px 1px 1px white, -1px 1px 1px white, 1px -1px 1px white, -1px -1px 1px white; }
 
 .dokidoki {
-    color: yellow;
-    text-shadow:
-      1px 1px 1px red,
-     -1px 1px 1px red,
-     1px -1px 1px red,
-    -1px -1px 1px red;
-}
+  color: yellow;
+  text-shadow: 1px 1px 1px red, -1px 1px 1px red, 1px -1px 1px red, -1px -1px 1px red; }
 
 .sugoi {
-    color: lightblue;
-    text-shadow:
-     1px 1px 1px blue,
-    -1px 1px 1px blue,
-    1px -1px 1px blue,
-   -1px -1px 1px blue;
-}
+  color: lightblue;
+  text-shadow: 1px 1px 1px blue, -1px 1px 1px blue, 1px -1px 1px blue, -1px -1px 1px blue; }
 
 .otsukare {
-    font-size: 17px;
-    color: yellow;
-    text-shadow:
-     1px 1px 1px green,
-    -1px 1px 1px green,
-    1px -1px 1px green,
-   -1px -1px 1px green;
-}
+  font-size: 17px;
+  color: yellow;
+  text-shadow: 1px 1px 1px green, -1px 1px 1px green, 1px -1px 1px green, -1px -1px 1px green; }
 
 .ureshii {
-    font-size: 20px;
-    color: white;
-    text-shadow:
-     1px 1px 1px red,
-    -1px 1px 1px red,
-    1px -1px 1px red,
-   -1px -1px 1px red;
-}
+  font-size: 20px;
+  color: white;
+  text-shadow: 1px 1px 1px red, -1px 1px 1px red, 1px -1px 1px red, -1px -1px 1px red; }
 
 .iina {
-    color: yellow;
-    text-shadow:
-     1px 1px 1px orange,
-    -1px 1px 1px orange,
-    1px -1px 1px orange,
-   -1px -1px 1px orange;
-}
+  color: yellow;
+  text-shadow: 1px 1px 1px orange, -1px 1px 1px orange, 1px -1px 1px orange, -1px -1px 1px orange; }
 
 .omedetou {
-    font-size: 17px;
-    color: white;
-    text-shadow:
-     1px 1px 1px red,
-    -1px 1px 1px red,
-    1px -1px 1px red,
-   -1px -1px 1px red;
-}
+  font-size: 17px;
+  color: white;
+  text-shadow: 1px 1px 1px red, -1px 1px 1px red, 1px -1px 1px red, -1px -1px 1px red; }
 
 .mouichido {
-    color: red;
-    text-shadow:
-     1px 1px 1px white,
-    -1px 1px 1px white,
-    1px -1px 1px white,
-   -1px -1px 1px white;
-}
+  color: red;
+  text-shadow: 1px 1px 1px white, -1px 1px 1px white, 1px -1px 1px white, -1px -1px 1px white; }
 
 .hanaremasu {
-    color: white;
-    text-shadow:
-     1px 1px 1px blue,
-    -1px 1px 1px blue,
-    1px -1px 1px blue,
-   -1px -1px 1px blue;
-}
+  color: white;
+  text-shadow: 1px 1px 1px blue, -1px 1px 1px blue, 1px -1px 1px blue, -1px -1px 1px blue; }
 
 /* ---- Dice ---- */
-
+/* ---- Dice ---- */
 .cube {
-    transform-style: preserve-3d;
-    position: relative;
-    top: 5px;
-    left: 5px;
-    width: 40px;
-    height: 40px;
-}
+  transform-style: preserve-3d;
+  position: relative;
+  top: 5px;
+  left: 5px;
+  width: 40px;
+  height: 40px; }
 
 .cube div:nth-child(1) {
-    transform: rotateY(90deg) translateX(-47%) rotateY(-90deg);
-}
+  transform: rotateY(90deg) translateX(-47%) rotateY(-90deg); }
 
 .cube div:nth-child(2) {
-    transform: translateY(47%) rotateX(-90deg);
-}
+  transform: translateY(47%) rotateX(-90deg); }
 
 .cube div:nth-child(3) {
-    transform: translateX(47%) rotateY(90deg);
-}
+  transform: translateX(47%) rotateY(90deg); }
 
 .cube div:nth-child(4) {
-    transform: translateX(-47%) rotateY(-90deg);
-}
+  transform: translateX(-47%) rotateY(-90deg); }
 
 .cube div:nth-child(5) {
-    transform: translateY(-47%) rotateX(90deg);
-}
+  transform: translateY(-47%) rotateX(90deg); }
 
 .cube div:nth-child(6) {
-    transform: rotateY(90deg) translateX(47%) rotateY(90deg);
-}
+  transform: rotateY(90deg) translateX(47%) rotateY(90deg); }
 
 .dice_view {
-    display: inline-block;
-    transform-style: preserve-3d;
-    transform: rotateX(60deg) rotateY(0deg) rotateZ(45deg);
-}
+  display: inline-block;
+  transform-style: preserve-3d;
+  transform: rotateX(60deg) rotateY(0deg) rotateZ(45deg); }
 
 .dice {
-    transform-style: preserve-3d;
-    display: inline-block;
-    width: 50px;
-    height: 50px;
-}
+  transform-style: preserve-3d;
+  display: inline-block;
+  width: 50px;
+  height: 50px; }
 
 .dice_face {
-    position: absolute;
-    top: 0pt;
-    left: 0pt;
-    width: 100%;
-    height: 100%;
-    border: 3px solid #EEEEEE;
-    background-color: #FFFFFF;
-    color: transparent;
-    line-height: 100%;
-    font-size: 1em;
-    text-align: center;
-    box-sizing: border-box;
-    margin: 0;
-    border-radius: 10%;
-}
+  position: absolute;
+  top: 0pt;
+  left: 0pt;
+  width: 100%;
+  height: 100%;
+  border: 3px solid #EEEEEE;
+  background-color: #FFFFFF;
+  color: transparent;
+  line-height: 100%;
+  font-size: 1em;
+  text-align: center;
+  box-sizing: border-box;
+  margin: 0;
+  border-radius: 10%; }
 
 .pip1 {
-    background: radial-gradient(red 22%, white 28%);
-}
+  background: radial-gradient(red 22%, white 28%); }
 
 .pip2 {
-    background:
-        radial-gradient(15% 15% at 29% 29%, black 75%, transparent),
-        radial-gradient(15% 15% at 71% 71%, black 75%, white);
-}
+  background: radial-gradient(15% 15% at 29% 29%, black 75%, transparent), radial-gradient(15% 15% at 71% 71%, black 75%, white); }
 
 .pip3 {
-    background:
-        radial-gradient(13% 13% at 25% 25%, black 75%, transparent),
-        radial-gradient(13% 13% at 50% 50%, black 75%, transparent),
-        radial-gradient(13% 13% at 75% 75%, black 75%, white);
-}
+  background: radial-gradient(13% 13% at 25% 25%, black 75%, transparent), radial-gradient(13% 13% at 50% 50%, black 75%, transparent), radial-gradient(13% 13% at 75% 75%, black 75%, white); }
 
 .pip4 {
-    background:
-        radial-gradient(13% 13% at 28% 28%, black 75%, transparent),
-        radial-gradient(13% 13% at 28% 72%, black 75%, transparent),
-        radial-gradient(13% 13% at 72% 28%, black 75%, transparent),
-        radial-gradient(13% 13% at 72% 72%, black 75%, white);
-}
+  background: radial-gradient(13% 13% at 28% 28%, black 75%, transparent), radial-gradient(13% 13% at 28% 72%, black 75%, transparent), radial-gradient(13% 13% at 72% 28%, black 75%, transparent), radial-gradient(13% 13% at 72% 72%, black 75%, white); }
 
 .pip5 {
-    background:
-        radial-gradient(13% 13% at 25% 25%, black 75%, transparent),
-        radial-gradient(13% 13% at 25% 75%, black 75%, transparent),
-        radial-gradient(13% 13% at 50% 50%, black 75%, transparent),
-        radial-gradient(13% 13% at 75% 25%, black 75%, transparent),
-        radial-gradient(13% 13% at 75% 75%, black 75%, white);
-}
+  background: radial-gradient(13% 13% at 25% 25%, black 75%, transparent), radial-gradient(13% 13% at 25% 75%, black 75%, transparent), radial-gradient(13% 13% at 50% 50%, black 75%, transparent), radial-gradient(13% 13% at 75% 25%, black 75%, transparent), radial-gradient(13% 13% at 75% 75%, black 75%, white); }
 
 .pip6 {
-    background:
-        radial-gradient(13% 13% at 28% 20%, black 75%, transparent),
-        radial-gradient(13% 13% at 28% 50%, black 75%, transparent),
-        radial-gradient(13% 13% at 28% 80%, black 75%, transparent),
-        radial-gradient(13% 13% at 72% 20%, black 75%, transparent),
-        radial-gradient(13% 13% at 72% 50%, black 75%, transparent),
-        radial-gradient(13% 13% at 72% 80%, black 75%, white);
-}
+  background: radial-gradient(13% 13% at 28% 20%, black 75%, transparent), radial-gradient(13% 13% at 28% 50%, black 75%, transparent), radial-gradient(13% 13% at 28% 80%, black 75%, transparent), radial-gradient(13% 13% at 72% 20%, black 75%, transparent), radial-gradient(13% 13% at 72% 50%, black 75%, transparent), radial-gradient(13% 13% at 72% 80%, black 75%, white); }
 
 .face1 {
-    transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg);
-}
+  transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+
 .face2 {
-    transform: rotateX(90deg) rotateY(0deg) rotateZ(0deg);
-}
+  transform: rotateX(90deg) rotateY(0deg) rotateZ(0deg); }
+
 .face3 {
-    transform: rotateX(90deg) rotateY(0deg) rotateZ(90deg);
-}
+  transform: rotateX(90deg) rotateY(0deg) rotateZ(90deg); }
+
 .face6 {
-    transform: rotateX(180deg) rotateY(0deg) rotateZ(90deg);
-}
+  transform: rotateX(180deg) rotateY(0deg) rotateZ(90deg); }
+
 .face5 {
-    transform: rotateX(180deg) rotateY(90deg) rotateZ(90deg);
-}
+  transform: rotateX(180deg) rotateY(90deg) rotateZ(90deg); }
+
 .face4 {
-    transform: rotateX(270deg) rotateY(90deg) rotateZ(90deg);
-}
+  transform: rotateX(270deg) rotateY(90deg) rotateZ(90deg); }
 
 .roll {
-    animation: roll 1s linear;
-    animation-iteration-count: infinite;
-}
+  animation: roll 1s linear;
+  animation-iteration-count: infinite; }
+
 @keyframes roll {
-      0% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0); }
-     25% { transform: rotateZ(20deg) rotate3d(1, -1, 0, 0.25turn); }
-     50% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.50turn); }
-     75% { transform: rotateZ(70deg) rotate3d(1, -1, 0, 0.75turn); }
-    100% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 1.00turn); }
-}
-
+  0% {
+    transform: rotateZ(45deg) rotate3d(1, -1, 0, 0); }
+  25% {
+    transform: rotateZ(20deg) rotate3d(1, -1, 0, 0.25turn); }
+  50% {
+    transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.5turn); }
+  75% {
+    transform: rotateZ(70deg) rotate3d(1, -1, 0, 0.75turn); }
+  100% {
+    transform: rotateZ(45deg) rotate3d(1, -1, 0, 1turn); } }
 @keyframes roll_end1 {
-      0% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0); }
-     25% { transform: rotateZ(20deg) rotate3d(1, -1, 0, 0.25turn); }
-     50% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.5turn); }
-     75% { transform: rotateZ(70deg) rotate3d(1, -1, 0, 0.75turn); }
-    100% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 1turn); }
-}
-
+  0% {
+    transform: rotateZ(45deg) rotate3d(1, -1, 0, 0); }
+  25% {
+    transform: rotateZ(20deg) rotate3d(1, -1, 0, 0.25turn); }
+  50% {
+    transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.5turn); }
+  75% {
+    transform: rotateZ(70deg) rotate3d(1, -1, 0, 0.75turn); }
+  100% {
+    transform: rotateZ(45deg) rotate3d(1, -1, 0, 1turn); } }
 @keyframes roll_end2 {
-      0% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0); }
-     50% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.25turn) rotateZ(-45deg) rotateY(-45deg); }
-    100% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.25turn) rotateZ(-45deg) rotateY(-45deg); }
-}
-
+  0% {
+    transform: rotateZ(45deg) rotate3d(1, -1, 0, 0); }
+  50% {
+    transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.25turn) rotateZ(-45deg) rotateY(-45deg); }
+  100% {
+    transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.25turn) rotateZ(-45deg) rotateY(-45deg); } }
 @keyframes roll_end3 {
-      0% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0); }
-     50% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.25turn) rotateZ(-45deg) rotateY(-45deg) rotateZ(90deg); }
-    100% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.25turn) rotateZ(-45deg) rotateY(-45deg) rotateZ(90deg); }
-}
-
+  0% {
+    transform: rotateZ(45deg) rotate3d(1, -1, 0, 0); }
+  50% {
+    transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.25turn) rotateZ(-45deg) rotateY(-45deg) rotateZ(90deg); }
+  100% {
+    transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.25turn) rotateZ(-45deg) rotateY(-45deg) rotateZ(90deg); } }
 @keyframes roll_end6 {
-      0% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0); }
-     25% { transform: rotateZ(20deg) rotate3d(1, -1, 0, 0.25turn); }
-     50% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.5turn); }
-    100% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.5turn); }
-}
-
+  0% {
+    transform: rotateZ(45deg) rotate3d(1, -1, 0, 0); }
+  25% {
+    transform: rotateZ(20deg) rotate3d(1, -1, 0, 0.25turn); }
+  50% {
+    transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.5turn); }
+  100% {
+    transform: rotateZ(45deg) rotate3d(1, -1, 0, 0.5turn); } }
 @keyframes roll_end5 {
-      0% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0); }
-     25% { transform: rotateZ(20deg) rotate3d(1, -1, 0, 0.25turn); }
-     50% { transform: rotateZ(10deg) rotate3d(1, -1, 0, 0.5turn); }
-    100% { transform: rotateZ(0deg)  rotate3d(1, -1, 0, 0.75turn) rotateZ(-45deg); }
-}
-
+  0% {
+    transform: rotateZ(45deg) rotate3d(1, -1, 0, 0); }
+  25% {
+    transform: rotateZ(20deg) rotate3d(1, -1, 0, 0.25turn); }
+  50% {
+    transform: rotateZ(10deg) rotate3d(1, -1, 0, 0.5turn); }
+  100% {
+    transform: rotateZ(0deg) rotate3d(1, -1, 0, 0.75turn) rotateZ(-45deg); } }
 @keyframes roll_end4 {
-      0% { transform: rotateZ(45deg) rotate3d(1, -1, 0, 0); }
-     25% { transform: rotateZ(20deg) rotate3d(1, -1, 0, 0.25turn); }
-     50% { transform: rotateZ(10deg) rotate3d(1, -1, 0, 0.5turn); }
-    100% { transform: rotateZ(0deg)  rotate3d(1, -1, 0, 0.75turn) rotateZ(45deg); }
-}
+  0% {
+    transform: rotateZ(45deg) rotate3d(1, -1, 0, 0); }
+  25% {
+    transform: rotateZ(20deg) rotate3d(1, -1, 0, 0.25turn); }
+  50% {
+    transform: rotateZ(10deg) rotate3d(1, -1, 0, 0.5turn); }
+  100% {
+    transform: rotateZ(0deg) rotate3d(1, -1, 0, 0.75turn) rotateZ(45deg); } }
+
+/*# sourceMappingURL=saikoro.css.map */

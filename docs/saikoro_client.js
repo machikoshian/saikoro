@@ -639,6 +639,10 @@ var Protocol = (function () {
                 return "";
         }
     };
+    Protocol.isTeamMatch = function (mode) {
+        var players = Protocol.getNpcCount(mode) + Protocol.getPlayerCount(mode);
+        return (Protocol.getTeamCount(mode) !== players);
+    };
     Protocol.getNpcCount = function (mode) {
         switch (mode) {
             case GameMode.OffLine_2:
@@ -3837,6 +3841,7 @@ var HtmlView = (function () {
         this.event_queue.reset();
     };
     HtmlView.prototype.resetViews = function () {
+        this.players_view.reset();
         this.buttons_view.reset();
         this.cards_view.reset();
         this.landmarks_view.reset();
@@ -4307,7 +4312,7 @@ var HtmlView = (function () {
             return;
         }
         this.switchScene(Scene.Matching);
-        this.message_view.drawMessage("通信中です", this.getPlayerColor(this.client.player_id));
+        this.message_view.drawMessage("通信中です", this.client.player_id);
         this.client.watchGame(this.live_session_ids[index]);
     };
     HtmlView.prototype.onClickDeckCard = function (data_id) {
@@ -4327,12 +4332,6 @@ var HtmlView = (function () {
             this.deck_maker.setFacility(x, y, data_id);
         }
         this.drawDeckBoard();
-    };
-    HtmlView.prototype.getPlayerColor = function (player_id) {
-        if (player_id === -1 || player_id > COLOR_PLAYERS.length) {
-            return COLOR_FIELD;
-        }
-        return COLOR_PLAYERS[player_id];
     };
     HtmlView.prototype.getFacilityColor = function (facility) {
         if (!facility) {
@@ -4420,7 +4419,7 @@ var HtmlView = (function () {
         else {
             message = "準備中です";
         }
-        this.message_view.drawMessage(message, this.getPlayerColor(this.client.player_id));
+        this.message_view.drawMessage(message, this.client.player_id);
     };
     HtmlView.prototype.drawCards = function (session) {
         var players = session.getPlayers();
@@ -4548,15 +4547,18 @@ var HtmlView = (function () {
             field.style.display = "none";
             return;
         }
-        // (ownder_id === -1) means a prebuild landmark.
-        var owner_color = (owner_id === -1) ? COLOR_LANDMARK : this.getPlayerColor(owner_id);
         field.innerText = facility.getName();
         if (!facility.is_open) {
             field.innerText += "💤";
         }
         field.style.display = "";
-        field.style.backgroundColor = owner_color;
         field.style.borderColor = this.getFacilityColor(facility);
+        field.style.backgroundColor = null;
+        // (ownder_id === -1) means a prebuild landmark.
+        field.classList.toggle("landmark", (owner_id === -1));
+        for (var i = 0; i < 4; ++i) {
+            field.classList.toggle("player_" + i, (owner_id === i));
+        }
         field.colSpan = facility.size;
     };
     HtmlView.prototype.drawStatusMessage = function (session) {
@@ -4567,27 +4569,26 @@ var HtmlView = (function () {
         var name = current_player.name;
         var phase = session.getPhase();
         var message = "";
-        var color = this.getPlayerColor(player_id);
         if (phase === session_1.Phase.StartGame) {
             message = "マッチング中です";
-            this.message_view.drawMessage(message, color);
+            this.message_view.drawMessage(message, player_id);
             return true;
         }
         if (phase === session_1.Phase.CharacterCard) {
             var effects = this.getDiceEffectsMessage(session.getDiceEffects());
             message = name + " \u306E\u30AD\u30E3\u30E9\u30AB\u30FC\u30C9\u307E\u305F\u306F\u30B5\u30A4\u30B3\u30ED" + effects + "\u3067\u3059";
-            this.message_view.drawMessage(message, color);
+            this.message_view.drawMessage(message, player_id);
             return true;
         }
         if (phase === session_1.Phase.DiceRoll) {
             var effects = this.getDiceEffectsMessage(session.getDiceEffects());
             message = name + " \u306E\u30B5\u30A4\u30B3\u30ED" + effects + "\u3067\u3059";
-            this.message_view.drawMessage(message, color);
+            this.message_view.drawMessage(message, player_id);
             return true;
         }
         if (phase === session_1.Phase.BuildFacility) {
             message = name + " \u306E\u5EFA\u8A2D\u3067\u3059";
-            this.message_view.drawMessage(message, color);
+            this.message_view.drawMessage(message, player_id);
             return true;
         }
         if (phase === session_1.Phase.EndGame) {
@@ -4596,13 +4597,13 @@ var HtmlView = (function () {
                 var event_3 = events_1[_i];
                 if (event_3.type === session_1.EventType.Quit) {
                     message = players[event_3.player_id].name + " \u304C\u5207\u65AD\u3057\u307E\u3057\u305F";
-                    this.message_view.drawMessage(message, this.getPlayerColor(event_3.player_id));
+                    this.message_view.drawMessage(message, event_3.player_id);
                     return true;
                 }
             }
             var winner = session.getPlayer(session.getWinner()).name;
             message = name + " \u306E\u52DD\u3061\u3067\u3059";
-            this.message_view.drawMessage(message, this.getPlayerColor(session.getWinner()));
+            this.message_view.drawMessage(message, session.getWinner());
             this.reset_button_view.show();
             return true;
         }
@@ -4685,8 +4686,7 @@ var HtmlView = (function () {
         if (event.type === session_1.EventType.Draw) {
             var current_player = this.prev_session.getPlayer(event.player_id);
             var message = current_player.name + " \u306E\u30BF\u30FC\u30F3\u3067\u3059";
-            var color = this.getPlayerColor(event.player_id);
-            this.message_view.drawMessage(message, color);
+            this.message_view.drawMessage(message, event.player_id);
             this.drawFacilityValues(this.prev_session, event.player_id);
             this.effectCardDeals(event.player_id, event.target_card_ids);
             return true;
@@ -4711,10 +4711,9 @@ var HtmlView = (function () {
                 }, 2000);
             }
             var message_1 = this.getDiceResultMessage(event.dice, event.player_id);
-            var color_1 = this.getPlayerColor(event.player_id);
             window.setTimeout(function () {
-                _this.board_view.animateDiceResult(event.dice.result(), color_1);
-                _this.message_view.drawMessage(message_1, color_1);
+                _this.board_view.animateDiceResult(event.dice.result(), event.player_id);
+                _this.message_view.drawMessage(message_1, event.player_id);
             }, 1500);
             return true;
         }
@@ -4729,19 +4728,16 @@ var HtmlView = (function () {
             var type = this.session.getCharacter(event.card_id).type;
             if (type === facility_1.CharacterType.DrawCards) {
                 var message = "\u5C71\u672D\u304B\u3089" + event.target_card_ids.length + "\u679A\u30AB\u30FC\u30C9\u3092\u5F15\u304D\u307E\u3057\u305F\u3002";
-                var color = this.getPlayerColor(event.player_id);
-                this.message_view.drawMessage(message, color);
+                this.message_view.drawMessage(message, event.player_id);
                 this.effectCardDeals(event.player_id, event.target_card_ids);
                 handled = true;
             }
             if (type === facility_1.CharacterType.DiceEven) {
-                var color = this.getPlayerColor(event.player_id);
-                this.message_view.drawMessage("次のサイコロの合計値が偶数になります", color);
+                this.message_view.drawMessage("次のサイコロの合計値が偶数になります", event.player_id);
                 handled = true;
             }
             if (type === facility_1.CharacterType.DiceOdd) {
-                var color = this.getPlayerColor(event.player_id);
-                this.message_view.drawMessage("次のサイコロの合計値が奇数になります", color);
+                this.message_view.drawMessage("次のサイコロの合計値が奇数になります", event.player_id);
                 handled = true;
             }
             if (type === facility_1.CharacterType.SalaryFactor) {
@@ -4775,8 +4771,7 @@ var HtmlView = (function () {
             this.players_view.players[player_id].addMoney(money);
             var name_1 = this.session.getPlayer(player_id).name;
             var message = name_1 + " \u306B\u7D66\u6599 " + money + " \u304C\u5165\u308A\u307E\u3057\u305F";
-            var color = this.getPlayerColor(player_id);
-            this.message_view.drawMessage(message, color);
+            this.message_view.drawMessage(message, player_id);
             return true;
         }
         if (event.type === session_1.EventType.Open) {
@@ -4790,8 +4785,7 @@ var HtmlView = (function () {
             if (event.card_id === -1) {
                 var name_2 = this.prev_session.getPlayer(event.player_id).name;
                 var message = name_2 + " \u306F\u4F55\u3082\u5EFA\u8A2D\u3057\u307E\u305B\u3093\u3067\u3057\u305F\u3002";
-                var color = this.getPlayerColor(event.player_id);
-                this.message_view.drawMessage(message, color);
+                this.message_view.drawMessage(message, event.player_id);
                 this.drawCards(this.prev_session);
                 return true;
             }
@@ -4838,8 +4832,7 @@ var HtmlView = (function () {
                 });
             }
             else {
-                var color = this.getPlayerColor(event.player_id);
-                this.message_view.drawMessage("対象プレイヤーを選択中です", color);
+                this.message_view.drawMessage("対象プレイヤーを選択中です", event.player_id);
             }
         }
         return true;
@@ -4876,20 +4869,17 @@ var HtmlView = (function () {
         }
     };
     HtmlView.prototype.dialogSelectFacilityPosition = function (callback) {
-        var color = this.getPlayerColor(this.client.player_id);
-        this.message_view.drawMessage("対象施設を選択してください", color);
+        this.message_view.drawMessage("対象施設を選択してください", this.client.player_id);
         this.board_view.setFacilitiesClickable(this.session, callback);
     };
     HtmlView.prototype.dialogSelectPlayer = function (callback) {
-        var color = this.getPlayerColor(this.client.player_id);
-        this.message_view.drawMessage("対象プレイヤーを選択してください", color);
+        this.message_view.drawMessage("対象プレイヤーを選択してください", this.client.player_id);
         this.players_view.setClickableForPlayer(this.client.player_id, callback);
     };
     HtmlView.prototype.dialogSelectCharCard = function (is_open, callback) {
         var _this = this;
         if (is_open) {
-            var color = this.getPlayerColor(this.client.player_id);
-            this.message_view.drawMessage("キャラカードを選択してください", color);
+            this.message_view.drawMessage("キャラカードを選択してください", this.client.player_id);
             this.cards_view.setCharCardsClickable(function (card_id) {
                 _this.cards_view.useCard(card_id, "board");
                 callback(card_id);
@@ -4989,6 +4979,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var facility_1 = __webpack_require__(0);
 var session_1 = __webpack_require__(2);
 var types_1 = __webpack_require__(3);
+var protocol_1 = __webpack_require__(1);
 // TODO: Move it to a new file for util.
 var COLOR_FIELD = "#FFE082";
 var COLOR_LANDMARK = "#B0BEC5";
@@ -4996,7 +4987,6 @@ var COLOR_CLICKABLE = "#FFCA28";
 var COLOR_INACTIVE = "#EEEEEE";
 var COLOR_HIGHTLIGHT_CARD = "#FFE082";
 var COLOR_CHARACTER = "#FFF9C4";
-var COLOR_PLAYERS = ["#909CC2", "#D9BDC5", "#90C290", "#9D8189"];
 var COLOR_GRAY = "#B0BEC5";
 var COLOR_BLUE = "#90CAF9";
 var COLOR_GREEN = "#A5D6A7";
@@ -5019,12 +5009,6 @@ function getFacilityColor(facility) {
         case facility_1.FacilityType.Purple:
             return COLOR_PURPLE;
     }
-}
-function getPlayerColor(player_id) {
-    if (player_id === -1 || player_id > COLOR_PLAYERS.length) {
-        return COLOR_FIELD;
-    }
-    return COLOR_PLAYERS[player_id];
 }
 var Visibility;
 (function (Visibility) {
@@ -5448,9 +5432,13 @@ var HtmlCardBaseView = (function (_super) {
     };
     HtmlCardBaseView.prototype.setOwnerId = function (owner_id) {
         this.owner_id = owner_id;
-        if (owner_id !== -1 && facility_1.CardData.isLandmark(this.data_id)) {
-            this.element.style.backgroundColor = getPlayerColor(owner_id);
+        if (!facility_1.CardData.isLandmark(this.data_id)) {
+            return;
         }
+        for (var i = 0; i < 4; ++i) {
+            this.element.classList.toggle("player_" + i, (owner_id === i));
+        }
+        this.element.style.backgroundColor = (owner_id === -1) ? COLOR_LANDMARK : null;
     };
     HtmlCardBaseView.prototype.setFacilityCard = function (facility) {
         var area = this.getFacilityAreaString(facility);
@@ -5469,12 +5457,7 @@ var HtmlCardBaseView = (function (_super) {
         this.element_name.innerText = landmark.getName();
         this.element_cost.innerText = String(landmark.getCost());
         this.element_description.innerText = landmark.getDescription();
-        if (owner_id === -1) {
-            this.element.style.backgroundColor = getFacilityColor(landmark);
-        }
-        else {
-            this.element.style.backgroundColor = getPlayerColor(owner_id);
-        }
+        this.setOwnerId(owner_id);
     };
     HtmlCardBaseView.prototype.setHighlight = function (is_highlight) {
         this.is_highlight = is_highlight;
@@ -5540,6 +5523,12 @@ var HtmlPlayersView = (function (_super) {
         }
         return _this;
     }
+    HtmlPlayersView.prototype.reset = function () {
+        for (var _i = 0, _a = this.players; _i < _a.length; _i++) {
+            var player = _a[_i];
+            player.reset();
+        }
+    };
     HtmlPlayersView.prototype.onClick = function (player_id) {
         for (var _i = 0, _a = this.players; _i < _a.length; _i++) {
             var player = _a[_i];
@@ -5589,9 +5578,18 @@ var HtmlPlayerView = (function (_super) {
             this.callback(this.player_id);
         }
     };
+    HtmlPlayerView.prototype.reset = function () {
+        this.element.classList.remove("team_0");
+        this.element.classList.remove("team_1");
+    };
     HtmlPlayerView.prototype.draw = function (session) {
         this.show();
         var player = session.getPlayer(this.player_id);
+        // Team
+        if (protocol_1.Protocol.isTeamMatch(session.mode)) {
+            this.element.classList.toggle("team_0", player.team === 0);
+            this.element.classList.toggle("team_1", player.team === 1);
+        }
         // Avatar
         var npc_avatars = ["⛄", "👻", "👾", "🗿"];
         var avatar = "😺";
@@ -5615,7 +5613,7 @@ var HtmlPlayerView = (function (_super) {
             this.element.style.backgroundColor = COLOR_CLICKABLE;
         }
         else {
-            this.element.style.backgroundColor = getPlayerColor(this.player_id);
+            this.element.style.backgroundColor = null;
         }
     };
     HtmlPlayerView.prototype.setMoney = function (money) {
@@ -5658,11 +5656,14 @@ var HtmlMessageView = (function (_super) {
         _this.messages = [];
         return _this;
     }
-    HtmlMessageView.prototype.drawMessage = function (message, color) {
-        if (color === void 0) { color = COLOR_FIELD; }
-        this.messages.push([message, color]);
+    HtmlMessageView.prototype.drawMessage = function (message, player_id) {
+        if (player_id === void 0) { player_id = -1; }
+        this.messages.push([message, player_id]);
         this.element.innerText = "\uD83C\uDFB2 " + message + " \uD83C\uDFB2";
-        this.element.style.backgroundColor = color;
+        for (var i = 0; i < 4; ++i) {
+            this.element.classList.toggle("player_" + i, (player_id === i));
+        }
+        this.element.style.backgroundColor = (player_id === -1) ? COLOR_FIELD : null;
     };
     HtmlMessageView.prototype.revertMessage = function () {
         if (this.messages.length < 2) {
@@ -5671,8 +5672,8 @@ var HtmlMessageView = (function (_super) {
             return;
         }
         this.messages.pop();
-        var _a = this.messages.pop(), message = _a[0], color = _a[1];
-        this.drawMessage(message, color);
+        var _a = this.messages.pop(), message = _a[0], player_id = _a[1];
+        this.drawMessage(message, player_id);
     };
     return HtmlMessageView;
 }(HtmlViewObject));
@@ -5736,8 +5737,8 @@ var HtmlBoardView = (function (_super) {
         }
         this.dialogCallback = callback;
     };
-    HtmlBoardView.prototype.animateDiceResult = function (result, color) {
-        this.clickable_fields.animateDiceResult(result, color);
+    HtmlBoardView.prototype.animateDiceResult = function (result, player_id) {
+        this.clickable_fields.animateDiceResult(result, player_id);
     };
     return HtmlBoardView;
 }(HtmlViewObject));
@@ -5789,7 +5790,7 @@ var HtmlClickableFieldsView = (function (_super) {
         var x = _a[0], y = _a[1];
         this.fields[x][y].showCost(cost);
     };
-    HtmlClickableFieldsView.prototype.animateDiceResult = function (pip, color) {
+    HtmlClickableFieldsView.prototype.animateDiceResult = function (pip, player_id) {
         var _this = this;
         var x = pip - 1;
         if (x < 0 || 11 < x) {
@@ -5799,10 +5800,8 @@ var HtmlClickableFieldsView = (function (_super) {
         var _loop_4 = function (i) {
             var y = this_3.row - 1 - i;
             window.setTimeout(function () {
-                _this.fields[x][y].setColor(color);
-                window.setTimeout(function () {
-                    _this.fields[x][y].setColor("transparent");
-                }, 1500);
+                _this.fields[x][y].setPlayer(player_id);
+                window.setTimeout(function () { _this.fields[x][y].setPlayer(-1); }, 1500);
             }, delay);
             delay = delay + 10 * i; // 0, 10, 30, 60, 100, ...
         };
@@ -5836,6 +5835,12 @@ var HtmlClickableFieldView = (function (_super) {
     };
     HtmlClickableFieldView.prototype.setColor = function (color) {
         this.element.style.borderColor = color;
+    };
+    HtmlClickableFieldView.prototype.setPlayer = function (player_id) {
+        this.element.style.borderColor = null;
+        for (var i = 0; i < 4; ++i) {
+            this.element.classList.toggle("player_" + i, (player_id === i));
+        }
     };
     HtmlClickableFieldView.prototype.showCost = function (cost) {
         this.element.innerText = String(cost);
