@@ -196,6 +196,35 @@ export class HtmlViewObject {
     }
 }
 
+export class HtmlHomeNameView extends HtmlViewObject {
+    private name: string = "";
+    private random_name: string = "";
+
+    constructor(readonly element_id: string) {
+        super(document.getElementById(element_id));
+        if (localStorage.name != undefined) {
+            this.name = localStorage.name;
+            (<HTMLInputElement>this.element).value = this.name;
+        }
+        else {
+            const NAMES = ["コロまる", "ごましお", "グラ", "ヂータ", "エル", "茜", "ベリー", "兼石", "ハルカ"];
+            const name_index = Math.floor(Math.random() * NAMES.length);
+            this.random_name = NAMES[name_index];
+            (<HTMLInputElement>this.element).value = this.random_name;
+        }
+    }
+
+    public checkName(): string {
+        const input_name: string = (<HTMLInputElement>this.element).value;
+        if (input_name === this.name || input_name === this.random_name) {
+            return input_name;
+        }
+        this.name = input_name;
+        localStorage.name = input_name;
+        return input_name;
+    }
+}
+
 export class HtmlCardsView extends HtmlViewObject {
     private card_id_map: { [card_id: number]: number } = {};  // CardId -> CardDataId
     private card_ids: CardId[] = [];

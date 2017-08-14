@@ -7,7 +7,8 @@ import { Dice, DiceResult } from "./dice";
 import { Client } from "./client";
 import { DeckMaker } from "./deck_maker";
 import { GameMode, Protocol, MatchingInfo } from "./protocol";
-import { PlayerIdCallback, HtmlViewObject, HtmlCardsView, HtmlCardView, HtmlPlayersView,
+import { PlayerIdCallback, HtmlViewObject, HtmlHomeNameView,
+         HtmlCardsView, HtmlCardView, HtmlPlayersView,
          HtmlMessageView, HtmlButtonsView, HtmlCardWidgetView,
          HtmlDeckCharView, HtmlBoardView, HtmlDiceView,
          HtmlChatButtonView, HtmlDeckCardsView } from "./html_view_parts";
@@ -93,6 +94,7 @@ export class HtmlView {
     private deck_cards_view: HtmlDeckCardsView = null;
     private list_cards_view: HtmlDeckCardsView = null;
     private clicked_field: [number, number] = [-1, -1];
+    private home_name_view: HtmlHomeNameView = null;
     private cards_view: HtmlCardsView = null;
     private players_view: HtmlPlayersView;
     private back_button_view: HtmlViewObject = null;
@@ -154,10 +156,6 @@ export class HtmlView {
     public initView(row: number = 5, column: number = 12): void {
         document.getElementById("widgets").style.display = "none";
 
-        const NAMES = ["コロまる", "ごましお", "グラ", "ヂータ", "エル", "茜", "ベリー", "兼石", "ハルカ"];
-        const name_index = Math.floor(Math.random() * NAMES.length);
-         (<HTMLInputElement>document.getElementById("matching_name")).value = NAMES[name_index];
-
         // Add click listeners.
         // Matching.
         document.getElementById("matching_button_deck").addEventListener(
@@ -201,6 +199,9 @@ export class HtmlView {
         this.client.startCheckLive((response: string) => {
             this.onLiveSessionsUpdated(response);
         });
+
+        // Home
+        this.home_name_view = new HtmlHomeNameView("home_name");
 
         // Widgets
         this.card_widget_view = new HtmlCardWidgetView("card_widget");
@@ -634,11 +635,11 @@ export class HtmlView {
     }
 
     private onClickMatching(mode: GameMode): void {
-        let name: string = (<HTMLInputElement>document.getElementById("matching_name")).value;
+        const name: string = this.home_name_view.checkName();
         if (name.length === 0) {
             return;
         }
-        let deck: string = (<HTMLInputElement>document.getElementById("deck")).value;
+        const deck: string = (<HTMLInputElement>document.getElementById("deck")).value;
 
         this.client.matching(this.client.createMatchingQuery(name, mode, deck));
         this.switchScene(Scene.Matching);
