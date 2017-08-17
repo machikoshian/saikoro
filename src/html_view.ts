@@ -89,7 +89,7 @@ export class HtmlView {
     private prev_session: Session = null;
     private prev_step: number = -1;
     private clicked_card_id: CardId = -1;
-    private deck_maker: DeckMaker = new DeckMaker();
+    private deck_maker: DeckMaker = null;
     private deck_char_view: HtmlDeckCharView = null;
     private deck_cards_view: HtmlDeckCardsView = null;
     private list_cards_view: HtmlDeckCardsView = null;
@@ -266,6 +266,10 @@ export class HtmlView {
 
         // Money motion
         this.money_motion_view = new HtmlViewObject(document.getElementById("money_motion"));
+
+        // Deck maker
+        this.deck_maker = new DeckMaker();
+        this.deck_maker.load();
 
         this.switchScene(Scene.Home);
     }
@@ -929,12 +933,12 @@ export class HtmlView {
 
     public drawDeckBoard(): void {
         this.board_view.clearEffects();
-        const board: Board = this.deck_maker.board;
+        const board: Board = this.deck_maker.getBoard();
         for (let y: number = 0; y < board.row; ++y) {
             for (let x: number = 0; x < board.column; ++x) {
                 const facility_id: CardId = board.getRawCardId(x, y);
                 const owner_id: PlayerId = 0;
-                let facility: Facility =
+                const facility: Facility =
                     (facility_id < 0) ? null : this.deck_maker.getFacility(facility_id);
                 this.drawField(x, y, facility_id, facility, owner_id);
             }
@@ -943,12 +947,12 @@ export class HtmlView {
             this.deck_char_view.drawCharacter(x, this.deck_maker.getCharacter(x));
         }
 
-        let [x, y]: [number, number] = this.clicked_field;
+        const [x, y]: [number, number] = this.clicked_field;
         if (y !== -1) {
             this.board_view.setClickable(this.clicked_field, true);
         }
-        document.getElementById("deck").innerText =
-            JSON.stringify(this.deck_maker.getDeck());
+        document.getElementById("deck").innerText = JSON.stringify(this.deck_maker.getDeck());
+        this.deck_maker.save();
     }
 
     private drawField(x: number, y: number,

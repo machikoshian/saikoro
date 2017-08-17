@@ -3,8 +3,8 @@ import { Board } from "./board";
 
 export class DeckMaker {
     private cards: { [key: number]: CardDataId }  = {};  // key is CardId.
-    readonly board: Board = new Board();
-    readonly chars: CardDataId[] = [-1, -1, -1, -1, -1];
+    private board: Board = new Board();
+    private chars: CardDataId[] = [-1, -1, -1, -1, -1];
     private availables: CardDataId[][];
 
     constructor() {
@@ -14,8 +14,44 @@ export class DeckMaker {
         }
     }
 
+    public toJSON(): Object {
+        return {
+            class_name: "DeckMaker",
+            cards: this.cards,
+            board: this.board.toJSON(),
+            chars: this.chars,
+        }
+    }
+
+    static fromJSON(json): DeckMaker {
+        let deck_maker: DeckMaker = new DeckMaker();
+        deck_maker.cards = json.cards;
+        deck_maker.board = Board.fromJSON(json.board);
+        deck_maker.chars = json.chars;
+        return deck_maker;
+    }
+
+    public save(): void {
+        localStorage.deck = JSON.stringify(this.toJSON());
+    }
+
+    public load(): void {
+        const json_string: string = localStorage.deck;
+        if (json_string == undefined) {
+            return;
+        }
+        const json = JSON.parse(localStorage.deck);
+        this.cards = json.cards;
+        this.board = Board.fromJSON(json.board);
+        this.chars = json.chars;
+    }
+
     public getAvailableFacilities(x: number): CardDataId[] {
         return this.availables[x];
+    }
+
+    public getBoard(): Board {
+        return this.board;
     }
 
     public setFacility(x: number, y: number, data_id: CardDataId): boolean {
