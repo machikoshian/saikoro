@@ -10,7 +10,7 @@ import { GameMode, Protocol, MatchingInfo } from "./protocol";
 import { PlayerIdCallback, HtmlViewObject, HtmlHomeNameView,
          HtmlCardsView, HtmlCardView, HtmlPlayersView,
          HtmlMessageView, HtmlButtonsView, HtmlCardWidgetView,
-         HtmlDeckCharView, HtmlBoardView, HtmlDiceView,
+         HtmlDeckButtonsView, HtmlDeckCharView, HtmlBoardView, HtmlDiceView,
          HtmlChatButtonView, HtmlDeckCardsView } from "./html_view_parts";
 import { DiceEffects, DiceNum, DiceEvenOdd } from "./types";
 import { AutoPlay } from "./auto_play";
@@ -90,6 +90,7 @@ export class HtmlView {
     private prev_step: number = -1;
     private clicked_card_id: CardId = -1;
     private deck_maker: DeckMaker = null;
+    private deck_buttons_view: HtmlDeckButtonsView = null;
     private deck_char_view: HtmlDeckCharView = null;
     private deck_cards_view: HtmlDeckCardsView = null;
     private list_cards_view: HtmlDeckCardsView = null;
@@ -244,6 +245,11 @@ export class HtmlView {
             this.onClickField(x, y);
         }
 
+        this.deck_buttons_view = new HtmlDeckButtonsView("deck_buttons");
+        this.deck_buttons_view.callback = (i: number) => {
+            this.onDeckChanged(i);
+        }
+
         // HtmlDeckCharView
         this.deck_char_view = new HtmlDeckCharView("deck_char");
         this.deck_char_view.callback = (x: number) => {
@@ -303,6 +309,7 @@ export class HtmlView {
         this.players_view.none();
         this.message_view.none();
         this.board_view.none();
+        this.deck_buttons_view.none();
         this.deck_char_view.none();
         this.deck_cards_view.none();
         this.list_cards_view.none();
@@ -329,6 +336,7 @@ export class HtmlView {
 
         if (scene === Scene.Deck) {
             this.back_button_view.show();
+            this.deck_buttons_view.show();
             this.board_view.show();
             this.deck_char_view.show();
 
@@ -396,6 +404,11 @@ export class HtmlView {
         }
         const card_id: CardId = target_facilities[0];
         this.client.sendRequest(this.client.createInteractQuery(card_id, target_player_id));
+    }
+
+    private onDeckChanged(deck_index: number): void {
+        this.deck_maker.changeDeckIndex(deck_index);
+        this.drawDeckBoard();
     }
 
     private onClickDeckField(x: number, y: number): void {

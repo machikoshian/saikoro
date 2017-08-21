@@ -402,6 +402,32 @@ export class HtmlCardsView extends HtmlViewObject {
     }
 }
 
+export class HtmlDeckButtonsView extends HtmlViewObject {
+    private buttons: HtmlButtonView[] = [];
+    public callback: (i: number) => void;
+    readonly deck_size: number = 5;
+
+    constructor(readonly element_id: string) {
+        super(document.getElementById(element_id));
+        for (let i = 0; i < this.deck_size; ++i) {
+            let button: HtmlButtonView = new HtmlButtonView(`deck_button_${i}`);
+            button.addClickListener(() => { this.onClick(i); });
+            this.buttons.push(button);
+        }
+    }
+
+    private onClick(deck_index: number) {
+        for (let i = 0; i < this.deck_size; ++i) {
+            this.buttons[i].element.classList.toggle("selected", deck_index === i);
+        }
+
+        if (this.callback == null) {
+            return;
+        }
+        this.callback(deck_index);
+    }
+}
+
 export class HtmlDeckCardsView extends HtmlViewObject {
     private cards_pool: { [data_id: number]: HtmlCardDataView } = {};
     private data_ids: CardDataId[] = [];
