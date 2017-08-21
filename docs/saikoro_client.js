@@ -3542,20 +3542,31 @@ exports.EffectManager = EffectManager;
 Object.defineProperty(exports, "__esModule", { value: true });
 var facility_1 = __webpack_require__(0);
 var board_1 = __webpack_require__(7);
-var DeckMaker = (function () {
-    function DeckMaker() {
+var DeckData = (function () {
+    function DeckData() {
         this.cards = {}; // key is CardId.
         this.board = new board_1.Board();
         this.chars = [-1, -1, -1, -1, -1];
-        this.availables = [];
-        for (var x = 0; x < this.board.column; ++x) {
-            this.availables[x] = facility_1.CardData.getAvailableFacilities(x + 1);
-        }
     }
-    DeckMaker.prototype.getAvailableFacilities = function (x) {
-        return this.availables[x];
+    DeckData.prototype.toJSON = function () {
+        return {
+            class_name: "DeckData",
+            cards: this.cards,
+            board: this.board.toJSON(),
+            chars: this.chars,
+        };
     };
-    DeckMaker.prototype.setFacility = function (x, y, data_id) {
+    DeckData.fromJSON = function (json) {
+        var deck_data = new DeckData();
+        deck_data.cards = json.cards;
+        deck_data.board = board_1.Board.fromJSON(json.board);
+        deck_data.chars = json.chars;
+        return deck_data;
+    };
+    DeckData.prototype.getBoard = function () {
+        return this.board;
+    };
+    DeckData.prototype.setFacility = function (x, y, data_id) {
         var _this = this;
         var facility = new facility_1.Facility(data_id); // TODO: Can refer FACILITY_DATA instead?
         // Check the facility's area.
@@ -3579,16 +3590,16 @@ var DeckMaker = (function () {
         this.cards[card_id] = data_id;
         return true;
     };
-    DeckMaker.prototype.getFacility = function (card_id) {
+    DeckData.prototype.getFacility = function (card_id) {
         return new facility_1.Facility(this.cards[card_id]); // TODO: Create a Facility pool.
     };
-    DeckMaker.prototype.removeFacility = function (x, y) {
+    DeckData.prototype.removeFacility = function (x, y) {
         var _this = this;
         this.board.removeCards(x, y, 1).map(function (removed) {
             delete _this.cards[removed];
         });
     };
-    DeckMaker.prototype.getDeck = function () {
+    DeckData.prototype.getDeck = function () {
         var deck = [];
         for (var _i = 0, _a = Object.keys(this.cards); _i < _a.length; _i++) {
             var key = _a[_i];
@@ -3602,18 +3613,94 @@ var DeckMaker = (function () {
         }
         return deck;
     };
-    DeckMaker.prototype.setCharacter = function (x, data_id) {
+    DeckData.prototype.setCharacter = function (x, data_id) {
         this.chars[x] = data_id;
     };
-    DeckMaker.prototype.getCharacter = function (x) {
+    DeckData.prototype.getCharacter = function (x) {
         var data_id = this.chars[x];
         if (data_id === -1) {
             return null;
         }
         return new facility_1.Character(data_id);
     };
-    DeckMaker.prototype.removeCharacter = function (x) {
+    DeckData.prototype.removeCharacter = function (x) {
         this.chars[x] = -1;
+    };
+    return DeckData;
+}());
+var DeckMaker = (function () {
+    function DeckMaker() {
+        this.data = [];
+        this.deck_index = 0;
+        this.availables = [];
+        for (var i = 0; i < 5; ++i) {
+            this.data.push(new DeckData());
+        }
+        for (var x = 0; x < this.data[0].board.column; ++x) {
+            this.availables[x] = facility_1.CardData.getAvailableFacilities(x + 1);
+        }
+    }
+    DeckMaker.prototype.toJSON = function () {
+        var data = this.data.map(function (data) { return data.toJSON(); });
+        return {
+            class_name: "DeckMaker",
+            data: data,
+            deck_index: this.deck_index,
+        };
+    };
+    DeckMaker.fromJSON = function (json) {
+        var deck_maker = new DeckMaker();
+        deck_maker.data = json.data.map(function (data) { return DeckData.fromJSON(data); });
+        deck_maker.deck_index = json.deck_index;
+        return deck_maker;
+    };
+    DeckMaker.prototype.save = function () {
+        localStorage.deck = JSON.stringify(this.toJSON());
+    };
+    DeckMaker.prototype.load = function () {
+        var json_string = localStorage.deck;
+        if (json_string == undefined) {
+            return;
+        }
+        var json = JSON.parse(json_string);
+        if (json.data == undefined) {
+            return;
+        }
+        this.data = json.data.map(function (data) { return DeckData.fromJSON(data); });
+        this.deck_index = json.deck_index;
+    };
+    DeckMaker.prototype.getAvailableFacilities = function (x) {
+        return this.availables[x];
+    };
+    DeckMaker.prototype.getDeckData = function () {
+        return this.data[this.deck_index];
+    };
+    DeckMaker.prototype.getBoard = function () {
+        return this.getDeckData().board;
+    };
+    DeckMaker.prototype.changeDeckIndex = function (index) {
+        this.deck_index = index;
+    };
+    DeckMaker.prototype.setFacility = function (x, y, data_id) {
+        return this.getDeckData().setFacility(x, y, data_id);
+    };
+    DeckMaker.prototype.getFacility = function (card_id) {
+        return new facility_1.Facility(this.getDeckData().cards[card_id]); // TODO: Create a Facility pool.
+    };
+    DeckMaker.prototype.removeFacility = function (x, y) {
+        this.getDeckData().removeFacility(x, y);
+    };
+    DeckMaker.prototype.getDeck = function () {
+        return this.getDeckData().getDeck();
+    };
+    DeckMaker.prototype.setCharacter = function (x, data_id) {
+        this.getDeckData().setCharacter(x, data_id);
+    };
+    DeckMaker.prototype.getCharacter = function (x) {
+        return this.getDeckData().getCharacter(x);
+    };
+    DeckMaker.prototype.removeCharacter = function (x) {
+        this.getDeckData().removeCharacter(x);
     };
     return DeckMaker;
 }());
@@ -3797,11 +3884,13 @@ var HtmlView = (function () {
         this.prev_session = null;
         this.prev_step = -1;
         this.clicked_card_id = -1;
-        this.deck_maker = new deck_maker_1.DeckMaker();
+        this.deck_maker = null;
+        this.deck_buttons_view = null;
         this.deck_char_view = null;
         this.deck_cards_view = null;
         this.list_cards_view = null;
         this.clicked_field = [-1, -1];
+        this.home_name_view = null;
         this.cards_view = null;
         this.back_button_view = null;
         this.reset_button_view = null;
@@ -3856,9 +3945,6 @@ var HtmlView = (function () {
         if (row === void 0) { row = 5; }
         if (column === void 0) { column = 12; }
         document.getElementById("widgets").style.display = "none";
-        var NAMES = ["コロまる", "ごましお", "グラ", "ヂータ", "エル", "茜", "ベリー", "兼石", "ハルカ"];
-        var name_index = Math.floor(Math.random() * NAMES.length);
-        document.getElementById("matching_name").value = NAMES[name_index];
         // Add click listeners.
         // Matching.
         document.getElementById("matching_button_deck").addEventListener("click", function () { _this.switchScene(Scene.Deck); });
@@ -3881,6 +3967,8 @@ var HtmlView = (function () {
         this.client.startCheckLive(function (response) {
             _this.onLiveSessionsUpdated(response);
         });
+        // Home
+        this.home_name_view = new html_view_parts_1.HtmlHomeNameView("home_name");
         // Widgets
         this.card_widget_view = new html_view_parts_1.HtmlCardWidgetView("card_widget");
         this.dice_widget_view = new html_view_parts_1.HtmlDiceView("dice_widget");
@@ -3912,6 +4000,10 @@ var HtmlView = (function () {
         this.board_view.callback = function (x, y) {
             _this.onClickField(x, y);
         };
+        this.deck_buttons_view = new html_view_parts_1.HtmlDeckButtonsView("deck_buttons");
+        this.deck_buttons_view.callback = function (i) {
+            _this.onDeckChanged(i);
+        };
         // HtmlDeckCharView
         this.deck_char_view = new html_view_parts_1.HtmlDeckCharView("deck_char");
         this.deck_char_view.callback = function (x) {
@@ -3929,6 +4021,9 @@ var HtmlView = (function () {
         this.field_card_view = new html_view_parts_1.HtmlCardWidgetView("field_card");
         // Money motion
         this.money_motion_view = new html_view_parts_1.HtmlViewObject(document.getElementById("money_motion"));
+        // Deck maker
+        this.deck_maker = new deck_maker_1.DeckMaker();
+        this.deck_maker.load();
         this.switchScene(Scene.Home);
     };
     HtmlView.prototype.resetMatchingButtons = function () {
@@ -3958,6 +4053,7 @@ var HtmlView = (function () {
         this.players_view.none();
         this.message_view.none();
         this.board_view.none();
+        this.deck_buttons_view.none();
         this.deck_char_view.none();
         this.deck_cards_view.none();
         this.list_cards_view.none();
@@ -3979,6 +4075,7 @@ var HtmlView = (function () {
         }
         if (scene === Scene.Deck) {
             this.back_button_view.show();
+            this.deck_buttons_view.show();
             this.board_view.show();
             this.deck_char_view.show();
             this.drawDeckBoard();
@@ -4040,6 +4137,10 @@ var HtmlView = (function () {
         }
         var card_id = target_facilities[0];
         this.client.sendRequest(this.client.createInteractQuery(card_id, target_player_id));
+    };
+    HtmlView.prototype.onDeckChanged = function (deck_index) {
+        this.deck_maker.changeDeckIndex(deck_index);
+        this.drawDeckBoard();
     };
     HtmlView.prototype.onClickDeckField = function (x, y) {
         var _a = this.clicked_field, px = _a[0], py = _a[1];
@@ -4259,7 +4360,7 @@ var HtmlView = (function () {
         }, 500);
     };
     HtmlView.prototype.onClickMatching = function (mode) {
-        var name = document.getElementById("matching_name").value;
+        var name = this.home_name_view.checkName();
         if (name.length === 0) {
             return;
         }
@@ -4514,7 +4615,7 @@ var HtmlView = (function () {
     };
     HtmlView.prototype.drawDeckBoard = function () {
         this.board_view.clearEffects();
-        var board = this.deck_maker.board;
+        var board = this.deck_maker.getBoard();
         for (var y_1 = 0; y_1 < board.row; ++y_1) {
             for (var x_1 = 0; x_1 < board.column; ++x_1) {
                 var facility_id = board.getRawCardId(x_1, y_1);
@@ -4530,8 +4631,8 @@ var HtmlView = (function () {
         if (y !== -1) {
             this.board_view.setClickable(this.clicked_field, true);
         }
-        document.getElementById("deck").innerText =
-            JSON.stringify(this.deck_maker.getDeck());
+        document.getElementById("deck").innerText = JSON.stringify(this.deck_maker.getDeck());
+        this.deck_maker.save();
     };
     HtmlView.prototype.drawField = function (x, y, facility_id, facility, owner_id) {
         var field = document.getElementById("field_" + x + "_" + y);
@@ -5146,6 +5247,37 @@ var HtmlViewObject = (function () {
     return HtmlViewObject;
 }());
 exports.HtmlViewObject = HtmlViewObject;
+var HtmlHomeNameView = (function (_super) {
+    __extends(HtmlHomeNameView, _super);
+    function HtmlHomeNameView(element_id) {
+        var _this = _super.call(this, document.getElementById(element_id)) || this;
+        _this.element_id = element_id;
+        _this.name = "";
+        _this.random_name = "";
+        if (localStorage.name != undefined) {
+            _this.name = localStorage.name;
+            _this.element.value = _this.name;
+        }
+        else {
+            var NAMES = ["コロまる", "ごましお", "グラ", "ヂータ", "エル", "茜", "ベリー", "兼石", "ハルカ"];
+            var name_index = Math.floor(Math.random() * NAMES.length);
+            _this.random_name = NAMES[name_index];
+            _this.element.value = _this.random_name;
+        }
+        return _this;
+    }
+    HtmlHomeNameView.prototype.checkName = function () {
+        var input_name = this.element.value;
+        if (input_name === this.name || input_name === this.random_name) {
+            return input_name;
+        }
+        this.name = input_name;
+        localStorage.name = input_name;
+        return input_name;
+    };
+    return HtmlHomeNameView;
+}(HtmlViewObject));
+exports.HtmlHomeNameView = HtmlHomeNameView;
 var HtmlCardsView = (function (_super) {
     __extends(HtmlCardsView, _super);
     function HtmlCardsView(element_id) {
@@ -5314,6 +5446,36 @@ var HtmlCardsView = (function (_super) {
     return HtmlCardsView;
 }(HtmlViewObject));
 exports.HtmlCardsView = HtmlCardsView;
+var HtmlDeckButtonsView = (function (_super) {
+    __extends(HtmlDeckButtonsView, _super);
+    function HtmlDeckButtonsView(element_id) {
+        var _this = _super.call(this, document.getElementById(element_id)) || this;
+        _this.element_id = element_id;
+        _this.buttons = [];
+        _this.deck_size = 5;
+        var _loop_2 = function (i) {
+            var button = new HtmlButtonView("deck_button_" + i);
+            button.addClickListener(function () { _this.onClick(i); });
+            this_2.buttons.push(button);
+        };
+        var this_2 = this;
+        for (var i = 0; i < _this.deck_size; ++i) {
+            _loop_2(i);
+        }
+        return _this;
+    }
+    HtmlDeckButtonsView.prototype.onClick = function (deck_index) {
+        for (var i = 0; i < this.deck_size; ++i) {
+            this.buttons[i].element.classList.toggle("selected", deck_index === i);
+        }
+        if (this.callback == null) {
+            return;
+        }
+        this.callback(deck_index);
+    };
+    return HtmlDeckButtonsView;
+}(HtmlViewObject));
+exports.HtmlDeckButtonsView = HtmlDeckButtonsView;
 var HtmlDeckCardsView = (function (_super) {
     __extends(HtmlDeckCardsView, _super);
     function HtmlDeckCardsView(element_id) {
@@ -5684,17 +5846,17 @@ var HtmlBoardView = (function (_super) {
         var _this = _super.call(this, document.getElementById(element_id)) || this;
         _this.dialogCallback = null;
         _this.clickable_fields = new HtmlClickableFieldsView("click", row, column);
-        var _loop_2 = function (y) {
-            var _loop_3 = function (x) {
-                this_2.clickable_fields.fields[x][y].addClickListener(function () { _this.onClick(x, y); });
+        var _loop_3 = function (y) {
+            var _loop_4 = function (x) {
+                this_3.clickable_fields.fields[x][y].addClickListener(function () { _this.onClick(x, y); });
             };
             for (var x = 0; x < column; ++x) {
-                _loop_3(x);
+                _loop_4(x);
             }
         };
-        var this_2 = this;
+        var this_3 = this;
         for (var y = 0; y < row; ++y) {
-            _loop_2(y);
+            _loop_3(y);
         }
         return _this;
     }
@@ -5797,17 +5959,17 @@ var HtmlClickableFieldsView = (function (_super) {
             return;
         }
         var delay = 0;
-        var _loop_4 = function (i) {
-            var y = this_3.row - 1 - i;
+        var _loop_5 = function (i) {
+            var y = this_4.row - 1 - i;
             window.setTimeout(function () {
                 _this.fields[x][y].setPlayer(player_id);
                 window.setTimeout(function () { _this.fields[x][y].setPlayer(-1); }, 1500);
             }, delay);
             delay = delay + 10 * i; // 0, 10, 30, 60, 100, ...
         };
-        var this_3 = this;
+        var this_4 = this;
         for (var i = 0; i < this.row; ++i) {
-            _loop_4(i);
+            _loop_5(i);
         }
     };
     return HtmlClickableFieldsView;
@@ -5854,16 +6016,16 @@ var HtmlDeckCharView = (function (_super) {
         var _this = _super.call(this, document.getElementById(element_id)) || this;
         _this.fields = [];
         _this.clickables = [];
-        var _loop_5 = function (i) {
+        var _loop_6 = function (i) {
             var field = new HtmlViewObject(document.getElementById(element_id + "_" + i));
-            this_4.fields.push(field);
+            this_5.fields.push(field);
             var clickable = new HtmlClickableFieldView("clickable_" + element_id + "_" + i);
-            this_4.clickables.push(clickable);
+            this_5.clickables.push(clickable);
             clickable.addClickListener(function () { _this.onClick(i); });
         };
-        var this_4 = this;
+        var this_5 = this;
         for (var i = 0; i < 5; ++i) {
-            _loop_5(i);
+            _loop_6(i);
         }
         return _this;
     }
@@ -6025,7 +6187,7 @@ var HtmlChatButtonView = (function (_super) {
         _this.stamp_box.none();
         _this.addClickListener(function () { _this.toggleStampBox(); });
         var stamp_elements = _this.stamp_box.element.getElementsByClassName("stamp");
-        var _loop_6 = function (i) {
+        var _loop_7 = function (i) {
             var stamp = new HtmlViewObject(stamp_elements[i]);
             stamp.addClickListener(function () {
                 if (_this.callback) {
@@ -6033,11 +6195,11 @@ var HtmlChatButtonView = (function (_super) {
                 }
                 _this.showStampBox(false);
             });
-            this_5.stamps.push(stamp);
+            this_6.stamps.push(stamp);
         };
-        var this_5 = this;
+        var this_6 = this;
         for (var i = 0; i < stamp_elements.length; ++i) {
-            _loop_6(i);
+            _loop_7(i);
         }
         return _this;
     }

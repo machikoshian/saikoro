@@ -17,9 +17,9 @@
         <font color="#EF5350">さ</font>いコロ！
       </div>
 
-      <div id="matching_name_box" class="ui_box">
+      <div id="home_name_box" class="ui_box">
         😺 名前<br />
-        <input id="matching_name" type="text" name="name" value="コロまる">
+        <input id="home_name" type="text" name="name" value="コロまる">
       </div>
       <div id="matching_button_deck" class="ui_button">
         デッキ<br />作成
@@ -68,9 +68,17 @@
       </div>
     </div><!-- id=home -->
 
-    <div id="back" class="ui_button">
-      ← 戻る
+    <div>
+      <div id="back" class="ui_button">← 戻る</div>
+      <div id="deck_buttons">
+        <div id="deck_button_0" class="ui_button selected">　1　</div>
+        <div id="deck_button_1" class="ui_button">　2　</div>
+        <div id="deck_button_2" class="ui_button">　3　</div>
+        <div id="deck_button_3" class="ui_button">　4　</div>
+        <div id="deck_button_4" class="ui_button">　5　</div>
+      </div>
     </div>
+
     <div id="list">
       <div id="list_cards" class="card_area scrollable"></div>
     </div>
@@ -208,7 +216,7 @@
     </div>
     <script type="text/javascript" src="saikoro_client.js"></script>
     <div class="devinfo">
-      Version: 9e905cb Sun Aug 13 00:27:41 2017 +0900
+      Version: 2679a75 Mon Aug 21 23:38:06 2017 +0900
     </div>
   </body>
 </html>
