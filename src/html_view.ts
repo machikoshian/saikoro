@@ -182,9 +182,8 @@ export class HtmlView {
             "click", () => { this.onClickMatching(GameMode.OnLine2Players); });
         document.getElementById("matching_button_multi_2vs2").addEventListener(
             "click", () => { this.onClickMatching(GameMode.OnLine2Players_2vs2); });
-        // 4 players are not supported yet.
-        // document.getElementById("matching_button_multi_4").addEventListener(
-        //     "click", () => { this.onClickMatching(GameMode.OnLine2Players); });
+        document.getElementById("matching_button_multi_4").addEventListener(
+            "click", () => { this.onClickMatching(GameMode.OnLine4Players); });
 
         document.getElementById("matching_button_watch_1").addEventListener(
             "click", () => { this.onClickWatch(0); });
@@ -289,7 +288,7 @@ export class HtmlView {
         }
         document.getElementById("matching_button_multi_2").classList.remove("promote");
         document.getElementById("matching_button_multi_4").classList.remove("promote");
-        document.getElementById("matching_button_multi_4").classList.add("inactive");
+        document.getElementById("matching_button_multi_4").classList.remove("inactive");
         document.getElementById("matching_button_watch_1").classList.add("inactive");
     }
 
@@ -672,6 +671,7 @@ export class HtmlView {
         }
         document.getElementById("matching_button_multi_2").classList.remove("promote");
         document.getElementById("matching_button_multi_2vs2").classList.remove("promote");
+        document.getElementById("matching_button_multi_4").classList.remove("promote");
 
         if (response == null) {
             return;
@@ -702,6 +702,9 @@ export class HtmlView {
             }
             else if (matching_info.mode === GameMode.OnLine2Players_2vs2) {
                 document.getElementById("matching_button_multi_2vs2").classList.add("promote");
+            }
+            else if (matching_info.mode === GameMode.OnLine4Players) {
+                document.getElementById("matching_button_multi_4").classList.add("promote");
             }
         }
     }

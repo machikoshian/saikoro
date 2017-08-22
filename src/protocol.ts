@@ -11,6 +11,7 @@ export enum GameMode {
     OnLineSingle_2vs2,
     OnLine2Players,
     OnLine2Players_2vs2,
+    OnLine4Players,
     OnLineWatch,
 };
 
@@ -31,9 +32,15 @@ export interface MatchingInfo {
 export class Protocol {
     static isOnlineMode(mode: GameMode): boolean {
         const onlines: GameMode[] = [
-            GameMode.OnLineSingle_2, GameMode.OnLineSingle_3, GameMode.OnLineSingle_4,
-            GameMode.OnLineSingle_2vs2, GameMode.OnLine2Players_2vs2,
-            GameMode.OnLine2Players, GameMode.OnLineWatch ];
+            GameMode.OnLineSingle_2,
+            GameMode.OnLineSingle_3,
+            GameMode.OnLineSingle_4,
+            GameMode.OnLineSingle_2vs2,
+            GameMode.OnLine2Players,
+            GameMode.OnLine2Players_2vs2,
+            GameMode.OnLine4Players,
+            GameMode.OnLineWatch,
+        ];
         return (onlines.indexOf(mode) !== -1);
     }
 
@@ -61,6 +68,8 @@ export class Protocol {
                 return "2人バトル 😺 😺";
             case GameMode.OnLine2Players_2vs2:
                 return "2vs2バトル 😺😺vs👻🗿";
+            case GameMode.OnLine4Players:
+                return "4人バトル 😺 😺 😺 😺";
             case GameMode.OnLineWatch:
                 return "観戦モード";
             case GameMode.None:
@@ -91,6 +100,7 @@ export class Protocol {
             case GameMode.OnLineSingle_2vs2:
                 return 3;
             case GameMode.OnLine2Players:
+            case GameMode.OnLine4Players:
             case GameMode.OnLineWatch:
                 return 0;
             case GameMode.None:
@@ -114,6 +124,8 @@ export class Protocol {
             case GameMode.OnLine2Players:
             case GameMode.OnLine2Players_2vs2:
                 return 2;
+            case GameMode.OnLine4Players:
+                return 4;
             case GameMode.OnLineWatch:
                 return 0;
             case GameMode.None:
@@ -139,6 +151,7 @@ export class Protocol {
 
             case GameMode.OffLine_4:
             case GameMode.OnLineSingle_4:
+            case GameMode.OnLine4Players:
                 return 4;
 
             case GameMode.OnLineWatch:
