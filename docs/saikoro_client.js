@@ -593,7 +593,8 @@ var GameMode;
     GameMode[GameMode["OnLineSingle_2vs2"] = 9] = "OnLineSingle_2vs2";
     GameMode[GameMode["OnLine2Players"] = 10] = "OnLine2Players";
     GameMode[GameMode["OnLine2Players_2vs2"] = 11] = "OnLine2Players_2vs2";
-    GameMode[GameMode["OnLineWatch"] = 12] = "OnLineWatch";
+    GameMode[GameMode["OnLine4Players"] = 12] = "OnLine4Players";
+    GameMode[GameMode["OnLineWatch"] = 13] = "OnLineWatch";
 })(GameMode = exports.GameMode || (exports.GameMode = {}));
 ;
 var Protocol = (function () {
@@ -601,9 +602,14 @@ var Protocol = (function () {
     }
     Protocol.isOnlineMode = function (mode) {
         var onlines = [
-            GameMode.OnLineSingle_2, GameMode.OnLineSingle_3, GameMode.OnLineSingle_4,
-            GameMode.OnLineSingle_2vs2, GameMode.OnLine2Players_2vs2,
-            GameMode.OnLine2Players, GameMode.OnLineWatch
+            GameMode.OnLineSingle_2,
+            GameMode.OnLineSingle_3,
+            GameMode.OnLineSingle_4,
+            GameMode.OnLineSingle_2vs2,
+            GameMode.OnLine2Players,
+            GameMode.OnLine2Players_2vs2,
+            GameMode.OnLine4Players,
+            GameMode.OnLineWatch,
         ];
         return (onlines.indexOf(mode) !== -1);
     };
@@ -631,6 +637,8 @@ var Protocol = (function () {
                 return "2人バトル 😺 😺";
             case GameMode.OnLine2Players_2vs2:
                 return "2vs2バトル 😺😺vs👻🗿";
+            case GameMode.OnLine4Players:
+                return "4人バトル 😺 😺 😺 😺";
             case GameMode.OnLineWatch:
                 return "観戦モード";
             case GameMode.None:
@@ -659,6 +667,7 @@ var Protocol = (function () {
             case GameMode.OnLineSingle_2vs2:
                 return 3;
             case GameMode.OnLine2Players:
+            case GameMode.OnLine4Players:
             case GameMode.OnLineWatch:
                 return 0;
             case GameMode.None:
@@ -681,6 +690,8 @@ var Protocol = (function () {
             case GameMode.OnLine2Players:
             case GameMode.OnLine2Players_2vs2:
                 return 2;
+            case GameMode.OnLine4Players:
+                return 4;
             case GameMode.OnLineWatch:
                 return 0;
             case GameMode.None:
@@ -703,6 +714,7 @@ var Protocol = (function () {
                 return 3;
             case GameMode.OffLine_4:
             case GameMode.OnLineSingle_4:
+            case GameMode.OnLine4Players:
                 return 4;
             case GameMode.OnLineWatch:
             case GameMode.None:
@@ -2102,6 +2114,12 @@ function difference(base, others) {
     return result;
 }
 exports.difference = difference;
+var seed = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+function random() {
+    seed = (seed * 9301 + 49297) % 233280;
+    return seed / 233280;
+}
+exports.random = random;
 
 
 /***/ }),
@@ -3957,9 +3975,7 @@ var HtmlView = (function () {
         document.getElementById("matching_button_online_4").addEventListener("click", function () { _this.onClickMatching(protocol_1.GameMode.OnLineSingle_4); });
         document.getElementById("matching_button_multi_2").addEventListener("click", function () { _this.onClickMatching(protocol_1.GameMode.OnLine2Players); });
         document.getElementById("matching_button_multi_2vs2").addEventListener("click", function () { _this.onClickMatching(protocol_1.GameMode.OnLine2Players_2vs2); });
-        // 4 players are not supported yet.
-        // document.getElementById("matching_button_multi_4").addEventListener(
-        //     "click", () => { this.onClickMatching(GameMode.OnLine2Players); });
+        document.getElementById("matching_button_multi_4").addEventListener("click", function () { _this.onClickMatching(protocol_1.GameMode.OnLine4Players); });
         document.getElementById("matching_button_watch_1").addEventListener("click", function () { _this.onClickWatch(0); });
         document.getElementById("matching_button_watch_2").addEventListener("click", function () { _this.onClickWatch(1); });
         document.getElementById("matching_button_watch_3").addEventListener("click", function () { _this.onClickWatch(2); });
@@ -4035,7 +4051,7 @@ var HtmlView = (function () {
         }
         document.getElementById("matching_button_multi_2").classList.remove("promote");
         document.getElementById("matching_button_multi_4").classList.remove("promote");
-        document.getElementById("matching_button_multi_4").classList.add("inactive");
+        document.getElementById("matching_button_multi_4").classList.remove("inactive");
         document.getElementById("matching_button_watch_1").classList.add("inactive");
     };
     HtmlView.prototype.switchScene = function (scene) {
@@ -4378,6 +4394,7 @@ var HtmlView = (function () {
         }
         document.getElementById("matching_button_multi_2").classList.remove("promote");
         document.getElementById("matching_button_multi_2vs2").classList.remove("promote");
+        document.getElementById("matching_button_multi_4").classList.remove("promote");
         if (response == null) {
             return;
         }
@@ -4405,6 +4422,9 @@ var HtmlView = (function () {
             }
             else if (matching_info.mode === protocol_1.GameMode.OnLine2Players_2vs2) {
                 document.getElementById("matching_button_multi_2vs2").classList.add("promote");
+            }
+            else if (matching_info.mode === protocol_1.GameMode.OnLine4Players) {
+                document.getElementById("matching_button_multi_4").classList.add("promote");
             }
         }
     };
