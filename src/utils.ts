@@ -16,3 +16,10 @@ export function difference(base: any[], others: any[]): any[] {
     }
     return result;
 }
+
+let seed: number = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+
+export function random(): number {
+    seed = (seed * 9301 + 49297) % 233280;
+    return seed / 233280;
+}
