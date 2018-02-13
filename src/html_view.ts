@@ -679,6 +679,9 @@ export class HtmlView {
 
         // TODO: session_info should be a class instance.
         const live_dict: {[key: string]: MatchingInfo} = JSON.parse(response);
+        if (live_dict == null) {
+            return;
+        }
 
         const keys: string[] = Object.keys(live_dict);
 
